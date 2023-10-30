@@ -1,0 +1,17 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "hermadata"
+authors = [{name = "Samuele Fusaro", email = "samuelevf@gmail.com"}]
+license = {file = "LICENSE"}
+classifiers = ["License :: OSI Approved :: MIT License"]
+dynamic = ["version", "description"]
+dependencies = [
+    "fastapi >= 0.104, < 1",
+    "sqlalchemy >= 2, < 3",
+    "alembic",
+    "uvicorn",
+    "pydantic-settings"
+]
