@@ -25,14 +25,18 @@ class SQLCityRepository(SQLBaseRepository):
         super().__init__(session)
 
     def get_province(self) -> list[ProvinciaModel]:
-        query_result = self.session.execute(select(Provincia)).scalars().all()
+        query_result = (
+            self.session.execute(select(Provincia).order_by(Provincia.name)).scalars().all()
+        )
         result = [ProvinciaModel.model_validate(r) for r in query_result]
 
         return result
 
     def get_comuni(self, provincia: str) -> list[ComuneModel]:
         query_result = (
-            self.session.execute(select(Comune).where(Comune.provincia == provincia))
+            self.session.execute(
+                select(Comune).where(Comune.provincia == provincia).order_by(Comune.name)
+            )
             .scalars()
             .all()
         )
