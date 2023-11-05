@@ -11,7 +11,13 @@ dynamic = ["version", "description"]
 dependencies = [
     "fastapi >= 0.104, < 1",
     "sqlalchemy >= 2, < 3",
+    "pymysql",
     "alembic",
     "uvicorn",
     "pydantic-settings"
 ]
+[tool.flake8]
+max-line-length = 120
+
+[tool.black]
+line-length = 120
