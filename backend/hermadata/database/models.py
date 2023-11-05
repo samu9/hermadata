@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from sqlalchemy import Date, DateTime, ForeignKey, String, Text, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -11,23 +11,23 @@ class Base(DeclarativeBase):
 class Animal(Base):
     __tablename__ = 'animal'
     id: Mapped[int] = mapped_column(primary_key=True)
-    code: Mapped[str] = mapped_column(String(20))
-
+    code: Mapped[str] = mapped_column(String(12), unique=True)
+    finding_date: Mapped[date] = mapped_column(Date())
     race_id: Mapped[str] = mapped_column(ForeignKey("race.id"))
-    breed_id: Mapped[str] = mapped_column(ForeignKey("breed.id"), nullable=True)
+    origin_city_code: Mapped[str] = mapped_column(String(4))
 
-    name: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str] = mapped_column(String(100), nullable=True)
+    breed_id: Mapped[str] = mapped_column(ForeignKey("breed.id"), nullable=True)
     sex: Mapped[int] = mapped_column()
-    birth_date: Mapped[Date] = mapped_column(Date(), nullable=True)
+    birth_date: Mapped[date] = mapped_column(Date(), nullable=True)
 
     check_in_date: Mapped[datetime] = mapped_column(Date(), nullable=True)
     check_out_date: Mapped[datetime] = mapped_column(Date(), nullable=True)
     returned_to_owner: Mapped[bool] = mapped_column(server_default=text("false"))
 
-    origin_city_code: Mapped[str] = mapped_column(String(4))
-
     sterilized: Mapped[bool] = mapped_column(nullable=True)
     adoptable: Mapped[bool] = mapped_column(nullable=True)
+    adoptability_index: Mapped[int] = mapped_column(nullable=True)
     behaviour: Mapped[str] = mapped_column(String(100), nullable=True)
     color: Mapped[str] = mapped_column(String(100), nullable=True)
     fur: Mapped[str] = mapped_column(String(100), nullable=True)
@@ -94,7 +94,7 @@ class Vet(Base):
 class Race(Base):
     __tablename__ = 'race'
     id: Mapped[int] = mapped_column(primary_key=True)
-
+    code: Mapped[str] = mapped_column(String(1), unique=True)
     name: Mapped[str] = mapped_column(String(100), unique=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
@@ -224,3 +224,16 @@ class Terapy(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(), server_onupdate=func.now(), nullable=True
     )
+
+
+class Provincia(Base):
+    __tablename__ = 'provincia'
+    id: Mapped[str] = mapped_column(String(2), primary_key=True)
+    name: Mapped[str] = mapped_column(String(50))
+
+
+class Comune(Base):
+    __tablename__ = 'comune'
+    id: Mapped[str] = mapped_column(String(4), primary_key=True)
+    provincia: Mapped[str] = mapped_column(ForeignKey('provincia.id'))
+    name: Mapped[str] = mapped_column(String(100))
