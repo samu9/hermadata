@@ -1,6 +1,6 @@
 from datetime import date
 from hermadata.repositories import BaseRepository
-from pydantic import BaseModel, Field, constr
+from pydantic import BaseModel, Field
 from sqlalchemy import func, insert, select
 from sqlalchemy.orm import Session
 
