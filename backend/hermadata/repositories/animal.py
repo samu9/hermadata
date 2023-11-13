@@ -1,28 +1,27 @@
 from datetime import date
 from hermadata.repositories import BaseRepository
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, Field, constr
 from sqlalchemy import func, insert, select
 from sqlalchemy.orm import Session
 
-from hermadata.database.models import Animal, Race
+from hermadata.database.models import Animal, Breed, Race
 
 
 class NewAnimalModel(BaseModel):
-    code: str
     race: str
-    origin_city_code: str = constr(pattern=r"[A-Z]\d{3}")
+    origin_city_code: str = Field(pattern=r"[A-Z]\d{3}")
     finding_date: date
 
 
 class AnimalModel(BaseModel):
     code: str
     race: str
-    name: str | None
-    breed: str | None
-    name: str | None = constr(max_length=100)
-    birth_date: date | None
-    sex: int
-    origin_city_code: str = constr(pattern=r"[A-Z]\d{3}")
+    origin_city_code: str = Field(pattern=r"[A-Z]\d{3}")
+    finding_date: date
+    breed: str = None
+    name: str = None
+    birth_date: date = None
+    sex: int = None
 
 
 class AnimalQueryModel(BaseModel):
@@ -41,7 +40,16 @@ class SQLAnimalRepository(AnimalRepository):
         self.session = session
 
     def save(self, model: AnimalModel):
-        result = self.session.execute(insert(Animal).values(**model.model_dump()))
+        race_id = self.session.execute(select(Race.id).where(Race.code == model.race)).scalar_one()
+        breed_id = None
+        if model.breed:
+            breed_id = self.session.execute(select(Breed.id).where(Breed.code == model.breed)).scalar_one()
+        data = model.model_dump()
+        data.pop("breed")
+        data.pop("race")
+        data["race_id"] = race_id
+        data["breed_id"] = breed_id
+        result = self.session.execute(insert(Animal).values(**data))
         self.session.commit()
         return result
 
@@ -61,6 +69,7 @@ class SQLAnimalRepository(AnimalRepository):
     def generate_code(self, race_code: str, origin_city_code: str, finding_date: date):
         current_animals = self.session.execute(
             select(func.count("*"))
+            .select_from(Animal)
             .join(Race, Race.id == Animal.race_id)
             .where(
                 Race.code == race_code,
@@ -69,6 +78,6 @@ class SQLAnimalRepository(AnimalRepository):
             )
         ).scalar_one()
 
-        code = race_code + origin_city_code + finding_date.strftime("%y%m%d") + hex(current_animals)
+        code = race_code + origin_city_code + finding_date.strftime("%y%m%d") + str(current_animals).zfill(2)
 
         return code
