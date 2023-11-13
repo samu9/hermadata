@@ -34,9 +34,6 @@ class ApiService {
         return res.data
     }
 
-    getAllRaces() {
-        const result = this.get(ApiEndpoints.race.getAll)
-    }
     createAnimal(data: NewAnimalSchema) {
         return this.post(ApiEndpoints.animal.create, data)
     }
@@ -64,6 +61,12 @@ class ApiService {
         const data = await this.get<RaceSchema[]>(ApiEndpoints.race.getAll)
 
         const result = data.map((d) => raceSchema.parse(d))
+
+        return result
+    }
+
+    async newAnimal(data: NewAnimalSchema) {
+        const result = await this.post(ApiEndpoints.animal.create, data)
 
         return result
     }
