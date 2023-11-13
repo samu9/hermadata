@@ -17,6 +17,10 @@ const NewAnimalForm = () => {
     } = useForm<NewAnimalSchema>({
         resolver: zodResolver(newAnimalSchema),
     })
+
+    useEffect(() => {
+        console.log(errors)
+    }, [watch()])
     const [provincia, setProvincia] = useState<string>()
     const provinceQuery = useQuery("province", () => apiService.getProvince(), {
         placeholderData: [],
@@ -36,79 +40,91 @@ const NewAnimalForm = () => {
 
     const onSubmit = async (data: NewAnimalSchema) => {
         console.log(data)
-        // const result = await apiService.createAnimal(data)
-        // return result
+
+        const result = await apiService.createAnimal(data)
+        console.log(result)
+        return result
     }
     return (
         <div className="border border-primary p-2 rounded max-w-lg">
             <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="flex gap-2">
-                    <div className="form-control w-full max-w-xs">
-                        <label className="label">
-                            <span className="label-text">Provincia</span>
-                        </label>
-                        <select
-                            className="select select-bordered w-full max-w-xs"
-                            onChange={(e) => {
-                                setProvincia(e.target.value)
-                            }}
-                        >
-                            <option disabled selected>
-                                Seleziona
-                            </option>
-                            {provinceQuery.data &&
-                                provinceQuery.data.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                        {p.name}
-                                    </option>
-                                ))}
-                        </select>
+                <div className="mb-2">
+                    <div className="flex gap-2">
+                        <div className="form-control w-full max-w-xs">
+                            <label className="label">
+                                <span className="label-text">Provincia</span>
+                            </label>
+                            <select
+                                className="select select-bordered w-full max-w-xs"
+                                onChange={(e) => {
+                                    setProvincia(e.target.value)
+                                }}
+                            >
+                                <option disabled selected>
+                                    Seleziona
+                                </option>
+                                {provinceQuery.data &&
+                                    provinceQuery.data.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
+                        <div className="form-control w-full max-w-xs">
+                            <label className="label">
+                                <span className="label-text">Comune</span>
+                            </label>
+                            <select
+                                className="select select-bordered w-full max-w-xs"
+                                {...register("origin_city_code")}
+                            >
+                                {comuniQuery.data &&
+                                    comuniQuery.data.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
+                        <div className="form-control w-full max-w-xs">
+                            <label className="label">
+                                <span className="label-text">Razza</span>
+                            </label>
+                            <select
+                                className="select select-bordered w-full max-w-xs"
+                                {...register("race")}
+                            >
+                                {racesQuery.data &&
+                                    racesQuery.data.map((p) => (
+                                        <option key={p.code} value={p.code}>
+                                            {p.name.toUpperCase()}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
                     </div>
+                    {/* <div className="form-control w-full max-w-xs">
+                        <label className="label">
+                            <span className="label-text">Nome</span>
+                        </label>
+                        <input
+                            {...register("name")}
+                            type="text"
+                            className="input input-bordered w-full max-w-xs"
+                        />
+                    </div> */}
                     <div className="form-control w-full max-w-xs">
                         <label className="label">
-                            <span className="label-text">Comune</span>
+                            <span className="label-text">Data recupero</span>
                         </label>
-                        <select
-                            className="select select-bordered w-full max-w-xs"
-                            {...register("origin_city_code")}
-                        >
-                            {comuniQuery.data &&
-                                comuniQuery.data.map((p) => (
-                                    <option key={p.id} value={p.id}>
-                                        {p.name}
-                                    </option>
-                                ))}
-                        </select>
-                    </div>
-                    <div className="form-control w-full max-w-xs">
-                        <label className="label">
-                            <span className="label-text">Razza</span>
-                        </label>
-                        <select
-                            className="select select-bordered w-full max-w-xs"
-                            {...register("race")}
-                        >
-                            {racesQuery.data &&
-                                racesQuery.data.map((p) => (
-                                    <option key={p.code} value={p.code}>
-                                        {p.name.toUpperCase()}
-                                    </option>
-                                ))}
-                        </select>
+                        <input
+                            type="date"
+                            {...register("finding_date")}
+                            className="input input-bordered w-full max-w-xs"
+                        />
                     </div>
                 </div>
-
-                <div className="form-control w-full max-w-xs">
-                    <label className="label">
-                        <span className="label-text">Nome</span>
-                    </label>
-                    <input
-                        {...register("name")}
-                        type="text"
-                        className="input input-bordered w-full max-w-xs"
-                    />
-                </div>
-
                 <button className="btn btn-success">
                     <FontAwesomeIcon icon={faPlus} /> Salva
                 </button>
