@@ -11,7 +11,7 @@ class Base(DeclarativeBase):
 class Animal(Base):
     __tablename__ = "animal"
     id: Mapped[int] = mapped_column(primary_key=True)
-    code: Mapped[str] = mapped_column(String(12), unique=True)
+    code: Mapped[str] = mapped_column(String(13), unique=True)
     finding_date: Mapped[date] = mapped_column(Date())
     race_id: Mapped[str] = mapped_column(ForeignKey("race.id"))
     origin_city_code: Mapped[str] = mapped_column(String(4))

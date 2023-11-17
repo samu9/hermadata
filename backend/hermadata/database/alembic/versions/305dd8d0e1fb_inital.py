@@ -157,7 +157,7 @@ def upgrade() -> None:
     op.create_table(
         "animal",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("code", sa.String(length=12), nullable=False),
+        sa.Column("code", sa.String(length=13), nullable=False),
         sa.Column("finding_date", sa.Date(), nullable=False),
         sa.Column("race_id", sa.Integer(), nullable=False),
         sa.Column("origin_city_code", sa.String(length=4), nullable=False),
