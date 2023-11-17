@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
-from hermadata.dependancies import get_session
+from hermadata.dependancies import get_repository, get_session
 from sqlalchemy.orm import Session
 
-from hermadata.repositories.animal import AnimalModel, NewAnimalModel, SQLAnimalRepository
+from hermadata.repositories.animal import AnimalModel, AnimalQueryModel, NewAnimalModel, SQLAnimalRepository
 
 router = APIRouter(prefix="/animal")
 
@@ -21,3 +21,10 @@ def create_new_animal(data: NewAnimalModel, session: Session = Depends(get_sessi
     repo.save(animal)
 
     return animal_code
+
+
+@router.get("{animal_id}")
+def get_animal(animal_id: int, repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository))):
+    animal_data = repo.get(AnimalQueryModel(id=animal_id))
+
+    return animal_data
