@@ -1,8 +1,9 @@
+from ast import TypeVar
 from functools import lru_cache
+from typing import Callable, Type
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from hermadata.repositories import BaseRepository
 from hermadata.settings import Settings
 
 
@@ -32,3 +33,12 @@ def get_session(readwrite=False):
     except Exception as e:
         s.rollback()
         raise e
+
+
+Repo = TypeVar("T")
+
+
+def get_repository(class_name: Type[Repo], readwrite=False) -> Callable[[], Repo]:
+    session = get_session(readwrite)
+
+    return lambda: class_name(session)
