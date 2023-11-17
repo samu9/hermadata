@@ -6,17 +6,19 @@ from sqlalchemy.orm import Session
 
 from hermadata.database.models import Animal, Breed, Race
 
+ORIGIN_CITY_CODE_PATTERN = r"[A-Z]\d{3}"
+
 
 class NewAnimalModel(BaseModel):
     race: str
-    origin_city_code: str = Field(pattern=r"[A-Z]\d{3}")
+    origin_city_code: str = Field(pattern=ORIGIN_CITY_CODE_PATTERN)
     finding_date: date
 
 
 class AnimalModel(BaseModel):
     code: str
     race: str
-    origin_city_code: str = Field(pattern=r"[A-Z]\d{3}")
+    origin_city_code: str = Field(pattern=ORIGIN_CITY_CODE_PATTERN)
     finding_date: date
     breed: str = None
     name: str = None
@@ -25,9 +27,11 @@ class AnimalModel(BaseModel):
 
 
 class AnimalQueryModel(BaseModel):
-    race_code: str | None
-    origin_city_code: str | None
-    finding_date: date | None
+    id: int = None
+    code: str = None
+    race_code: str = None
+    origin_city_code: str = Field(pattern=ORIGIN_CITY_CODE_PATTERN, default=None)
+    finding_date: date = None
 
 
 class AnimalRepository(BaseRepository):
@@ -55,6 +59,8 @@ class SQLAnimalRepository(AnimalRepository):
 
     def get(self, query: AnimalQueryModel, columns=[]):
         where = []
+        if query.id is not None:
+            where.append(Animal.id == query.id)
         if query.code is not None:
             where.append(Animal.code == query.code)
         if query.finding_date is not None:
