@@ -14,7 +14,8 @@ dependencies = [
     "pymysql",
     "alembic",
     "uvicorn",
-    "pydantic-settings"
+    "pydantic-settings",
+    "cryptography"
 ]
 [tool.flake8]
 max-line-length = 120
