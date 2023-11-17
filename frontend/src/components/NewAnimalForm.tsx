@@ -19,7 +19,7 @@ const NewAnimalForm = () => {
     })
 
     useEffect(() => {
-        console.log(errors)
+        console.log(getValues(), errors)
     }, [watch()])
     const [provincia, setProvincia] = useState<string>()
     const provinceQuery = useQuery("province", () => apiService.getProvince(), {
@@ -60,9 +60,7 @@ const NewAnimalForm = () => {
                                     setProvincia(e.target.value)
                                 }}
                             >
-                                <option disabled selected>
-                                    Seleziona
-                                </option>
+                                <option disabled>Seleziona</option>
                                 {provinceQuery.data &&
                                     provinceQuery.data.map((p) => (
                                         <option key={p.id} value={p.id}>
@@ -76,6 +74,10 @@ const NewAnimalForm = () => {
                                 <span className="label-text">Comune</span>
                             </label>
                             <select
+                                defaultValue={
+                                    comuniQuery.data?.length &&
+                                    comuniQuery.data[0].id
+                                }
                                 className="select select-bordered w-full max-w-xs"
                                 {...register("origin_city_code")}
                             >
@@ -92,6 +94,10 @@ const NewAnimalForm = () => {
                                 <span className="label-text">Razza</span>
                             </label>
                             <select
+                                defaultValue={
+                                    racesQuery.data?.length &&
+                                    racesQuery.data[0].code
+                                }
                                 className="select select-bordered w-full max-w-xs"
                                 {...register("race")}
                             >
