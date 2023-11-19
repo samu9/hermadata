@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from hermadata.routers import animal, util, race
+from hermadata.routers import animal_router, race_router, util_router
 from hermadata.settings import Settings
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,6 +13,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(animal.router)
-app.include_router(util.router)
-app.include_router(race.router)
+app.include_router(animal_router.router)
+app.include_router(util_router.router)
+app.include_router(race_router.router)
