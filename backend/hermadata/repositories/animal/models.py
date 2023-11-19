@@ -1,6 +1,8 @@
 from datetime import date, datetime
 from pydantic import BaseModel, Field
 
+from hermadata.models import PaginationQuery
+
 
 rescue_city_code_PATTERN = r"[A-Z]\d{3}"
 
@@ -11,14 +13,16 @@ class NewAnimalModel(BaseModel):
     rescue_date: date
 
 
-class AnimalSearchModel(BaseModel):
-    race_id: str = None
-    code: str = None
-    from_rescue_date: date = None
-    to_rescue_date: date = None
-    name: str = None
-    from_created_at: datetime = None
-    to_created_at: datetime = None
+class AnimalSearchModel(PaginationQuery):
+    from_index: int | None = None
+    to_index: int | None = None
+    race_id: str | None = None
+    code: str | None = None
+    from_rescue_date: date | None = None
+    to_rescue_date: date | None = None
+    name: str | None = None
+    from_created_at: datetime | None = None
+    to_created_at: datetime | None = None
 
 
 class AnimalModel(BaseModel):
@@ -52,7 +56,7 @@ class AnimalQueryModel(BaseModel):
 
 class AnimalSearchResult(BaseModel):
     code: str
-    name: str = None
+    name: str | None = None
     race_id: str
     rescue_date: date
     rescue_city_code: str
