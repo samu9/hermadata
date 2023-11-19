@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from hermadata.repositories.race import RaceModel, SQLRaceRepository
+from hermadata.repositories.race_repository import RaceModel, SQLRaceRepository
 
 
 def test_race_reository(db_session: Session):

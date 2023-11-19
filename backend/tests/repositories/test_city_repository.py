@@ -1,4 +1,7 @@
-from hermadata.repositories.city import ProvinciaModel, SQLCityRepository
+from hermadata.repositories.city_repository import (
+    ProvinciaModel,
+    SQLCityRepository,
+)
 
 
 def test_city_repository(db_session):

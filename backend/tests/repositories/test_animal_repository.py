@@ -5,7 +5,7 @@ from sqlalchemy import insert, select
 from sqlalchemy.orm import Session
 from hermadata.database.models import Animal
 
-from hermadata.repositories.animal.animal import (
+from hermadata.repositories.animal.animal_repository import (
     AnimalModel,
     AnimalSearchModel,
     SQLAnimalRepository,
