@@ -8,12 +8,12 @@ from sqlalchemy.orm import Session
 class RaceModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    code: str = constr(pattern=r"[A-Z]")
+    id: str = constr(pattern=r"[A-Z]")
     name: str
 
 
 class RaceQuery(BaseModel):
-    code: str = constr(pattern=r"[A-Z]")
+    id: str = constr(pattern=r"[A-Z]")
 
 
 class SQLRaceRepository(BaseRepository):
@@ -32,12 +32,10 @@ class SQLRaceRepository(BaseRepository):
 
         return result
 
-    def delete(self, id_: int = None, code: str = None):
+    def delete(self, id_: int = None):
         where = []
         if id_:
             where.append(Race.id == id_)
-        if code:
-            where.append(Race.code == code)
 
         result = self.session.execute(delete(Race).where(*where))
         return result
