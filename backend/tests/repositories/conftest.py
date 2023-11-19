@@ -1,6 +1,6 @@
 import pytest
 from sqlalchemy import Engine, create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
 
 @pytest.fixture(scope="function")
@@ -11,7 +11,7 @@ def engine():
 
 
 @pytest.fixture(scope="function")
-def db_session(engine: Engine):
-    session = sessionmaker(bind=engine)
+def db_session(engine: Engine) -> Session:
+    session = sessionmaker(bind=engine)()
 
     return session

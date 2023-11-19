@@ -1,5 +1,5 @@
 from hermadata.dependancies import get_repository
-from hermadata.repositories.animal import SQLAnimalRepository
+from hermadata.repositories.animal.animal import SQLAnimalRepository
 
 
 def test_get_repository():
