@@ -7,6 +7,7 @@ const ApiEndpoints = {
     animal: {
         getByCode: (code: string) => `/animal/${code}`,
         create: "/animal",
+        search: "/animal/search",
     },
     util: {
         getProvince: "/util/province",
