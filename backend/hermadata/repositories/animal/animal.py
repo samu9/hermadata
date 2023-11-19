@@ -1,0 +1,133 @@
+from datetime import date
+from hermadata.repositories import BaseRepository
+from sqlalchemy import func, insert, select, update
+from sqlalchemy.orm import Session
+
+from hermadata.database.models import Animal, Comune, Provincia
+from hermadata.repositories.animal.models import (
+    AnimalModel,
+    AnimalQueryModel,
+    AnimalSearchModel,
+    AnimalSearchResult,
+    UpdateAnimalModel,
+)
+
+
+class AnimalRepository(BaseRepository):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+class SQLAnimalRepository(AnimalRepository):
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def save(self, model: AnimalModel):
+        data = model.model_dump()
+        result = self.session.execute(insert(Animal).values(**data))
+        self.session.commit()
+        return result
+
+    def get(self, query: AnimalQueryModel, columns=[]):
+        where = []
+        if query.id is not None:
+            where.append(Animal.id == query.id)
+        if query.code is not None:
+            where.append(Animal.code == query.code)
+        if query.rescue_date is not None:
+            where.append(Animal.rescue_date == query.rescue_date)
+
+        if query.origin_city_code is not None:
+            where.append(Animal.origin_city_code == query.origin_city_code)
+
+        result = self.session.execute(select(Animal).where(*where))
+        return result
+
+    def search(self, query: AnimalSearchModel):
+        """
+        Return the minimum data set of a list of animals which match the search query.
+        """
+
+        where = []
+
+        if query.code is not None:
+            where.append(Animal.code.like(f"%{query.code}%"))
+        if query.race_id is not None:
+            where.append(Animal.race_id == query.race_id)
+        if query.from_rescue_date is not None:
+            where.append(Animal.rescue_date >= query.from_rescue_date)
+        if query.to_rescue_date is not None:
+            where.append(Animal.rescue_date <= query.to_rescue_date)
+        if query.from_created_at is not None:
+            where.append(Animal.created_at >= query.from_created_at)
+        if query.to_created_at is not None:
+            where.append(Animal.created_at <= query.to_created_at)
+        if query.name is not None:
+            where.append(Animal.name.like(f"{query.name}%"))
+
+        stmt = (
+            select(
+                Animal.code,
+                Animal.name,
+                Animal.race_id,
+                Animal.rescue_date,
+                Animal.origin_city_code,
+                Comune.name,
+                Provincia.name,
+            )
+            .select_from(Animal)
+            .join(Comune, Comune.id == Animal.origin_city_code)
+            .join(Provincia, Provincia.id == Comune.provincia)
+            .where(*where)
+        )
+        result = self.session.execute(stmt).all()
+
+        response = [
+            AnimalSearchResult(
+                code=code,
+                name=name,
+                race_id=race_id,
+                rescue_date=rescue_date,
+                origin_city_code=origin_city_code,
+                origin_city=origin_city,
+                origin_province=origin_province,
+            )
+            for code, name, race_id, rescue_date, origin_city_code, origin_city, origin_province in result
+        ]
+
+        return response
+
+    def generate_code(
+        self, race_id: str, origin_city_code: str, rescue_date: date
+    ):
+        current_animals = self.session.execute(
+            select(func.count("*"))
+            .select_from(Animal)
+            .where(
+                Animal.race_id == race_id,
+                Animal.origin_city_code == origin_city_code,
+                Animal.rescue_date == rescue_date,
+            )
+        ).scalar_one()
+
+        code = (
+            race_id
+            + origin_city_code
+            + rescue_date.strftime("%y%m%d")
+            + str(current_animals).zfill(2)
+        )
+
+        return code
+
+    def update(self, code: str, updates: UpdateAnimalModel):
+        values = updates.model_dump(exclude_none=True)
+        result = self.session.execute(
+            update(Animal).where(Animal.code == code).values(**values)
+        )
+
+        self.session.commit()
+
+        return result.rowcount
+
+    def add_adoption(self):
+        pass
