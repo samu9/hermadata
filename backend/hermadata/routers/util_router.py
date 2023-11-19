@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends
 from hermadata.dependancies import get_session
 from sqlalchemy.orm import Session
-from hermadata.repositories.city import ComuneModel, ProvinciaModel, SQLCityRepository
+from hermadata.repositories.city_repository import (
+    ComuneModel,
+    ProvinciaModel,
+    SQLCityRepository,
+)
 
 
 router = APIRouter(prefix="/util")

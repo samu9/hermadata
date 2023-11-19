@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from hermadata.dependancies import get_session
 from sqlalchemy.orm import Session
 
-from hermadata.repositories.race import RaceModel, SQLRaceRepository
+from hermadata.repositories.race_repository import RaceModel, SQLRaceRepository
 
 router = APIRouter(prefix="/race")
 
