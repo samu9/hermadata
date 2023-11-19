@@ -1,9 +1,10 @@
 from datetime import date
+from hermadata.models import PaginationResult
 from hermadata.repositories import BaseRepository
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.orm import Session
 
-from hermadata.database.models import Animal, Comune, Provincia
+from hermadata.database.models import Animal, Comune
 from hermadata.repositories.animal.models import (
     AnimalModel,
     AnimalQueryModel,
@@ -65,6 +66,9 @@ class SQLAnimalRepository(AnimalRepository):
         if query.name is not None:
             where.append(Animal.name.like(f"{query.name}%"))
 
+        total = self.session.execute(
+            select(func.count("*")).select_from(Animal).where(*where)
+        ).scalar_one()
         stmt = (
             select(
                 Animal.code,
@@ -73,13 +77,17 @@ class SQLAnimalRepository(AnimalRepository):
                 Animal.rescue_date,
                 Animal.rescue_city_code,
                 Comune.name,
-                Provincia.name,
+                Comune.provincia,
             )
             .select_from(Animal)
             .join(Comune, Comune.id == Animal.rescue_city_code)
-            .join(Provincia, Provincia.id == Comune.provincia)
             .where(*where)
         )
+        if query.from_index is not None:
+            stmt.offset(query.from_index)
+        if query.to_index is not None:
+            stmt.limit(query.to_index - query.from_index or 0)
+
         result = self.session.execute(stmt).all()
 
         response = [
@@ -95,7 +103,7 @@ class SQLAnimalRepository(AnimalRepository):
             for code, name, race_id, rescue_date, rescue_city_code, rescue_city, rescue_province in result
         ]
 
-        return response
+        return PaginationResult(items=response, total=total)
 
     def generate_code(
         self, race_id: str, rescue_city_code: str, rescue_date: date

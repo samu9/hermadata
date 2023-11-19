@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends
 from hermadata.dependancies import get_repository, get_session
 from sqlalchemy.orm import Session
-from hermadata.repositories.animal.animal import SQLAnimalRepository
+from hermadata.models import PaginationResult
+from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 
 from hermadata.repositories.animal.models import (
     AnimalModel,
     AnimalQueryModel,
+    AnimalSearchModel,
+    AnimalSearchResult,
     NewAnimalModel,
 )
 
@@ -37,12 +40,19 @@ def get_animal_list():
     pass
 
 
-@router.get("search")
-def search_animals():
-    pass
+@router.get("/search", response_model=PaginationResult[AnimalSearchResult])
+def search_animals(
+    query: AnimalSearchModel = Depends(),
+    db_session: Session = Depends(get_session),
+):
+    repo = SQLAnimalRepository(db_session)
+
+    result = repo.search(query)
+
+    return result
 
 
-@router.get("{animal_id}")
+@router.get("/{animal_id}")
 def get_animal(
     animal_id: int,
     repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
