@@ -2,12 +2,12 @@ from datetime import date, datetime
 from pydantic import BaseModel, Field
 
 
-ORIGIN_CITY_CODE_PATTERN = r"[A-Z]\d{3}"
+rescue_city_code_PATTERN = r"[A-Z]\d{3}"
 
 
 class NewAnimalModel(BaseModel):
     race_id: str
-    origin_city_code: str = Field(pattern=ORIGIN_CITY_CODE_PATTERN)
+    rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
     rescue_date: date
 
 
@@ -24,7 +24,7 @@ class AnimalSearchModel(BaseModel):
 class AnimalModel(BaseModel):
     code: str
     race_id: str
-    origin_city_code: str = Field(pattern=ORIGIN_CITY_CODE_PATTERN)
+    rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
     rescue_date: date
     breed_id: str = None
     name: str = None
@@ -44,8 +44,8 @@ class AnimalQueryModel(BaseModel):
     id: int = None
     code: str = None
     race_id: str = None
-    origin_city_code: str = Field(
-        pattern=ORIGIN_CITY_CODE_PATTERN, default=None
+    rescue_city_code: str = Field(
+        pattern=rescue_city_code_PATTERN, default=None
     )
     rescue_date: date = None
 
@@ -55,6 +55,6 @@ class AnimalSearchResult(BaseModel):
     name: str = None
     race_id: str
     rescue_date: date
-    origin_city_code: str
-    origin_city: str
-    origin_province: str
+    rescue_city_code: str
+    rescue_city: str
+    rescue_province: str

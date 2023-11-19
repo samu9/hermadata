@@ -37,8 +37,8 @@ class SQLAnimalRepository(AnimalRepository):
         if query.rescue_date is not None:
             where.append(Animal.rescue_date == query.rescue_date)
 
-        if query.origin_city_code is not None:
-            where.append(Animal.origin_city_code == query.origin_city_code)
+        if query.rescue_city_code is not None:
+            where.append(Animal.rescue_city_code == query.rescue_city_code)
 
         result = self.session.execute(select(Animal).where(*where))
         return result
@@ -71,12 +71,12 @@ class SQLAnimalRepository(AnimalRepository):
                 Animal.name,
                 Animal.race_id,
                 Animal.rescue_date,
-                Animal.origin_city_code,
+                Animal.rescue_city_code,
                 Comune.name,
                 Provincia.name,
             )
             .select_from(Animal)
-            .join(Comune, Comune.id == Animal.origin_city_code)
+            .join(Comune, Comune.id == Animal.rescue_city_code)
             .join(Provincia, Provincia.id == Comune.provincia)
             .where(*where)
         )
@@ -88,31 +88,31 @@ class SQLAnimalRepository(AnimalRepository):
                 name=name,
                 race_id=race_id,
                 rescue_date=rescue_date,
-                origin_city_code=origin_city_code,
-                origin_city=origin_city,
-                origin_province=origin_province,
+                rescue_city_code=rescue_city_code,
+                rescue_city=rescue_city,
+                rescue_province=rescue_province,
             )
-            for code, name, race_id, rescue_date, origin_city_code, origin_city, origin_province in result
+            for code, name, race_id, rescue_date, rescue_city_code, rescue_city, rescue_province in result
         ]
 
         return response
 
     def generate_code(
-        self, race_id: str, origin_city_code: str, rescue_date: date
+        self, race_id: str, rescue_city_code: str, rescue_date: date
     ):
         current_animals = self.session.execute(
             select(func.count("*"))
             .select_from(Animal)
             .where(
                 Animal.race_id == race_id,
-                Animal.origin_city_code == origin_city_code,
+                Animal.rescue_city_code == rescue_city_code,
                 Animal.rescue_date == rescue_date,
             )
         ).scalar_one()
 
         code = (
             race_id
-            + origin_city_code
+            + rescue_city_code
             + rescue_date.strftime("%y%m%d")
             + str(current_animals).zfill(2)
         )

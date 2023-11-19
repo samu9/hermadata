@@ -14,7 +14,7 @@ class Animal(Base):
     code: Mapped[str] = mapped_column(String(13), unique=True)
     rescue_date: Mapped[date] = mapped_column(Date())
     race_id: Mapped[str] = mapped_column(ForeignKey("race.id"))
-    origin_city_code: Mapped[str] = mapped_column(String(4))
+    rescue_city_code: Mapped[str] = mapped_column(String(4))
 
     name: Mapped[str] = mapped_column(String(100), nullable=True)
     breed_id: Mapped[str] = mapped_column(ForeignKey("breed.id"), nullable=True)

@@ -16,17 +16,17 @@ from hermadata.repositories.animal.models import UpdateAnimalModel
 def test_save(db_session):
     repo = SQLAnimalRepository(session=db_session)
     race_id = "C"
-    origin_city_code = "A074"
+    rescue_city_code = "A074"
     rescue_date = date(2020, 1, 2)
 
-    code = repo.generate_code(race_id, origin_city_code, rescue_date)
+    code = repo.generate_code(race_id, rescue_city_code, rescue_date)
     model = AnimalModel(
         code=code,
         name="Leone",
         race_id=race_id,
         rescue_date=rescue_date,
         sex=0,
-        origin_city_code=origin_city_code,
+        rescue_city_code=rescue_city_code,
     )
     repo.save(model)
 
@@ -40,19 +40,19 @@ def test_search(db_session: Session):
         {
             "code": uuid4().hex[0:11],
             "rescue_date": date(2020, 2, 3),
-            "origin_city_code": "A074",
+            "rescue_city_code": "A074",
             "race_id": "C",
         },
         {
             "code": uuid4().hex[0:11],
             "rescue_date": date(2020, 3, 4),
-            "origin_city_code": "A117",
+            "rescue_city_code": "A117",
             "race_id": "C",
         },
         {
             "code": uuid4().hex[0:11],
             "rescue_date": date(2020, 5, 6),
-            "origin_city_code": "A109",
+            "rescue_city_code": "A109",
             "race_id": "G",
         },
     ]
@@ -74,7 +74,7 @@ def test_update(db_session: Session):
             {
                 "code": code,
                 "rescue_date": date(2020, 3, 4),
-                "origin_city_code": "A117",
+                "rescue_city_code": "A117",
                 "race_id": "C",
             }
         )

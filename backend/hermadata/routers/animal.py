@@ -20,7 +20,7 @@ def create_new_animal(
 
     animal_code = repo.generate_code(
         race_id=data.race_id,
-        origin_city_code=data.origin_city_code,
+        rescue_city_code=data.rescue_city_code,
         rescue_date=data.rescue_date,
     )
 
