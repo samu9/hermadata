@@ -1,13 +1,15 @@
 import "./App.css"
-import Nav from "./components/Nav"
 import NewAnimalForm from "./components/NewAnimalForm"
+import AnimalList from "./components/AnimalList"
 
 function App() {
     return (
         <div>
-            <Nav />
-            {/* <button className="btn btn-primary">Primary</button> */}
-            <NewAnimalForm />
+            {/* <Nav /> */}
+            <div className="container">
+                <NewAnimalForm />
+                <AnimalList />
+            </div>
         </div>
     )
 }
