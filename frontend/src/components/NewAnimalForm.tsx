@@ -1,29 +1,33 @@
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { apiService } from "../main"
-import { NewAnimalSchema, newAnimalSchema } from "../models/new-animal.schema"
+import { NewAnimal, newAnimalSchema } from "../models/new-animal.schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPlus } from "@fortawesome/free-solid-svg-icons"
 import { useEffect, useState } from "react"
 import { useQuery } from "react-query"
+import { Button } from "primereact/button"
+import { Dropdown } from "primereact/dropdown"
+import { classNames } from "primereact/utils"
+import { Calendar } from "primereact/calendar"
 
 const NewAnimalForm = () => {
+    const form = useForm<NewAnimal>({
+        resolver: zodResolver(newAnimalSchema),
+    })
+
     const {
         register,
         handleSubmit,
         watch,
         getValues,
         formState: { errors },
-    } = useForm<NewAnimalSchema>({
-        resolver: zodResolver(newAnimalSchema),
-    })
+    } = form
 
-    useEffect(() => {
-        console.log(getValues(), errors)
-    }, [watch()])
     const [provincia, setProvincia] = useState<string>()
     const provinceQuery = useQuery("province", () => apiService.getProvince(), {
         placeholderData: [],
+        staleTime: Infinity,
     })
     const racesQuery = useQuery("races", () => apiService.getRaces(), {
         placeholderData: [],
@@ -38,7 +42,7 @@ const NewAnimalForm = () => {
         }
     )
 
-    const onSubmit = async (data: NewAnimalSchema) => {
+    const onSubmit = async (data: NewAnimal) => {
         console.log(data)
 
         const result = await apiService.createAnimal(data)
@@ -48,92 +52,134 @@ const NewAnimalForm = () => {
     return (
         <div className="border border-primary p-2 rounded max-w-lg">
             <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="mb-2">
-                    <div className="flex gap-2">
-                        <div className="form-control w-full max-w-xs">
-                            <label className="label">
-                                <span className="label-text">Provincia</span>
+                <div className="flex flex-col gap-2 items-start">
+                    <Controller
+                        name="race_id"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                            <div>
+                                <label
+                                    className="text-xs text-gray-500"
+                                    htmlFor={field.name}
+                                >
+                                    Razza
+                                </label>
+
+                                <Dropdown
+                                    {...field}
+                                    options={racesQuery.data}
+                                    optionLabel="name"
+                                    optionValue="id"
+                                    placeholder="Seleziona"
+                                    className="w-full md:w-14rem"
+                                />
+                            </div>
+                        )}
+                    />
+                    <div className="flex gap-2 w-full">
+                        <div>
+                            <label
+                                className="text-xs text-gray-500"
+                                htmlFor="comune"
+                            >
+                                Provincia
                             </label>
-                            <select
-                                className="select select-bordered w-full max-w-xs"
+                            <Dropdown
+                                value={provincia}
                                 onChange={(e) => {
                                     setProvincia(e.target.value)
                                 }}
-                            >
-                                <option disabled>Seleziona</option>
-                                {provinceQuery.data &&
-                                    provinceQuery.data.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.name}
-                                        </option>
-                                    ))}
-                            </select>
+                                options={provinceQuery.data}
+                                optionLabel="name"
+                                optionValue="id"
+                                placeholder="Seleziona"
+                                className="w-full"
+                            />
                         </div>
-                        <div className="form-control w-full max-w-xs">
-                            <label className="label">
-                                <span className="label-text">Comune</span>
-                            </label>
-                            <select
-                                defaultValue={
-                                    comuniQuery.data?.length &&
-                                    comuniQuery.data[0].id
-                                }
-                                className="select select-bordered w-full max-w-xs"
-                                {...register("origin_city_code")}
-                            >
-                                {comuniQuery.data &&
-                                    comuniQuery.data.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.name}
-                                        </option>
-                                    ))}
-                            </select>
-                        </div>
-                        <div className="form-control w-full max-w-xs">
-                            <label className="label">
-                                <span className="label-text">Razza</span>
-                            </label>
-                            <select
-                                defaultValue={
-                                    racesQuery.data?.length &&
-                                    racesQuery.data[0].code
-                                }
-                                className="select select-bordered w-full max-w-xs"
-                                {...register("race")}
-                            >
-                                {racesQuery.data &&
-                                    racesQuery.data.map((p) => (
-                                        <option key={p.code} value={p.code}>
-                                            {p.name.toUpperCase()}
-                                        </option>
-                                    ))}
-                            </select>
-                        </div>
-                    </div>
-                    {/* <div className="form-control w-full max-w-xs">
-                        <label className="label">
-                            <span className="label-text">Nome</span>
-                        </label>
-                        <input
-                            {...register("name")}
-                            type="text"
-                            className="input input-bordered w-full max-w-xs"
-                        />
-                    </div> */}
-                    <div className="form-control w-full max-w-xs">
-                        <label className="label">
-                            <span className="label-text">Data recupero</span>
-                        </label>
-                        <input
-                            type="date"
-                            {...register("finding_date")}
-                            className="input input-bordered w-full max-w-xs"
+
+                        <Controller
+                            name="rescue_city_code"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <div>
+                                    <label
+                                        className="text-xs text-gray-500"
+                                        htmlFor={field.name}
+                                    >
+                                        Comune
+                                    </label>
+                                    <Dropdown
+                                        {...field}
+                                        options={comuniQuery.data}
+                                        optionLabel="name"
+                                        optionValue="id"
+                                        placeholder="Seleziona"
+                                        className="w-full"
+                                    />
+                                </div>
+                            )}
                         />
                     </div>
+
+                    <div className="flex gap-2 w-full">
+                        <Controller
+                            name="rescue_type"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <div>
+                                    <label
+                                        className="text-xs text-gray-500"
+                                        htmlFor={field.name}
+                                    >
+                                        Tipo di ingresso
+                                    </label>
+
+                                    <Dropdown
+                                        {...field}
+                                        options={[
+                                            { id: "R", name: "Recupero" },
+                                            { id: "C", name: "Conferimento" },
+                                            { id: "S", name: "Sequestro " },
+                                        ]}
+                                        optionLabel="name"
+                                        optionValue="id"
+                                        placeholder="Seleziona"
+                                        className="w-full"
+                                    />
+                                </div>
+                            )}
+                        />
+                        <Controller
+                            name="rescue_date"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <div>
+                                    <label
+                                        className="text-xs text-gray-500"
+                                        htmlFor={field.name}
+                                    >
+                                        Data ingresso
+                                    </label>
+                                    <div className="w-full">
+                                        <Calendar
+                                            inputId={field.name}
+                                            value={field.value}
+                                            onChange={field.onChange}
+                                            dateFormat="dd/mm/yy"
+                                            showIcon
+                                            locale="en"
+                                            className={classNames({
+                                                "p-invalid": fieldState.error,
+                                            })}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        />
+                    </div>
+
+                    <Button type="submit">Salva</Button>
                 </div>
-                <button className="btn btn-success">
-                    <FontAwesomeIcon icon={faPlus} /> Salva
-                </button>
             </form>
         </div>
     )
