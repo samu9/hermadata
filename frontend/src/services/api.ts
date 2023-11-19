@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios"
-import { NewAnimalSchema } from "../models/new-animal.schema"
+import { NewAnimal } from "../models/new-animal.schema"
 import ApiEndpoints from "./apiEndpoints"
 import {
     ComuneSchema,
@@ -7,7 +7,13 @@ import {
     comuneSchema,
     provinciaSchema,
 } from "../models/city.schema"
-import { RaceSchema, raceSchema } from "../models/race.schema"
+import { Race, raceSchema } from "../models/race.schema"
+import {
+    Animal,
+    PaginatedAnimalSearchResult,
+    paginatedAnimalSearchResultSchema,
+} from "../models/animal.schema"
+import { PaginationQuery } from "../models/pagination.schema"
 
 class ApiService {
     inst: AxiosInstance
@@ -34,7 +40,7 @@ class ApiService {
         return res.data
     }
 
-    createAnimal(data: NewAnimalSchema) {
+    createAnimal(data: NewAnimal) {
         return this.post(ApiEndpoints.animal.create, data)
     }
 
@@ -57,18 +63,34 @@ class ApiService {
         return result
     }
 
-    async getRaces(): Promise<RaceSchema[]> {
-        const data = await this.get<RaceSchema[]>(ApiEndpoints.race.getAll)
+    async getRaces(): Promise<Race[]> {
+        const data = await this.get<Race[]>(ApiEndpoints.race.getAll)
 
         const result = data.map((d) => raceSchema.parse(d))
 
         return result
     }
 
-    async newAnimal(data: NewAnimalSchema) {
+    async newAnimal(data: NewAnimal) {
         const result = await this.post(ApiEndpoints.animal.create, data)
 
         return result
+    }
+
+    async getAnimal(code: string): Promise<Animal> {
+        const result = await this.get<Animal>(
+            ApiEndpoints.animal.getByCode(code)
+        )
+
+        return result
+    }
+
+    async searchAnimals(
+        query: PaginationQuery
+    ): Promise<PaginatedAnimalSearchResult> {
+        const result = await this.get(ApiEndpoints.animal.search, query)
+
+        return paginatedAnimalSearchResultSchema.parse(result)
     }
 }
 
