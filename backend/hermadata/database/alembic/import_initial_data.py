@@ -1,16 +1,16 @@
 import csv
 import os
-from sqlalchemy import Engine, create_engine, insert, select
+from sqlalchemy import Engine, insert, select
 from sqlalchemy.orm import sessionmaker
-from hermadata.settings import Settings
 from hermadata.database.models import Comune, Provincia, Race
 
+INITIAL_DATA_DIR = os.path.join(os.path.dirname(__file__), "initial_data")
 
-def import_initial_data(stage: str, engine: Engine):
+
+def import_comuni_and_province(engine: Engine):
     Session = sessionmaker(engine)
-    initial_data_dir = os.path.join(os.path.dirname(__file__), "initial_data")
     with Session.begin() as s:
-        with open(os.path.join(initial_data_dir, "province.csv"), "r") as fp:
+        with open(os.path.join(INITIAL_DATA_DIR, "province.csv"), "r") as fp:
             reader = csv.DictReader(fp, delimiter=";")
             for r in reader:
                 check = s.execute(
@@ -27,11 +27,9 @@ def import_initial_data(stage: str, engine: Engine):
                     )
                 )
         s.flush()
-        with open(os.path.join(initial_data_dir, "comuni.csv"), "r") as fp:
+        with open(os.path.join(INITIAL_DATA_DIR, "comuni.csv"), "r") as fp:
             reader = csv.DictReader(fp, delimiter=";")
-            for i, r in enumerate(reader):
-                if i >= 100 and stage == "dev":
-                    break
+            for r in reader:
                 check = s.execute(
                     select(Comune.id).where(Comune.id == r["codice_belfiore"])
                 ).first()
@@ -44,7 +42,12 @@ def import_initial_data(stage: str, engine: Engine):
                         provincia=r["sigla_provincia"],
                     )
                 )
-        with open(os.path.join(initial_data_dir, "races.csv"), "r") as fp:
+
+
+def import_races(engine: Engine):
+    Session = sessionmaker(engine)
+    with Session.begin() as s:
+        with open(os.path.join(INITIAL_DATA_DIR, "races.csv"), "r") as fp:
             reader = csv.DictReader(fp)
             for i, r in enumerate(reader):
                 check = s.execute(
@@ -58,8 +61,3 @@ def import_initial_data(stage: str, engine: Engine):
                         name=r["name"],
                     )
                 )
-
-
-if __name__ == "__main__":
-    settings = Settings()
-    import_initial_data(settings.stage, create_engine(settings.db.url))
