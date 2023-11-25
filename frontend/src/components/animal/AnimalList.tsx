@@ -1,14 +1,14 @@
 import { useState } from "react"
 import { useQuery } from "react-query"
-import { apiService } from "../main"
+import { apiService } from "../../main"
 import { DataTable, DataTableStateEvent } from "primereact/datatable"
 import { Column } from "primereact/column"
-import { AnimalSearchResult } from "../models/animal.schema"
+import { AnimalSearchResult } from "../../models/animal.schema"
 import { format } from "date-fns"
+import { useNavigate } from "react-router-dom"
 
 const AnimalList = () => {
-    const [page, setPage] = useState(0)
-    const [perPage, setPerPage] = useState(1)
+    const [perPage, setPerPage] = useState(10)
     const [first, setFirst] = useState(0)
     const [total, setTotal] = useState(0)
     const animalQuery = useQuery(
@@ -20,15 +20,20 @@ const AnimalList = () => {
             }),
         {
             onSuccess: (data) => {
-                console.log(data.items)
                 setTotal(data.total)
             },
         }
     )
+    const navigate = useNavigate()
     return (
-        <div>
+        <div className="w-full">
             <DataTable
+                className="w-full"
                 value={animalQuery.data?.items}
+                selectionMode="single"
+                onSelectionChange={(e) => {
+                    navigate(e.value.code)
+                }}
                 paginator
                 first={first}
                 dataKey="code"
@@ -52,16 +57,17 @@ const AnimalList = () => {
                 <Column field="code" header="Codice" />
                 <Column field="name" header="Nome" />
                 <Column
-                    body={(animal: AnimalSearchResult) =>
-                        format(animal.rescue_date, "dd/MM/y")
-                    }
-                    header="Data ingresso"
-                />
-                <Column
                     header="Provenienza"
                     body={(animal: AnimalSearchResult) =>
                         `${animal.rescue_city} (${animal.rescue_province})`
                     }
+                />
+                <Column
+                    body={(animal: AnimalSearchResult) =>
+                        animal.entry_date &&
+                        format(animal.entry_date, "dd/MM/y")
+                    }
+                    header="Data ingresso"
                 />
             </DataTable>
         </div>
