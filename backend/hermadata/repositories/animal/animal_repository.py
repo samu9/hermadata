@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timedelta
 from hermadata.models import PaginationResult
 from hermadata.repositories import BaseRepository
 from sqlalchemy import func, insert, select, update
@@ -10,6 +10,7 @@ from hermadata.repositories.animal.models import (
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
+    NewAnimalEntryModel,
     UpdateAnimalModel,
 )
 
@@ -28,6 +29,20 @@ class SQLAnimalRepository(AnimalRepository):
         result = self.session.execute(insert(Animal).values(**data))
         self.session.commit()
         return result
+
+    def insert_new_entry(self, data: NewAnimalEntryModel):
+        code = self.generate_code(
+            race_id=data.race_id,
+            rescue_city_code=data.rescue_city_code,
+            rescue_date=datetime.now().date(),
+        )
+
+        self.session.execute(
+            insert(Animal).values(code=code, **data.model_dump())
+        )
+        self.session.commit()
+
+        return code
 
     def get(self, query: AnimalQueryModel, columns=[]):
         where = []
@@ -55,10 +70,10 @@ class SQLAnimalRepository(AnimalRepository):
             where.append(Animal.code.like(f"%{query.code}%"))
         if query.race_id is not None:
             where.append(Animal.race_id == query.race_id)
-        if query.from_rescue_date is not None:
-            where.append(Animal.rescue_date >= query.from_rescue_date)
-        if query.to_rescue_date is not None:
-            where.append(Animal.rescue_date <= query.to_rescue_date)
+        if query.from_entry_date is not None:
+            where.append(Animal.entry_date >= query.from_entry_date)
+        if query.to_entry_date is not None:
+            where.append(Animal.entry_date <= query.to_entry_date)
         if query.from_created_at is not None:
             where.append(Animal.created_at >= query.from_created_at)
         if query.to_created_at is not None:
@@ -74,7 +89,7 @@ class SQLAnimalRepository(AnimalRepository):
                 Animal.code,
                 Animal.name,
                 Animal.race_id,
-                Animal.rescue_date,
+                Animal.entry_date,
                 Animal.rescue_city_code,
                 Comune.name,
                 Comune.provincia,
@@ -95,26 +110,29 @@ class SQLAnimalRepository(AnimalRepository):
                 code=code,
                 name=name,
                 race_id=race_id,
-                rescue_date=rescue_date,
+                entry_date=entry_date,
                 rescue_city_code=rescue_city_code,
                 rescue_city=rescue_city,
                 rescue_province=rescue_province,
             )
-            for code, name, race_id, rescue_date, rescue_city_code, rescue_city, rescue_province in result
+            for code, name, race_id, entry_date, rescue_city_code, rescue_city, rescue_province in result
         ]
 
         return PaginationResult(items=response, total=total)
 
     def generate_code(
-        self, race_id: str, rescue_city_code: str, rescue_date: date
+        self, race_id: str, rescue_city_code: str, rescue_date: date = None
     ):
+        rescue_date = rescue_date or datetime.now().date()
         current_animals = self.session.execute(
             select(func.count("*"))
             .select_from(Animal)
             .where(
                 Animal.race_id == race_id,
                 Animal.rescue_city_code == rescue_city_code,
-                Animal.rescue_date == rescue_date,
+                Animal.created_at.between(
+                    rescue_date, rescue_date + timedelta(1)
+                ),
             )
         ).scalar_one()
 
