@@ -12,6 +12,7 @@ const ApiEndpoints = {
     util: {
         getProvince: "/util/province",
         getComuni: "/util/comuni",
+        getEntryTypes: "/util/entry-types",
     },
 }
 export default ApiEndpoints
