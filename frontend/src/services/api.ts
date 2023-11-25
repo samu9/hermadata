@@ -1,5 +1,4 @@
 import axios, { AxiosInstance } from "axios"
-import { NewAnimal } from "../models/new-animal.schema"
 import ApiEndpoints from "./apiEndpoints"
 import {
     ComuneSchema,
@@ -10,6 +9,7 @@ import {
 import { Race, raceSchema } from "../models/race.schema"
 import {
     Animal,
+    NewAnimalEntry,
     PaginatedAnimalSearchResult,
     paginatedAnimalSearchResultSchema,
 } from "../models/animal.schema"
@@ -40,8 +40,8 @@ class ApiService {
         return res.data
     }
 
-    createAnimal(data: NewAnimal) {
-        return this.post(ApiEndpoints.animal.create, data)
+    createAnimalEntry(data: NewAnimalEntry): Promise<string> {
+        return this.post<string>(ApiEndpoints.animal.create, data)
     }
 
     async getProvince(): Promise<ProvinciaSchema[]> {
@@ -71,7 +71,14 @@ class ApiService {
         return result
     }
 
-    async newAnimal(data: NewAnimal) {
+    async getEntryTypes(): Promise<{ id: string; label: string }[]> {
+        const data = await this.get<{ id: string; label: string }[]>(
+            ApiEndpoints.util.getEntryTypes
+        )
+
+        return data
+    }
+    async newAnimal(data: NewAnimalEntry) {
         const result = await this.post(ApiEndpoints.animal.create, data)
 
         return result
