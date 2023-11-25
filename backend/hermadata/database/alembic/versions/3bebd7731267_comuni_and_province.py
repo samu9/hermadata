@@ -1,7 +1,7 @@
 """comuni and province
 
 Revision ID: 3bebd7731267
-Revises: 
+Revises:
 Create Date: 2023-11-24 23:20:22.007586
 
 """
