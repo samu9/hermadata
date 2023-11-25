@@ -1,14 +1,18 @@
 import "./App.css"
-import NewAnimalForm from "./components/NewAnimalForm"
-import AnimalList from "./components/AnimalList"
+import SideMenu from "./components/layout/SideMenu"
+import { Outlet } from "react-router-dom"
+import PageWrapper from "./components/layout/PageWrapper"
 
 function App() {
     return (
-        <div>
-            {/* <Nav /> */}
-            <div className="container">
-                <NewAnimalForm />
-                <AnimalList />
+        <div className="h-screen relative">
+            <div className="h-full w-full flex">
+                <SideMenu />
+                <div className="grow overflow-auto">
+                    <PageWrapper>
+                        <Outlet />
+                    </PageWrapper>
+                </div>
             </div>
         </div>
     )
