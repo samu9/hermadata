@@ -16,13 +16,15 @@ class Animal(Base):
     rescue_city_code: Mapped[str] = mapped_column(String(4))
 
     entry_type: Mapped[str] = mapped_column(String(1))
-    entry_result: Mapped[str] = mapped_column(String(1))
+    entry_result: Mapped[str | None] = mapped_column(String(1), nullable=True)
     entry_date: Mapped[date] = mapped_column(Date(), nullable=True)
 
-    name: Mapped[str] = mapped_column(String(100), nullable=True)
-    breed_id: Mapped[str] = mapped_column(ForeignKey("breed.id"), nullable=True)
-    sex: Mapped[int] = mapped_column(nullable=True)
-    birth_date: Mapped[date] = mapped_column(Date(), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    breed_id: Mapped[str | None] = mapped_column(
+        ForeignKey("breed.id"), nullable=True
+    )
+    sex: Mapped[int | None] = mapped_column(nullable=True)
+    birth_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
 
     # check_in_date: Mapped[datetime] = mapped_column(Date(), nullable=True)
     # check_out_date: Mapped[datetime] = mapped_column(Date(), nullable=True)
@@ -30,11 +32,11 @@ class Animal(Base):
     #     server_default=text("false")
     # )
 
-    sterilized: Mapped[bool] = mapped_column(nullable=True)
-    adoptable: Mapped[bool] = mapped_column(nullable=True)
-    adoptability_index: Mapped[int] = mapped_column(nullable=True)
+    sterilized: Mapped[bool | None] = mapped_column(nullable=True)
+    adoptable: Mapped[bool | None] = mapped_column(nullable=True)
+    adoptability_index: Mapped[int | None] = mapped_column(nullable=True)
     # behaviour: Mapped[str] = mapped_column(String(100), nullable=True)
-    color: Mapped[str] = mapped_column(String(100), nullable=True)
+    color: Mapped[str | None] = mapped_column(String(100), nullable=True)
     # fur: Mapped[str] = mapped_column(String(100), nullable=True)
     # features: Mapped[str] = mapped_column(String(100), nullable=True)
     # medical_treatments: Mapped[str] = mapped_column(String(100), nullable=True)
@@ -42,13 +44,17 @@ class Animal(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )
-    updated_at: Mapped[datetime] = mapped_column(
+    updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(), server_onupdate=func.now(), nullable=True
     )
-    deleted_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
 
     vet: Mapped["Vet"] = relationship(back_populates="animals")
-    vet_id: Mapped[int] = mapped_column(ForeignKey("vet.id"), nullable=True)
+    vet_id: Mapped[int | None] = mapped_column(
+        ForeignKey("vet.id"), nullable=True
+    )
 
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
 
