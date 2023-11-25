@@ -13,3 +13,8 @@ class PaginationQuery(BaseModel):
 class PaginationResult(BaseModel, Generic[T]):
     total: int
     items: list[T] = []
+
+
+class UtilElement(BaseModel):
+    id: str
+    label: str
