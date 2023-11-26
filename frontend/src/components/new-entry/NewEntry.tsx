@@ -21,7 +21,10 @@ const NewEntry = () => {
     return (
         <div>
             <div className="absolute bottom-4 right-4">
-                <Button onClick={(e) => op.current && op.current.toggle(e)}>
+                <Button
+                    className="shadow-lg"
+                    onClick={(e) => op.current && op.current.toggle(e)}
+                >
                     <FontAwesomeIcon icon={faPlus} fixedWidth /> Nuovo ingresso
                 </Button>
                 <OverlayPanel showCloseIcon ref={op}>
