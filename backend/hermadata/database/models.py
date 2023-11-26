@@ -1,7 +1,9 @@
 from datetime import date, datetime
-from sqlalchemy import Date, DateTime, ForeignKey, String, Text, text
+from sqlalchemy import JSON, Date, DateTime, ForeignKey, String, Text, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
+
+from hermadata.constants import AnimalStage, EntryResult, EntryType
 
 
 class Base(DeclarativeBase):
@@ -15,9 +17,11 @@ class Animal(Base):
     race_id: Mapped[str] = mapped_column(ForeignKey("race.id"))
     rescue_city_code: Mapped[str] = mapped_column(String(4))
 
-    entry_type: Mapped[str] = mapped_column(String(1))
-    entry_result: Mapped[str | None] = mapped_column(String(1), nullable=True)
+    entry_type: Mapped[EntryType] = mapped_column(String(1))
+    entry_result: Mapped[EntryResult] = mapped_column(String(1), nullable=True)
     entry_date: Mapped[date] = mapped_column(Date(), nullable=True)
+
+    stage: Mapped[AnimalStage] = mapped_column(String(1), nullable=True)
 
     name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     breed_id: Mapped[str | None] = mapped_column(
@@ -25,12 +29,6 @@ class Animal(Base):
     )
     sex: Mapped[int | None] = mapped_column(nullable=True)
     birth_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
-
-    # check_in_date: Mapped[datetime] = mapped_column(Date(), nullable=True)
-    # check_out_date: Mapped[datetime] = mapped_column(Date(), nullable=True)
-    # returned_to_owner: Mapped[bool] = mapped_column(
-    #     server_default=text("false")
-    # )
 
     sterilized: Mapped[bool | None] = mapped_column(nullable=True)
     adoptable: Mapped[bool | None] = mapped_column(nullable=True)
@@ -59,6 +57,26 @@ class Animal(Base):
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
 
     adoptions: Mapped[list["Adoption"]] = relationship(back_populates="animal")
+    logs: Mapped[list["AnimalLog"]] = relationship(back_populates="animal")
+
+
+class AnimalLog(Base):
+    __tablename__ = "animal_log"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    animal: Mapped[Animal] = relationship(back_populates="logs")
+
+    animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
+
+    event: Mapped[str] = mapped_column(String(10))
+
+    data: Mapped[dict] = mapped_column(JSON, nullable=True)
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
 
 
 class Adoption(Base):
@@ -144,6 +162,8 @@ class User(Base):
     surname: Mapped[str] = mapped_column(String(100), nullable=True)
 
     email: Mapped[str] = mapped_column(String(100))
+
+    password: Mapped[str] = mapped_column(String(15))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
