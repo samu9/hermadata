@@ -1,4 +1,6 @@
+from functools import cache
 from fastapi import APIRouter, Depends
+from hermadata.constants import ANIMAL_STAGE_LABELS, ENTRY_TYPE_LABELS
 from hermadata.dependancies import get_session
 from sqlalchemy.orm import Session
 from hermadata.models import UtilElement
@@ -30,32 +32,16 @@ def get_comuni(provincia: str, session: Session = Depends(get_session)):
 
 @router.get("/entry-types", response_model=list[UtilElement])
 def get_entry_types():
-    return [
-        {
-            "id": "R",
-            "label": "Recupero",
-        },
-        {
-            "id": "C",
-            "label": "Conferimento",
-        },
-        {
-            "id": "S",
-            "label": "Sequestro",
-        },
+    result = [
+        UtilElement(id=k.value, label=v) for k, v in ENTRY_TYPE_LABELS.items()
     ]
+    return result
 
 
 @router.get("/animal-stages", response_model=list[UtilElement])
+@cache
 def get_animal_stages():
-    return [
-        {
-            "id": "S",
-            "label": "Sanitario",
-        },
-        {
-            "id": "R",
-            "label": "Rifugio",
-        },
-        {"id": "P", "label": "Preaffido"},
+    result = [
+        UtilElement(id=k.value, label=v) for k, v in ANIMAL_STAGE_LABELS.items()
     ]
+    return result
