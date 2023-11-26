@@ -1,17 +1,17 @@
 import { useQuery } from "react-query"
 import { useParams } from "react-router-dom"
 import { Animal } from "../models/animal.schema"
-import AnimalDossier from "../components/animal/AnimalDossier"
+import AnimalRecord from "../components/animal/AnimalRecord"
 
 const data: Animal = {
-    name: "Gino",
+    // name: "Gino",
     code: "CB1802023112000",
     race_id: "C",
     entry_type: "R",
     rescue_city: "Roma",
     rescue_province: "RM",
     entry_date: new Date("2023-11-21"),
-    adoptability_index: 0,
+    // adoptability_index: 0,
     stage: "S",
 }
 
@@ -24,7 +24,7 @@ const AnimalProfilePage = () => {
 
     return (
         <div>
-            {animalQuery.data && <AnimalDossier data={animalQuery.data} />}
+            {animalQuery.data && <AnimalRecord data={animalQuery.data} />}
         </div>
     )
 }
