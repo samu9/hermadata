@@ -2,24 +2,12 @@ import { useQuery } from "react-query"
 import { useParams } from "react-router-dom"
 import { Animal } from "../models/animal.schema"
 import AnimalRecord from "../components/animal/AnimalRecord"
-
-const data: Animal = {
-    // name: "Gino",
-    code: "CB1802023112000",
-    race_id: "C",
-    entry_type: "R",
-    rescue_city: "Roma",
-    rescue_province: "RM",
-    entry_date: new Date("2023-11-21"),
-    // adoptability_index: 0,
-    stage: "S",
-}
+import { apiService } from "../main"
 
 const AnimalProfilePage = () => {
-    const { code } = useParams()
-    const animalQuery = useQuery(
-        ["animal", code],
-        () => new Promise<Animal>((resolve) => resolve(data)) // apiService.getAnimal(props.code)
+    const { id } = useParams()
+    const animalQuery = useQuery(["animal", id], () =>
+        apiService.getAnimal(id!)
     )
 
     return (
