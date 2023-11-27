@@ -31,9 +31,7 @@ const AnimalList = () => {
                 className="w-full"
                 value={animalQuery.data?.items}
                 selectionMode="single"
-                onSelectionChange={(e) => {
-                    navigate(e.value.code)
-                }}
+                onSelectionChange={(e) => navigate(e.value.id.toString())}
                 paginator
                 first={first}
                 dataKey="code"
