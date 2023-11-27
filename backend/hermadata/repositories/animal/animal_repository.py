@@ -56,8 +56,10 @@ class SQLAnimalRepository(AnimalRepository):
         if query.rescue_city_code is not None:
             where.append(Animal.rescue_city_code == query.rescue_city_code)
 
-        result = self.session.execute(select(Animal).where(*where))
-        return result
+        result = self.session.execute(select(Animal).where(*where)).scalar_one()
+
+        data = AnimalModel.model_validate(result, from_attributes=True)
+        return data
 
     def search(self, query: AnimalSearchModel):
         """
@@ -86,6 +88,7 @@ class SQLAnimalRepository(AnimalRepository):
         ).scalar_one()
         stmt = (
             select(
+                Animal.id,
                 Animal.code,
                 Animal.name,
                 Animal.race_id,
@@ -107,6 +110,7 @@ class SQLAnimalRepository(AnimalRepository):
 
         response = [
             AnimalSearchResult(
+                id=id,
                 code=code,
                 name=name,
                 race_id=race_id,
@@ -115,7 +119,7 @@ class SQLAnimalRepository(AnimalRepository):
                 rescue_city=rescue_city,
                 rescue_province=rescue_province,
             )
-            for code, name, race_id, entry_date, rescue_city_code, rescue_city, rescue_province in result
+            for id, code, name, race_id, entry_date, rescue_city_code, rescue_city, rescue_province in result
         ]
 
         return PaginationResult(items=response, total=total)
@@ -145,10 +149,10 @@ class SQLAnimalRepository(AnimalRepository):
 
         return code
 
-    def update(self, code: str, updates: UpdateAnimalModel):
+    def update(self, id: str, updates: UpdateAnimalModel):
         values = updates.model_dump(exclude_none=True)
         result = self.session.execute(
-            update(Animal).where(Animal.code == code).values(**values)
+            update(Animal).where(Animal.id == id).values(**values)
         )
 
         self.session.commit()
