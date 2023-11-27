@@ -9,6 +9,7 @@ import {
 import { Race, raceSchema } from "../models/race.schema"
 import {
     Animal,
+    AnimalEdit,
     NewAnimalEntry,
     PaginatedAnimalSearchResult,
     paginatedAnimalSearchResultSchema,
@@ -84,10 +85,8 @@ class ApiService {
         return result
     }
 
-    async getAnimal(code: string): Promise<Animal> {
-        const result = await this.get<Animal>(
-            ApiEndpoints.animal.getByCode(code)
-        )
+    async getAnimal(id: string): Promise<Animal> {
+        const result = await this.get<Animal>(ApiEndpoints.animal.getById(id))
 
         return result
     }
@@ -98,6 +97,15 @@ class ApiService {
         const result = await this.get(ApiEndpoints.animal.search, query)
 
         return paginatedAnimalSearchResultSchema.parse(result)
+    }
+
+    async updateAnimal(id: string, data: AnimalEdit): Promise<boolean> {
+        const result = await this.post<boolean>(
+            ApiEndpoints.animal.update(id),
+            data
+        )
+
+        return result
     }
 }
 
