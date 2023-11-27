@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends
-from hermadata.dependancies import get_repository, get_session
+from fastapi import APIRouter, Depends, HTTPException
+from hermadata.dependancies import get_session
 from sqlalchemy.orm import Session
 from hermadata.models import PaginationResult
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
-
+from sqlalchemy.exc import NoResultFound
 from hermadata.repositories.animal.models import (
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
     NewAnimalEntryModel,
+    UpdateAnimalModel,
 )
 
 router = APIRouter(prefix="/animal")
@@ -45,8 +46,25 @@ def search_animals(
 @router.get("/{animal_id}")
 def get_animal(
     animal_id: int,
-    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
+    db_session: Session = Depends(get_session),
 ):
-    animal_data = repo.get(AnimalQueryModel(id=animal_id))
+    repo = SQLAnimalRepository(db_session)
+    try:
+        animal_data = repo.get(AnimalQueryModel(id=animal_id))
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="No animal found")
 
     return animal_data
+
+
+@router.post("/{animal_id}")
+def update_animal(
+    animal_id: str,
+    data: UpdateAnimalModel,
+    db_session: Session = Depends(get_session),
+):
+    repo = SQLAnimalRepository(db_session)
+
+    result = repo.update(animal_id, data)
+
+    return result
