@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from hermadata.models import PaginationQuery
 
@@ -29,18 +29,25 @@ class AnimalModel(BaseModel):
     code: str
     race_id: str
     rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
-    breed_id: str = None
-    name: str = None
-    birth_date: date = None
-    sex: int = None
+    breed_id: str | None = None
+    chip_code: str | None = None
+    name: str | None = None
+    birth_date: date | None = None
+    entry_date: date | None = None
+    sex: int | None = None
+    sterilized: bool | None = None
+
+    model_config = ConfigDict(extra="ignore")
 
 
 class UpdateAnimalModel(BaseModel):
-    name: str = None
-    breed_id: str = None
-    sex: int = None
-    sterilized: bool = None
-    notes: str = None
+    name: str | None = None
+    breed_id: str | None = None
+    chip_code: str | None = None
+    sex: int | None = None
+    sterilized: bool | None = None
+    notes: str | None = None
+    entry_date: date | None = None
 
 
 class AnimalQueryModel(BaseModel):
@@ -54,6 +61,7 @@ class AnimalQueryModel(BaseModel):
 
 
 class AnimalSearchResult(BaseModel):
+    id: int
     code: str
     name: str | None = None
     race_id: str
