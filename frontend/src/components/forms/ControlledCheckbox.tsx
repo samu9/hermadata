@@ -1,13 +1,11 @@
-import { InputText } from "primereact/inputtext"
 import { classNames } from "primereact/utils"
 import { Controller, FieldValues, Path, useFormContext } from "react-hook-form"
 import { InputLabel } from "../typography"
 import { Checkbox } from "primereact/checkbox"
+import { ControlledInputProps } from "./ControlledInputProps"
 
-type Props<T extends FieldValues> = {
-    fieldName: Path<T>
+type Props<T extends FieldValues> = ControlledInputProps<T> & {
     label: string
-    className?: string
 }
 
 const ControlledCheckbox = <T extends FieldValues>(props: Props<T>) => {
@@ -15,8 +13,7 @@ const ControlledCheckbox = <T extends FieldValues>(props: Props<T>) => {
 
     const {
         control,
-        formState: { errors },
-        register,
+        // formState: { errors },
     } = form
     return (
         <Controller
@@ -25,12 +22,12 @@ const ControlledCheckbox = <T extends FieldValues>(props: Props<T>) => {
             // rules={{ required: "Name - Surname is required." }}
             render={({ field, fieldState }) => (
                 <>
-                    <label
+                    {/* <label
                         htmlFor={field.name}
                         className={classNames({
                             // "p-error": errors.name,
                         })}
-                    ></label>
+                    ></label> */}
                     <div
                         className={classNames(
                             "flex items-center gap-2",

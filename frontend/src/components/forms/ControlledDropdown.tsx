@@ -1,20 +1,23 @@
-import { InputText } from "primereact/inputtext"
+import { Dropdown } from "primereact/dropdown"
 import { classNames } from "primereact/utils"
 import { Controller, FieldValues, Path, useFormContext } from "react-hook-form"
 import { InputLabel } from "../typography"
 import { ControlledInputProps } from "./ControlledInputProps"
 
-type Props<T extends FieldValues> = ControlledInputProps<T> & {
+type Props<T extends FieldValues, X> = ControlledInputProps<T> & {
     label: string
+    options: X[]
+    optionLabel: Path<X>
+    optionValue: Path<X>
+    placeholder?: string
 }
 
-const ControlledInputText = <T extends FieldValues>(props: Props<T>) => {
+const ControlledDropdown = <T extends FieldValues, X>(props: Props<T, X>) => {
     const form = useFormContext<T>()
 
     const {
         control,
         // formState: { errors },
-        register,
     } = form
     return (
         <Controller
@@ -29,16 +32,21 @@ const ControlledInputText = <T extends FieldValues>(props: Props<T>) => {
                             // "p-error": errors.name,
                         })}
                     ></label> */}
-                    <div className={props.className}>
-                        <InputLabel htmlFor={field.name}>
+                    <div className={classNames(props.className)}>
+                        <InputLabel
+                            htmlFor={field.name}
+                            disabled={props.disabled}
+                        >
                             {props.label}
                         </InputLabel>
-                        <InputText
-                            id={field.name}
-                            className={classNames("p-inputtext-sm w-full", {
-                                "p-invalid": fieldState.error,
-                            })}
-                            {...register(props.fieldName)}
+                        <Dropdown
+                            disabled={props.disabled}
+                            {...field}
+                            options={props.options}
+                            optionLabel={props.optionLabel}
+                            optionValue={props.optionValue}
+                            placeholder={props.placeholder}
+                            className="w-full"
                         />
                     </div>
                     {/* {getFormErrorMessage(field.name)} */}
@@ -48,4 +56,4 @@ const ControlledInputText = <T extends FieldValues>(props: Props<T>) => {
     )
 }
 
-export default ControlledInputText
+export default ControlledDropdown

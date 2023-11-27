@@ -3,11 +3,10 @@ import { classNames } from "primereact/utils"
 import { Controller, FieldValues, Path, useFormContext } from "react-hook-form"
 import { InputLabel } from "../typography"
 import { Calendar } from "primereact/calendar"
+import { ControlledInputProps } from "./ControlledInputProps"
 
-type Props<T extends FieldValues> = {
-    fieldName: Path<T>
+type Props<T extends FieldValues> = ControlledInputProps<T> & {
     label: string
-    className?: string
 }
 
 const ControlledInputDate = <T extends FieldValues>(props: Props<T>) => {
@@ -25,12 +24,12 @@ const ControlledInputDate = <T extends FieldValues>(props: Props<T>) => {
             rules={{ required: "Name - Surname is required." }}
             render={({ field, fieldState }) => (
                 <>
-                    <label
+                    {/* <label
                         htmlFor={field.name}
                         className={classNames({
                             // "p-error": errors.name,
                         })}
-                    ></label>
+                    ></label> */}
                     <div className={props.className}>
                         <InputLabel htmlFor={field.name}>
                             {props.label}
