@@ -24,6 +24,7 @@ class Animal(Base):
     stage: Mapped[AnimalStage] = mapped_column(String(1), nullable=True)
 
     name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    chip_code: Mapped[str] = mapped_column(String(100), nullable=True)
     breed_id: Mapped[str | None] = mapped_column(
         ForeignKey("breed.id"), nullable=True
     )
