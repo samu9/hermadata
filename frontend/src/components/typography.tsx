@@ -1,3 +1,5 @@
+import { classNames } from "primereact/utils"
+
 type Props = {
     children: React.ReactNode
 }
@@ -18,8 +20,16 @@ export const SubTitle = (props: Props) => (
         {props.children}
     </h3>
 )
-export const InputLabel = (props: Props & { htmlFor?: string }) => (
-    <label htmlFor={props.htmlFor} className="text-xs text-gray-500">
+export const InputLabel = (
+    props: Props & { htmlFor?: string; disabled?: boolean }
+) => (
+    <label
+        htmlFor={props.htmlFor}
+        className={classNames("text-xs", {
+            "text-gray-500": !props.disabled,
+            "text-gray-400": props.disabled,
+        })}
+    >
         {props.children}
     </label>
 )
