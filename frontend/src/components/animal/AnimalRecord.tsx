@@ -37,7 +37,7 @@ const AnimalRecord = (props: Props) => {
             icon: (
                 <FontAwesomeIcon icon={faPencil} fixedWidth className="px-1" />
             ),
-            command: () => navigate("edit"),
+            command: () => navigate("edit", { state: props.data }),
         },
     ]
     return (
