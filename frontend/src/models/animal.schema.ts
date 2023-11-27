@@ -20,26 +20,35 @@ export const animalSchema = z.object({
     code: animalCodeValidator,
     name: z.string().nullable().optional(),
     race_id: animalRaceValidator,
+    breed_id: z.number().nullish(),
+    sterilized: z.boolean().nullish(),
+
     rescue_city: z.string(),
     rescue_province: z.string(),
     entry_date: dateOnly.optional(),
     entry_type: z.string(),
-    stage: z.string(),
+    stage: z.string().nullish(),
     adoptability_index: z.number().optional(),
     chip_code: z.string().optional(),
+    sex: z.number().nullable(),
 })
 
 export type Animal = z.infer<typeof animalSchema>
 
-export const animalEditSchema = animalSchema.extend({
-    sterilized: z.boolean().nullable(),
+export const animalEditSchema = z.object({
+    name: z.string().nullable().optional(),
+    chip_code: z.string().optional(),
+
+    entry_date: dateOnly.optional(),
+    sterilized: z.boolean().nullish(),
     sex: z.number().nullable(),
-    breed_id: z.number().nullable(),
+    breed_id: z.number().nullish(),
 })
 
 export type AnimalEdit = z.infer<typeof animalEditSchema>
 
 export const animalSearchResultSchema = z.object({
+    id: z.number(),
     code: z.string(), //animalCodeValidator,
     name: z.string().nullable(),
     race_id: animalRaceValidator,
