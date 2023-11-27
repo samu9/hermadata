@@ -20,7 +20,7 @@ const routes: RouteObject[] = [
                 children: [],
             },
             {
-                path: "animal/:code",
+                path: "animal/:id",
                 element: <AnimalProfilePage />,
                 children: [
                     { path: "", element: <AnimalOverview /> },
