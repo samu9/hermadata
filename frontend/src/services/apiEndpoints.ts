@@ -5,9 +5,10 @@ const ApiEndpoints = {
         create: "/race",
     },
     animal: {
-        getByCode: (code: string) => `/animal/${code}`,
+        getById: (code: string) => `/animal/${code}`,
         create: "/animal",
         search: "/animal/search",
+        update: (id: string) => `/animal/${id}`,
     },
     util: {
         getProvince: "/util/province",
