@@ -108,7 +108,7 @@ def upgrade() -> None:
             ["race.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
+        sa.UniqueConstraint("name", "race_id", name="unique_breed"),
     )
     op.create_table(
         "document",

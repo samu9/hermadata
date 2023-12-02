@@ -1,5 +1,14 @@
 from datetime import date, datetime
-from sqlalchemy import JSON, Date, DateTime, ForeignKey, String, Text, text
+from sqlalchemy import (
+    JSON,
+    Date,
+    DateTime,
+    ForeignKey,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -144,7 +153,7 @@ class Breed(Base):
     __tablename__ = "breed"
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    name: Mapped[str] = mapped_column(String(100), unique=True)
+    name: Mapped[str] = mapped_column(String(100))
     race_id: Mapped[str] = mapped_column(ForeignKey("race.id"))
 
     created_at: Mapped[datetime] = mapped_column(
@@ -153,6 +162,8 @@ class Breed(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(), server_onupdate=func.now(), nullable=True
     )
+
+    __table_args__ = (UniqueConstraint("name", "race_id", name="unique_breed"),)
 
 
 class User(Base):
