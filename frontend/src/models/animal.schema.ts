@@ -30,6 +30,8 @@ export const animalSchema = z.object({
     stage: z.string().nullish(),
     adoptability_index: z.number().optional(),
     chip_code: z.string().optional(),
+    chip_code_set: z.boolean(),
+
     sex: z.number().nullable(),
 })
 
@@ -37,12 +39,15 @@ export type Animal = z.infer<typeof animalSchema>
 
 export const animalEditSchema = z.object({
     name: z.string().nullable().optional(),
-    chip_code: z.string().optional(),
+    chip_code: z.string().nullish(),
+    chip_code_set: z.boolean(),
 
-    entry_date: dateOnly.optional(),
+    entry_date: dateOnly.nullish(),
+    birth_date: dateOnly.nullish(),
     sterilized: z.boolean().nullish(),
     sex: z.number().nullable(),
     breed_id: z.number().nullish(),
+    notes: z.string().nullish(),
 })
 
 export type AnimalEdit = z.infer<typeof animalEditSchema>
