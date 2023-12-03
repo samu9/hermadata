@@ -1,14 +1,10 @@
-import { useQuery } from "react-query"
 import { useParams } from "react-router-dom"
-import { Animal } from "../models/animal.schema"
 import AnimalRecord from "../components/animal/AnimalRecord"
-import { apiService } from "../main"
+import { useAnimalQuery } from "../queries"
 
 const AnimalProfilePage = () => {
     const { id } = useParams()
-    const animalQuery = useQuery(["animal", id], () =>
-        apiService.getAnimal(id!)
-    )
+    const animalQuery = useAnimalQuery(id!)
 
     return (
         <div>
