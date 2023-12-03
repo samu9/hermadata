@@ -15,6 +15,7 @@ import {
     paginatedAnimalSearchResultSchema,
 } from "../models/animal.schema"
 import { PaginationQuery } from "../models/pagination.schema"
+import { NewBreed, Breed } from "../models/breed.schema"
 
 class ApiService {
     inst: AxiosInstance
@@ -104,6 +105,20 @@ class ApiService {
             ApiEndpoints.animal.update(id),
             data
         )
+
+        return result
+    }
+
+    async addBreed(data: NewBreed): Promise<Breed> {
+        const result = await this.post<Breed>(ApiEndpoints.breed.create, data)
+
+        return result
+    }
+
+    async getBreeds(race_id: string): Promise<Breed[]> {
+        const result = await this.get<Breed[]>(ApiEndpoints.breed.getAll, {
+            race_id,
+        })
 
         return result
     }
