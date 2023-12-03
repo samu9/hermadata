@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from hermadata.dependancies import get_session
 from hermadata.repositories.breed_repository import (
-    AddBreedModel,
+    NewBreedModel,
     BreedModel,
     SQLBreedRepository,
 )
@@ -22,7 +22,7 @@ def get_all(session: Session = Depends(get_session), race_id: str = Query()):
 
 
 @router.post("", response_model=BreedModel)
-def create_race(data: AddBreedModel, session: Session = Depends(get_session)):
+def create_race(data: NewBreedModel, session: Session = Depends(get_session)):
     repo = SQLBreedRepository(session)
     try:
         breed_id = repo.create(data)
