@@ -30,7 +30,10 @@ const ControlledInputText = <T extends FieldValues>(props: Props<T>) => {
                         })}
                     ></label> */}
                     <div className={props.className}>
-                        <InputLabel htmlFor={field.name}>
+                        <InputLabel
+                            htmlFor={field.name}
+                            disabled={props.disabled}
+                        >
                             {props.label}
                         </InputLabel>
                         <InputText
@@ -39,6 +42,7 @@ const ControlledInputText = <T extends FieldValues>(props: Props<T>) => {
                                 "p-invalid": fieldState.error,
                             })}
                             {...register(props.fieldName)}
+                            disabled={props.disabled}
                         />
                     </div>
                     {/* {getFormErrorMessage(field.name)} */}
