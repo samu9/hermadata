@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+import logging
 from hermadata.models import PaginationResult
 from hermadata.repositories import BaseRepository
 from sqlalchemy import func, insert, select, update
@@ -13,6 +14,8 @@ from hermadata.repositories.animal.models import (
     NewAnimalEntryModel,
     UpdateAnimalModel,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AnimalRepository(BaseRepository):
@@ -151,6 +154,16 @@ class SQLAnimalRepository(AnimalRepository):
 
     def update(self, id: str, updates: UpdateAnimalModel):
         values = updates.model_dump(exclude_none=True)
+        if updates.chip_code:
+            is_set = self.session.execute(
+                select(Animal.chip_code_set).where(Animal.id == id)
+            ).scalar_one()
+
+            if is_set:
+                logger.info("chip code already set for animal id %s", id)
+                updates.chip_code = None
+            values["chip_code_set"] = True
+
         result = self.session.execute(
             update(Animal).where(Animal.id == id).values(**values)
         )
