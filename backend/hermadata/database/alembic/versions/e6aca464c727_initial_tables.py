@@ -185,6 +185,12 @@ def upgrade() -> None:
         sa.Column("sex", sa.Integer(), nullable=True),
         sa.Column("birth_date", sa.Date(), nullable=True),
         sa.Column("sterilized", sa.Boolean(), nullable=True),
+        sa.Column(
+            "chip_code_set",
+            sa.Boolean(),
+            nullable=True,
+            server_default=sa.text("false"),
+        ),
         sa.Column("adoptable", sa.Boolean(), nullable=True),
         sa.Column("adoptability_index", sa.Integer(), nullable=True),
         sa.Column("color", sa.String(length=100), nullable=True),

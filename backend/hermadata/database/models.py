@@ -34,6 +34,9 @@ class Animal(Base):
 
     name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     chip_code: Mapped[str] = mapped_column(String(100), nullable=True)
+    chip_code_set: Mapped[bool] = mapped_column(
+        server_default=text("false"), default=False
+    )
     breed_id: Mapped[str | None] = mapped_column(
         ForeignKey("breed.id"), nullable=True
     )
