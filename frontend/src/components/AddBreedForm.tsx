@@ -74,7 +74,7 @@ const AddBreedForm = (props: Props) => {
                         label="Nome"
                         className="w-full"
                     />
-                    <Button type="submit">
+                    <Button type="button" onClick={handleSubmit(onSubmit)}>
                         <FontAwesomeIcon
                             icon={faPlus}
                             fixedWidth

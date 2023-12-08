@@ -8,7 +8,7 @@ export const breedNameValidator = z
     .string({
         required_error: "Il nome è obbligatorio",
     })
-    .regex(/(.*){1,}/)
+    .regex(/^(.*[a-zA-Z]){2,}.*$/)
 
 export const dateOnly = z
     .preprocess(
