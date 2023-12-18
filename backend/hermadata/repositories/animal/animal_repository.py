@@ -47,7 +47,7 @@ class SQLAnimalRepository(AnimalRepository):
 
         return code
 
-    def get(self, query: AnimalQueryModel, columns=[]):
+    def get(self, query: AnimalQueryModel, columns=[]) -> AnimalModel:
         where = []
         if query.id is not None:
             where.append(Animal.id == query.id)
