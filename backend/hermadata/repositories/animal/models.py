@@ -38,6 +38,8 @@ class AnimalModel(BaseModel):
     sex: int | None = None
     sterilized: bool | None = None
     notes: str | None = None
+    img_path: str | None = None
+
     model_config = ConfigDict(extra="ignore")
 
 
