@@ -31,7 +31,7 @@ export const animalSchema = z.object({
     adoptability_index: z.number().optional(),
     chip_code: z.string().optional(),
     chip_code_set: z.boolean(),
-
+    img_path: z.string().nullable(),
     sex: z.number().nullable(),
 })
 
