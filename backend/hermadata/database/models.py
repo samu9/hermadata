@@ -68,6 +68,7 @@ class Animal(Base):
     )
 
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
+    img_path: Mapped[str] = mapped_column(String(100), nullable=True)
 
     adoptions: Mapped[list["Adoption"]] = relationship(back_populates="animal")
     logs: Mapped[list["AnimalLog"]] = relationship(back_populates="animal")

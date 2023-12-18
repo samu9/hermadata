@@ -204,6 +204,7 @@ def upgrade() -> None:
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
         sa.Column("vet_id", sa.Integer(), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
+        sa.Column("img_path", sa.String(length=100), nullable=True),
         sa.ForeignKeyConstraint(
             ["breed_id"],
             ["breed.id"],
