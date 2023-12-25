@@ -2,7 +2,7 @@ import csv
 import os
 from sqlalchemy import Engine, insert, select
 from sqlalchemy.orm import sessionmaker
-from hermadata.database.models import Comune, Provincia, Race
+from hermadata.database.models import Comune, DocumentKind, Provincia, Race
 
 INITIAL_DATA_DIR = os.path.join(os.path.dirname(__file__), "initial_data")
 
@@ -59,5 +59,23 @@ def import_races(engine: Engine):
                     insert(Race).values(
                         id=r["id"],
                         name=r["name"],
+                    )
+                )
+
+
+def import_doc_kinds(engine: Engine):
+    Session = sessionmaker(engine)
+    with Session.begin() as s:
+        with open(os.path.join(INITIAL_DATA_DIR, "doc-kinds.csv"), "r") as fp:
+            rows = csv.reader(fp)
+            for r in rows:
+                check = s.execute(
+                    select(DocumentKind.id).where(DocumentKind.name == r[0])
+                ).first()
+                if check:
+                    continue
+                s.execute(
+                    insert(DocumentKind).values(
+                        name=r[0],
                     )
                 )
