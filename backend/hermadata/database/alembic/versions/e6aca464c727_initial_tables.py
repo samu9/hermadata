@@ -10,6 +10,8 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
+from hermadata.database.alembic.import_initial_data import import_doc_kinds
+
 
 # revision identifiers, used by Alembic.
 revision: str = "e6aca464c727"
@@ -120,6 +122,10 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
+        sa.Column("key", sa.String(length=40), nullable=False),
+        sa.Column("filename", sa.String(length=100), nullable=False),
+        sa.Column("mimetype", sa.String(length=50), nullable=False),
+        sa.Column("storage_service", sa.String(length=2), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(
             ["kind_id"],
@@ -309,6 +315,8 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###
+
+    import_doc_kinds(op.get_bind())
 
 
 def downgrade() -> None:

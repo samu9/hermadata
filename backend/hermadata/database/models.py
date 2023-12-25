@@ -225,6 +225,11 @@ class Document(Base):
 
     __tablename__ = "document"
     id: Mapped[int] = mapped_column(primary_key=True)
+    storage_service: Mapped[str] = mapped_column(String(2))
+    key: Mapped[str] = mapped_column(String(40))
+    storage_service: Mapped[str] = mapped_column(String(2))
+    filename: Mapped[str] = mapped_column(String(100))
+    mimetype: Mapped[str] = mapped_column(String(50))
     kind_id: Mapped[int] = mapped_column(ForeignKey("document_kind.id"))
 
     created_at: Mapped[datetime] = mapped_column(
