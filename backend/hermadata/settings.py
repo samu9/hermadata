@@ -5,11 +5,20 @@ class DBSettings(BaseSettings):
     url: str
 
 
+class DiskStorageSettings(BaseSettings):
+    base_path: str
+
+
+class StorageSettings(BaseSettings):
+    disk: DiskStorageSettings
+
+
 class Settings(BaseSettings):
     stage: str
     db: DBSettings
+    storage: StorageSettings
     model_config = SettingsConfigDict(
-        env_file='.env', env_file_encoding='utf-8', env_nested_delimiter='__'
+        env_file=".env", env_file_encoding="utf-8", env_nested_delimiter="__"
     )
 
 
