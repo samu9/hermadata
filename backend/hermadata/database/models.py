@@ -230,7 +230,6 @@ class Document(Base):
     storage_service: Mapped[str] = mapped_column(String(2))
     filename: Mapped[str] = mapped_column(String(100))
     mimetype: Mapped[str] = mapped_column(String(50))
-    kind_id: Mapped[int] = mapped_column(ForeignKey("document_kind.id"))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
@@ -250,6 +249,31 @@ class DocumentKind(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+
+class AnimalDocument(Base):
+    __tablename__ = "animal_document"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
+    document_id: Mapped[int] = mapped_column(ForeignKey("document.id"))
+    document_kind_id = mapped_column(ForeignKey("document_kind.id"))
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "animal_id",
+            "document_id",
+            "document_kind_id",
+            name="unique_animal_document",
+        ),
     )
 
 
