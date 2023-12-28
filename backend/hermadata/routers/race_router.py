@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from hermadata.dependancies import get_session
-from sqlalchemy.orm import Session
+from hermadata.dependancies import RepositoryFactory
 
 from hermadata.repositories.race_repository import RaceModel, SQLRaceRepository
 
@@ -9,9 +8,9 @@ router = APIRouter(prefix="/race")
 
 
 @router.get("", response_model=list[RaceModel])
-def get_races(session: Session = Depends(get_session)):
-    repo = SQLRaceRepository(session)
-
+def get_races(
+    repo: SQLRaceRepository = Depends(RepositoryFactory(SQLRaceRepository)),
+):
     races = repo.get_all()
 
     return races

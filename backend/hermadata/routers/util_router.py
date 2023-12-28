@@ -1,8 +1,7 @@
 from functools import cache
 from fastapi import APIRouter, Depends
 from hermadata.constants import ANIMAL_STAGE_LABELS, ENTRY_TYPE_LABELS
-from hermadata.dependancies import get_session
-from sqlalchemy.orm import Session
+from hermadata.dependancies import RepositoryFactory
 from hermadata.models import UtilElement
 from hermadata.repositories.city_repository import (
     ComuneModel,
@@ -15,17 +14,18 @@ router = APIRouter(prefix="/util")
 
 
 @router.get("/province", response_model=list[ProvinciaModel])
-def get_province(session: Session = Depends(get_session)):
-    repo = SQLCityRepository(session)
-
+def get_province(
+    repo: SQLCityRepository = Depends(RepositoryFactory(SQLCityRepository)),
+):
     province = repo.get_province()
     return province
 
 
 @router.get("/comuni", response_model=list[ComuneModel])
-def get_comuni(provincia: str, session: Session = Depends(get_session)):
-    repo = SQLCityRepository(session)
-
+def get_comuni(
+    provincia: str,
+    repo: SQLCityRepository = Depends(RepositoryFactory(SQLCityRepository)),
+):
     comuni = repo.get_comuni(provincia=provincia)
     return comuni
 
