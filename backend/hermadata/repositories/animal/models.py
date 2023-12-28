@@ -75,3 +75,16 @@ class AnimalSearchResult(BaseModel):
     rescue_city_code: str
     rescue_city: str
     rescue_province: str
+
+
+class NewAnimalDocument(BaseModel):
+    document_id: int
+    document_kind_id: int
+    title: str
+
+
+class AnimalDocumentModel(BaseModel):
+    animal_id: int
+    document_id: int
+    document_kind_id: int
+    created_at: datetime
