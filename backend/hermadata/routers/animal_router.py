@@ -1,15 +1,15 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import NoResultFound
 
 from hermadata.dependancies import animal_repository_factory
 from hermadata.models import PaginationResult
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import (
+    AnimalDocumentModel,
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
+    NewAnimalDocument,
     NewAnimalEntryModel,
     UpdateAnimalModel,
 )
@@ -67,11 +67,21 @@ def update_animal(
     return result
 
 
-@router.post("/{animal_id}/doc")
-def upload_animal_document(
-    animal_id: str,
-    title: Annotated[str, Form()],
-    doc: UploadFile,
+@router.get("/{animal_id}/document", response_model=list[AnimalDocumentModel])
+def get_animal_documents(
+    animal_id: int,
     repo: SQLAnimalRepository = Depends(animal_repository_factory),
 ):
-    return True
+    docs = repo.get_documents(animal_id)
+
+    return docs
+
+
+@router.post("/{animal_id}/document", response_model=AnimalDocumentModel)
+def upload_animal_document(
+    animal_id: int,
+    data: NewAnimalDocument,
+    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+):
+    result = repo.new_document(animal_id, data)
+    return result
