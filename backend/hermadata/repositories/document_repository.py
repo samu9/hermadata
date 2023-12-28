@@ -1,5 +1,5 @@
 from enum import Enum
-from uuid import UUID, uuid4
+from uuid import uuid4
 from pydantic import BaseModel
 
 from sqlalchemy import insert, select
@@ -16,7 +16,6 @@ class StorageType(Enum):
 
 
 class NewDocument(BaseModel):
-    doc_kind_id: int
     storage_service: StorageType
     filename: str
     data: bytes
@@ -64,18 +63,18 @@ class SQLDocumentRepository(BaseRepository):
 
         return result
 
-    def new_document(self, data: NewDocument) -> UUID:
+    def new_document(self, data: NewDocument) -> int:
         key = str(uuid4())
         doc = Document(
-            kind_id=data.doc_kind_id,
             storage_service=data.storage_service.value,
             key=key,
             filename=data.filename,
             mimetype=data.mimetype,
         )
         self.session.add(doc)
+        self.session.flush()
+        doc_id = doc.id
         self.session.commit()
-
         self.storage[data.storage_service].store_file(key, data.data)
 
-        return key
+        return doc_id
