@@ -1,15 +1,34 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
 from hermadata.dependancies import document_repository_factory
 from hermadata.repositories.document_repository import (
     DocKindModel,
     NewDocKindModel,
+    NewDocument,
     SQLDocumentRepository,
+    StorageType,
 )
 from sqlalchemy.exc import IntegrityError
 
 
 router = APIRouter(prefix="/document")
+
+
+@router.post("", response_model=int)
+def new_document(
+    doc: UploadFile,
+    doc_repo: SQLDocumentRepository = Depends(document_repository_factory),
+):
+    result = doc_repo.new_document(
+        NewDocument(
+            data=doc.file.read(),
+            filename=doc.filename,
+            mimetype=doc.content_type,
+            storage_service=StorageType.disk,
+        )
+    )
+
+    return result
 
 
 @router.get("/kind")
