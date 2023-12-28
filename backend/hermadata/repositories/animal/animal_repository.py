@@ -5,12 +5,14 @@ from hermadata.repositories import BaseRepository
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.orm import Session
 
-from hermadata.database.models import Animal, Comune
+from hermadata.database.models import Animal, AnimalDocument, Comune
 from hermadata.repositories.animal.models import (
+    AnimalDocumentModel,
     AnimalModel,
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
+    NewAnimalDocument,
     NewAnimalEntryModel,
     UpdateAnimalModel,
 )
@@ -171,6 +173,44 @@ class SQLAnimalRepository(AnimalRepository):
         self.session.commit()
 
         return result.rowcount
+
+    def new_document(self, animal_id: int, data: NewAnimalDocument):
+        animal_document = AnimalDocument(
+            animal_id=animal_id,
+            document_id=data.document_id,
+            document_kind_id=data.document_kind_id,
+        )
+        self.session.add(animal_document)
+        self.session.flush()
+
+        result = AnimalDocumentModel.model_validate(
+            animal_document, from_attributes=True
+        )
+
+        self.session.commit()
+
+        return result
+
+    def get_documents(self, animal_id: int):
+        result = self.session.execute(
+            select(
+                AnimalDocument.document_id,
+                AnimalDocument.document_kind_id,
+                AnimalDocument.created_at,
+            ).where(AnimalDocument.animal_id == animal_id)
+        ).all()
+
+        docs = [
+            AnimalDocumentModel(
+                animal_id=animal_id,
+                document_id=document_id,
+                document_kind_id=document_kind_id,
+                created_at=created_at,
+            )
+            for document_id, document_kind_id, created_at in result
+        ]
+
+        return docs
 
     def add_adoption(self):
         pass
