@@ -242,7 +242,7 @@ class Document(Base):
 
 class DocumentKind(Base):
     __tablename__ = "document_kind"
-    name: Mapped[str] = mapped_column(String(50))
+    name: Mapped[str] = mapped_column(String(50), unique=True)
     id: Mapped[int] = mapped_column(primary_key=True)
 
     created_at: Mapped[datetime] = mapped_column(

@@ -55,6 +55,7 @@ def upgrade() -> None:
         ),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("name", name="unique_name"),
     )
     op.create_table(
         "procedure_kind",
