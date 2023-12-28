@@ -55,12 +55,10 @@ def document_repository_factory(
         DiskStorage, Depends(get_disk_storage, use_cache=True)
     ],
 ):
-    db_session_generator = get_session()
     storage = {StorageType.disk: disk_storage}
-    with db_session_generator as db_session:
-        repo = SQLDocumentRepository(db_session, storage=storage)
+    repo = SQLDocumentRepository(db_session, storage=storage)
 
-        yield repo
+    yield repo
 
 
 def animal_repository_factory(
