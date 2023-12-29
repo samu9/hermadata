@@ -4,6 +4,7 @@ import {
     animalCodeValidator,
     animalRaceValidator,
     cityCodeValidator,
+    dateFromString,
     dateOnly,
 } from "./validators"
 
@@ -76,3 +77,20 @@ export const paginatedAnimalSearchResultSchema = createPaginatedResponseSchema(
 export type PaginatedAnimalSearchResult = z.infer<
     typeof paginatedAnimalSearchResultSchema
 >
+
+export const animalDocUploadSchema = z.object({
+    title: z.string().min(1),
+    document_kind_id: z.number().min(1),
+    document_id: z.number(),
+})
+
+export type AnimalDocUpload = z.infer<typeof animalDocUploadSchema>
+
+export const animalDocumentSchema = z.object({
+    animal_id: z.number(),
+    document_id: z.number(),
+    document_kind_id: z.number(),
+    created_at: dateFromString,
+})
+
+export type AnimalDocument = z.infer<typeof animalDocumentSchema>
