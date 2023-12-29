@@ -1,4 +1,4 @@
-import { useQuery } from "react-query"
+import { useMutation, useQuery } from "react-query"
 import { apiService } from "./main"
 
 export const useAnimalQuery = (id: string) =>
@@ -38,3 +38,42 @@ export const useComuniQuery = (provincia?: string) =>
             staleTime: Infinity,
         }
     )
+
+export const useDocKindsQuery = () =>
+    useQuery("doc-kinds", () => apiService.getAllDocKinds(), {
+        staleTime: Infinity,
+    })
+
+export const useAnimalDocumentsQuery = (animal_id: number) =>
+    useQuery(["animal-documents", animal_id], {
+        queryFn: () => apiService.getAnimalDocuments(animal_id),
+        staleTime: Infinity,
+        placeholderData: [],
+    })
+// export const useNewEntryMutation = useMutation({
+//     mutationFn: (args: { id: string; data: AnimalEdit }) =>
+//         apiService.updateAnimal(args.id, args.data),
+//     onSuccess: (
+//         result: boolean,
+//         variables: { id: string; data: AnimalEdit },
+//         context
+//     ) => {
+//         queryClient.setQueryData(["animal", variables.id], variables.data)
+//         toast.current?.show({
+//             severity: "success",
+//             summary: "Scheda aggiornata",
+//         })
+//     },
+//     onError: () =>
+//         toast.current?.show({
+//             severity: "error",
+//             summary: "Qualcosa è andato storto",
+//         }),
+//     mutationKey: "updateAnimal",
+// })
+
+export const useEntryTypesQuery = () =>
+    useQuery(["entry-types"], () => apiService.getEntryTypes(), {
+        placeholderData: [],
+        staleTime: Infinity,
+    })
