@@ -13,7 +13,7 @@ const ControlledInputText = <T extends FieldValues>(props: Props<T>) => {
 
     const {
         control,
-        // formState: { errors },
+        formState: { errors },
         register,
     } = form
     return (
@@ -44,6 +44,11 @@ const ControlledInputText = <T extends FieldValues>(props: Props<T>) => {
                             {...register(props.fieldName)}
                             disabled={props.disabled}
                         />
+                        {errors.name && (
+                            <span className="text-xs text-red-500">
+                                {errors.name.message?.toString()}
+                            </span>
+                        )}
                     </div>
                     {/* {getFormErrorMessage(field.name)} */}
                 </>
