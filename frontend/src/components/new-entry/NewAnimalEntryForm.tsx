@@ -11,7 +11,12 @@ import {
 } from "../../models/animal.schema"
 import { Divider } from "primereact/divider"
 import { SubTitle } from "../typography"
-import { useComuniQuery, useProvinceQuery, useRacesQuery } from "../../queries"
+import {
+    useComuniQuery,
+    useEntryTypesQuery,
+    useProvinceQuery,
+    useRacesQuery,
+} from "../../queries"
 
 type Props = {
     onSuccess?: (code: string) => void
@@ -28,15 +33,8 @@ const NewAnimalForm = (props: Props) => {
     const provinceQuery = useProvinceQuery()
     const racesQuery = useRacesQuery()
     const comuniQuery = useComuniQuery(provincia)
+    const entryTypesQuery = useEntryTypesQuery()
 
-    const entryTypesQuery = useQuery(
-        ["entry-types"],
-        () => apiService.getEntryTypes(),
-        {
-            placeholderData: [],
-            staleTime: Infinity,
-        }
-    )
     const onSubmit = async (data: NewAnimalEntry) => {
         const newEntryCode = await apiService.createAnimalEntry(data)
 
