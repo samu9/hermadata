@@ -16,10 +16,11 @@ type Props = {
     raceId?: string
     className?: string
     defaultValue?: number
+    onAddBreed?: (breed: Breed) => void
 }
 const ControlledBreedsDropdown = (props: Props) => {
     const breedsQuery = useBreedsQuery(props.raceId)
-    const form = useFormContext<{ breed_id: string }>()
+    const form = useFormContext<{ breed_id: number }>()
     const op = useRef<OverlayPanel>(null)
 
     const { setValue } = form
@@ -27,7 +28,7 @@ const ControlledBreedsDropdown = (props: Props) => {
         <Controller
             name="breed_id"
             control={form.control}
-            defaultValue={props.defaultValue?.toString()}
+            defaultValue={props.defaultValue}
             render={({ field }) => (
                 <div className="w-1/2">
                     <label
@@ -62,8 +63,9 @@ const ControlledBreedsDropdown = (props: Props) => {
                             <AddBreedForm
                                 raceId={props.raceId}
                                 onSuccess={(breed: Breed) => {
-                                    op.current?.toggle(null)
-                                    setValue("breed_id", breed.id.toString())
+                                    setValue("breed_id", breed.id)
+                                    props.onAddBreed && props.onAddBreed(breed)
+                                    op.current?.hide()
                                 }}
                             />
                         </div>
