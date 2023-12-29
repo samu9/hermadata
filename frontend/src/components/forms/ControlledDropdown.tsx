@@ -6,7 +6,7 @@ import { ControlledInputProps } from "./ControlledInputProps"
 
 type Props<T extends FieldValues, X> = ControlledInputProps<T> & {
     label: string
-    options: X[]
+    options: X[] | undefined
     optionLabel: Path<X>
     optionValue: Path<X>
     placeholder?: string
