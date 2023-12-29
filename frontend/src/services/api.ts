@@ -9,18 +9,23 @@ import {
 import { Race, raceSchema } from "../models/race.schema"
 import {
     Animal,
+    AnimalDocUpload,
+    AnimalDocument,
     AnimalEdit,
     NewAnimalEntry,
     PaginatedAnimalSearchResult,
+    animalDocumentSchema,
     paginatedAnimalSearchResultSchema,
 } from "../models/animal.schema"
 import { PaginationQuery } from "../models/pagination.schema"
 import { NewBreed, Breed } from "../models/breed.schema"
+import { DocKind, NewDocKind } from "../models/docs.schema"
 
 class ApiService {
     inst: AxiosInstance
-
+    baseURL: string
     constructor(baseURL: string) {
+        this.baseURL = baseURL
         this.inst = axios.create({
             baseURL,
             headers: {
@@ -37,8 +42,12 @@ class ApiService {
         return res.data
     }
 
-    private async post<T>(endpoint: string, data: object): Promise<T> {
-        const res = await this.inst.post<T>(endpoint, data)
+    private async post<T>(
+        endpoint: string,
+        data: object,
+        headers = {}
+    ): Promise<T> {
+        const res = await this.inst.post<T>(endpoint, data, { headers })
         return res.data
     }
 
@@ -121,6 +130,57 @@ class ApiService {
         })
 
         return result
+    }
+
+    async getAllDocKinds(): Promise<DocKind[]> {
+        const result = await this.get<DocKind[]>(ApiEndpoints.doc.getAllKinds)
+
+        return result
+    }
+
+    async addNewDocKind(data: NewDocKind): Promise<DocKind> {
+        const result = await this.post<DocKind>(
+            ApiEndpoints.doc.createKind,
+            data
+        )
+
+        return result
+    }
+
+    async uploadDoc(file: File): Promise<number> {
+        const formData = new FormData()
+        formData.append("doc", file)
+        const result = this.post<number>(ApiEndpoints.doc.upload, formData, {
+            "Content-Type": "multipart/form-data",
+        })
+
+        return result
+    }
+
+    async newAnimalDocument(
+        animal_id: number,
+        data: AnimalDocUpload
+    ): Promise<AnimalDocument> {
+        const result = await this.post<AnimalDocument>(
+            ApiEndpoints.animal.newDocument(animal_id),
+            data
+        )
+
+        return animalDocumentSchema.parse(result)
+    }
+
+    async getAnimalDocuments(animal_id: number): Promise<AnimalDocument[]> {
+        const result = await this.get<AnimalDocument[]>(
+            ApiEndpoints.animal.documents(animal_id)
+        )
+
+        const parsed = result.map((r) => animalDocumentSchema.parse(r))
+        console.log(parsed)
+        return parsed
+    }
+
+    async openDocument(document_id: number) {
+        window.open(new URL(ApiEndpoints.doc.open(document_id), this.baseURL))
     }
 }
 
