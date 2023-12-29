@@ -7,11 +7,11 @@ class StorageInterface(ABC):
         pass
 
     @abstractmethod
-    def retrieve_file(self, file_name):
+    def retrieve_file(self, key: str):
         pass
 
     @abstractmethod
-    def delete_file(self, file_name):
+    def delete_file(self, key: str):
         pass
 
     @abstractmethod
