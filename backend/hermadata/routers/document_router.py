@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
 
 from hermadata.dependancies import document_repository_factory
 from hermadata.repositories.document_repository import (
@@ -55,3 +55,13 @@ def create_new_kind(
             },
         )
     return new_doc_kind
+
+
+@router.get("/{document_id}", response_class=Response)
+def serve_document(
+    document_id: int,
+    doc_repo: SQLDocumentRepository = Depends(document_repository_factory),
+):
+    data, content_type = doc_repo.get_data(document_id)
+
+    return Response(content=data, media_type=content_type)
