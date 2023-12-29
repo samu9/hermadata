@@ -78,3 +78,18 @@ class SQLDocumentRepository(BaseRepository):
         self.storage[data.storage_service].store_file(key, data.data)
 
         return doc_id
+
+    def get_data(self, document_id: int):
+        key, storage_service, content_type = self.session.execute(
+            select(
+                Document.key, Document.storage_service, Document.mimetype
+            ).where(Document.id == document_id)
+        ).one()
+        storage_service = StorageType(storage_service)
+
+        if storage_service not in self.storage:
+            raise Exception("storage not handled")
+
+        data = self.storage[storage_service].retrieve_file(key)
+
+        return data, content_type
