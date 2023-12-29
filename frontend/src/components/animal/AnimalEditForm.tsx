@@ -2,10 +2,10 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
 import { Divider } from "primereact/divider"
 import { Toast } from "primereact/toast"
-import { useEffect, useRef } from "react"
+import { useRef } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
-import { useLocation, useParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { apiService } from "../../main"
 import { AnimalEdit, animalEditSchema } from "../../models/animal.schema"
 import { useAnimalQuery } from "../../queries"
@@ -18,7 +18,6 @@ import ControlledTextarea from "../forms/ControlledTextarea"
 
 const AnimalEditForm = () => {
     const { id } = useParams()
-    const location = useLocation()
     const animalQuery = useAnimalQuery(id!)
     const form = useForm<AnimalEdit>({
         resolver: zodResolver(animalEditSchema),
@@ -27,15 +26,12 @@ const AnimalEditForm = () => {
     const toast = useRef<Toast>(null)
 
     const {
-        formState: { errors },
+        formState: { errors, isDirty },
         handleSubmit,
-        watch,
+        reset,
         setValue,
     } = form
 
-    useEffect(() => {
-        console.log(watch())
-    }, [watch()])
     const queryClient = useQueryClient()
 
     const updateAnimalMutation = useMutation({
@@ -51,28 +47,27 @@ const AnimalEditForm = () => {
                 severity: "success",
                 summary: "Scheda aggiornata",
             })
+            reset(variables.data)
         },
         onError: () =>
             toast.current?.show({
                 severity: "error",
                 summary: "Qualcosa è andato storto",
             }),
-        mutationKey: "updateAnimal",
+        mutationKey: "update-animal",
     })
     const onSubmit = async (data: AnimalEdit) => {
         if (!id) {
             return false
         }
         await updateAnimalMutation.mutateAsync({ id, data })
-        await apiService.updateAnimal(id, data)
     }
 
     return (
         <div>
             <FormProvider {...form}>
-                <form onSubmit={handleSubmit(onSubmit, (e) => console.log(e))}>
+                <form onSubmit={handleSubmit(onSubmit)}>
                     <div>
-                        <h3 className="font-bold">Dati generali</h3>
                         <div className="pb-4 flex flex-col gap-2">
                             <ControlledInputText<AnimalEdit>
                                 fieldName="name"
@@ -120,7 +115,7 @@ const AnimalEditForm = () => {
                                 />
                             </div>
                             <ControlledBreedsDropdown
-                                raceId={location.state.race_id}
+                                raceId={animalQuery.data?.race_id}
                             />
                         </div>
                         <ControlledTextarea<AnimalEdit>
@@ -130,7 +125,9 @@ const AnimalEditForm = () => {
                         />
                     </div>
                     <Divider />
-                    <Button type="submit">Salva</Button>
+                    <Button disabled={!isDirty} type="submit">
+                        Salva
+                    </Button>
                 </form>
             </FormProvider>
             <Toast ref={toast} position="bottom-right" />
