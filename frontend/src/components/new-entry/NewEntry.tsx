@@ -16,7 +16,7 @@ const NewEntry = () => {
             summary: "Nuovo ingresso",
             detail: `Codice: ${code}`,
         })
-        op.current?.toggle(null)
+        op.current?.hide()
     }
     return (
         <div>
@@ -29,7 +29,7 @@ const NewEntry = () => {
                 </Button>
                 <OverlayPanel showCloseIcon ref={op}>
                     <div className="w-[20rem]">
-                        <NewAnimalForm onSuccess={onNew} />
+                        <NewAnimalForm onSuccess={onNew.bind(this)} />
                     </div>
                 </OverlayPanel>
                 <Toast ref={toast} position="bottom-right" />
