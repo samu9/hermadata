@@ -23,7 +23,11 @@ const routes: RouteObject[] = [
                 path: "animal/:id",
                 element: <AnimalProfilePage />,
                 children: [
-                    { path: "", element: <AnimalOverview /> },
+                    {
+                        path: "overview",
+                        index: true,
+                        element: <AnimalOverview />,
+                    },
                     { path: "docs", element: <AnimalDocs /> },
                     { path: "events", element: <AnimalEvents /> },
                     { path: "edit", element: <AnimalEditForm /> },
