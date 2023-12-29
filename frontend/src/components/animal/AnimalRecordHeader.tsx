@@ -1,6 +1,10 @@
 import { Animal } from "../../models/animal.schema"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faKitMedical, faTents } from "@fortawesome/free-solid-svg-icons"
+import {
+    faKitMedical,
+    faMicrochip,
+    faTents,
+} from "@fortawesome/free-solid-svg-icons"
 import { classNames } from "primereact/utils"
 
 type Props = {
@@ -25,10 +29,14 @@ const RifugioBadge = () => (
     </span>
 )
 const AnimalRecordHeader = (props: Props) => {
+    const img_url = new URL(
+        props.data.img_path || "",
+        import.meta.env.VITE_ASSETS_BASE_URL
+    )
     return (
         <div className="flex gap-4 items-end">
             <img
-                src="https://www.105.net/resizer/1000/683/true/43-1681218444492.jpg--citta_inglese_tenuta_sotto_controllo_da_due_chihuahua.jpg?1681218444516"
+                src="https://www.idyll-by-the-sea.com/one/images/P0003391.jpg" //{img_url.toString()}
                 className="rounded-full w-40 h-40 object-cover"
             />
             <div className="grow">
@@ -52,7 +60,17 @@ const AnimalRecordHeader = (props: Props) => {
                         {props.data.name || "Nome non assegnato"}
                     </h1>
                 </div>
-                <SanitarioBadge /> <RifugioBadge />
+                <div
+                    className={classNames("text-sm flex gap-1 items-center", {
+                        "text-gray-300": !props.data.chip_code,
+                        "font-mono mb-2": props.data.chip_code,
+                    })}
+                >
+                    <FontAwesomeIcon icon={faMicrochip} />
+                    <span>{props.data.chip_code || "Chip non assegnato"}</span>
+                </div>
+                {/* <SanitarioBadge /> */}
+                <RifugioBadge />
             </div>
         </div>
     )
