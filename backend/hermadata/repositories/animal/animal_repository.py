@@ -73,6 +73,10 @@ class SQLAnimalRepository(AnimalRepository):
 
         where = []
 
+        if query.rescue_city_code is not None:
+            where.append(Animal.rescue_city_code == query.rescue_city_code)
+        if query.entry_type is not None:
+            where.append(Animal.entry_type == query.entry_type)
         if query.code is not None:
             where.append(Animal.code.like(f"%{query.code}%"))
         if query.race_id is not None:
@@ -96,20 +100,22 @@ class SQLAnimalRepository(AnimalRepository):
                 Animal.id,
                 Animal.code,
                 Animal.name,
+                Animal.chip_code,
                 Animal.race_id,
                 Animal.entry_date,
                 Animal.rescue_city_code,
                 Comune.name,
                 Comune.provincia,
+                Animal.entry_type,
             )
             .select_from(Animal)
             .join(Comune, Comune.id == Animal.rescue_city_code)
             .where(*where)
         )
         if query.from_index is not None:
-            stmt.offset(query.from_index)
+            stmt = stmt.offset(query.from_index)
         if query.to_index is not None:
-            stmt.limit(query.to_index - query.from_index or 0)
+            stmt = stmt.limit(query.to_index - query.from_index or 0)
 
         result = self.session.execute(stmt).all()
 
@@ -118,13 +124,26 @@ class SQLAnimalRepository(AnimalRepository):
                 id=id,
                 code=code,
                 name=name,
+                chip_code=chip_code,
                 race_id=race_id,
                 entry_date=entry_date,
                 rescue_city_code=rescue_city_code,
                 rescue_city=rescue_city,
                 rescue_province=rescue_province,
+                entry_type=entry_type,
             )
-            for id, code, name, race_id, entry_date, rescue_city_code, rescue_city, rescue_province in result
+            for (
+                id,
+                code,
+                name,
+                chip_code,
+                race_id,
+                entry_date,
+                rescue_city_code,
+                rescue_city,
+                rescue_province,
+                entry_type,
+            ) in result
         ]
 
         return PaginationResult(items=response, total=total)
