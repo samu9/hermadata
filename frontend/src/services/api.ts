@@ -12,6 +12,7 @@ import {
     AnimalDocUpload,
     AnimalDocument,
     AnimalEdit,
+    AnimalSearchQuery,
     NewAnimalEntry,
     PaginatedAnimalSearchResult,
     animalDocumentSchema,
@@ -102,7 +103,7 @@ class ApiService {
     }
 
     async searchAnimals(
-        query: PaginationQuery
+        query: AnimalSearchQuery
     ): Promise<PaginatedAnimalSearchResult> {
         const result = await this.get(ApiEndpoints.animal.search, query)
 
