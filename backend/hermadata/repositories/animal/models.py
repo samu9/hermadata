@@ -23,6 +23,10 @@ class AnimalSearchModel(PaginationQuery):
     name: str | None = None
     from_created_at: datetime | None = None
     to_created_at: datetime | None = None
+    rescue_city_code: str | None = Field(
+        pattern=rescue_city_code_PATTERN, default=None
+    )
+    entry_type: str | None = None
 
 
 class AnimalModel(BaseModel):
@@ -70,11 +74,13 @@ class AnimalSearchResult(BaseModel):
     id: int
     code: str
     name: str | None = None
+    chip_code: str | None = None
     race_id: str
     entry_date: date | None = None
     rescue_city_code: str
     rescue_city: str
     rescue_province: str
+    entry_type: str
 
 
 class NewAnimalDocument(BaseModel):
