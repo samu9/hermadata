@@ -1,5 +1,8 @@
 import { z } from "zod"
-import { createPaginatedResponseSchema } from "./pagination.schema"
+import {
+    createPaginatedResponseSchema,
+    paginationQuerySchema,
+} from "./pagination.schema"
 import {
     animalCodeValidator,
     animalRaceValidator,
@@ -58,7 +61,7 @@ export const animalSearchResultSchema = z.object({
     code: z.string(), //animalCodeValidator,
     name: z.string().nullable(),
     race_id: animalRaceValidator,
-    chip_code: z.string().optional(),
+    chip_code: z.string().nullish(),
     rescue_city_code: cityCodeValidator,
     rescue_city: z.string(),
     rescue_province: z.string().length(2),
@@ -66,6 +69,7 @@ export const animalSearchResultSchema = z.object({
         .string()
         .nullable()
         .transform((str) => (str && new Date(str)) || null),
+    entry_type: z.string(),
 })
 
 export type AnimalSearchResult = z.infer<typeof animalSearchResultSchema>
@@ -94,3 +98,10 @@ export const animalDocumentSchema = z.object({
 })
 
 export type AnimalDocument = z.infer<typeof animalDocumentSchema>
+
+export const animalSearchQuerySchema = paginationQuerySchema.extend({
+    rescue_city_code: z.string().nullish(),
+    entry_type: z.string().nullish(),
+})
+
+export type AnimalSearchQuery = z.infer<typeof animalSearchQuerySchema>
