@@ -44,6 +44,7 @@ const ControlledDropdown = <T extends FieldValues, X>(props: Props<T, X>) => {
                             {...field}
                             options={props.options}
                             optionLabel={props.optionLabel}
+                            emptyMessage="Nessun risultato"
                             optionValue={props.optionValue}
                             placeholder={props.placeholder}
                             className="w-full"

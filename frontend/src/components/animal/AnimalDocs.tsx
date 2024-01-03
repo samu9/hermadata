@@ -28,6 +28,7 @@ const AnimalDocs = () => {
     return (
         <div>
             <DataTable
+                emptyMessage="Nessun documento trovato"
                 selectionMode="single"
                 onSelectionChange={(e) => apiService.openDocument(e.value.id)}
                 value={

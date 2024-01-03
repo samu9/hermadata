@@ -44,6 +44,7 @@ const ControlledBreedsDropdown = (props: Props) => {
                             optionLabel="name"
                             optionValue="id"
                             placeholder="Seleziona"
+                            emptyMessage="Nessun risultato"
                             className={classNames(
                                 "w-full md:w-14rem",
                                 props.className
