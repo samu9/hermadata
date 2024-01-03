@@ -9,6 +9,7 @@ type Props = {
     className?: string
     disabled?: boolean
     placeholder?: string
+    label?: string
     onChange?: (value: string) => void
 }
 
@@ -17,7 +18,9 @@ const UncontrolledProvinceDropdown = (props: Props) => {
     const [value, setValue] = useState<string | null>(props.value || null)
     return (
         <div className={classNames(props.className)}>
-            <InputLabel disabled={props.disabled}>Provincia</InputLabel>
+            <InputLabel disabled={props.disabled}>
+                {props.label || "Provincia"}
+            </InputLabel>
             <Dropdown
                 value={value}
                 onChange={(e: DropdownChangeEvent) => {
