@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
 
 class EntryType(Enum):
@@ -15,9 +15,36 @@ ENTRY_TYPE_LABELS = {
 
 
 class AnimalStage(Enum):
-    shelter = ("S",)
+    shelter = "S"
     hospital = "H"
 
+
+class AnimalSize(IntEnum):
+    mini = 0
+    small = 1
+    medium = 2
+    big = 3
+
+
+SIZE_LABELS = {
+    AnimalSize.mini: "Mini",
+    AnimalSize.small: "Piccolo",
+    AnimalSize.medium: "Medio",
+    AnimalSize.big: "Grande",
+}
+
+
+class AnimalFur(IntEnum):
+    short = 0
+    curly_long = 1
+    straight_long = 2
+
+
+FUR_LABELS = {
+    AnimalFur.short: "Corto",
+    AnimalFur.curly_long: "Lungo riccio",
+    AnimalFur.straight_long: "Lungo liscio",
+}
 
 ANIMAL_STAGE_LABELS = {
     AnimalStage.hospital: "Sanitario",
