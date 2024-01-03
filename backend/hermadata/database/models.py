@@ -4,6 +4,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Integer,
     String,
     Text,
     UniqueConstraint,
@@ -12,7 +13,13 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from hermadata.constants import AnimalStage, EntryResult, EntryType
+from hermadata.constants import (
+    AnimalFur,
+    AnimalSize,
+    AnimalStage,
+    EntryResult,
+    EntryType,
+)
 
 
 class Base(DeclarativeBase):
@@ -47,8 +54,9 @@ class Animal(Base):
     adoptable: Mapped[bool | None] = mapped_column(nullable=True)
     adoptability_index: Mapped[int | None] = mapped_column(nullable=True)
     # behaviour: Mapped[str] = mapped_column(String(100), nullable=True)
-    color: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    # fur: Mapped[str] = mapped_column(String(100), nullable=True)
+    color: Mapped[int | None] = mapped_column(Integer(), nullable=True)
+    size: Mapped[AnimalSize | None] = mapped_column(Integer(), nullable=True)
+    fur: Mapped[AnimalFur | None] = mapped_column(Integer(), nullable=True)
     # features: Mapped[str] = mapped_column(String(100), nullable=True)
     # medical_treatments: Mapped[str] = mapped_column(String(100), nullable=True)
 
@@ -114,6 +122,7 @@ class Adopter(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
     surname: Mapped[str] = mapped_column(String(100))
+    fiscal_code: Mapped[str] = mapped_column(String(16))
     birth_city_code: Mapped[str] = mapped_column(String(4))
     birth_date: Mapped[Date] = mapped_column(Date())
     residence_city_code: Mapped[str] = mapped_column(String(4))
