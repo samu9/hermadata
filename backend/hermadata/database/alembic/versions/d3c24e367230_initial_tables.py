@@ -27,6 +27,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=100), nullable=False),
         sa.Column("surname", sa.String(length=100), nullable=False),
+        sa.Column("fiscal_code", sa.String(length=16), nullable=False),
         sa.Column("birth_city_code", sa.String(length=4), nullable=False),
         sa.Column("birth_date", sa.Date(), nullable=False),
         sa.Column("residence_city_code", sa.String(length=4), nullable=False),
@@ -195,7 +196,9 @@ def upgrade() -> None:
         sa.Column("sterilized", sa.Boolean(), nullable=True),
         sa.Column("adoptable", sa.Boolean(), nullable=True),
         sa.Column("adoptability_index", sa.Integer(), nullable=True),
-        sa.Column("color", sa.String(length=100), nullable=True),
+        sa.Column("fur", sa.Integer(), nullable=True),
+        sa.Column("size", sa.Integer(), nullable=True),
+        sa.Column("color", sa.Integer(), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(),

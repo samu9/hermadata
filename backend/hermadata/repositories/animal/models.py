@@ -43,7 +43,8 @@ class AnimalModel(BaseModel):
     sterilized: bool | None = None
     notes: str | None = None
     img_path: str | None = None
-
+    fur: int | None = None
+    size: int | None = None
     model_config = ConfigDict(extra="ignore")
 
 
@@ -58,6 +59,8 @@ class UpdateAnimalModel(BaseModel):
     notes: str | None = None
     entry_date: date | None = None
     birth_date: date | None = None
+    fur: int | None = None
+    size: int | None = None
 
 
 class AnimalQueryModel(BaseModel):
