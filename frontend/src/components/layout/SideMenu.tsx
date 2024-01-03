@@ -11,6 +11,10 @@ const menuItems: CustomMenuItem[] = [
         label: "Animali",
         route: "/animals",
     },
+    {
+        label: "Adottanti",
+        route: "/adopters",
+    },
 ]
 type MenuElementProps = {
     to: string
@@ -45,6 +49,7 @@ const SideMenu = () => {
                     <div className="flex flex-col gap-1">
                         <MenuElement to="/" label="Home" />
                         <MenuElement to="/animal" label="Animali" />
+                        <MenuElement to="/adopters" label="Adottanti" />
                     </div>
                 </div>
             </div>
