@@ -7,6 +7,7 @@ import AnimalDocs from "../components/animal/AnimalDocs"
 import AnimalEvents from "../components/animal/AnimalEvents"
 import AnimalOverview from "../components/animal/AnimalOverview"
 import AnimalEditForm from "../components/animal/AnimalEditForm"
+import NewAdopterForm from "../components/adopter/NewAdopterForm"
 
 const routes: RouteObject[] = [
     {
@@ -32,6 +33,10 @@ const routes: RouteObject[] = [
                     { path: "events", element: <AnimalEvents /> },
                     { path: "edit", element: <AnimalEditForm /> },
                 ],
+            },
+            {
+                path: "adopters",
+                element: <NewAdopterForm />,
             },
         ],
     },
