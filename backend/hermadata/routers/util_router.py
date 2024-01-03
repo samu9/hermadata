@@ -1,6 +1,11 @@
 from functools import cache
 from fastapi import APIRouter, Depends
-from hermadata.constants import ANIMAL_STAGE_LABELS, ENTRY_TYPE_LABELS
+from hermadata.constants import (
+    ANIMAL_STAGE_LABELS,
+    ENTRY_TYPE_LABELS,
+    FUR_LABELS,
+    SIZE_LABELS,
+)
 from hermadata.dependancies import RepositoryFactory
 from hermadata.models import UtilElement
 from hermadata.repositories.city_repository import (
@@ -35,6 +40,18 @@ def get_entry_types():
     result = [
         UtilElement(id=k.value, label=v) for k, v in ENTRY_TYPE_LABELS.items()
     ]
+    return result
+
+
+@router.get("/animal-size", response_model=list[UtilElement])
+def get_animal_sizes():
+    result = [UtilElement(id=k.value, label=v) for k, v in SIZE_LABELS.items()]
+    return result
+
+
+@router.get("/animal-fur", response_model=list[UtilElement])
+def get_animal_fur_types():
+    result = [UtilElement(id=k.value, label=v) for k, v in FUR_LABELS.items()]
     return result
 
 
