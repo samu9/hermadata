@@ -48,6 +48,8 @@ export const animalEditSchema = z.object({
 
     entry_date: dateOnly.nullish(),
     birth_date: dateOnly.nullish(),
+    fur: z.number().nullish(),
+    size: z.number().nullish(),
     sterilized: z.boolean().nullish(),
     sex: z.number().nullable(),
     breed_id: z.number().nullish(),
