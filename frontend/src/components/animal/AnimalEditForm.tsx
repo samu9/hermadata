@@ -8,17 +8,24 @@ import { useMutation, useQueryClient } from "react-query"
 import { useParams } from "react-router-dom"
 import { apiService } from "../../main"
 import { AnimalEdit, animalEditSchema } from "../../models/animal.schema"
-import { useAnimalQuery } from "../../queries"
+import {
+    useAnimalFurTypesQuery,
+    useAnimalQuery,
+    useAnimalSizesQuery,
+} from "../../queries"
 import ControlledBreedsDropdown from "../forms/ControlledBreedsDropdown"
 import ControlledCheckbox from "../forms/ControlledCheckbox"
 import ControlledInputDate from "../forms/ControlledInputDate"
 import ControlledInputText from "../forms/ControlledInputText"
 import ControlledRadio from "../forms/ControlledRadio"
 import ControlledTextarea from "../forms/ControlledTextarea"
+import ControlledDropdown from "../forms/ControlledDropdown"
 
 const AnimalEditForm = () => {
     const { id } = useParams()
     const animalQuery = useAnimalQuery(id!)
+    const animalSizesQuery = useAnimalSizesQuery()
+    const animalFurTypesQuery = useAnimalFurTypesQuery()
     const form = useForm<AnimalEdit>({
         resolver: zodResolver(animalEditSchema),
         defaultValues: { ...animalEditSchema.parse(animalQuery.data) },
@@ -74,13 +81,13 @@ const AnimalEditForm = () => {
                                 label="Nome"
                                 className="w-52"
                             />
-                            <ControlledInputText<AnimalEdit>
-                                fieldName="chip_code"
-                                label="Chip"
-                                disabled={animalQuery.data?.chip_code_set}
-                                className="w-52"
-                            />
                             <div className="flex gap-4">
+                                <ControlledInputText<AnimalEdit>
+                                    fieldName="chip_code"
+                                    label="Chip"
+                                    disabled={animalQuery.data?.chip_code_set}
+                                    className="w-52"
+                                />
                                 <ControlledInputDate<AnimalEdit>
                                     fieldName="entry_date"
                                     label="Data ingresso"
@@ -117,6 +124,24 @@ const AnimalEditForm = () => {
                             <ControlledBreedsDropdown
                                 raceId={animalQuery.data?.race_id}
                             />
+
+                            <div className="flex flex-row gap-4 py-2">
+                                <ControlledDropdown
+                                    fieldName="size"
+                                    label="Taglia"
+                                    optionValue="id"
+                                    optionLabel="label"
+                                    options={animalSizesQuery.data}
+                                />
+
+                                <ControlledDropdown
+                                    fieldName="fur"
+                                    label="Pelo"
+                                    optionValue="id"
+                                    optionLabel="label"
+                                    options={animalFurTypesQuery.data}
+                                />
+                            </div>
                         </div>
                         <ControlledTextarea<AnimalEdit>
                             fieldName="notes"
