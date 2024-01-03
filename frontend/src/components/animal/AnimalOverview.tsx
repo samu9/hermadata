@@ -5,7 +5,7 @@ import { Button } from "primereact/button"
 const AnimalOverview = () => {
     return (
         <div>
-            <div className="w-full text-center">
+            <div className="w-full">
                 <Button severity="warning" outlined raised>
                     <FontAwesomeIcon icon={faWarning} /> Completa ingresso
                 </Button>
