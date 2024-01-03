@@ -44,6 +44,16 @@ export const useDocKindsQuery = () =>
         staleTime: Infinity,
     })
 
+export const useAnimalSizesQuery = () =>
+    useQuery("animal-sizes", () => apiService.getAnimalSizes(), {
+        staleTime: Infinity,
+    })
+
+export const useAnimalFurTypesQuery = () =>
+    useQuery("animal-fur-types", () => apiService.getAnimalFurTypes(), {
+        staleTime: Infinity,
+    })
+
 export const useAnimalDocumentsQuery = (animal_id: number) =>
     useQuery(["animal-documents", animal_id], {
         queryFn: () => apiService.getAnimalDocuments(animal_id),
