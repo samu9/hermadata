@@ -22,10 +22,15 @@ const ApiEndpoints = {
         documents: (id: number) => `/animal/${id}/document`,
         newDocument: (id: number) => `/animal/${id}/document`,
     },
+    adopter: {
+        create: "/adopter",
+    },
     util: {
         getProvince: "/util/province",
         getComuni: "/util/comuni",
         getEntryTypes: "/util/entry-types",
+        getAnimalSizes: "/util/animal-size",
+        getAnimalFurTypes: "/util/animal-fur",
     },
 }
 export default ApiEndpoints

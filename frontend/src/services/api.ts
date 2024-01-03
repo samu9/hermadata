@@ -18,9 +18,10 @@ import {
     animalDocumentSchema,
     paginatedAnimalSearchResultSchema,
 } from "../models/animal.schema"
-import { PaginationQuery } from "../models/pagination.schema"
 import { NewBreed, Breed } from "../models/breed.schema"
 import { DocKind, NewDocKind } from "../models/docs.schema"
+import { IntUtilItem } from "../models/util.schema"
+import { Adopter, NewAdopter } from "../models/adopter.schema"
 
 class ApiService {
     inst: AxiosInstance
@@ -182,6 +183,30 @@ class ApiService {
 
     async openDocument(document_id: number) {
         window.open(new URL(ApiEndpoints.doc.open(document_id), this.baseURL))
+    }
+
+    async getAnimalSizes() {
+        const data = await this.get<IntUtilItem[]>(
+            ApiEndpoints.util.getAnimalSizes
+        )
+        return data
+    }
+
+    async getAnimalFurTypes() {
+        const data = await this.get<IntUtilItem[]>(
+            ApiEndpoints.util.getAnimalFurTypes
+        )
+
+        return data
+    }
+
+    async newAdopter(data: NewAdopter): Promise<Adopter> {
+        const result = await this.post<Adopter>(
+            ApiEndpoints.adopter.create,
+            data
+        )
+
+        return result
     }
 }
 
