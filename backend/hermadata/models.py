@@ -16,5 +16,5 @@ class PaginationResult(BaseModel, Generic[T]):
 
 
 class UtilElement(BaseModel):
-    id: str
+    id: str | int
     label: str
