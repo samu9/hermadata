@@ -20,6 +20,7 @@ import ControlledInputText from "../forms/ControlledInputText"
 import ControlledRadio from "../forms/ControlledRadio"
 import ControlledTextarea from "../forms/ControlledTextarea"
 import ControlledDropdown from "../forms/ControlledDropdown"
+import ControlledInputMask from "../forms/ControlledInputMask"
 
 const AnimalEditForm = () => {
     const { id } = useParams()
@@ -82,9 +83,10 @@ const AnimalEditForm = () => {
                                 className="w-52"
                             />
                             <div className="flex gap-4">
-                                <ControlledInputText<AnimalEdit>
+                                <ControlledInputMask<AnimalEdit>
                                     fieldName="chip_code"
                                     label="Chip"
+                                    mask="999.999.999.999.999.999"
                                     disabled={animalQuery.data?.chip_code_set}
                                     className="w-52"
                                 />
