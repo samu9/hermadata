@@ -50,6 +50,9 @@ const AnimalEditForm = () => {
             variables: { id: string; data: AnimalEdit },
             context
         ) => {
+            queryClient.invalidateQueries({
+                queryKey: ["animal-search"],
+            })
             queryClient.setQueryData(["animal", variables.id], variables.data)
             toast.current?.show({
                 severity: "success",

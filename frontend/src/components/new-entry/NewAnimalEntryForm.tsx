@@ -2,7 +2,7 @@ import { Controller, useForm } from "react-hook-form"
 import { apiService } from "../../main"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"
-import { useQuery } from "react-query"
+import { useMutation, useQueryClient } from "react-query"
 import { Button } from "primereact/button"
 import { Dropdown } from "primereact/dropdown"
 import {
@@ -35,12 +35,20 @@ const NewAnimalForm = (props: Props) => {
     const comuniQuery = useComuniQuery(provincia)
     const entryTypesQuery = useEntryTypesQuery()
 
+    const queryClient = useQueryClient()
+    const newEntryMutation = useMutation({
+        mutationKey: "new-animal-entry",
+        mutationFn: (data: NewAnimalEntry) =>
+            apiService.createAnimalEntry(data),
+        onSuccess: (data: string) => {
+            queryClient.invalidateQueries({
+                queryKey: ["animal-search"],
+            })
+            props.onSuccess?.(data)
+        },
+    })
     const onSubmit = async (data: NewAnimalEntry) => {
-        const newEntryCode = await apiService.createAnimalEntry(data)
-
-        if (props.onSuccess) {
-            props.onSuccess(newEntryCode)
-        }
+        newEntryMutation.mutate(data)
     }
     return (
         <div className="w-full">
