@@ -16,7 +16,7 @@ import { format } from "date-fns"
 import { useNavigate } from "react-router-dom"
 import { FilterMatchMode } from "primereact/api"
 import UncontrolledComuniDropdown from "../forms/uncontrolled/UncontrolledComuniDropdown"
-import { useEntryTypesQuery } from "../../queries"
+import { useAnimalSearchQuery, useEntryTypesQuery } from "../../queries"
 import { Dropdown } from "primereact/dropdown"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { IconDefinition, faCat, faDog } from "@fortawesome/free-solid-svg-icons"
@@ -61,13 +61,7 @@ const AnimalList = () => {
         entry_type: undefined,
         rescue_city_code: undefined,
     })
-    const animalQuery = useQuery(["animal-search", queryData], {
-        queryFn: () => apiService.searchAnimals(queryData),
-        staleTime: Infinity,
-        onSuccess: (data) => {
-            setTotalRecords(data.total)
-        },
-    })
+    const animalQuery = useAnimalSearchQuery(queryData)
     const entryTypesQuery = useEntryTypesQuery()
     const entryTypesMap = entryTypesQuery.data?.reduce(
         (result: { [key: string]: string }, current) => {
@@ -76,6 +70,10 @@ const AnimalList = () => {
         },
         {}
     )
+
+    useEffect(() => {
+        animalQuery.data && setTotalRecords(animalQuery.data.total)
+    }, [animalQuery.data])
     const navigate = useNavigate()
 
     const comuneFilterTemplate = (

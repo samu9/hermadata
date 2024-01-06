@@ -1,5 +1,12 @@
 import { useMutation, useQuery } from "react-query"
 import { apiService } from "./main"
+import { AnimalSearchQuery } from "./models/animal.schema"
+
+export const useAnimalSearchQuery = (queryData: AnimalSearchQuery) =>
+    useQuery(["animal-search", queryData], {
+        queryFn: () => apiService.searchAnimals(queryData),
+        staleTime: Infinity,
+    })
 
 export const useAnimalQuery = (id: string) =>
     useQuery(["animal", id], {
