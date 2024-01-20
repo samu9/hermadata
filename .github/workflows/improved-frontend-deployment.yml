@@ -1,0 +1,41 @@
+name: Frontend deployment
+on:
+  push:
+    branches-ignore:
+      - '*'
+    tags:
+      - deploy_fe_test*
+      - deploy_fe_prod*
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: ['test', 'prod']
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '16.x'
+
+      - name: Install Dependencies
+        run: npm install --force
+
+      - name: Build Application
+        run: npm run build${{ matrix.environment === 'test' ? ':test' : '' }} --if-present
+        env:
+          CI: false
+
+      - name: Deploy to Server
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          local: build
+          remote: ${{ matrix.environment === 'test' ? vars.REMOTE_PATH_TEST : vars.REMOTE_PATH_PROD }}
+          host: ${{ matrix.environment === 'test' ? vars.HOST_TEST : vars.HOST_PROD }}
+          username: ${{ matrix.environment === 'test' ? vars.USERNAME_TEST : vars.USERNAME_PROD }}
+          privateKey: ${{ secrets.PRIVATE_KEY }}
