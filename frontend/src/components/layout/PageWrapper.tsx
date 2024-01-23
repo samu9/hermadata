@@ -3,7 +3,7 @@ type Props = {
 }
 
 const PageWrapper = (props: Props) => {
-    return <div className="p-4">{props.children}</div>
+    return <div className="p-4 h-full">{props.children}</div>
 }
 
 export default PageWrapper
