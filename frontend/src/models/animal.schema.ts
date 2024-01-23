@@ -27,8 +27,6 @@ export const animalSchema = z.object({
     breed_id: z.number().nullish(),
     sterilized: z.boolean().nullish(),
 
-    rescue_city: z.string(),
-    rescue_province: z.string(),
     entry_date: dateOnly.optional(),
     entry_type: z.string(),
     stage: z.string().nullish(),
@@ -107,3 +105,11 @@ export const animalSearchQuerySchema = paginationQuerySchema.extend({
 })
 
 export type AnimalSearchQuery = z.infer<typeof animalSearchQuerySchema>
+
+export const newAnimalAdoptionSchema = z.object({
+    animal_id: z.number(),
+    adopter_id: z.number(),
+    completed: z.boolean().nullish(),
+})
+
+export type NewAnimalAdoption = z.infer<typeof newAnimalAdoptionSchema>
