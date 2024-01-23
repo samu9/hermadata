@@ -14,7 +14,7 @@ export const PageTitle = (props: Props) => (
 
 export const SubTitle = (props: Props) => (
     <h3
-        className="text-[1.2rem] font-bold"
+        className="text-[1.2rem] font-bold text-gray-500"
         // style={{ color: "var(--primary-color)" }}
     >
         {props.children}
