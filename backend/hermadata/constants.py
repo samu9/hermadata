@@ -7,6 +7,12 @@ class EntryType(Enum):
     confiscation = "C"
 
 
+class ExitType(Enum):
+    adoption = "A"
+    death = "D"
+    return_ = "R"
+
+
 ENTRY_TYPE_LABELS = {
     EntryType.rescue: "Recupero",
     EntryType.surrender: "Conferimento",
