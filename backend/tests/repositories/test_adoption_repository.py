@@ -1,0 +1,36 @@
+from datetime import date
+from hermadata.database.models import Adopter, Animal
+from hermadata.repositories.adoption_repository import (
+    NewAdoption,
+    SQLAdopionRepository,
+)
+from sqlalchemy.orm import Session
+
+
+def test_create(db_session: Session):
+    animal = Animal(
+        code="1234567890123",
+        race_id="C",
+        rescue_city_code="H501",
+        entry_type="a",
+    )
+    adopter = Adopter(
+        name="A",
+        surname="B",
+        fiscal_code="123",
+        birth_city_code="H501",
+        birth_date=date(1900, 1, 1),
+        residence_city_code="H501",
+        phone="123",
+    )
+    db_session.add(animal)
+    db_session.add(adopter)
+    db_session.flush()
+
+    repo = SQLAdopionRepository(db_session)
+
+    result = repo.create(
+        NewAdoption(animal_id=animal.id, adopter_id=adopter.id)
+    )
+
+    assert result

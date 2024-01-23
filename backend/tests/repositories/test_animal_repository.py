@@ -24,7 +24,7 @@ def test_save(db_session):
         code=code,
         name="Leone",
         race_id=race_id,
-        rescue_date=rescue_date,
+        chip_code_set=False,
         sex=0,
         rescue_city_code=rescue_city_code,
     )
