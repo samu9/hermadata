@@ -5,7 +5,13 @@ from hermadata.repositories import BaseRepository
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.orm import Session
 
-from hermadata.database.models import Animal, AnimalDocument, Comune
+from hermadata.database.models import (
+    Adopter,
+    Adoption,
+    Animal,
+    AnimalDocument,
+    Comune,
+)
 from hermadata.repositories.animal.models import (
     AnimalDocumentModel,
     AnimalModel,
@@ -65,6 +71,17 @@ class SQLAnimalRepository(AnimalRepository):
 
         data = AnimalModel.model_validate(result, from_attributes=True)
         return data
+
+    def get_adoption(self, animal_id: int):
+        result = self.session.execute(
+            select()
+            .select_from(Adoption)
+            .join(Adopter, Adopter.id == Adoption.adopter_id)
+            .where(Adoption.animal_id == animal_id)
+        ).first()
+
+        if not result:
+            return None
 
     def search(self, query: AnimalSearchModel):
         """
@@ -230,6 +247,3 @@ class SQLAnimalRepository(AnimalRepository):
         ]
 
         return docs
-
-    def add_adoption(self):
-        pass
