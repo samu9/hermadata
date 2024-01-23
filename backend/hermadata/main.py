@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from hermadata.routers import (
     adopter_router,
+    adoption_router,
     animal_router,
     race_router,
     util_router,
@@ -26,3 +27,4 @@ app.include_router(race_router.router)
 app.include_router(breed_router.router)
 app.include_router(document_router.router)
 app.include_router(adopter_router.router)
+app.include_router(adoption_router.router)
