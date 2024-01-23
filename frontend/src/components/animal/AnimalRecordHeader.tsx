@@ -1,11 +1,18 @@
-import { Animal } from "../../models/animal.schema"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
+    faBars,
+    faHeart,
     faKitMedical,
-    faMicrochip,
     faTents,
 } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { Button } from "primereact/button"
+import { Menu } from "primereact/menu"
+import { MenuItem } from "primereact/menuitem"
 import { classNames } from "primereact/utils"
+import { useRef } from "react"
+import { Link } from "react-router-dom"
+import { Animal } from "../../models/animal.schema"
+import { ChipCodeBadge } from "./misc"
 
 type Props = {
     data: Animal
@@ -29,17 +36,53 @@ const RifugioBadge = () => (
     </span>
 )
 const AnimalRecordHeader = (props: Props) => {
+    const menuRef = useRef<Menu>(null)
+
+    const menuItems: MenuItem[] = [
+        {
+            template: (item) => (
+                <div className="p-menuitem-content">
+                    <Link
+                        to="adoption"
+                        className="flex align-items-center p-menuitem-link"
+                    >
+                        <FontAwesomeIcon
+                            className="text-red-500"
+                            icon={faHeart}
+                        />
+                        <span className="mx-2 font-bold">Adozione</span>
+                    </Link>
+                </div>
+            ),
+        },
+    ]
     const img_url = new URL(
         props.data.img_path || "",
         import.meta.env.VITE_ASSETS_BASE_URL
     )
     return (
-        <div className="flex gap-4 items-end">
+        <div className="flex gap-4 items-end relative">
             <img
                 src="https://www.idyll-by-the-sea.com/one/images/P0003391.jpg" //{img_url.toString()}
                 className="rounded-full w-40 h-40 object-cover"
             />
             <div className="grow">
+                <div className="absolute right-4 top-4">
+                    <Button
+                        severity="secondary"
+                        outlined
+                        onClick={(e) => menuRef.current?.toggle(e)}
+                    >
+                        <FontAwesomeIcon icon={faBars} />
+                    </Button>
+                    <Menu
+                        model={menuItems}
+                        popup
+                        ref={menuRef}
+                        id="popup_menu"
+                        popupAlignment="right"
+                    />
+                </div>
                 <div className="flex items-center gap-1">
                     {props.data.adoptability_index && (
                         <div
@@ -60,15 +103,7 @@ const AnimalRecordHeader = (props: Props) => {
                         {props.data.name || "Nome non assegnato"}
                     </h1>
                 </div>
-                <div
-                    className={classNames("text-sm flex gap-1 items-center", {
-                        "text-gray-300": !props.data.chip_code,
-                        "font-mono mb-2": props.data.chip_code,
-                    })}
-                >
-                    <FontAwesomeIcon icon={faMicrochip} />
-                    <span>{props.data.chip_code || "Chip non assegnato"}</span>
-                </div>
+                <ChipCodeBadge code={props.data.chip_code} />
                 {/* <SanitarioBadge /> */}
                 <RifugioBadge />
             </div>
