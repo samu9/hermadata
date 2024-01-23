@@ -1,16 +1,16 @@
-import { Animal } from "../../models/animal.schema"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
     faFile,
     faHome,
     faList,
     faPencil,
 } from "@fortawesome/free-solid-svg-icons"
-import { TabMenu } from "primereact/tabmenu"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { MenuItem } from "primereact/menuitem"
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
-import AnimalRecordHeader from "./AnimalRecordHeader"
+import { TabMenu } from "primereact/tabmenu"
 import { useEffect, useState } from "react"
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
+import { Animal } from "../../models/animal.schema"
+import AnimalRecordHeader from "./AnimalRecordHeader"
 
 type Props = {
     data: Animal
