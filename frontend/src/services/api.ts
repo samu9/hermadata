@@ -1,27 +1,29 @@
 import axios, { AxiosInstance } from "axios"
-import ApiEndpoints from "./apiEndpoints"
-import {
-    ComuneSchema,
-    ProvinciaSchema,
-    comuneSchema,
-    provinciaSchema,
-} from "../models/city.schema"
-import { Race, raceSchema } from "../models/race.schema"
+import { Adopter, NewAdopter } from "../models/adopter.schema"
 import {
     Animal,
     AnimalDocUpload,
     AnimalDocument,
     AnimalEdit,
     AnimalSearchQuery,
+    NewAnimalAdoption,
     NewAnimalEntry,
     PaginatedAnimalSearchResult,
     animalDocumentSchema,
+    animalSchema,
     paginatedAnimalSearchResultSchema,
 } from "../models/animal.schema"
-import { NewBreed, Breed } from "../models/breed.schema"
+import { Breed, NewBreed } from "../models/breed.schema"
+import {
+    ComuneSchema,
+    ProvinciaSchema,
+    comuneSchema,
+    provinciaSchema,
+} from "../models/city.schema"
 import { DocKind, NewDocKind } from "../models/docs.schema"
+import { Race, raceSchema } from "../models/race.schema"
 import { IntUtilItem } from "../models/util.schema"
-import { Adopter, NewAdopter } from "../models/adopter.schema"
+import ApiEndpoints from "./apiEndpoints"
 
 class ApiService {
     inst: AxiosInstance
@@ -100,7 +102,7 @@ class ApiService {
     async getAnimal(id: string): Promise<Animal> {
         const result = await this.get<Animal>(ApiEndpoints.animal.getById(id))
 
-        return result
+        return animalSchema.parse(result)
     }
 
     async searchAnimals(
@@ -206,6 +208,22 @@ class ApiService {
             data
         )
 
+        return result
+    }
+
+    async searchAdopter(fiscalCode: string): Promise<Adopter[]> {
+        const result = await this.get<Adopter[]>(ApiEndpoints.adopter.search, {
+            fiscal_code: fiscalCode,
+        })
+
+        return result
+    }
+
+    async newAnimalAdoption(data: NewAnimalAdoption) {
+        const result = await this.post<number>(
+            ApiEndpoints.adoption.create,
+            data
+        )
         return result
     }
 }
