@@ -1,19 +1,25 @@
-import { FormProvider, useForm } from "react-hook-form"
-import { NewAdopter, newAdopterSchema } from "../../models/adopter.schema"
 import { zodResolver } from "@hookform/resolvers/zod"
-import ControlledInputText from "../forms/ControlledInputText"
-import ControlledInputDate from "../forms/ControlledInputDate"
-import { Divider } from "primereact/divider"
 import { Button } from "primereact/button"
-import { useComuniQuery } from "../../queries"
-import ControlledDropdown from "../forms/ControlledDropdown"
 import { useState } from "react"
-import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
-import { PageTitle } from "../typography"
+import { FormProvider, useForm } from "react-hook-form"
 import { useMutation } from "react-query"
 import { apiService } from "../../main"
+import {
+    Adopter,
+    NewAdopter,
+    newAdopterSchema,
+} from "../../models/adopter.schema"
+import { useComuniQuery } from "../../queries"
+import ControlledDropdown from "../forms/ControlledDropdown"
+import ControlledInputDate from "../forms/ControlledInputDate"
+import ControlledInputText from "../forms/ControlledInputText"
+import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
 
-const NewAdopterForm = () => {
+type Props = {
+    onSaved?: (result: Adopter) => void
+}
+
+const NewAdopterForm = (props: Props) => {
     const [provinciaNascita, setProvinciaNascita] = useState<string>()
     const [provinciaResidenza, setProvinciaResidenza] = useState<string>()
 
@@ -27,7 +33,9 @@ const NewAdopterForm = () => {
     const newAdopterMutation = useMutation({
         mutationKey: "new-adopter",
         mutationFn: (data: NewAdopter) => apiService.newAdopter(data),
-        onSuccess: () => {},
+        onSuccess: (data) => {
+            props.onSaved?.(data)
+        },
     })
     const { handleSubmit } = form
     const onSubmit = (data: NewAdopter) => {
@@ -35,9 +43,11 @@ const NewAdopterForm = () => {
     }
     return (
         <div>
-            <PageTitle>Nuovo adottante</PageTitle>
             <FormProvider {...form}>
-                <form onSubmit={handleSubmit(onSubmit)} className="">
+                <form
+                    onSubmit={handleSubmit(onSubmit)}
+                    className="flex flex-col gap-2 items-start"
+                >
                     <div className="flex flex-col gap-2 items-start">
                         <div className="flex gap-2">
                             <ControlledInputText
@@ -100,8 +110,7 @@ const NewAdopterForm = () => {
                             className="w-64"
                         />
                     </div>
-                    <Divider />
-                    <Button>Salva</Button>
+                    <Button label="Salva" size="small" />
                 </form>
             </FormProvider>
         </div>
