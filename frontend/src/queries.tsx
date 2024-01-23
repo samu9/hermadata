@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "react-query"
+import { useQuery } from "react-query"
 import { apiService } from "./main"
 import { AnimalSearchQuery } from "./models/animal.schema"
 
