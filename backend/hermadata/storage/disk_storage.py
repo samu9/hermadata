@@ -32,9 +32,9 @@ class DiskStorage(StorageInterface):
         file_path = os.path.join(self.base_path, file_name)
         if os.path.exists(file_path):
             os.remove(file_path)
-            print(f"File '{file_name}' deleted.")
+            logger.info(f"File '{file_name}' deleted.")
         else:
-            print(f"File '{file_name}' not found.")
+            logger.info(f"File '{file_name}' not found.")
 
     def list_files(self):
         files = os.listdir(self.base_path)
