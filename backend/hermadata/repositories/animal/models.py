@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, Field
+from hermadata.constants import EntryType, ExitType
 
 from hermadata.models import PaginationQuery
 
@@ -39,12 +40,16 @@ class AnimalModel(BaseModel):
     name: str | None = None
     birth_date: date | None = None
     entry_date: date | None = None
+    entry_type: EntryType | None = None
     sex: int | None = None
     sterilized: bool | None = None
     notes: str | None = None
     img_path: str | None = None
     fur: int | None = None
     size: int | None = None
+    exit_date: date | None = None
+    exit_type: ExitType | None = None
+
     model_config = ConfigDict(extra="ignore")
 
 
