@@ -19,6 +19,7 @@ from hermadata.constants import (
     AnimalStage,
     EntryResult,
     EntryType,
+    ExitType,
 )
 
 
@@ -75,6 +76,9 @@ class Animal(Base):
         ForeignKey("vet.id"), nullable=True
     )
 
+    exit_date: Mapped[date] = mapped_column(Date(), nullable=True)
+    exit_type: Mapped[ExitType] = mapped_column(String(1), nullable=True)
+
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
     img_path: Mapped[str] = mapped_column(String(100), nullable=True)
 
@@ -107,13 +111,16 @@ class Adoption(Base):
     animal: Mapped[Animal] = relationship(back_populates="adoptions")
 
     animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
-    temporary: Mapped[bool]
+    adopter_id: Mapped[int] = mapped_column(ForeignKey("adopter.id"))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(), server_onupdate=func.now(), nullable=True
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
     )
 
 

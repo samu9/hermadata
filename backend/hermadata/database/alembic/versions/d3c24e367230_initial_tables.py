@@ -181,6 +181,8 @@ def upgrade() -> None:
         sa.Column("entry_type", sa.String(length=1), nullable=False),
         sa.Column("entry_result", sa.String(length=1), nullable=True),
         sa.Column("entry_date", sa.Date(), nullable=True),
+        sa.Column("exit_date", sa.Date(), nullable=True),
+        sa.Column("exit_type", sa.String(length=1), nullable=True),
         sa.Column("stage", sa.String(length=1), nullable=True),
         sa.Column("name", sa.String(length=100), nullable=True),
         sa.Column("chip_code", sa.String(length=100), nullable=True),
@@ -250,7 +252,7 @@ def upgrade() -> None:
         "adoption",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("animal_id", sa.Integer(), nullable=False),
-        sa.Column("temporary", sa.Boolean(), nullable=False),
+        sa.Column("adopter_id", sa.Integer(), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(),
@@ -258,9 +260,14 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
+        sa.Column("completed_at", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(
             ["animal_id"],
             ["animal.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["adopter_id"],
+            ["adopter.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
