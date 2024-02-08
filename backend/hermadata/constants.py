@@ -1,22 +1,29 @@
 from enum import Enum, IntEnum
 
 
-class EntryType(Enum):
+class EntryType(str, Enum):
     rescue = "R"
     surrender = "S"
     confiscation = "C"
-
-
-class ExitType(Enum):
-    adoption = "A"
-    death = "D"
-    return_ = "R"
 
 
 ENTRY_TYPE_LABELS = {
     EntryType.rescue: "Recupero",
     EntryType.surrender: "Conferimento",
     EntryType.confiscation: "Sequestro",
+}
+
+
+class ExitType(str, Enum):
+    adoption = "A"
+    death = "D"
+    return_ = "R"
+
+
+EXIT_TYPE_LABELS = {
+    ExitType.adoption: "Adozione",
+    ExitType.death: "Morte",
+    ExitType.return_: "Restituzione",
 }
 
 
@@ -69,3 +76,7 @@ ENTRY_RESULT_LABELS = {
     EntryResult.failed: "Fallito",
     EntryResult.returned: "Restituito",
 }
+
+
+class AnimalEvent(Enum):
+    exit_ = "EX"
