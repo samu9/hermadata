@@ -1,5 +1,7 @@
 from datetime import date, datetime, timedelta
+import json
 import logging
+from hermadata.constants import AnimalEvent
 from hermadata.models import PaginationResult
 from hermadata.repositories import BaseRepository
 from sqlalchemy import func, insert, select, update
@@ -10,10 +12,12 @@ from hermadata.database.models import (
     Adoption,
     Animal,
     AnimalDocument,
+    AnimalLog,
     Comune,
 )
 from hermadata.repositories.animal.models import (
     AnimalDocumentModel,
+    AnimalExit,
     AnimalModel,
     AnimalQueryModel,
     AnimalSearchModel,
@@ -247,3 +251,32 @@ class SQLAnimalRepository(AnimalRepository):
         ]
 
         return docs
+
+    def exit(self, animal_id: int, data: AnimalExit):
+        entry_date, exit_date = self.session.execute(
+            select(Animal.entry_date, Animal.exit_date).where(
+                Animal.id == animal_id
+            )
+        ).one()
+
+        if not entry_date:
+            raise Exception(f"animal {animal_id} did not complete the entry")
+        if exit_date:
+            raise Exception(f"animal {animal_id} already is exit!")
+
+        animal_log = AnimalLog(
+            animal_id=animal_id,
+            data=json.loads(data.model_dump_json()),
+            event=AnimalEvent.exit_.value,
+            # user_id=user_id #TODO: add user
+        )
+        self.session.add(animal_log)
+        self.session.execute(
+            update(Animal)
+            .where(Animal.id == animal_id)
+            .values(
+                exit_date=data.exit_date,
+                exit_type=data.exit_type,
+            )
+        )
+        self.session.commit()
