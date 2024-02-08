@@ -12,9 +12,9 @@ const AnimalCard = (props: Props) => {
             <img className="w-16 h-16 rounded" />
             <div>
                 <span className="text-xl font-bold text-gray-600">
-                    {props.data.name}
+                    {props.data.name || "Nome non assegnato"}
                 </span>
-                <ChipCodeBadge code={props.data.chip_code} />
+                <ChipCodeBadge code={props.data.chip_code ?? undefined} />
                 {props.data.entry_date && (
                     <span className="text-sm">
                         entrato il{" "}
