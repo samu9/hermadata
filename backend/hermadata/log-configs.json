@@ -1,0 +1,32 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        }
+    },
+    "handlers": {
+        "file": {
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "filename": "app.log",
+            "level": "DEBUG",
+            "formatter": "standard",
+            "when": "midnight",
+            "interval": 1,
+            "backupCount": 7
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "DEBUG",
+            "formatter": "standard"
+        }
+    },
+    "root": {
+        "handlers": [
+            "file",
+            "console"
+        ],
+        "level": "INFO"
+    }
+}
