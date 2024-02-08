@@ -6,6 +6,7 @@ from hermadata.models import PaginationResult
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import (
     AnimalDocumentModel,
+    AnimalExit,
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
@@ -85,3 +86,14 @@ def upload_animal_document(
 ):
     result = repo.new_document(animal_id, data)
     return result
+
+
+@router.post("/{animal_id}/exit")
+def animal_exit(
+    animal_id: int,
+    data: AnimalExit,
+    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+):
+    repo.exit(animal_id, data)
+
+    return True
