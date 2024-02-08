@@ -102,3 +102,8 @@ class AnimalDocumentModel(BaseModel):
     document_id: int
     document_kind_id: int
     created_at: datetime
+
+
+class AnimalExit(BaseModel):
+    exit_date: date
+    exit_type: ExitType
