@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from hermadata.constants import (
     ANIMAL_STAGE_LABELS,
     ENTRY_TYPE_LABELS,
+    EXIT_TYPE_LABELS,
     FUR_LABELS,
     SIZE_LABELS,
 )
@@ -39,6 +40,14 @@ def get_comuni(
 def get_entry_types():
     result = [
         UtilElement(id=k.value, label=v) for k, v in ENTRY_TYPE_LABELS.items()
+    ]
+    return result
+
+
+@router.get("/exit-types", response_model=list[UtilElement])
+def get_exit_types():
+    result = [
+        UtilElement(id=k.value, label=v) for k, v in EXIT_TYPE_LABELS.items()
     ]
     return result
 
