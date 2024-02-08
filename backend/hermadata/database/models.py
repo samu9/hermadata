@@ -122,6 +122,10 @@ class Adoption(Base):
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(), nullable=True
     )
+    # adoptions can be returned, making the adoption null
+    returned_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
 
 
 class Adopter(Base):

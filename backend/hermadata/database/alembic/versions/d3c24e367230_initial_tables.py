@@ -261,6 +261,7 @@ def upgrade() -> None:
         ),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("completed_at", sa.DateTime(), nullable=True),
+        sa.Column("returned_at", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(
             ["animal_id"],
             ["animal.id"],
