@@ -12,12 +12,14 @@ export const breedNameValidator = z
 
 export const dateFromString = z.preprocess(
     (arg) => (typeof arg == "string" ? new Date(arg) : arg),
-    z.date()
+    z.date().nullable()
 )
 export const dateOnly = dateFromString.transform((d) => {
     // prime-react calendar returns a date at 0 hour at local time.
     // this results at an UTC date for the previous day at 23 hour.
-
+    if (!d) {
+        return null
+    }
     d.setUTCDate(d.getDate())
     d.setUTCHours(0, 0, 0, 0)
     return new Date(d)
