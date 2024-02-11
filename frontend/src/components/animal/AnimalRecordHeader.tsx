@@ -3,16 +3,21 @@ import {
     faHeart,
     faKitMedical,
     faTents,
+    faXmarkCircle,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { format } from "date-fns"
 import { Button } from "primereact/button"
 import { Menu } from "primereact/menu"
 import { MenuItem } from "primereact/menuitem"
+import { Message } from "primereact/message"
 import { classNames } from "primereact/utils"
 import { useRef } from "react"
 import { Link } from "react-router-dom"
 import { Animal } from "../../models/animal.schema"
 import { ChipCodeBadge } from "./misc"
+import { useExitTypesQuery } from "../../queries"
+import { useExitTypesMap } from "../../hooks/useMaps"
 
 type Props = {
     data: Animal
@@ -60,6 +65,7 @@ const AnimalRecordHeader = (props: Props) => {
         props.data.img_path || "",
         import.meta.env.VITE_ASSETS_BASE_URL
     )
+    const exitTypesMap = useExitTypesMap()
     return (
         <div className="flex gap-4 items-end relative">
             <img
@@ -103,9 +109,54 @@ const AnimalRecordHeader = (props: Props) => {
                         {props.data.name || "Nome non assegnato"}
                     </h1>
                 </div>
-                <ChipCodeBadge code={props.data.chip_code} />
-                {/* <SanitarioBadge /> */}
-                <RifugioBadge />
+                <ChipCodeBadge code={props.data.chip_code || undefined} />
+                {/* <RifugioBadge /> */}
+                {props.data.exit_type &&
+                    props.data.exit_date &&
+                    props.data.exit_date < new Date() && (
+                        <Message
+                            severity="error"
+                            className="text-red-600"
+                            content={
+                                <div>
+                                    <div className="flex flex-col">
+                                        <div className="flex gap-1 items-center text-red-600">
+                                            <FontAwesomeIcon
+                                                icon={faXmarkCircle}
+                                            />
+                                            <span className="font-bold text-xl">
+                                                Non presente
+                                            </span>
+                                        </div>
+                                        <div className="flex gap-1">
+                                            <span className="font-light">
+                                                Data
+                                            </span>
+                                            <span className="font-bold">
+                                                {format(
+                                                    props.data.exit_date,
+                                                    "dd/MM/y"
+                                                )}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex gap-1">
+                                            <span className="font-light">
+                                                Motivo
+                                            </span>
+                                            <span className="font-bold">
+                                                {
+                                                    exitTypesMap?.[
+                                                        props.data.exit_type
+                                                    ]
+                                                }
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        />
+                    )}
             </div>
         </div>
     )
