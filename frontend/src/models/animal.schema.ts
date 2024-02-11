@@ -27,11 +27,15 @@ export const animalSchema = z.object({
     breed_id: z.number().nullish(),
     sterilized: z.boolean().nullish(),
 
-    entry_date: dateOnly.optional(),
+    entry_date: dateOnly,
     entry_type: z.string(),
+
+    exit_date: dateOnly.nullish(),
+    exit_type: z.string().nullish(),
+
     stage: z.string().nullish(),
     adoptability_index: z.number().optional(),
-    chip_code: z.string().optional(),
+    chip_code: z.string().nullish(),
     chip_code_set: z.boolean(),
     img_path: z.string().nullable(),
     sex: z.number().nullable(),
@@ -70,6 +74,11 @@ export const animalSearchResultSchema = z.object({
         .nullable()
         .transform((str) => (str && new Date(str)) || null),
     entry_type: z.string(),
+    exit_date: z
+        .string()
+        .nullish()
+        .transform((str) => (str && new Date(str)) || null),
+    exit_type: z.string().nullish(),
 })
 
 export type AnimalSearchResult = z.infer<typeof animalSearchResultSchema>
@@ -102,6 +111,13 @@ export type AnimalDocument = z.infer<typeof animalDocumentSchema>
 export const animalSearchQuerySchema = paginationQuerySchema.extend({
     rescue_city_code: z.string().nullish(),
     entry_type: z.string().nullish(),
+    exit_type: z.string().nullish(),
+    present: z.boolean().nullish(),
+    not_present: z.boolean().nullish(),
+    name: z.string().nullish(),
+    chip_code: z.string().nullish(),
+    sort_field: z.string().nullish(),
+    sort_order: z.number().nullish(),
 })
 
 export type AnimalSearchQuery = z.infer<typeof animalSearchQuerySchema>
@@ -113,3 +129,11 @@ export const newAnimalAdoptionSchema = z.object({
 })
 
 export type NewAnimalAdoption = z.infer<typeof newAnimalAdoptionSchema>
+
+export const animalExitSchema = z.object({
+    animal_id: z.number(),
+    exit_type: z.string(),
+    exit_date: dateOnly,
+})
+
+export type AnimalExit = z.infer<typeof animalExitSchema>
