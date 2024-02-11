@@ -28,6 +28,7 @@ import UncontrolledComuniDropdown from "../forms/uncontrolled/UncontrolledComuni
 import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
 import { classNames } from "primereact/utils"
 import { InputText } from "primereact/inputtext"
+import { useEntryTypesMap, useExitTypesMap } from "../../hooks/useMaps"
 
 type LazyTableState = {
     first: number
@@ -102,21 +103,8 @@ const AnimalList = () => {
     const animalQuery = useAnimalSearchQuery(queryData)
     const entryTypesQuery = useEntryTypesQuery()
     const exitTypesQuery = useExitTypesQuery()
-    const entryTypesMap = entryTypesQuery.data?.reduce(
-        (result: { [key: string]: string }, current) => {
-            result[current.id] = current.label
-            return result
-        },
-        {}
-    )
-
-    const exitTypesMap = exitTypesQuery.data?.reduce(
-        (result: { [key: string]: string }, current) => {
-            result[current.id] = current.label
-            return result
-        },
-        {}
-    )
+    const entryTypesMap = useEntryTypesMap()
+    const exitTypesMap = useExitTypesMap()
 
     useEffect(() => {
         animalQuery.data && setTotalRecords(animalQuery.data.total)
