@@ -94,3 +94,11 @@ export const useEntryTypesQuery = () =>
         placeholderData: [],
         staleTime: Infinity,
     })
+
+export const useExitTypesQuery = () =>
+    useQuery({
+        queryKey: ["exit-types"],
+        queryFn: () => apiService.getExitTypes(),
+        placeholderData: [],
+        staleTime: Infinity,
+    })
