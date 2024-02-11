@@ -4,9 +4,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button } from "primereact/button"
 import { Dialog } from "primereact/dialog"
 import { Divider } from "primereact/divider"
-import { useEffect, useState } from "react"
+import { Toast } from "primereact/toast"
+import { useEffect, useRef, useState } from "react"
 import { useMutation } from "react-query"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import NewAdopterForm from "../components/adopter/NewAdopterForm"
 import AdopterCard from "../components/adoption/AdopterCard"
 import AnimalCard from "../components/adoption/AnimalCard"
@@ -28,9 +29,11 @@ const AnimalAdoptionPage = () => {
     if (!id) {
         throw new Error("Animal id not defined")
     }
+    const navigate = useNavigate()
     const [section, setSection] = useState<Section | null>(Section.search)
     const [showNewAdopterDialog, setShowNewAdopterDialog] = useState(false)
     const [adopter, setAdopter] = useState<Adopter | null>(null)
+    const toast = useRef<Toast>(null)
 
     const animalQuery = useAnimalQuery(id!)
 
@@ -38,18 +41,32 @@ const AnimalAdoptionPage = () => {
         mutationKey: "new-adoption",
         mutationFn: (data: NewAnimalAdoption) =>
             apiService.newAnimalAdoption(data),
-        onSuccess: (data) => {
+        onSuccess: (data, variables) => {
             console.log(data)
+            if (variables.completed) {
+                toast.current?.show({
+                    severity: "success",
+                    summary: "Adozione completata!",
+                })
+            } else {
+                toast.current?.show({
+                    severity: "info",
+                    summary: "Adozione salvata",
+                    content: "Vai alla scheda animale per completarla",
+                })
+            }
+            navigate(`/animal/${variables.animal_id}`)
         },
     })
 
-    const onConfirm = () => {
+    const onConfirm = (completed: boolean) => {
         if (!adopter) {
             return
         }
         newAdoptionMutation.mutate({
             animal_id: parseInt(id),
             adopter_id: adopter.id,
+            completed,
         })
     }
     const dialogFooter = (
@@ -100,18 +117,7 @@ const AnimalAdoptionPage = () => {
                             <FontAwesomeIcon icon={faAdd} />
                         </Button>
                     </div>
-                    {/* <AdopterCard
-                        data={{
-                            name: "Samuele",
-                            surname: "Fusaro",
-                            residence_city_code: "H501",
-                            phone: "3287432548",
-                            fiscal_code: "FSRSLV91P19B180J",
-                            id: 1,
-                            birth_date: new Date("1991-09-19"),
-                            birth_city_code: "H501",
-                        }}
-                    /> */}
+
                     {section == Section.search && (
                         <div>
                             <SubTitle>Cerca adottante</SubTitle>
@@ -151,16 +157,25 @@ const AnimalAdoptionPage = () => {
                     )}
                 </div>
             </div>
-            <div className="shrink-0">
+            <div className="shrink-0 flex gap-2">
                 <Button
-                    onClick={onConfirm}
+                    onClick={() => onConfirm(false)}
+                    severity="info"
+                    className="text-center block font-bold w-full"
+                    disabled={!adopter}
+                >
+                    Salva senza completare
+                </Button>
+                <Button
+                    onClick={() => onConfirm(true)}
                     severity="success"
                     className="text-center block font-bold w-full"
                     disabled={!adopter}
                 >
-                    Conferma
+                    Completa
                 </Button>
             </div>
+            <Toast ref={toast} position="bottom-center" />
         </div>
     )
 }
