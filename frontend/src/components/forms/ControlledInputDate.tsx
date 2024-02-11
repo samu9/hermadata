@@ -7,6 +7,7 @@ import { ControlledInputProps } from "./ControlledInputProps"
 
 type Props<T extends FieldValues> = ControlledInputProps<T> & {
     label: string
+    disabled?: boolean
 }
 
 const ControlledInputDate = <T extends FieldValues>(props: Props<T>) => {
@@ -45,6 +46,7 @@ const ControlledInputDate = <T extends FieldValues>(props: Props<T>) => {
                     {/* {getFormErrorMessage(field.name)} */}
                 </>
             )}
+            disabled={props.disabled}
         />
     )
 }
