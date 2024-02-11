@@ -5,6 +5,7 @@ import {
     AnimalDocUpload,
     AnimalDocument,
     AnimalEdit,
+    AnimalExit,
     AnimalSearchQuery,
     NewAnimalAdoption,
     NewAnimalEntry,
@@ -89,6 +90,14 @@ class ApiService {
     async getEntryTypes(): Promise<{ id: string; label: string }[]> {
         const data = await this.get<{ id: string; label: string }[]>(
             ApiEndpoints.util.getEntryTypes
+        )
+
+        return data
+    }
+
+    async getExitTypes(): Promise<{ id: string; label: string }[]> {
+        const data = await this.get<{ id: string; label: string }[]>(
+            ApiEndpoints.util.getExitTypes
         )
 
         return data
@@ -224,6 +233,15 @@ class ApiService {
             ApiEndpoints.adoption.create,
             data
         )
+        return result
+    }
+
+    async animalExit(data: AnimalExit) {
+        const result = await this.post<void>(
+            ApiEndpoints.animal.exit(data.animal_id),
+            data
+        )
+
         return result
     }
 }
