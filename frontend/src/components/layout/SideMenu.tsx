@@ -49,6 +49,7 @@ const SideMenu = () => {
                     <div className="flex flex-col gap-1">
                         <MenuElement to="/" label="Home" />
                         <MenuElement to="/animal" label="Animali" />
+                        <MenuElement to="/exports" label="Estrazioni" />
                         <MenuElement to="/adopters" label="Adottanti" />
                     </div>
                 </div>
