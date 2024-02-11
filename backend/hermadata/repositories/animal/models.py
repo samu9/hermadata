@@ -1,11 +1,27 @@
+from collections import namedtuple
 from datetime import date, datetime
-from pydantic import BaseModel, ConfigDict, Field
-from hermadata.constants import EntryType, ExitType
+from typing import Any, Callable, Iterable, NamedTuple, Optional
 
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
+
+from hermadata.constants import EntryType, ExitType
+from hermadata.database.models import Animal
 from hermadata.models import PaginationQuery
 
-
 rescue_city_code_PATTERN = r"[A-Z]\d{3}"
+
+
+class WhereClauseMapItem(NamedTuple):
+    """
+    * attribute_builder: callable which returns the attribute
+    or a in iterable of attributes to put in the whereclause
+    * in_or: bool which determines if the attribute should be put in or
+    """
+
+    attribute_builder: Callable[[Any], InstrumentedAttribute]
+    in_or: bool = False
 
 
 class NewAnimalEntryModel(BaseModel):
@@ -17,17 +33,91 @@ class NewAnimalEntryModel(BaseModel):
 class AnimalSearchModel(PaginationQuery):
     from_index: int | None = None
     to_index: int | None = None
-    race_id: str | None = None
-    code: str | None = None
+
+    sort_field: str | None = None
+    sort_order: int | None = None
+
+    race_id: Optional[str] = None
+    code: Optional[str] = None
     from_entry_date: date | None = None
     to_entry_date: date | None = None
-    name: str | None = None
+    name: Optional[str] = None
     from_created_at: datetime | None = None
     to_created_at: datetime | None = None
     rescue_city_code: str | None = Field(
         pattern=rescue_city_code_PATTERN, default=None
     )
-    entry_type: str | None = None
+    entry_type: Optional[str] = None
+    exit_type: Optional[str] = None
+    present: bool = True
+    not_present: bool = False
+    chip_code: Optional[str] = None
+
+    _where_clause_map: dict[str, WhereClauseMapItem] = {
+        "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
+        "chip_code": WhereClauseMapItem(
+            lambda v: Animal.chip_code.like(f"%{v}%")
+        ),
+        "rescue_city_code": WhereClauseMapItem(
+            lambda v: Animal.rescue_city_code == v
+        ),
+        "entry_type": WhereClauseMapItem(lambda v: Animal.entry_type == v),
+        "exit_type": WhereClauseMapItem(lambda v: Animal.exit_type == v),
+        "race_id": WhereClauseMapItem(lambda v: Animal.race_id == v),
+        "from_entry_date": WhereClauseMapItem(lambda v: Animal.entry_date >= v),
+        "to_entry_date": WhereClauseMapItem(lambda v: Animal.entry_date <= v),
+        "from_created_at": WhereClauseMapItem(lambda v: Animal.created_at >= v),
+        "to_created_at": WhereClauseMapItem(lambda v: Animal.created_at <= v),
+        "present": WhereClauseMapItem(
+            lambda v: v
+            and (
+                Animal.exit_date.is_(None),
+                Animal.exit_date > datetime.now().date(),
+            )
+            or None,
+            in_or=True,
+        ),
+        "not_present": WhereClauseMapItem(
+            lambda v: (
+                and_(
+                    Animal.exit_date.is_not(None),
+                    Animal.exit_date <= datetime.now().date(),
+                )
+                if v
+                else None
+            ),
+            in_or=True,
+        ),
+    }
+
+    def as_order_by_clause(self) -> MappedColumn | None:
+        if not (self.sort_field and self.sort_order):
+            return None
+        column: MappedColumn = getattr(Animal, self.sort_field)
+        if self.sort_order == 1:
+            return column.asc()
+        if self.sort_order == -1:
+            return column.desc()
+
+    def as_where_clause(self) -> list:
+        or_elems = []
+        where = []
+        for field in self._where_clause_map.keys():
+            value = getattr(self, field)
+            if value is None:
+                continue
+            builder, in_or = self._where_clause_map[field]
+            attribute = builder(value)
+
+            to_add = or_elems if in_or else where
+            if isinstance(attribute, Iterable):
+                to_add.extend(attribute)
+            else:
+                to_add.append(attribute)
+
+        if or_elems:
+            where.append(or_(*or_elems))
+        return where
 
 
 class AnimalModel(BaseModel):
@@ -89,6 +179,13 @@ class AnimalSearchResult(BaseModel):
     rescue_city: str
     rescue_province: str
     entry_type: str
+    exit_date: date | None = None
+    exit_type: str | None = None
+
+
+AnimalSearchResultQuery = namedtuple(
+    "AnimalSearchResultQuery", AnimalSearchResult.model_fields.keys()
+)
 
 
 class NewAnimalDocument(BaseModel):

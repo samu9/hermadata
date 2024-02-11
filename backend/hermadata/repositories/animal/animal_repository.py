@@ -22,6 +22,7 @@ from hermadata.repositories.animal.models import (
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
+    AnimalSearchResultQuery,
     NewAnimalDocument,
     NewAnimalEntryModel,
     UpdateAnimalModel,
@@ -92,26 +93,7 @@ class SQLAnimalRepository(AnimalRepository):
         Return the minimum data set of a list of animals which match the search query.
         """
 
-        where = []
-
-        if query.rescue_city_code is not None:
-            where.append(Animal.rescue_city_code == query.rescue_city_code)
-        if query.entry_type is not None:
-            where.append(Animal.entry_type == query.entry_type)
-        if query.code is not None:
-            where.append(Animal.code.like(f"%{query.code}%"))
-        if query.race_id is not None:
-            where.append(Animal.race_id == query.race_id)
-        if query.from_entry_date is not None:
-            where.append(Animal.entry_date >= query.from_entry_date)
-        if query.to_entry_date is not None:
-            where.append(Animal.entry_date <= query.to_entry_date)
-        if query.from_created_at is not None:
-            where.append(Animal.created_at >= query.from_created_at)
-        if query.to_created_at is not None:
-            where.append(Animal.created_at <= query.to_created_at)
-        if query.name is not None:
-            where.append(Animal.name.like(f"{query.name}%"))
+        where = query.as_where_clause()
 
         total = self.session.execute(
             select(func.count("*")).select_from(Animal).where(*where)
@@ -128,10 +110,14 @@ class SQLAnimalRepository(AnimalRepository):
                 Comune.name,
                 Comune.provincia,
                 Animal.entry_type,
+                Animal.exit_date,
+                Animal.exit_type,
             )
             .select_from(Animal)
             .join(Comune, Comune.id == Animal.rescue_city_code)
+            .join(Adoption, Adoption.animal_id == Animal.id, isouter=True)
             .where(*where)
+            .order_by(query.as_order_by_clause())
         )
         if query.from_index is not None:
             stmt = stmt.offset(query.from_index)
@@ -141,30 +127,10 @@ class SQLAnimalRepository(AnimalRepository):
         result = self.session.execute(stmt).all()
 
         response = [
-            AnimalSearchResult(
-                id=id,
-                code=code,
-                name=name,
-                chip_code=chip_code,
-                race_id=race_id,
-                entry_date=entry_date,
-                rescue_city_code=rescue_city_code,
-                rescue_city=rescue_city,
-                rescue_province=rescue_province,
-                entry_type=entry_type,
+            AnimalSearchResult.model_validate(
+                AnimalSearchResultQuery(*r), from_attributes=True
             )
-            for (
-                id,
-                code,
-                name,
-                chip_code,
-                race_id,
-                entry_date,
-                rescue_city_code,
-                rescue_city,
-                rescue_province,
-                entry_type,
-            ) in result
+            for r in result
         ]
 
         return PaginationResult(items=response, total=total)
