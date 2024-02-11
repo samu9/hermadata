@@ -1,4 +1,5 @@
 import {
+    faCircleXmark,
     faFile,
     faHome,
     faList,
@@ -11,6 +12,7 @@ import { useEffect, useState } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { Animal } from "../../models/animal.schema"
 import AnimalRecordHeader from "./AnimalRecordHeader"
+import { classNames } from "primereact/utils"
 
 type Props = {
     data: Animal
@@ -36,6 +38,13 @@ const items = [
         label: "Modifica",
         icon: <FontAwesomeIcon icon={faPencil} fixedWidth className="px-1" />,
         path: "edit",
+    },
+    {
+        label: "Uscita",
+        icon: (
+            <FontAwesomeIcon icon={faCircleXmark} fixedWidth className="px-1" />
+        ),
+        path: "exit",
     },
 ]
 
@@ -68,7 +77,7 @@ const AnimalRecord = (props: Props) => {
                 }}
                 role="menuitem"
                 to={tabItem.path}
-                className={options.className}
+                className={classNames(options.className)}
             >
                 <span className={options.iconClassName}>{item.icon}</span>
                 <span className={options.labelClassName}>{item.label}</span>
