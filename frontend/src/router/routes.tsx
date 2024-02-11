@@ -1,15 +1,15 @@
-import { RouteObject } from "react-router-dom"
+import { Outlet, RouteObject, UIMatch } from "react-router-dom"
 import App from "../App"
-import HomePage from "../pages/HomePage"
-import AnimalsPage from "../pages/AnimalsPage"
-import AnimalProfilePage from "../pages/AnimalProfilePage"
-import AnimalDocs from "../components/animal/AnimalDocs"
-import AnimalEvents from "../components/animal/AnimalEvents"
-import AnimalOverview from "../components/animal/AnimalOverview"
-import AnimalEditForm from "../components/animal/AnimalEditForm"
 import NewAdopterForm from "../components/adopter/NewAdopterForm"
-import AnimalAdoptionPage from "../pages/AnimalAdoptionPage"
+import AnimalDocs from "../components/animal/AnimalDocs"
+import AnimalEditForm from "../components/animal/AnimalEditForm"
+import AnimalEvents from "../components/animal/AnimalEvents"
 import AnimalExitForm from "../components/animal/AnimalExitForm"
+import AnimalOverview from "../components/animal/AnimalOverview"
+import AnimalAdoptionPage from "../pages/AnimalAdoptionPage"
+import AnimalProfilePage from "../pages/AnimalProfilePage"
+import AnimalsPage from "../pages/AnimalsPage"
+import HomePage from "../pages/HomePage"
 
 const routes: RouteObject[] = [
     {
@@ -19,30 +19,41 @@ const routes: RouteObject[] = [
             { path: "", element: <HomePage /> },
             {
                 path: "animal",
-                element: <AnimalsPage />,
-                children: [],
-            },
-            {
-                path: "animal/:id/adoption",
-                element: <AnimalAdoptionPage />,
-            },
-            {
-                path: "animal/:id",
-                element: <AnimalProfilePage />,
+                element: <Outlet />,
                 children: [
                     {
-                        path: "overview",
+                        element: <AnimalsPage />,
                         index: true,
-                        element: <AnimalOverview />,
                     },
-                    { path: "docs", element: <AnimalDocs /> },
-                    { path: "events", element: <AnimalEvents /> },
-                    { path: "edit", element: <AnimalEditForm /> },
                     {
-                        path: "exit",
-                        element: <AnimalExitForm />,
+                        path: ":id",
+                        element: <AnimalProfilePage />,
+                        handle: {
+                            crumb: (data: UIMatch) => data.params["id"],
+                        },
+                        children: [
+                            {
+                                path: "overview",
+                                index: true,
+                                element: <AnimalOverview />,
+                            },
+                            { path: "docs", element: <AnimalDocs /> },
+                            { path: "events", element: <AnimalEvents /> },
+                            { path: "edit", element: <AnimalEditForm /> },
+                            {
+                                path: "exit",
+                                element: <AnimalExitForm />,
+                            },
+                        ],
+                    },
+                    {
+                        path: ":id/adoption",
+                        element: <AnimalAdoptionPage />,
                     },
                 ],
+                handle: {
+                    crumb: () => "Animali",
+                },
             },
             {
                 path: "adopters",
