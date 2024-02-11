@@ -9,6 +9,7 @@ import AnimalOverview from "../components/animal/AnimalOverview"
 import AnimalEditForm from "../components/animal/AnimalEditForm"
 import NewAdopterForm from "../components/adopter/NewAdopterForm"
 import AnimalAdoptionPage from "../pages/AnimalAdoptionPage"
+import AnimalExitForm from "../components/animal/AnimalExitForm"
 
 const routes: RouteObject[] = [
     {
@@ -37,6 +38,10 @@ const routes: RouteObject[] = [
                     { path: "docs", element: <AnimalDocs /> },
                     { path: "events", element: <AnimalEvents /> },
                     { path: "edit", element: <AnimalEditForm /> },
+                    {
+                        path: "exit",
+                        element: <AnimalExitForm />,
+                    },
                 ],
             },
             {
