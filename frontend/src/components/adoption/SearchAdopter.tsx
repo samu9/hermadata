@@ -58,6 +58,7 @@ const SearchAdopter = (props: SearchAdopterProps) => {
             <div className="flex gap-2 my-4 flex-col">
                 {results.map((r) => (
                     <SearchResult
+                        key={r.id}
                         data={r}
                         onSelected={() => {
                             setResults([])
