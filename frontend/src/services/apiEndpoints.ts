@@ -21,14 +21,20 @@ const ApiEndpoints = {
         update: (id: string) => `/animal/${id}`,
         documents: (id: number) => `/animal/${id}/document`,
         newDocument: (id: number) => `/animal/${id}/document`,
+        exit: (id: number) => `/animal/${id}/exit`,
     },
     adopter: {
         create: "/adopter",
+        search: "/adopter",
+    },
+    adoption: {
+        create: "/adoption",
     },
     util: {
         getProvince: "/util/province",
         getComuni: "/util/comuni",
         getEntryTypes: "/util/entry-types",
+        getExitTypes: "/util/exit-types",
         getAnimalSizes: "/util/animal-size",
         getAnimalFurTypes: "/util/animal-fur",
     },
