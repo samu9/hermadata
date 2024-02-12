@@ -18,7 +18,8 @@ import { Animal } from "../../models/animal.schema"
 import { ChipCodeBadge } from "./misc"
 import { useExitTypesQuery } from "../../queries"
 import { useExitTypesMap } from "../../hooks/useMaps"
-
+import dog from "../../assets/dog.svg"
+import cat from "../../assets/cat.svg"
 type Props = {
     data: Animal
 }
@@ -67,11 +68,19 @@ const AnimalRecordHeader = (props: Props) => {
     )
     const exitTypesMap = useExitTypesMap()
     return (
-        <div className="flex gap-4 items-end relative">
-            <img
-                src="https://www.idyll-by-the-sea.com/one/images/P0003391.jpg" //{img_url.toString()}
-                className="rounded-full w-40 h-40 object-cover"
-            />
+        <div className="flex gap-4 items-start relative">
+            <div
+                className={classNames("w-28 h-28 rounded-full", {
+                    border: !props.data.img_path,
+                })}
+            >
+                <img
+                    src={props.data.race_id == "C" ? dog : cat}
+                    className={classNames("object-cover", {
+                        "rounded-none m-8": !props.data.img_path,
+                    })}
+                />
+            </div>
             <div className="grow">
                 <div className="absolute right-4 top-4">
                     <Button
