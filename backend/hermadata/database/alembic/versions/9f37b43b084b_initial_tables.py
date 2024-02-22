@@ -1,20 +1,19 @@
 """initial tables
 
-Revision ID: d3c24e367230
+Revision ID: 9f37b43b084b
 Revises: 1bb12e9dcab1
-Create Date: 2023-12-28 15:07:27.037511
+Create Date: 2024-02-14 19:19:45.118386
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 
-from hermadata.database.alembic.import_initial_data import import_doc_kinds
-
 
 # revision identifiers, used by Alembic.
-revision: str = "d3c24e367230"
+revision: str = "9f37b43b084b"
 down_revision: Union[str, None] = "1bb12e9dcab1"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -73,6 +72,25 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
+    )
+    op.create_table(
+        "person",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(length=100), nullable=False),
+        sa.Column("surname", sa.String(length=100), nullable=False),
+        sa.Column("fiscal_code", sa.String(length=16), nullable=False),
+        sa.Column("birth_city_code", sa.String(length=4), nullable=False),
+        sa.Column("birth_date", sa.Date(), nullable=False),
+        sa.Column("residence_city_code", sa.String(length=4), nullable=False),
+        sa.Column("phone", sa.String(length=15), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column("updated_at", sa.DateTime(), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "procedure_kind",
@@ -177,12 +195,6 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("code", sa.String(length=13), nullable=False),
         sa.Column("race_id", sa.String(length=1), nullable=False),
-        sa.Column("rescue_city_code", sa.String(length=4), nullable=False),
-        sa.Column("entry_type", sa.String(length=1), nullable=False),
-        sa.Column("entry_result", sa.String(length=1), nullable=True),
-        sa.Column("entry_date", sa.Date(), nullable=True),
-        sa.Column("exit_date", sa.Date(), nullable=True),
-        sa.Column("exit_type", sa.String(length=1), nullable=True),
         sa.Column("stage", sa.String(length=1), nullable=True),
         sa.Column("name", sa.String(length=100), nullable=True),
         sa.Column("chip_code", sa.String(length=100), nullable=True),
@@ -198,9 +210,9 @@ def upgrade() -> None:
         sa.Column("sterilized", sa.Boolean(), nullable=True),
         sa.Column("adoptable", sa.Boolean(), nullable=True),
         sa.Column("adoptability_index", sa.Integer(), nullable=True),
-        sa.Column("fur", sa.Integer(), nullable=True),
-        sa.Column("size", sa.Integer(), nullable=True),
         sa.Column("color", sa.Integer(), nullable=True),
+        sa.Column("size", sa.Integer(), nullable=True),
+        sa.Column("fur", sa.Integer(), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(),
@@ -263,12 +275,12 @@ def upgrade() -> None:
         sa.Column("completed_at", sa.DateTime(), nullable=True),
         sa.Column("returned_at", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["animal_id"],
-            ["animal.id"],
-        ),
-        sa.ForeignKeyConstraint(
             ["adopter_id"],
             ["adopter.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["animal_id"],
+            ["animal.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -304,6 +316,34 @@ def upgrade() -> None:
             "document_kind_id",
             name="unique_animal_document",
         ),
+    )
+    op.create_table(
+        "animal_entry",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("animal_id", sa.Integer(), nullable=False),
+        sa.Column("entry_type", sa.String(length=1), nullable=False),
+        sa.Column("entry_date", sa.Date(), nullable=True),
+        sa.Column("origin_city_code", sa.String(length=4), nullable=False),
+        sa.Column("exit_date", sa.Date(), nullable=True),
+        sa.Column("exit_type", sa.String(length=1), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column("updated_at", sa.DateTime(), nullable=True),
+        sa.Column(
+            "current",
+            sa.Boolean(),
+            server_default=sa.text("true"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(
+            ["animal_id"],
+            ["animal.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "animal_log",
@@ -356,13 +396,12 @@ def upgrade() -> None:
     )
     # ### end Alembic commands ###
 
-    import_doc_kinds(op.get_bind())
-
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table("terapy")
     op.drop_table("animal_log")
+    op.drop_table("animal_entry")
     op.drop_table("animal_document")
     op.drop_table("adoption")
     op.drop_table("procedure_document_checklist")
@@ -373,6 +412,7 @@ def downgrade() -> None:
     op.drop_table("vet")
     op.drop_table("users")
     op.drop_table("procedure_kind")
+    op.drop_table("person")
     op.drop_table("document_kind")
     op.drop_table("document")
     op.drop_table("adopter")
