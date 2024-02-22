@@ -3,6 +3,7 @@ from uuid import uuid4
 from sqlalchemy import insert, select
 
 from sqlalchemy.orm import Session
+from hermadata.constants import EntryType
 from hermadata.database.models import Animal
 
 from hermadata.repositories.animal.animal_repository import (
@@ -10,7 +11,24 @@ from hermadata.repositories.animal.animal_repository import (
     AnimalSearchModel,
     SQLAnimalRepository,
 )
-from hermadata.repositories.animal.models import UpdateAnimalModel
+from hermadata.repositories.animal.models import (
+    NewAnimalEntryModel,
+    UpdateAnimalModel,
+)
+
+
+def test_new_entry(db_session):
+    repo = SQLAnimalRepository(session=db_session)
+
+    repo.insert_new_entry(
+        NewAnimalEntryModel(
+            race_id="C",
+            rescue_city_code="H501",
+            entry_type=EntryType.rescue.value,
+        )
+    )
+
+    assert True
 
 
 def test_save(db_session):
