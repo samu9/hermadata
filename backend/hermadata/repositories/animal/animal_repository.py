@@ -4,7 +4,7 @@ import logging
 from hermadata.constants import AnimalEvent
 from hermadata.models import PaginationResult
 from hermadata.repositories import BaseRepository
-from sqlalchemy import func, insert, select, update
+from sqlalchemy import and_, func, insert, select, update
 from sqlalchemy.orm import Session
 
 from hermadata.database.models import (
@@ -12,6 +12,7 @@ from hermadata.database.models import (
     Adoption,
     Animal,
     AnimalDocument,
+    AnimalEntry,
     AnimalLog,
     Comune,
 )
@@ -53,9 +54,17 @@ class SQLAnimalRepository(AnimalRepository):
             rescue_date=datetime.now().date(),
         )
 
-        self.session.execute(
-            insert(Animal).values(code=code, **data.model_dump())
+        animal = Animal(
+            code=code,
+            race_id=data.race_id,
         )
+        animal_entry = AnimalEntry(
+            animal=animal,
+            entry_type=data.entry_type,
+            origin_city_code=data.rescue_city_code,
+        )
+        self.session.add(animal)
+        self.session.add(animal_entry)
         self.session.commit()
 
         return code
@@ -142,10 +151,18 @@ class SQLAnimalRepository(AnimalRepository):
         current_animals = self.session.execute(
             select(func.count("*"))
             .select_from(Animal)
+            .join(
+                AnimalEntry,
+                and_(
+                    Animal.id == AnimalEntry.animal_id,
+                    AnimalEntry.current.is_(True),
+                ),
+                isouter=True,
+            )
             .where(
                 Animal.race_id == race_id,
-                Animal.rescue_city_code == rescue_city_code,
-                Animal.created_at.between(
+                AnimalEntry.origin_city_code == rescue_city_code,
+                AnimalEntry.created_at.between(
                     rescue_date, rescue_date + timedelta(1)
                 ),
             )
