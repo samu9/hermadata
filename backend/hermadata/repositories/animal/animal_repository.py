@@ -162,10 +162,7 @@ class SQLAnimalRepository(AnimalRepository):
             .select_from(Animal)
             .join(
                 AnimalEntry,
-                and_(
-                    Animal.id == AnimalEntry.animal_id,
-                    AnimalEntry.current.is_(True),
-                ),
+                Animal.id == AnimalEntry.animal_id,
                 isouter=True,
             )
             .where(
