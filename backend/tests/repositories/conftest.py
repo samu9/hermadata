@@ -1,3 +1,4 @@
+import alembic
 import pytest
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -8,7 +9,8 @@ from hermadata.storage.disk_storage import DiskStorage
 
 @pytest.fixture(scope="function")
 def engine():
-    e = create_engine("mysql+pymysql://root:dev@localhost/hermadata")
+
+    e = create_engine("mysql+pymysql://root:dev@localhost/hermadata-tests")
 
     return e
 

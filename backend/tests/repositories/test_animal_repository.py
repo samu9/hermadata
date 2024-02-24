@@ -66,7 +66,8 @@ def test_exit(db_session: Session, animal_repository: SQLAnimalRepository):
 
     check = db_session.execute(
         select(AnimalEntry.id).where(
-            AnimalEntry.animal_id == animal_id, AnimalEntry.current.is_(True)
+            AnimalEntry.animal_id == animal_id,
+            AnimalEntry.exit_date.is_(None),
         )
     ).scalar()
 
