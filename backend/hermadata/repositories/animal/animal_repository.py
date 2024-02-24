@@ -24,6 +24,7 @@ from hermadata.repositories.animal.models import (
     AnimalSearchModel,
     AnimalSearchResult,
     AnimalSearchResultQuery,
+    CompleteEntryModel,
     NewAnimalDocument,
     NewAnimalModel,
     NewEntryModel,
@@ -228,11 +229,11 @@ class SQLAnimalRepository(AnimalRepository):
 
         return code
 
-    def complete_entry(self, animal_id: str, entry_date: date):
+    def complete_entry(self, animal_id: str, data: CompleteEntryModel):
         self.session.execute(
             update(AnimalEntry)
             .where(AnimalEntry.animal_id == animal_id)
-            .values(entry_date=entry_date)
+            .values(entry_date=data.entry_date)
         )
         self.session.commit()
 
