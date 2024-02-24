@@ -80,18 +80,23 @@ class SQLAnimalRepository(AnimalRepository):
             select(Animal.id).where(Animal.id == animal_id)
         ).one()
 
-        is_current_entry, last_exit_date = self.session.execute(
-            select(AnimalEntry.current, AnimalEntry.exit_date)
-            .where(AnimalEntry.animal_id)
-            .order_by(AnimalEntry.entry_date.desc())
-            .limit(1)
-        ).first()
+        is_present = self.session.execute(
+            select(AnimalEntry.id).where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+                AnimalEntry.exit_date.is_(None),
+            )
+        ).scalar()
 
-        if is_current_entry or last_exit_date is None:
+        if is_present:
             raise Exception(
                 f"animal id {animal_id} has already an active entry"
             )
-
+        self.session.execute(
+            update(AnimalEntry)
+            .where(AnimalEntry.animal_id, AnimalEntry.current.is_(True))
+            .values(current=False)
+        )
         new_entry = AnimalEntry(
             animal_id=animal_id,
             entry_type=data.entry_type,
@@ -326,7 +331,6 @@ class SQLAnimalRepository(AnimalRepository):
             .values(
                 exit_date=data.exit_date,
                 exit_type=data.exit_type,
-                current=False,
             )
         )
         self.session.commit()
