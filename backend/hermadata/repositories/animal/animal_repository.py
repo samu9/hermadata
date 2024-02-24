@@ -25,7 +25,8 @@ from hermadata.repositories.animal.models import (
     AnimalSearchResult,
     AnimalSearchResultQuery,
     NewAnimalDocument,
-    NewAnimalEntryModel,
+    NewAnimalModel,
+    NewEntryModel,
     UpdateAnimalModel,
 )
 
@@ -42,32 +43,76 @@ class SQLAnimalRepository(AnimalRepository):
         self.session = session
 
     def save(self, model: AnimalModel):
-        data = model.model_dump()
-        result = self.session.execute(insert(Animal).values(**data))
+        result = self.session.execute(
+            insert(Animal).values(
+                code=model.code,
+                race_id=model.race_id,
+            )
+        )
         self.session.commit()
         return result
 
-    def insert_new_entry(self, data: NewAnimalEntryModel):
-        code = self.generate_code(
-            race_id=data.race_id,
-            rescue_city_code=data.rescue_city_code,
-            rescue_date=datetime.now().date(),
-        )
+    def new_animal(self, data: NewAnimalModel) -> str:
+        with self.session.begin() as transaction:
 
-        animal = Animal(
-            code=code,
-            race_id=data.race_id,
-        )
-        animal_entry = AnimalEntry(
-            animal=animal,
+            code = self.generate_code(
+                race_id=data.race_id,
+                rescue_city_code=data.rescue_city_code,
+                rescue_date=datetime.now().date(),
+            )
+
+            animal = Animal(
+                code=code,
+                race_id=data.race_id,
+            )
+            animal_entry = AnimalEntry(
+                animal=animal,
+                entry_type=data.entry_type,
+                origin_city_code=data.rescue_city_code,
+            )
+            transaction.session.add(animal)
+            transaction.session.add(animal_entry)
+
+        return code
+
+    def add_entry(self, animal_id: int, data: NewEntryModel) -> int:
+        self.session.execute(
+            select(Animal.id).where(Animal.id == animal_id)
+        ).one()
+
+        is_current_entry, last_exit_date = self.session.execute(
+            select(AnimalEntry.current, AnimalEntry.exit_date)
+            .where(AnimalEntry.animal_id)
+            .order_by(AnimalEntry.entry_date.desc())
+            .limit(1)
+        ).first()
+
+        if is_current_entry or last_exit_date is None:
+            raise Exception(
+                f"animal id {animal_id} has already an active entry"
+            )
+
+        new_entry = AnimalEntry(
+            animal_id=animal_id,
             entry_type=data.entry_type,
             origin_city_code=data.rescue_city_code,
         )
-        self.session.add(animal)
-        self.session.add(animal_entry)
+
+        self.session.add(new_entry)
         self.session.commit()
 
-        return code
+        return new_entry.id
+
+    def check_complete_entry_needed(self, animal_id: int) -> bool:
+        check = self.session.execute(
+            select(AnimalEntry.id).where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+                AnimalEntry.entry_date.is_(None),
+            )
+        )
+
+        return check is not None
 
     def get(self, query: AnimalQueryModel, columns=[]) -> AnimalModel:
         where = []
@@ -182,6 +227,14 @@ class SQLAnimalRepository(AnimalRepository):
         )
 
         return code
+
+    def complete_entry(self, animal_id: str, entry_date: date):
+        self.session.execute(
+            update(AnimalEntry)
+            .where(AnimalEntry.animal_id == animal_id)
+            .values(entry_date=entry_date)
+        )
+        self.session.commit()
 
     def update(self, id: str, updates: UpdateAnimalModel):
         values = updates.model_dump(exclude_none=True)
