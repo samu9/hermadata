@@ -97,7 +97,9 @@ class SQLAnimalRepository(AnimalRepository):
         if not result:
             return None
 
-    def search(self, query: AnimalSearchModel):
+    def search(
+        self, query: AnimalSearchModel
+    ) -> PaginationResult[AnimalSearchResult]:
         """
         Return the minimum data set of a list of animals which match the search query.
         """
@@ -114,17 +116,24 @@ class SQLAnimalRepository(AnimalRepository):
                 Animal.name,
                 Animal.chip_code,
                 Animal.race_id,
-                Animal.entry_date,
-                Animal.rescue_city_code,
+                AnimalEntry.entry_date,
+                AnimalEntry.origin_city_code,
                 Comune.name,
                 Comune.provincia,
-                Animal.entry_type,
-                Animal.exit_date,
-                Animal.exit_type,
+                AnimalEntry.entry_type,
+                AnimalEntry.exit_date,
+                AnimalEntry.exit_type,
             )
             .select_from(Animal)
-            .join(Comune, Comune.id == Animal.rescue_city_code)
             .join(Adoption, Adoption.animal_id == Animal.id, isouter=True)
+            .join(
+                AnimalEntry,
+                and_(
+                    Animal.id == AnimalEntry.animal_id,
+                    AnimalEntry.current.is_(True),
+                ),
+            )
+            .join(Comune, Comune.id == AnimalEntry.origin_city_code)
             .where(*where)
             .order_by(query.as_order_by_clause())
         )
