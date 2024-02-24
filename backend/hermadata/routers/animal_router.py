@@ -10,8 +10,10 @@ from hermadata.repositories.animal.models import (
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
+    CompleteEntryModel,
     NewAnimalDocument,
-    NewAnimalEntryModel,
+    NewAnimalModel,
+    NewEntryModel,
     UpdateAnimalModel,
 )
 
@@ -20,10 +22,10 @@ router = APIRouter(prefix="/animal")
 
 @router.post("")
 def new_animal_entry(
-    data: NewAnimalEntryModel,
+    data: NewAnimalModel,
     repo: SQLAnimalRepository = Depends(animal_repository_factory),
 ):
-    animal_code = repo.insert_new_entry(data)
+    animal_code = repo.new_animal(data)
 
     return animal_code
 
@@ -97,3 +99,25 @@ def animal_exit(
     repo.exit(animal_id, data)
 
     return True
+
+
+@router.post("/{animal_id}/entry/complete", response_class=bool)
+def complete_entry(
+    animal_id: int,
+    data: CompleteEntryModel,
+    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+):
+    repo.complete_entry(animal_id, data)
+
+    return True
+
+
+@router.post("/{animal_id}/entry", response_class=int)
+def add_entry(
+    animal_id: int,
+    data: NewEntryModel,
+    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+):
+    result = repo.add_entry(animal_id, data)
+
+    return result
