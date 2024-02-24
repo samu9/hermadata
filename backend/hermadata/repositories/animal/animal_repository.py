@@ -242,12 +242,16 @@ class SQLAnimalRepository(AnimalRepository):
         return docs
 
     def exit(self, animal_id: int, data: AnimalExit):
-        entry_date, exit_date = self.session.execute(
-            select(Animal.entry_date, Animal.exit_date).where(
-                Animal.id == animal_id
+        check = self.session.execute(
+            select(AnimalEntry.entry_date, AnimalEntry.exit_date).where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
             )
-        ).one()
+        ).first()
+        if not check:
+            raise Exception(f"animal {animal_id} is not present")
 
+        entry_date, exit_date = check
         if not entry_date:
             raise Exception(f"animal {animal_id} did not complete the entry")
         if exit_date:
@@ -261,11 +265,15 @@ class SQLAnimalRepository(AnimalRepository):
         )
         self.session.add(animal_log)
         self.session.execute(
-            update(Animal)
-            .where(Animal.id == animal_id)
+            update(AnimalEntry)
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
             .values(
                 exit_date=data.exit_date,
                 exit_type=data.exit_type,
+                current=False,
             )
         )
         self.session.commit()
