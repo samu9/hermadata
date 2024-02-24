@@ -54,26 +54,25 @@ class SQLAnimalRepository(AnimalRepository):
         return result
 
     def new_animal(self, data: NewAnimalModel) -> str:
-        with self.session.begin() as transaction:
 
-            code = self.generate_code(
-                race_id=data.race_id,
-                rescue_city_code=data.rescue_city_code,
-                rescue_date=datetime.now().date(),
-            )
+        code = self.generate_code(
+            race_id=data.race_id,
+            rescue_city_code=data.rescue_city_code,
+            rescue_date=datetime.now().date(),
+        )
 
-            animal = Animal(
-                code=code,
-                race_id=data.race_id,
-            )
-            animal_entry = AnimalEntry(
-                animal=animal,
-                entry_type=data.entry_type,
-                origin_city_code=data.rescue_city_code,
-            )
-            transaction.session.add(animal)
-            transaction.session.add(animal_entry)
-
+        animal = Animal(
+            code=code,
+            race_id=data.race_id,
+        )
+        animal_entry = AnimalEntry(
+            animal=animal,
+            entry_type=data.entry_type,
+            origin_city_code=data.rescue_city_code,
+        )
+        self.session.add(animal)
+        self.session.add(animal_entry)
+        self.session.commit()
         return code
 
     def add_entry(self, animal_id: int, data: NewEntryModel) -> int:
