@@ -1,12 +1,11 @@
-from datetime import date, datetime, timedelta
 import json
 import logging
-from hermadata.constants import AnimalEvent
-from hermadata.models import PaginationResult
-from hermadata.repositories import BaseRepository
+from datetime import date, datetime, timedelta
+
 from sqlalchemy import and_, func, insert, select, update
 from sqlalchemy.orm import Session
 
+from hermadata.constants import AnimalEvent
 from hermadata.database.models import (
     Adopter,
     Adoption,
@@ -16,9 +15,12 @@ from hermadata.database.models import (
     AnimalLog,
     Comune,
 )
+from hermadata.models import PaginationResult
+from hermadata.repositories import BaseRepository
 from hermadata.repositories.animal.models import (
     AnimalDocumentModel,
     AnimalExit,
+    AnimalGetQuery,
     AnimalModel,
     AnimalQueryModel,
     AnimalSearchModel,
@@ -32,6 +34,14 @@ from hermadata.repositories.animal.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class EntryNotCompleteException(Exception):
+    pass
+
+
+class AnimalNotPresentException(Exception):
+    pass
 
 
 class AnimalRepository(BaseRepository):
@@ -131,9 +141,40 @@ class SQLAnimalRepository(AnimalRepository):
         if query.rescue_city_code is not None:
             where.append(Animal.rescue_city_code == query.rescue_city_code)
 
-        result = self.session.execute(select(Animal).where(*where)).scalar_one()
+        result = self.session.execute(
+            select(
+                Animal.code,
+                Animal.race_id,
+                AnimalEntry.origin_city_code,
+                Animal.breed_id,
+                Animal.chip_code,
+                Animal.chip_code_set,
+                Animal.name,
+                Animal.birth_date,
+                AnimalEntry.entry_date,
+                AnimalEntry.entry_type,
+                Animal.sex,
+                Animal.sterilized,
+                Animal.notes,
+                Animal.img_path,
+                Animal.fur,
+                Animal.size,
+                AnimalEntry.exit_date,
+                AnimalEntry.exit_type,
+            )
+            .where(*where)
+            .join(
+                AnimalEntry,
+                and_(
+                    Animal.id == AnimalEntry.animal_id,
+                    AnimalEntry.current.is_(True),
+                ),
+            )
+        ).one()
 
-        data = AnimalModel.model_validate(result, from_attributes=True)
+        data = AnimalModel.model_validate(
+            AnimalGetQuery(*result), from_attributes=True
+        )
         return data
 
     def get_adoption(self, animal_id: int):
@@ -307,11 +348,11 @@ class SQLAnimalRepository(AnimalRepository):
             )
         ).first()
         if not check:
-            raise Exception(f"animal {animal_id} is not present")
+            raise AnimalNotPresentException()
 
         entry_date, exit_date = check
         if not entry_date:
-            raise Exception(f"animal {animal_id} did not complete the entry")
+            raise EntryNotCompleteException()
         if exit_date:
             raise Exception(f"animal {animal_id} already is exit!")
 
