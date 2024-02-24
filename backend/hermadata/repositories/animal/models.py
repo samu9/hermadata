@@ -30,6 +30,15 @@ class NewAnimalEntryModel(BaseModel):
     entry_type: str
 
 
+class CompleteEntryModel(BaseModel):
+    entry_date: date
+
+
+class NewEntryModel(BaseModel):
+    rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
+    entry_type: str
+
+
 class AnimalSearchModel(PaginationQuery):
     from_index: int | None = None
     to_index: int | None = None
