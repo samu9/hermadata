@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import sessionmaker, Session
+from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 
 from hermadata.storage.disk_storage import DiskStorage
 
@@ -24,3 +25,9 @@ def db_session(engine: Engine) -> Session:
     session = sessionmaker(bind=engine)()
 
     return session
+
+
+@pytest.fixture(scope="function")
+def animal_repository(db_session: Session) -> SQLAnimalRepository:
+    repo = SQLAnimalRepository(db_session)
+    return repo
