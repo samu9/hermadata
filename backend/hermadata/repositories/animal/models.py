@@ -7,7 +7,7 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
 from hermadata.constants import EntryType, ExitType
-from hermadata.database.models import Animal
+from hermadata.database.models import Animal, AnimalEntry
 from hermadata.models import PaginationQuery
 
 rescue_city_code_PATTERN = r"[A-Z]\d{3}"
@@ -24,7 +24,7 @@ class WhereClauseMapItem(NamedTuple):
     in_or: bool = False
 
 
-class NewAnimalEntryModel(BaseModel):
+class NewAnimalModel(BaseModel):
     race_id: str
     rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
     entry_type: str
@@ -160,12 +160,11 @@ class UpdateAnimalModel(BaseModel):
     name: str | None = None
     breed_id: int | None = None
     chip_code: str | None = None
-    chip_code_set: bool
+    chip_code_set: bool | None = False
 
     sex: int | None = None
     sterilized: bool | None = None
     notes: str | None = None
-    entry_date: date | None = None
     birth_date: date | None = None
     fur: int | None = None
     size: int | None = None
