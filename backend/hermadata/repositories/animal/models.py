@@ -199,6 +199,8 @@ AnimalSearchResultQuery = namedtuple(
     "AnimalSearchResultQuery", AnimalSearchResult.model_fields.keys()
 )
 
+AnimalGetQuery = namedtuple("AnimalGetQuery", AnimalModel.model_fields.keys())
+
 
 class NewAnimalDocument(BaseModel):
     document_id: int
