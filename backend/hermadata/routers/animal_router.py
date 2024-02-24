@@ -101,7 +101,7 @@ def animal_exit(
     return True
 
 
-@router.post("/{animal_id}/entry/complete", response_class=bool)
+@router.post("/{animal_id}/entry/complete")
 def complete_entry(
     animal_id: int,
     data: CompleteEntryModel,
@@ -112,7 +112,7 @@ def complete_entry(
     return True
 
 
-@router.post("/{animal_id}/entry", response_class=int)
+@router.post("/{animal_id}/entry")
 def add_entry(
     animal_id: int,
     data: NewEntryModel,
