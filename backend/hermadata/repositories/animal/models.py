@@ -61,18 +61,22 @@ class AnimalSearchModel(PaginationQuery):
         "rescue_city_code": WhereClauseMapItem(
             lambda v: Animal.rescue_city_code == v
         ),
-        "entry_type": WhereClauseMapItem(lambda v: Animal.entry_type == v),
-        "exit_type": WhereClauseMapItem(lambda v: Animal.exit_type == v),
+        "entry_type": WhereClauseMapItem(lambda v: AnimalEntry.entry_type == v),
+        "exit_type": WhereClauseMapItem(lambda v: AnimalEntry.exit_type == v),
         "race_id": WhereClauseMapItem(lambda v: Animal.race_id == v),
-        "from_entry_date": WhereClauseMapItem(lambda v: Animal.entry_date >= v),
-        "to_entry_date": WhereClauseMapItem(lambda v: Animal.entry_date <= v),
+        "from_entry_date": WhereClauseMapItem(
+            lambda v: AnimalEntry.entry_date >= v
+        ),
+        "to_entry_date": WhereClauseMapItem(
+            lambda v: AnimalEntry.entry_date <= v
+        ),
         "from_created_at": WhereClauseMapItem(lambda v: Animal.created_at >= v),
         "to_created_at": WhereClauseMapItem(lambda v: Animal.created_at <= v),
         "present": WhereClauseMapItem(
             lambda v: v
             and (
-                Animal.exit_date.is_(None),
-                Animal.exit_date > datetime.now().date(),
+                AnimalEntry.exit_date.is_(None),
+                AnimalEntry.exit_date > datetime.now().date(),
             )
             or None,
             in_or=True,
@@ -80,8 +84,8 @@ class AnimalSearchModel(PaginationQuery):
         "not_present": WhereClauseMapItem(
             lambda v: (
                 and_(
-                    Animal.exit_date.is_not(None),
-                    Animal.exit_date <= datetime.now().date(),
+                    AnimalEntry.exit_date.is_not(None),
+                    AnimalEntry.exit_date <= datetime.now().date(),
                 )
                 if v
                 else None
