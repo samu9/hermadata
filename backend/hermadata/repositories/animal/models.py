@@ -84,8 +84,10 @@ class AnimalSearchModel(PaginationQuery):
         "present": WhereClauseMapItem(
             lambda v: v
             and (
-                AnimalEntry.exit_date.is_(None),
-                AnimalEntry.exit_date > datetime.now().date(),
+                or_(
+                    AnimalEntry.exit_date.is_(None),
+                    AnimalEntry.exit_date > datetime.now().date(),
+                ),
             )
             or None,
             in_or=True,
