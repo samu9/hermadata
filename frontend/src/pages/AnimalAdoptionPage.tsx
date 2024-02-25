@@ -13,7 +13,7 @@ import AdopterCard from "../components/adoption/AdopterCard"
 import AnimalCard from "../components/adoption/AnimalCard"
 import SearchAdopter from "../components/adoption/SearchAdopter"
 import { PageTitle, SubTitle } from "../components/typography"
-import { adoptionService, apiService } from "../main"
+import { apiService } from "../main"
 import { Adopter } from "../models/adopter.schema"
 import { NewAnimalAdoption } from "../models/animal.schema"
 import { useAnimalQuery } from "../queries"
@@ -81,9 +81,7 @@ const AnimalAdoptionPage = () => {
             />
         </div>
     )
-    useEffect(() => {
-        adoptionService.start(id!)
-    }, [])
+    useEffect(() => {}, [])
 
     return (
         <div className="flex flex-col h-full gap-3 max-w-3xl">
