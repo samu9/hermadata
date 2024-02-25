@@ -59,14 +59,19 @@ def get_animal(
     return animal_data
 
 
-@router.post("/{animal_id}")
+@router.post("/{animal_id}", response_model=int | ApiError)
 def update_animal(
     animal_id: str,
     data: UpdateAnimalModel,
     repo: SQLAnimalRepository = Depends(animal_repository_factory),
 ):
-    result = repo.update(animal_id, data)
-
+    try:
+        result = repo.update(animal_id, data)
+    except ExistingChipCodeException as e:
+        return ApiError(
+            code=ApiErrorCode.existing_chip_code,
+            content={"animal_id": e.animal_id},
+        )
     return result
 
 

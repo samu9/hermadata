@@ -44,6 +44,12 @@ class AnimalNotPresentException(Exception):
     pass
 
 
+class ExistingChipCodeException(Exception):
+    def __init__(self, *args: object, animal_id: int) -> None:
+        self.animal_id = animal_id
+        super().__init__(*args)
+
+
 class AnimalRepository(BaseRepository):
     def __init__(self) -> None:
         super().__init__()
@@ -303,12 +309,27 @@ class SQLAnimalRepository(AnimalRepository):
                 updates.chip_code = None
             values["chip_code_set"] = True
 
-        result = self.session.execute(
-            update(Animal).where(Animal.id == id).values(**values)
+        try:
+            result = self.session.execute(
+                update(Animal).where(Animal.id == id).values(**values)
+            )
+        except IntegrityError as e:
+            if updates.chip_code and "chip_code" in e.orig.args[1]:
+                other_animal_id = self.session.execute(
+                    select(Animal.id).where(
+                        Animal.chip_code == updates.chip_code
+                    )
+                ).scalar_one()
+                raise ExistingChipCodeException(animal_id=other_animal_id)
+            self.session.rollback()
+            raise e
+        event_log = AnimalLog(
+            animal_id=id,
+            event=AnimalEvent.data_update.value,
+            data=json.loads(updates.model_dump_json()),
         )
-
+        self.session.add(event_log)
         self.session.commit()
-
         return result.rowcount
 
     def new_document(self, animal_id: int, data: NewAnimalDocument):
