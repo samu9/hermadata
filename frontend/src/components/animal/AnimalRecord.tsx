@@ -2,6 +2,7 @@ import {
     faCircleXmark,
     faFile,
     faHome,
+    faHospital,
     faList,
     faPencil,
 } from "@fortawesome/free-solid-svg-icons"
@@ -33,6 +34,11 @@ const items = [
         label: "Eventi",
         icon: <FontAwesomeIcon icon={faList} fixedWidth className="px-1" />,
         path: "events",
+    },
+    {
+        label: "Dati sanitari",
+        icon: <FontAwesomeIcon icon={faHospital} fixedWidth className="px-1" />,
+        path: "health",
     },
     {
         label: "Modifica",
