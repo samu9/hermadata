@@ -238,6 +238,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("code"),
+        sa.UniqueConstraint("chip_code"),
     )
     op.create_table(
         "procedure_document_checklist",

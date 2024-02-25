@@ -35,7 +35,9 @@ class Animal(Base):
     stage: Mapped[AnimalStage] = mapped_column(String(1), nullable=True)
 
     name: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    chip_code: Mapped[str] = mapped_column(String(100), nullable=True)
+    chip_code: Mapped[str] = mapped_column(
+        String(100), nullable=True, unique=True
+    )
     chip_code_set: Mapped[bool] = mapped_column(
         server_default=expression.false(), default=False
     )
