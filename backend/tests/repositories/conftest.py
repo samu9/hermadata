@@ -1,9 +1,10 @@
-import alembic
 import pytest
+from alembic import command
+from alembic.config import Config
 from sqlalchemy import Engine, create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
+from sqlalchemy.orm import Session, sessionmaker
 
+from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.storage.disk_storage import DiskStorage
 
 
