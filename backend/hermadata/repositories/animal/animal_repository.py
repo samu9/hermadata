@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta
 
 from sqlalchemy import and_, func, insert, select, update
 from sqlalchemy.orm import Session
-
+from sqlalchemy.exc import IntegrityError
 from hermadata.constants import AnimalEvent
 from hermadata.database.models import (
     Adopter,
@@ -86,8 +86,14 @@ class SQLAnimalRepository(AnimalRepository):
             entry_type=data.entry_type,
             origin_city_code=data.rescue_city_code,
         )
+        event_log = AnimalLog(
+            animal=animal,
+            event=AnimalEvent.create.value,
+            data=data.model_dump(),
+        )
         self.session.add(animal)
         self.session.add(animal_entry)
+        self.session.add(event_log)
         self.session.commit()
         return code
 
@@ -113,6 +119,7 @@ class SQLAnimalRepository(AnimalRepository):
             .where(AnimalEntry.animal_id, AnimalEntry.current.is_(True))
             .values(current=False)
         )
+
         new_entry = AnimalEntry(
             animal_id=animal_id,
             entry_type=data.entry_type,
@@ -120,9 +127,16 @@ class SQLAnimalRepository(AnimalRepository):
         )
 
         self.session.add(new_entry)
+        new_entry_id = new_entry.id
+        event_log = AnimalLog(
+            animal_id=animal_id,
+            event=AnimalEvent.new_entry.value,
+            data=data.model_dump(),
+        )
+        self.session.add(event_log)
         self.session.commit()
 
-        return new_entry.id
+        return new_entry_id
 
     def check_complete_entry_needed(self, animal_id: int) -> bool:
         check = self.session.execute(
@@ -295,6 +309,12 @@ class SQLAnimalRepository(AnimalRepository):
             .where(AnimalEntry.animal_id == animal_id)
             .values(entry_date=data.entry_date)
         )
+        event_log = AnimalLog(
+            animal_id=animal_id,
+            event=AnimalEvent.entry_complete.value,
+            data=json.loads(data.model_dump_json()),
+        )
+        self.session.add(event_log)
         self.session.commit()
 
     def update(self, id: str, updates: UpdateAnimalModel):
