@@ -5,7 +5,7 @@ import { Toast } from "primereact/toast"
 import { useRef } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
-import { useParams } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 import { apiService } from "../../main"
 import { AnimalEdit, animalEditSchema } from "../../models/animal.schema"
 import {
@@ -21,6 +21,8 @@ import ControlledRadio from "../forms/ControlledRadio"
 import ControlledTextarea from "../forms/ControlledTextarea"
 import ControlledDropdown from "../forms/ControlledDropdown"
 import ControlledInputMask from "../forms/ControlledInputMask"
+import { ApiError, apiErrorSchema } from "../../models/api.schema"
+import { ApiErrorCode } from "../../constants"
 
 const AnimalEditForm = () => {
     const { id } = useParams()
@@ -46,10 +48,40 @@ const AnimalEditForm = () => {
         mutationFn: (args: { id: string; data: AnimalEdit }) =>
             apiService.updateAnimal(args.id, args.data),
         onSuccess: (
-            result: boolean,
+            result: boolean | ApiError,
             variables: { id: string; data: AnimalEdit },
             context
         ) => {
+            const isApiError = apiErrorSchema.safeParse(result)
+            console.log(isApiError)
+            if (isApiError.success) {
+                if (isApiError.data.code == ApiErrorCode.existingChipCode) {
+                    const otherAnimalId = isApiError.data.content!.animal_id
+                    toast.current?.show({
+                        severity: "warn",
+                        summary: "Il chip è già esistente",
+                        sticky: true,
+
+                        content: (
+                            <div className="flex gap-3 w-full items-start">
+                                <i className="text-[2rem] pi pi-exclamation-triangle" />
+                                <div className="flex flex-col gap-1 w-full">
+                                    <span className="p-toast-summary">
+                                        Chip già esistente
+                                    </span>
+                                    <Link
+                                        className="underline"
+                                        to={"/animal/" + otherAnimalId}
+                                    >
+                                        Vai alla scheda dell'animale
+                                    </Link>
+                                </div>
+                            </div>
+                        ),
+                    })
+                }
+                return
+            }
             queryClient.invalidateQueries({
                 queryKey: ["animal-search"],
             })
@@ -60,7 +92,7 @@ const AnimalEditForm = () => {
             })
             reset(variables.data)
         },
-        onError: () =>
+        onError: (error) =>
             toast.current?.show({
                 severity: "error",
                 summary: "Qualcosa è andato storto",
@@ -93,11 +125,7 @@ const AnimalEditForm = () => {
                                     disabled={animalQuery.data?.chip_code_set}
                                     className="w-52"
                                 />
-                                <ControlledInputDate<AnimalEdit>
-                                    fieldName="entry_date"
-                                    label="Data ingresso"
-                                    className="w-32"
-                                />
+
                                 {/* <ControlledDropdown<AnimalEdit, ProvinciaSchema>
                                     options={[{ name: "Test", id: "1" }]}
                                     optionLabel="name"
