@@ -1,16 +1,31 @@
-import { faMapPin, faWarning } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button } from "primereact/button"
+import { useParams } from "react-router-dom"
+import { useAnimalQuery } from "../../queries"
+import AnimalOverviewMessages from "./AnimalOverviewMessages"
 
+type OverviewItemProps = {
+    label: string
+    value?: string
+    content?: React.ReactNode
+}
+const OverviewItem = (props: OverviewItemProps) => (
+    <div className="flex gap-2 items-center">
+        <span className="text-xs ">{props.label}</span>
+        {props.value && (
+            <span className="text-[2rem] font-bold">{props.value}</span>
+        )}
+        {props.content}
+    </div>
+)
 const AnimalOverview = () => {
+    const { id } = useParams()
+    const animalQuery = useAnimalQuery(id!)
+
     return (
         <div>
-            <div className="w-full">
-                <Button severity="warning" outlined raised>
-                    <FontAwesomeIcon icon={faWarning} /> Completa ingresso
-                </Button>
+            <AnimalOverviewMessages animal_id={id!} />
+            <div>
+                <OverviewItem label="Età" value="3" />
             </div>
-
             {/* <div>
                     <FontAwesomeIcon icon={faMapPin} /> {props.data.rescue_city}{" "}
                     ({props.data.rescue_province})
