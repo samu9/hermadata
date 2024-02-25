@@ -1,6 +1,8 @@
 from typing import Generic, TypeVar
 from pydantic import BaseModel
 
+from hermadata.constants import ApiErrorCode
+
 
 T = TypeVar("T")
 
@@ -18,3 +20,9 @@ class PaginationResult(BaseModel, Generic[T]):
 class UtilElement(BaseModel):
     id: str | int
     label: str
+
+
+class ApiError(BaseModel):
+    code: ApiErrorCode
+    content: dict
+    message: str | None = None
