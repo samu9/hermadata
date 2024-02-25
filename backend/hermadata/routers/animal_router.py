@@ -1,9 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import NoResultFound
+from hermadata.constants import ApiErrorCode
 
 from hermadata.dependancies import animal_repository_factory
-from hermadata.models import PaginationResult
-from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
+from hermadata.models import ApiError, PaginationResult
+from hermadata.repositories.animal.animal_repository import (
+    ExistingChipCodeException,
+    SQLAnimalRepository,
+)
 from hermadata.repositories.animal.models import (
     AnimalDocumentModel,
     AnimalExit,
@@ -126,3 +130,11 @@ def add_entry(
     result = repo.add_entry(animal_id, data)
 
     return result
+
+
+@router.get("/{animal_id}/warning")
+def get_warnings(
+    animal_id: int,
+    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+):
+    return
