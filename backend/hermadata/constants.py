@@ -79,4 +79,12 @@ ENTRY_RESULT_LABELS = {
 
 
 class AnimalEvent(Enum):
+    create = "CR"
     exit_ = "EX"
+    new_entry = "NE"
+    entry_complete = "EC"
+    data_update = "DU"
+
+
+class ApiErrorCode(Enum):
+    existing_chip_code = "ECC"
