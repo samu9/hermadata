@@ -12,7 +12,7 @@ import {
 } from "./validators"
 
 export const newAnimalEntrySchema = z.object({
-    race_id: z.string().length(1),
+    race_id: z.string().length(1).nullish(),
     rescue_city_code: cityCodeValidator,
 
     entry_type: z.string(),
@@ -48,7 +48,6 @@ export const animalEditSchema = z.object({
     chip_code: z.string().nullish(),
     chip_code_set: z.boolean(),
 
-    entry_date: dateOnly.nullish(),
     birth_date: dateOnly.nullish(),
     fur: z.number().nullish(),
     size: z.number().nullish(),
@@ -59,6 +58,11 @@ export const animalEditSchema = z.object({
 })
 
 export type AnimalEdit = z.infer<typeof animalEditSchema>
+
+export const animalCompleteEntrySchema = z.object({
+    entry_date: dateOnly,
+})
+export type AnimalCompleteEntry = z.infer<typeof animalCompleteEntrySchema>
 
 export const animalSearchResultSchema = z.object({
     id: z.number(),
