@@ -2,6 +2,7 @@ import axios, { AxiosInstance } from "axios"
 import { Adopter, NewAdopter } from "../models/adopter.schema"
 import {
     Animal,
+    AnimalCompleteEntry,
     AnimalDocUpload,
     AnimalDocument,
     AnimalEdit,
@@ -56,10 +57,13 @@ class ApiService {
         return res.data
     }
 
-    createAnimalEntry(data: NewAnimalEntry): Promise<string> {
+    createAnimal(data: NewAnimalEntry): Promise<string> {
         return this.post<string>(ApiEndpoints.animal.create, data)
     }
 
+    addAnimalEntry(animalId: string, data: NewAnimalEntry): Promise<string> {
+        return this.post<string>(ApiEndpoints.animal.addEntry(animalId), data)
+    }
     async getProvince(): Promise<ProvinciaSchema[]> {
         const data = await this.get<ProvinciaSchema[]>(
             ApiEndpoints.util.getProvince
@@ -131,6 +135,17 @@ class ApiService {
         return result
     }
 
+    async completeAnimalEntry(
+        id: string,
+        data: AnimalCompleteEntry
+    ): Promise<boolean> {
+        const result = await this.post<boolean>(
+            ApiEndpoints.animal.completeEntry(id),
+            data
+        )
+
+        return result
+    }
     async addBreed(data: NewBreed): Promise<Breed> {
         const result = await this.post<Breed>(ApiEndpoints.breed.create, data)
 
