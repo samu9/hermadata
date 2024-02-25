@@ -198,7 +198,16 @@ class SQLAnimalRepository(AnimalRepository):
         where = query.as_where_clause()
 
         total = self.session.execute(
-            select(func.count("*")).select_from(Animal).where(*where)
+            select(func.count("*"))
+            .select_from(Animal)
+            .join(
+                AnimalEntry,
+                and_(
+                    Animal.id == AnimalEntry.animal_id,
+                    AnimalEntry.current.is_(True),
+                ),
+            )
+            .where(*where)
         ).scalar_one()
         stmt = (
             select(
