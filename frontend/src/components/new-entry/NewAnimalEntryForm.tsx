@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "react-query"
 import { Button } from "primereact/button"
 import { Dropdown } from "primereact/dropdown"
 import {
+    Animal,
     NewAnimalEntry,
     newAnimalEntrySchema,
 } from "../../models/animal.schema"
@@ -19,6 +20,9 @@ import {
 } from "../../queries"
 
 type Props = {
+    // first entry must also specify race
+    animalId?: string
+    title?: string
     onSuccess?: (code: string) => void
 }
 
@@ -38,12 +42,30 @@ const NewAnimalForm = (props: Props) => {
     const queryClient = useQueryClient()
     const newEntryMutation = useMutation({
         mutationKey: "new-animal-entry",
-        mutationFn: (data: NewAnimalEntry) =>
-            apiService.createAnimalEntry(data),
-        onSuccess: (data: string) => {
+        mutationFn: (data: NewAnimalEntry) => {
+            if (props.animalId) {
+                return apiService.addAnimalEntry(props.animalId, data)
+            } else {
+                return apiService.createAnimal(data)
+            }
+        },
+        onSuccess: (data: string, variables) => {
             queryClient.invalidateQueries({
                 queryKey: ["animal-search"],
             })
+            if (props.animalId) {
+                queryClient.setQueryData(
+                    ["animal", props.animalId],
+                    //@ts-ignore: types Updater and Animal are not compatible
+                    (old: Animal) => ({
+                        ...old,
+                        entry_type: variables.entry_type,
+                        entry_date: null,
+                        exit_date: null,
+                        exit_type: null,
+                    })
+                )
+            }
             props.onSuccess?.(data)
         },
     })
@@ -52,33 +74,35 @@ const NewAnimalForm = (props: Props) => {
     }
     return (
         <div className="w-full">
-            <SubTitle>Nuovo ingresso</SubTitle>
+            <SubTitle>{props.title || "Nuovo ingresso"}</SubTitle>
             <Divider />
             <form onSubmit={handleSubmit(onSubmit)} className="w-full">
                 <div className="flex flex-col gap-2 items-start">
-                    <Controller
-                        name="race_id"
-                        control={form.control}
-                        render={({ field }) => (
-                            <div className="w-1/2">
-                                <label
-                                    className="text-xs text-gray-500"
-                                    htmlFor={field.name}
-                                >
-                                    Tipo
-                                </label>
+                    {!props.animalId && (
+                        <Controller
+                            name="race_id"
+                            control={form.control}
+                            render={({ field }) => (
+                                <div className="w-1/2">
+                                    <label
+                                        className="text-xs text-gray-500"
+                                        htmlFor={field.name}
+                                    >
+                                        Tipo
+                                    </label>
 
-                                <Dropdown
-                                    {...field}
-                                    options={racesQuery.data}
-                                    optionLabel="name"
-                                    optionValue="id"
-                                    placeholder="Seleziona"
-                                    className="w-full md:w-14rem"
-                                />
-                            </div>
-                        )}
-                    />
+                                    <Dropdown
+                                        {...field}
+                                        options={racesQuery.data}
+                                        optionLabel="name"
+                                        optionValue="id"
+                                        placeholder="Seleziona"
+                                        className="w-full md:w-14rem"
+                                    />
+                                </div>
+                            )}
+                        />
+                    )}
                     <div className="flex flex-col w-full">
                         <label
                             className="text-xs text-gray-500"
