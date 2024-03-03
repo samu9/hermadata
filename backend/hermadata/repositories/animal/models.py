@@ -107,7 +107,7 @@ class AnimalSearchModel(PaginationQuery):
 
     def as_order_by_clause(self) -> MappedColumn | None:
         if not (self.sort_field and self.sort_order):
-            return None
+            return Animal.created_at.desc()
         column: MappedColumn = getattr(Animal, self.sort_field)
         if self.sort_order == 1:
             return column.asc()
