@@ -128,7 +128,7 @@ const AnimalEditForm = () => {
                                 <ControlledInputMask<AnimalEdit>
                                     fieldName="chip_code"
                                     label="Chip"
-                                    mask="999.999.999.999.999.999"
+                                    mask="999.999.999.999.999"
                                     disabled={animalQuery.data?.chip_code_set}
                                     className="w-52"
                                 />
