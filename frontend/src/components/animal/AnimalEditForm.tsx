@@ -85,7 +85,14 @@ const AnimalEditForm = () => {
             queryClient.invalidateQueries({
                 queryKey: ["animal-search"],
             })
-            queryClient.setQueryData(["animal", variables.id], variables.data)
+            queryClient.setQueryData(
+                ["animal", variables.id],
+                //@ts-ignore: types Updater and Animal are not compatible
+                (old: Animal) => ({
+                    ...old,
+                    ...variables.data,
+                })
+            )
             toast.current?.show({
                 severity: "success",
                 summary: "Scheda aggiornata",
