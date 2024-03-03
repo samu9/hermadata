@@ -163,6 +163,11 @@ const AnimalEditForm = () => {
                             </div>
                             <ControlledBreedsDropdown
                                 raceId={animalQuery.data?.race_id}
+                                onAddBreed={(breed) =>
+                                    setValue("breed_id", breed.id, {
+                                        shouldDirty: true,
+                                    })
+                                }
                             />
 
                             <div className="flex flex-row gap-4 py-2">
