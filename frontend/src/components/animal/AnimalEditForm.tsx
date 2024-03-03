@@ -6,8 +6,10 @@ import { useRef } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 import { Link, useParams } from "react-router-dom"
+import { ApiErrorCode } from "../../constants"
 import { apiService } from "../../main"
 import { AnimalEdit, animalEditSchema } from "../../models/animal.schema"
+import { ApiError, apiErrorSchema } from "../../models/api.schema"
 import {
     useAnimalFurTypesQuery,
     useAnimalQuery,
@@ -15,14 +17,12 @@ import {
 } from "../../queries"
 import ControlledBreedsDropdown from "../forms/ControlledBreedsDropdown"
 import ControlledCheckbox from "../forms/ControlledCheckbox"
+import ControlledDropdown from "../forms/ControlledDropdown"
 import ControlledInputDate from "../forms/ControlledInputDate"
+import ControlledInputMask from "../forms/ControlledInputMask"
 import ControlledInputText from "../forms/ControlledInputText"
 import ControlledRadio from "../forms/ControlledRadio"
 import ControlledTextarea from "../forms/ControlledTextarea"
-import ControlledDropdown from "../forms/ControlledDropdown"
-import ControlledInputMask from "../forms/ControlledInputMask"
-import { ApiError, apiErrorSchema } from "../../models/api.schema"
-import { ApiErrorCode } from "../../constants"
 
 const AnimalEditForm = () => {
     const { id } = useParams()
@@ -59,7 +59,6 @@ const AnimalEditForm = () => {
                     const otherAnimalId = isApiError.data.content!.animal_id
                     toast.current?.show({
                         severity: "warn",
-                        summary: "Il chip è già esistente",
                         sticky: true,
 
                         content: (
@@ -132,16 +131,6 @@ const AnimalEditForm = () => {
                                     disabled={animalQuery.data?.chip_code_set}
                                     className="w-52"
                                 />
-
-                                {/* <ControlledDropdown<AnimalEdit, ProvinciaSchema>
-                                    options={[{ name: "Test", id: "1" }]}
-                                    optionLabel="name"
-                                    optionValue="id"
-                                    fieldName="rescue_province"
-                                    label="Provincia ritrovamento"
-                                    disabled
-                                    className="w-52"
-                                /> */}
                             </div>
                             <div className="flex flex-row gap-4 py-2">
                                 <ControlledCheckbox<AnimalEdit>
