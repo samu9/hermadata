@@ -1,7 +1,5 @@
 import { Dropdown } from "primereact/dropdown"
 import { Controller, useFormContext } from "react-hook-form"
-import { useQuery } from "react-query"
-import { apiService } from "../../main"
 import { classNames } from "primereact/utils"
 import { Button } from "primereact/button"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
