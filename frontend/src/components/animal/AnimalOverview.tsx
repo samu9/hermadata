@@ -23,9 +23,7 @@ const AnimalOverview = () => {
     return (
         <div>
             <AnimalOverviewMessages animal_id={id!} />
-            <div>
-                <OverviewItem label="Età" value="3" />
-            </div>
+            <div>{/* <OverviewItem label="Età" value="3" /> */}</div>
             {/* <div>
                     <FontAwesomeIcon icon={faMapPin} /> {props.data.rescue_city}{" "}
                     ({props.data.rescue_province})
