@@ -1,3 +1,9 @@
+# 0.3.0
+## IMPROVEMENTS
+- add chip code validation in update animal
+## FIXES
+- fixed animal search sort order using map
+
 # 0.2.0
 - updated constants:
     - added entry types
