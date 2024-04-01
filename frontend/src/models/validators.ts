@@ -28,3 +28,7 @@ export const dateOnly = dateFromString.transform((d) => {
 export const docKindNameValidator = z
     .string()
     .min(3, "Il nome deve avere almeno 3 caratteri.")
+
+export const chipCodeValidator = z
+    .string()
+    .regex(/\d{3}\.\d{3}\.\d{3}\.\d{3}\.\d{3}/, "Codice chip non valido")

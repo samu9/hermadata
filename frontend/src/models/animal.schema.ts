@@ -6,6 +6,7 @@ import {
 import {
     animalCodeValidator,
     animalRaceValidator,
+    chipCodeValidator,
     cityCodeValidator,
     dateFromString,
     dateOnly,
@@ -45,7 +46,10 @@ export type Animal = z.infer<typeof animalSchema>
 
 export const animalEditSchema = z.object({
     name: z.string().nullable().optional(),
-    chip_code: z.string().nullish(),
+    chip_code: z.preprocess(
+        (arg) => (arg === "" ? null : arg),
+        chipCodeValidator.nullish()
+    ),
     chip_code_set: z.boolean(),
 
     birth_date: dateOnly.nullish(),
