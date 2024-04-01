@@ -1,5 +1,9 @@
 import { FormProvider, useForm } from "react-hook-form"
-import { AnimalExit, animalExitSchema } from "../../models/animal.schema"
+import {
+    Animal,
+    AnimalExit,
+    animalExitSchema,
+} from "../../models/animal.schema"
 import ControlledDropdown from "../forms/ControlledDropdown"
 import ControlledInputDate from "../forms/ControlledInputDate"
 import { Button } from "primereact/button"
@@ -31,12 +35,19 @@ const AnimalExitForm = () => {
             exit_type: animalQuery.data?.exit_type || undefined,
         },
     })
+
     const animalExitMutation = useMutation({
         mutationFn: (data: AnimalExit) => apiService.animalExit(data),
-        onSuccess: () => {
+        onSuccess: (data, variables) => {
             queryClient.invalidateQueries({
                 queryKey: ["animal-search"],
             })
+            //@ts-ignore: types Updater and Animal are not compatible
+            queryClient.setQueryData(["animal", id], (old: Animal) => ({
+                ...old,
+                exit_date: variables.exit_date,
+                exit_type: variables.exit_type,
+            }))
             toast.current?.show({
                 severity: "success",
                 summary: "Uscita completata",

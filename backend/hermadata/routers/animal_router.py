@@ -1,17 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import NoResultFound
+from hermadata.constants import ApiErrorCode
 
 from hermadata.dependancies import animal_repository_factory
-from hermadata.models import PaginationResult
-from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
+from hermadata.models import ApiError, PaginationResult
+from hermadata.repositories.animal.animal_repository import (
+    ExistingChipCodeException,
+    SQLAnimalRepository,
+)
 from hermadata.repositories.animal.models import (
     AnimalDocumentModel,
     AnimalExit,
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
+    CompleteEntryModel,
     NewAnimalDocument,
-    NewAnimalEntryModel,
+    NewAnimalModel,
+    NewEntryModel,
     UpdateAnimalModel,
 )
 
@@ -20,10 +26,10 @@ router = APIRouter(prefix="/animal")
 
 @router.post("")
 def new_animal_entry(
-    data: NewAnimalEntryModel,
+    data: NewAnimalModel,
     repo: SQLAnimalRepository = Depends(animal_repository_factory),
 ):
-    animal_code = repo.insert_new_entry(data)
+    animal_code = repo.new_animal(data)
 
     return animal_code
 
@@ -57,14 +63,19 @@ def get_animal(
     return animal_data
 
 
-@router.post("/{animal_id}")
+@router.post("/{animal_id}", response_model=int | ApiError)
 def update_animal(
     animal_id: str,
     data: UpdateAnimalModel,
     repo: SQLAnimalRepository = Depends(animal_repository_factory),
 ):
-    result = repo.update(animal_id, data)
-
+    try:
+        result = repo.update(animal_id, data)
+    except ExistingChipCodeException as e:
+        return ApiError(
+            code=ApiErrorCode.existing_chip_code,
+            content={"animal_id": e.animal_id},
+        )
     return result
 
 
@@ -97,3 +108,33 @@ def animal_exit(
     repo.exit(animal_id, data)
 
     return True
+
+
+@router.post("/{animal_id}/entry/complete")
+def complete_entry(
+    animal_id: int,
+    data: CompleteEntryModel,
+    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+):
+    repo.complete_entry(animal_id, data)
+
+    return True
+
+
+@router.post("/{animal_id}/entry")
+def add_entry(
+    animal_id: int,
+    data: NewEntryModel,
+    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+):
+    result = repo.add_entry(animal_id, data)
+
+    return result
+
+
+@router.get("/{animal_id}/warning")
+def get_warnings(
+    animal_id: int,
+    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+):
+    return

@@ -41,6 +41,10 @@ const routes: RouteObject[] = [
                             { path: "events", element: <AnimalEvents /> },
                             { path: "edit", element: <AnimalEditForm /> },
                             {
+                                path: "health",
+                                element: <div>IN COSTRUZIONE</div>,
+                            },
+                            {
                                 path: "exit",
                                 element: <AnimalExitForm />,
                             },
@@ -58,6 +62,10 @@ const routes: RouteObject[] = [
             {
                 path: "adopters",
                 element: <NewAdopterForm />,
+            },
+            {
+                path: "exports",
+                element: <div>IN COSTRUZIONE</div>,
             },
         ],
     },

@@ -7,7 +7,7 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
 from hermadata.constants import EntryType, ExitType
-from hermadata.database.models import Animal
+from hermadata.database.models import Animal, AnimalEntry
 from hermadata.models import PaginationQuery
 
 rescue_city_code_PATTERN = r"[A-Z]\d{3}"
@@ -24,8 +24,17 @@ class WhereClauseMapItem(NamedTuple):
     in_or: bool = False
 
 
-class NewAnimalEntryModel(BaseModel):
+class NewAnimalModel(BaseModel):
     race_id: str
+    rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
+    entry_type: str
+
+
+class CompleteEntryModel(BaseModel):
+    entry_date: date
+
+
+class NewEntryModel(BaseModel):
     rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
     entry_type: str
 
@@ -53,6 +62,9 @@ class AnimalSearchModel(PaginationQuery):
     not_present: bool = False
     chip_code: Optional[str] = None
 
+    _sort_field_map: dict[str, MappedColumn] = {
+        "entry_date": AnimalEntry.entry_date
+    }
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
         "chip_code": WhereClauseMapItem(
@@ -61,18 +73,24 @@ class AnimalSearchModel(PaginationQuery):
         "rescue_city_code": WhereClauseMapItem(
             lambda v: Animal.rescue_city_code == v
         ),
-        "entry_type": WhereClauseMapItem(lambda v: Animal.entry_type == v),
-        "exit_type": WhereClauseMapItem(lambda v: Animal.exit_type == v),
+        "entry_type": WhereClauseMapItem(lambda v: AnimalEntry.entry_type == v),
+        "exit_type": WhereClauseMapItem(lambda v: AnimalEntry.exit_type == v),
         "race_id": WhereClauseMapItem(lambda v: Animal.race_id == v),
-        "from_entry_date": WhereClauseMapItem(lambda v: Animal.entry_date >= v),
-        "to_entry_date": WhereClauseMapItem(lambda v: Animal.entry_date <= v),
+        "from_entry_date": WhereClauseMapItem(
+            lambda v: AnimalEntry.entry_date >= v
+        ),
+        "to_entry_date": WhereClauseMapItem(
+            lambda v: AnimalEntry.entry_date <= v
+        ),
         "from_created_at": WhereClauseMapItem(lambda v: Animal.created_at >= v),
         "to_created_at": WhereClauseMapItem(lambda v: Animal.created_at <= v),
         "present": WhereClauseMapItem(
             lambda v: v
             and (
-                Animal.exit_date.is_(None),
-                Animal.exit_date > datetime.now().date(),
+                or_(
+                    AnimalEntry.exit_date.is_(None),
+                    AnimalEntry.exit_date > datetime.now().date(),
+                ),
             )
             or None,
             in_or=True,
@@ -80,8 +98,8 @@ class AnimalSearchModel(PaginationQuery):
         "not_present": WhereClauseMapItem(
             lambda v: (
                 and_(
-                    Animal.exit_date.is_not(None),
-                    Animal.exit_date <= datetime.now().date(),
+                    AnimalEntry.exit_date.is_not(None),
+                    AnimalEntry.exit_date <= datetime.now().date(),
                 )
                 if v
                 else None
@@ -91,9 +109,12 @@ class AnimalSearchModel(PaginationQuery):
     }
 
     def as_order_by_clause(self) -> MappedColumn | None:
-        if not (self.sort_field and self.sort_order):
-            return None
-        column: MappedColumn = getattr(Animal, self.sort_field)
+        if (
+            not (self.sort_field and self.sort_order)
+            and self.sort_field not in self._sort_field_map
+        ):
+            return Animal.created_at.desc()
+        column: MappedColumn = self._sort_field_map[self.sort_field]
         if self.sort_order == 1:
             return column.asc()
         if self.sort_order == -1:
@@ -147,12 +168,11 @@ class UpdateAnimalModel(BaseModel):
     name: str | None = None
     breed_id: int | None = None
     chip_code: str | None = None
-    chip_code_set: bool
+    chip_code_set: bool | None = False
 
     sex: int | None = None
     sterilized: bool | None = None
     notes: str | None = None
-    entry_date: date | None = None
     birth_date: date | None = None
     fur: int | None = None
     size: int | None = None
@@ -186,6 +206,8 @@ class AnimalSearchResult(BaseModel):
 AnimalSearchResultQuery = namedtuple(
     "AnimalSearchResultQuery", AnimalSearchResult.model_fields.keys()
 )
+
+AnimalGetQuery = namedtuple("AnimalGetQuery", AnimalModel.model_fields.keys())
 
 
 class NewAnimalDocument(BaseModel):

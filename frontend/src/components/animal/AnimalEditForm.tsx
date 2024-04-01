@@ -5,9 +5,11 @@ import { Toast } from "primereact/toast"
 import { useRef } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
-import { useParams } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
+import { ApiErrorCode } from "../../constants"
 import { apiService } from "../../main"
 import { AnimalEdit, animalEditSchema } from "../../models/animal.schema"
+import { ApiError, apiErrorSchema } from "../../models/api.schema"
 import {
     useAnimalFurTypesQuery,
     useAnimalQuery,
@@ -15,12 +17,12 @@ import {
 } from "../../queries"
 import ControlledBreedsDropdown from "../forms/ControlledBreedsDropdown"
 import ControlledCheckbox from "../forms/ControlledCheckbox"
+import ControlledDropdown from "../forms/ControlledDropdown"
 import ControlledInputDate from "../forms/ControlledInputDate"
+import ControlledInputMask from "../forms/ControlledInputMask"
 import ControlledInputText from "../forms/ControlledInputText"
 import ControlledRadio from "../forms/ControlledRadio"
 import ControlledTextarea from "../forms/ControlledTextarea"
-import ControlledDropdown from "../forms/ControlledDropdown"
-import ControlledInputMask from "../forms/ControlledInputMask"
 
 const AnimalEditForm = () => {
     const { id } = useParams()
@@ -46,21 +48,57 @@ const AnimalEditForm = () => {
         mutationFn: (args: { id: string; data: AnimalEdit }) =>
             apiService.updateAnimal(args.id, args.data),
         onSuccess: (
-            result: boolean,
+            result: boolean | ApiError,
             variables: { id: string; data: AnimalEdit },
             context
         ) => {
+            const isApiError = apiErrorSchema.safeParse(result)
+            console.log(isApiError)
+            if (isApiError.success) {
+                if (isApiError.data.code == ApiErrorCode.existingChipCode) {
+                    const otherAnimalId = isApiError.data.content!.animal_id
+                    toast.current?.show({
+                        severity: "warn",
+                        sticky: true,
+
+                        content: (
+                            <div className="flex gap-3 w-full items-start">
+                                <i className="text-[2rem] pi pi-exclamation-triangle" />
+                                <div className="flex flex-col gap-1 w-full">
+                                    <span className="p-toast-summary">
+                                        Chip già esistente
+                                    </span>
+                                    <Link
+                                        className="underline"
+                                        to={"/animal/" + otherAnimalId}
+                                    >
+                                        Vai alla scheda dell'animale
+                                    </Link>
+                                </div>
+                            </div>
+                        ),
+                    })
+                }
+                return
+            }
             queryClient.invalidateQueries({
                 queryKey: ["animal-search"],
             })
-            queryClient.setQueryData(["animal", variables.id], variables.data)
+            queryClient.setQueryData(
+                ["animal", variables.id],
+                //@ts-ignore: types Updater and Animal are not compatible
+                (old: Animal) => ({
+                    ...old,
+                    ...variables.data,
+                })
+            )
             toast.current?.show({
                 severity: "success",
                 summary: "Scheda aggiornata",
             })
             reset(variables.data)
         },
-        onError: () =>
+        onError: (error) =>
             toast.current?.show({
                 severity: "error",
                 summary: "Qualcosa è andato storto",
@@ -89,24 +127,10 @@ const AnimalEditForm = () => {
                                 <ControlledInputMask<AnimalEdit>
                                     fieldName="chip_code"
                                     label="Chip"
-                                    mask="999.999.999.999.999.999"
+                                    mask="999.999.999.999.999"
                                     disabled={animalQuery.data?.chip_code_set}
                                     className="w-52"
                                 />
-                                <ControlledInputDate<AnimalEdit>
-                                    fieldName="entry_date"
-                                    label="Data ingresso"
-                                    className="w-32"
-                                />
-                                {/* <ControlledDropdown<AnimalEdit, ProvinciaSchema>
-                                    options={[{ name: "Test", id: "1" }]}
-                                    optionLabel="name"
-                                    optionValue="id"
-                                    fieldName="rescue_province"
-                                    label="Provincia ritrovamento"
-                                    disabled
-                                    className="w-52"
-                                /> */}
                             </div>
                             <div className="flex flex-row gap-4 py-2">
                                 <ControlledCheckbox<AnimalEdit>
@@ -128,6 +152,11 @@ const AnimalEditForm = () => {
                             </div>
                             <ControlledBreedsDropdown
                                 raceId={animalQuery.data?.race_id}
+                                onAddBreed={(breed) =>
+                                    setValue("breed_id", breed.id, {
+                                        shouldDirty: true,
+                                    })
+                                }
                             />
 
                             <div className="flex flex-row gap-4 py-2">

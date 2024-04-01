@@ -1,34 +1,53 @@
-from datetime import date, datetime, timedelta
 import json
 import logging
-from hermadata.constants import AnimalEvent
-from hermadata.models import PaginationResult
-from hermadata.repositories import BaseRepository
-from sqlalchemy import func, insert, select, update
-from sqlalchemy.orm import Session
+from datetime import date, datetime, timedelta
 
+from sqlalchemy import and_, func, insert, select, update
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from hermadata.constants import AnimalEvent
 from hermadata.database.models import (
     Adopter,
     Adoption,
     Animal,
     AnimalDocument,
+    AnimalEntry,
     AnimalLog,
     Comune,
 )
+from hermadata.models import PaginationResult
+from hermadata.repositories import BaseRepository
 from hermadata.repositories.animal.models import (
     AnimalDocumentModel,
     AnimalExit,
+    AnimalGetQuery,
     AnimalModel,
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
     AnimalSearchResultQuery,
+    CompleteEntryModel,
     NewAnimalDocument,
-    NewAnimalEntryModel,
+    NewAnimalModel,
+    NewEntryModel,
     UpdateAnimalModel,
 )
 
 logger = logging.getLogger(__name__)
+
+
+class EntryNotCompleteException(Exception):
+    pass
+
+
+class AnimalNotPresentException(Exception):
+    pass
+
+
+class ExistingChipCodeException(Exception):
+    def __init__(self, *args: object, animal_id: int) -> None:
+        self.animal_id = animal_id
+        super().__init__(*args)
 
 
 class AnimalRepository(BaseRepository):
@@ -41,24 +60,94 @@ class SQLAnimalRepository(AnimalRepository):
         self.session = session
 
     def save(self, model: AnimalModel):
-        data = model.model_dump()
-        result = self.session.execute(insert(Animal).values(**data))
+        result = self.session.execute(
+            insert(Animal).values(
+                code=model.code,
+                race_id=model.race_id,
+            )
+        )
         self.session.commit()
         return result
 
-    def insert_new_entry(self, data: NewAnimalEntryModel):
+    def new_animal(self, data: NewAnimalModel) -> str:
+
         code = self.generate_code(
             race_id=data.race_id,
             rescue_city_code=data.rescue_city_code,
             rescue_date=datetime.now().date(),
         )
 
-        self.session.execute(
-            insert(Animal).values(code=code, **data.model_dump())
+        animal = Animal(
+            code=code,
+            race_id=data.race_id,
         )
+        animal_entry = AnimalEntry(
+            animal=animal,
+            entry_type=data.entry_type,
+            origin_city_code=data.rescue_city_code,
+        )
+        event_log = AnimalLog(
+            animal=animal,
+            event=AnimalEvent.create.value,
+            data=data.model_dump(),
+        )
+        self.session.add(animal)
+        self.session.add(animal_entry)
+        self.session.add(event_log)
+        self.session.commit()
+        return code
+
+    def add_entry(self, animal_id: int, data: NewEntryModel) -> int:
+        self.session.execute(
+            select(Animal.id).where(Animal.id == animal_id)
+        ).one()
+
+        is_present = self.session.execute(
+            select(AnimalEntry.id).where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+                AnimalEntry.exit_date.is_(None),
+            )
+        ).scalar()
+
+        if is_present:
+            raise Exception(
+                f"animal id {animal_id} has already an active entry"
+            )
+        self.session.execute(
+            update(AnimalEntry)
+            .where(AnimalEntry.animal_id, AnimalEntry.current.is_(True))
+            .values(current=False)
+        )
+
+        new_entry = AnimalEntry(
+            animal_id=animal_id,
+            entry_type=data.entry_type,
+            origin_city_code=data.rescue_city_code,
+        )
+
+        self.session.add(new_entry)
+        new_entry_id = new_entry.id
+        event_log = AnimalLog(
+            animal_id=animal_id,
+            event=AnimalEvent.new_entry.value,
+            data=data.model_dump(),
+        )
+        self.session.add(event_log)
         self.session.commit()
 
-        return code
+        return new_entry_id
+
+    def check_complete_entry_needed(self, animal_id: int) -> bool:
+        check = self.session.execute(
+            select(AnimalEntry.id).where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+                AnimalEntry.entry_date.is_(None),
+            )
+        )
+
+        return check is not None
 
     def get(self, query: AnimalQueryModel, columns=[]) -> AnimalModel:
         where = []
@@ -72,9 +161,40 @@ class SQLAnimalRepository(AnimalRepository):
         if query.rescue_city_code is not None:
             where.append(Animal.rescue_city_code == query.rescue_city_code)
 
-        result = self.session.execute(select(Animal).where(*where)).scalar_one()
+        result = self.session.execute(
+            select(
+                Animal.code,
+                Animal.race_id,
+                AnimalEntry.origin_city_code,
+                Animal.breed_id,
+                Animal.chip_code,
+                Animal.chip_code_set,
+                Animal.name,
+                Animal.birth_date,
+                AnimalEntry.entry_date,
+                AnimalEntry.entry_type,
+                Animal.sex,
+                Animal.sterilized,
+                Animal.notes,
+                Animal.img_path,
+                Animal.fur,
+                Animal.size,
+                AnimalEntry.exit_date,
+                AnimalEntry.exit_type,
+            )
+            .where(*where)
+            .join(
+                AnimalEntry,
+                and_(
+                    Animal.id == AnimalEntry.animal_id,
+                    AnimalEntry.current.is_(True),
+                ),
+            )
+        ).one()
 
-        data = AnimalModel.model_validate(result, from_attributes=True)
+        data = AnimalModel.model_validate(
+            AnimalGetQuery(*result), from_attributes=True
+        )
         return data
 
     def get_adoption(self, animal_id: int):
@@ -88,7 +208,9 @@ class SQLAnimalRepository(AnimalRepository):
         if not result:
             return None
 
-    def search(self, query: AnimalSearchModel):
+    def search(
+        self, query: AnimalSearchModel
+    ) -> PaginationResult[AnimalSearchResult]:
         """
         Return the minimum data set of a list of animals which match the search query.
         """
@@ -96,7 +218,16 @@ class SQLAnimalRepository(AnimalRepository):
         where = query.as_where_clause()
 
         total = self.session.execute(
-            select(func.count("*")).select_from(Animal).where(*where)
+            select(func.count("*"))
+            .select_from(Animal)
+            .join(
+                AnimalEntry,
+                and_(
+                    Animal.id == AnimalEntry.animal_id,
+                    AnimalEntry.current.is_(True),
+                ),
+            )
+            .where(*where)
         ).scalar_one()
         stmt = (
             select(
@@ -105,17 +236,24 @@ class SQLAnimalRepository(AnimalRepository):
                 Animal.name,
                 Animal.chip_code,
                 Animal.race_id,
-                Animal.entry_date,
-                Animal.rescue_city_code,
+                AnimalEntry.entry_date,
+                AnimalEntry.origin_city_code,
                 Comune.name,
                 Comune.provincia,
-                Animal.entry_type,
-                Animal.exit_date,
-                Animal.exit_type,
+                AnimalEntry.entry_type,
+                AnimalEntry.exit_date,
+                AnimalEntry.exit_type,
             )
             .select_from(Animal)
-            .join(Comune, Comune.id == Animal.rescue_city_code)
             .join(Adoption, Adoption.animal_id == Animal.id, isouter=True)
+            .join(
+                AnimalEntry,
+                and_(
+                    Animal.id == AnimalEntry.animal_id,
+                    AnimalEntry.current.is_(True),
+                ),
+            )
+            .join(Comune, Comune.id == AnimalEntry.origin_city_code)
             .where(*where)
             .order_by(query.as_order_by_clause())
         )
@@ -142,10 +280,15 @@ class SQLAnimalRepository(AnimalRepository):
         current_animals = self.session.execute(
             select(func.count("*"))
             .select_from(Animal)
+            .join(
+                AnimalEntry,
+                Animal.id == AnimalEntry.animal_id,
+                isouter=True,
+            )
             .where(
                 Animal.race_id == race_id,
-                Animal.rescue_city_code == rescue_city_code,
-                Animal.created_at.between(
+                AnimalEntry.origin_city_code == rescue_city_code,
+                AnimalEntry.created_at.between(
                     rescue_date, rescue_date + timedelta(1)
                 ),
             )
@@ -160,6 +303,20 @@ class SQLAnimalRepository(AnimalRepository):
 
         return code
 
+    def complete_entry(self, animal_id: str, data: CompleteEntryModel):
+        self.session.execute(
+            update(AnimalEntry)
+            .where(AnimalEntry.animal_id == animal_id)
+            .values(entry_date=data.entry_date)
+        )
+        event_log = AnimalLog(
+            animal_id=animal_id,
+            event=AnimalEvent.entry_complete.value,
+            data=json.loads(data.model_dump_json()),
+        )
+        self.session.add(event_log)
+        self.session.commit()
+
     def update(self, id: str, updates: UpdateAnimalModel):
         values = updates.model_dump(exclude_none=True)
         if updates.chip_code:
@@ -172,12 +329,27 @@ class SQLAnimalRepository(AnimalRepository):
                 updates.chip_code = None
             values["chip_code_set"] = True
 
-        result = self.session.execute(
-            update(Animal).where(Animal.id == id).values(**values)
+        try:
+            result = self.session.execute(
+                update(Animal).where(Animal.id == id).values(**values)
+            )
+        except IntegrityError as e:
+            if updates.chip_code and "chip_code" in e.orig.args[1]:
+                other_animal_id = self.session.execute(
+                    select(Animal.id).where(
+                        Animal.chip_code == updates.chip_code
+                    )
+                ).scalar_one()
+                raise ExistingChipCodeException(animal_id=other_animal_id)
+            self.session.rollback()
+            raise e
+        event_log = AnimalLog(
+            animal_id=id,
+            event=AnimalEvent.data_update.value,
+            data=json.loads(updates.model_dump_json()),
         )
-
+        self.session.add(event_log)
         self.session.commit()
-
         return result.rowcount
 
     def new_document(self, animal_id: int, data: NewAnimalDocument):
@@ -219,14 +391,18 @@ class SQLAnimalRepository(AnimalRepository):
         return docs
 
     def exit(self, animal_id: int, data: AnimalExit):
-        entry_date, exit_date = self.session.execute(
-            select(Animal.entry_date, Animal.exit_date).where(
-                Animal.id == animal_id
+        check = self.session.execute(
+            select(AnimalEntry.entry_date, AnimalEntry.exit_date).where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
             )
-        ).one()
+        ).first()
+        if not check:
+            raise AnimalNotPresentException()
 
+        entry_date, exit_date = check
         if not entry_date:
-            raise Exception(f"animal {animal_id} did not complete the entry")
+            raise EntryNotCompleteException()
         if exit_date:
             raise Exception(f"animal {animal_id} already is exit!")
 
@@ -238,8 +414,11 @@ class SQLAnimalRepository(AnimalRepository):
         )
         self.session.add(animal_log)
         self.session.execute(
-            update(Animal)
-            .where(Animal.id == animal_id)
+            update(AnimalEntry)
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
             .values(
                 exit_date=data.exit_date,
                 exit_type=data.exit_type,

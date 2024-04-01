@@ -1,16 +1,20 @@
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 
 
 class EntryType(str, Enum):
     rescue = "R"
-    surrender = "S"
     confiscation = "C"
+    private_surrender = "P"
+    quitclaim = "Q"
+    temporary_owner_surrender = "T"
 
 
 ENTRY_TYPE_LABELS = {
     EntryType.rescue: "Recupero",
-    EntryType.surrender: "Conferimento",
     EntryType.confiscation: "Sequestro",
+    EntryType.private_surrender: "Confermento da privato",
+    EntryType.quitclaim: "Rinuncia di proprietà",
+    EntryType.temporary_owner_surrender: "Conferimento temporaneo del padrone",
 }
 
 
@@ -18,12 +22,14 @@ class ExitType(str, Enum):
     adoption = "A"
     death = "D"
     return_ = "R"
+    disappeared = "I"
 
 
 EXIT_TYPE_LABELS = {
     ExitType.adoption: "Adozione",
     ExitType.death: "Morte",
     ExitType.return_: "Restituzione",
+    ExitType.disappeared: "Scomparsa",
 }
 
 
@@ -48,13 +54,27 @@ SIZE_LABELS = {
 
 
 class AnimalFur(IntEnum):
-    short = 0
-    curly_long = 1
-    straight_long = 2
+    very_short = auto()
+    short = auto()
+    curly_long = auto()
+    straight_long = auto()
+    curly = auto()
+    semilong = auto()
+    long = auto()
+    hard = auto()
+    frangiato = auto()
+    cordato = auto()
 
 
 FUR_LABELS = {
+    AnimalFur.very_short: "Rado",
     AnimalFur.short: "Corto",
+    AnimalFur.curly: "Riccio",
+    AnimalFur.semilong: "Semilungo",
+    AnimalFur.long: "Lungo",
+    AnimalFur.hard: "Duro",
+    AnimalFur.frangiato: "Frangiato",
+    AnimalFur.cordato: "Cordato",
     AnimalFur.curly_long: "Lungo riccio",
     AnimalFur.straight_long: "Lungo liscio",
 }
@@ -79,4 +99,12 @@ ENTRY_RESULT_LABELS = {
 
 
 class AnimalEvent(Enum):
+    create = "CR"
     exit_ = "EX"
+    new_entry = "NE"
+    entry_complete = "EC"
+    data_update = "DU"
+
+
+class ApiErrorCode(Enum):
+    existing_chip_code = "ECC"

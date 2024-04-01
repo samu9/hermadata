@@ -16,7 +16,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '16.x'
-      - run: npm install --force
+      - run: npm install
       - run: npm run build:test --if-present 
         env:
           CI: false

@@ -2,6 +2,7 @@ import axios, { AxiosInstance } from "axios"
 import { Adopter, NewAdopter } from "../models/adopter.schema"
 import {
     Animal,
+    AnimalCompleteEntry,
     AnimalDocUpload,
     AnimalDocument,
     AnimalEdit,
@@ -25,6 +26,7 @@ import { DocKind, NewDocKind } from "../models/docs.schema"
 import { Race, raceSchema } from "../models/race.schema"
 import { IntUtilItem } from "../models/util.schema"
 import ApiEndpoints from "./apiEndpoints"
+import { ApiError } from "../models/api.schema"
 
 class ApiService {
     inst: AxiosInstance
@@ -56,10 +58,13 @@ class ApiService {
         return res.data
     }
 
-    createAnimalEntry(data: NewAnimalEntry): Promise<string> {
+    createAnimal(data: NewAnimalEntry): Promise<string> {
         return this.post<string>(ApiEndpoints.animal.create, data)
     }
 
+    addAnimalEntry(animalId: string, data: NewAnimalEntry): Promise<string> {
+        return this.post<string>(ApiEndpoints.animal.addEntry(animalId), data)
+    }
     async getProvince(): Promise<ProvinciaSchema[]> {
         const data = await this.get<ProvinciaSchema[]>(
             ApiEndpoints.util.getProvince
@@ -122,8 +127,11 @@ class ApiService {
         return paginatedAnimalSearchResultSchema.parse(result)
     }
 
-    async updateAnimal(id: string, data: AnimalEdit): Promise<boolean> {
-        const result = await this.post<boolean>(
+    async updateAnimal(
+        id: string,
+        data: AnimalEdit
+    ): Promise<boolean | ApiError> {
+        const result = await this.post<boolean | ApiError>(
             ApiEndpoints.animal.update(id),
             data
         )
@@ -131,6 +139,17 @@ class ApiService {
         return result
     }
 
+    async completeAnimalEntry(
+        id: string,
+        data: AnimalCompleteEntry
+    ): Promise<boolean> {
+        const result = await this.post<boolean>(
+            ApiEndpoints.animal.completeEntry(id),
+            data
+        )
+
+        return result
+    }
     async addBreed(data: NewBreed): Promise<Breed> {
         const result = await this.post<Breed>(ApiEndpoints.breed.create, data)
 

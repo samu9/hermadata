@@ -11,13 +11,12 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, expression
 
 from hermadata.constants import (
     AnimalFur,
     AnimalSize,
     AnimalStage,
-    EntryResult,
     EntryType,
     ExitType,
 )
@@ -32,18 +31,15 @@ class Animal(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(String(13), unique=True)
     race_id: Mapped[str] = mapped_column(ForeignKey("race.id"))
-    rescue_city_code: Mapped[str] = mapped_column(String(4))
-
-    entry_type: Mapped[EntryType] = mapped_column(String(1))
-    entry_result: Mapped[EntryResult] = mapped_column(String(1), nullable=True)
-    entry_date: Mapped[date] = mapped_column(Date(), nullable=True)
 
     stage: Mapped[AnimalStage] = mapped_column(String(1), nullable=True)
 
     name: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    chip_code: Mapped[str] = mapped_column(String(100), nullable=True)
+    chip_code: Mapped[str] = mapped_column(
+        String(100), nullable=True, unique=True
+    )
     chip_code_set: Mapped[bool] = mapped_column(
-        server_default=text("false"), default=False
+        server_default=expression.false(), default=False
     )
     breed_id: Mapped[str | None] = mapped_column(
         ForeignKey("breed.id"), nullable=True
@@ -76,14 +72,38 @@ class Animal(Base):
         ForeignKey("vet.id"), nullable=True
     )
 
-    exit_date: Mapped[date] = mapped_column(Date(), nullable=True)
-    exit_type: Mapped[ExitType] = mapped_column(String(1), nullable=True)
-
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
     img_path: Mapped[str] = mapped_column(String(100), nullable=True)
 
+    entries: Mapped[list["AnimalEntry"]] = relationship(back_populates="animal")
     adoptions: Mapped[list["Adoption"]] = relationship(back_populates="animal")
     logs: Mapped[list["AnimalLog"]] = relationship(back_populates="animal")
+
+
+class AnimalEntry(Base):
+    __tablename__ = "animal_entry"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    animal: Mapped[Animal] = relationship(back_populates="entries")
+
+    animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
+
+    entry_type: Mapped[EntryType] = mapped_column(String(1))
+    entry_date: Mapped[date] = mapped_column(Date(), nullable=True)
+
+    origin_city_code: Mapped[str] = mapped_column(String(4))
+
+    exit_date: Mapped[date] = mapped_column(Date(), nullable=True)
+    exit_type: Mapped[ExitType] = mapped_column(String(1), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+    current: Mapped[bool] = mapped_column(server_default=expression.true())
 
 
 class AnimalLog(Base):
@@ -125,6 +145,25 @@ class Adoption(Base):
     # adoptions can be returned, making the adoption null
     returned_at: Mapped[datetime | None] = mapped_column(
         DateTime(), nullable=True
+    )
+
+
+class Person(Base):
+    __tablename__ = "person"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    surname: Mapped[str] = mapped_column(String(100))
+    fiscal_code: Mapped[str] = mapped_column(String(16))
+    birth_city_code: Mapped[str] = mapped_column(String(4))
+    birth_date: Mapped[Date] = mapped_column(Date())
+    residence_city_code: Mapped[str] = mapped_column(String(4))
+    phone: Mapped[str] = mapped_column(String(15))
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
     )
 
 
