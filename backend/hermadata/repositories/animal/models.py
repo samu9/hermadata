@@ -167,7 +167,9 @@ class AnimalModel(BaseModel):
 class UpdateAnimalModel(BaseModel):
     name: str | None = None
     breed_id: int | None = None
-    chip_code: str | None = None
+    chip_code: str | None = Field(
+        pattern=r"\d{3}\.\d{3}\.\d{3}\.\d{3}\.\d{3}", default=None
+    )
     chip_code_set: bool | None = False
 
     sex: int | None = None
