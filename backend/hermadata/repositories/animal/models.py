@@ -62,6 +62,9 @@ class AnimalSearchModel(PaginationQuery):
     not_present: bool = False
     chip_code: Optional[str] = None
 
+    _sort_field_map: dict[str, MappedColumn] = {
+        "entry_date": AnimalEntry.entry_date
+    }
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
         "chip_code": WhereClauseMapItem(
@@ -106,9 +109,12 @@ class AnimalSearchModel(PaginationQuery):
     }
 
     def as_order_by_clause(self) -> MappedColumn | None:
-        if not (self.sort_field and self.sort_order):
+        if (
+            not (self.sort_field and self.sort_order)
+            and self.sort_field not in self._sort_field_map
+        ):
             return Animal.created_at.desc()
-        column: MappedColumn = getattr(Animal, self.sort_field)
+        column: MappedColumn = self._sort_field_map[self.sort_field]
         if self.sort_order == 1:
             return column.asc()
         if self.sort_order == -1:
