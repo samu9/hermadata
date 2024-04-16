@@ -1,9 +1,16 @@
+from jinja2 import (
+    Environment,
+    FileSystemLoader,
+    PackageLoader,
+    select_autoescape,
+)
 import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.storage.disk_storage import DiskStorage
 
@@ -28,6 +35,22 @@ def db_session(engine: Engine) -> Session:
     session = sessionmaker(bind=engine)()
 
     return session
+
+
+@pytest.fixture(scope="function")
+def jinja_env():
+    jinja_env = Environment(
+        loader=FileSystemLoader("hermadata/reports/templates"),
+        autoescape=select_autoescape(),
+    )
+
+    return jinja_env
+
+
+@pytest.fixture(scope="function")
+def report_generator(jinja_env) -> ReportGenerator:
+
+    return ReportGenerator(jinja_env=jinja_env)
 
 
 @pytest.fixture(scope="function")
