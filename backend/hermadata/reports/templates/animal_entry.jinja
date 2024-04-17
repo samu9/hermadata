@@ -1,15 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link
-            rel="stylesheet"
-            href="{{ url_for('static', filename='style.css') }}"
-        />
-        <title>Document</title>
-    </head>
-    <body>
-        <h1 class="border p-2 text-3xl font-bold underline">{{ name }}</h1>
-    </body>
-</html>
+{% extends "base.jinja" %} {% block content%}
+
+<div>
+    <table>
+        <tr>
+            <td>tipo</td>
+            <td>{{ animal_type }}</td>
+
+            <td>Comune</td>
+            <td>{{ city }}</td>
+        </tr>
+    </table>
+</div>
+{% endblock %}
