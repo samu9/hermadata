@@ -1,8 +1,8 @@
 """initial tables
 
-Revision ID: 9f37b43b084b
+Revision ID: 828c51b8100f
 Revises: 1bb12e9dcab1
-Create Date: 2024-02-14 19:19:45.118386
+Create Date: 2024-04-17 22:58:24.768385
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "9f37b43b084b"
+revision: str = "828c51b8100f"
 down_revision: Union[str, None] = "1bb12e9dcab1"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -74,59 +74,19 @@ def upgrade() -> None:
         sa.UniqueConstraint("name"),
     )
     op.create_table(
-        "person",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sa.String(length=100), nullable=False),
-        sa.Column("surname", sa.String(length=100), nullable=False),
-        sa.Column("fiscal_code", sa.String(length=16), nullable=False),
-        sa.Column("birth_city_code", sa.String(length=4), nullable=False),
-        sa.Column("birth_date", sa.Date(), nullable=False),
-        sa.Column("residence_city_code", sa.String(length=4), nullable=False),
-        sa.Column("phone", sa.String(length=15), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_table(
-        "procedure_kind",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sa.String(length=50), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_table(
-        "users",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sa.String(length=100), nullable=True),
-        sa.Column("surname", sa.String(length=100), nullable=True),
-        sa.Column("email", sa.String(length=100), nullable=False),
-        sa.Column("password", sa.String(length=15), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.Column("deleted_at", sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_table(
         "vet",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sa.String(length=100), nullable=False),
-        sa.Column("surname", sa.String(length=100), nullable=False),
+        sa.Column("business_name", sa.String(length=100), nullable=False),
+        sa.Column("fiscal_code", sa.String(length=100), nullable=False),
+        sa.Column("nome", sa.String(length=100), nullable=True),
+        sa.Column("cognome", sa.String(length=100), nullable=True),
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -147,48 +107,6 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name", "race_id", name="unique_breed"),
-    )
-    op.create_table(
-        "procedure",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("kind_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "status", sa.Integer(), server_default=sa.text("0"), nullable=False
-        ),
-        sa.Column(
-            "created_at",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.Column("closed_at", sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["kind_id"],
-            ["procedure_kind.id"],
-        ),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_table(
-        "procedure_document",
-        sa.Column("procedure_kind_id", sa.Integer(), nullable=False),
-        sa.Column("document_kind_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["document_kind_id"],
-            ["document_kind.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["procedure_kind_id"],
-            ["procedure_kind.id"],
-        ),
-        sa.PrimaryKeyConstraint("procedure_kind_id", "document_kind_id"),
     )
     op.create_table(
         "animal",
@@ -237,29 +155,8 @@ def upgrade() -> None:
             ["vet.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("code"),
         sa.UniqueConstraint("chip_code"),
-    )
-    op.create_table(
-        "procedure_document_checklist",
-        sa.Column("procedure_id", sa.Integer(), nullable=False),
-        sa.Column("document_id", sa.Integer(), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["document_id"],
-            ["document.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["procedure_id"],
-            ["procedure.id"],
-        ),
-        sa.PrimaryKeyConstraint("procedure_id", "document_id"),
+        sa.UniqueConstraint("code"),
     )
     op.create_table(
         "adoption",
@@ -352,7 +249,6 @@ def upgrade() -> None:
         sa.Column("animal_id", sa.Integer(), nullable=False),
         sa.Column("event", sa.String(length=10), nullable=False),
         sa.Column("data", sa.JSON(), nullable=True),
-        sa.Column("user_id", sa.Integer(), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(),
@@ -363,35 +259,22 @@ def upgrade() -> None:
             ["animal_id"],
             ["animal.id"],
         ),
-        sa.ForeignKeyConstraint(
-            ["user_id"],
-            ["users.id"],
-        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
-        "terapy",
+        "medical_record",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("animal_id", sa.Integer(), nullable=False),
+        sa.Column("causal", sa.String(length=100), nullable=False),
+        sa.Column("price", sa.DECIMAL(precision=15, scale=2), nullable=False),
         sa.Column("vet_id", sa.Integer(), nullable=False),
-        sa.Column("med_name", sa.String(length=100), nullable=False),
-        sa.Column("notes", sa.Text(), nullable=False),
-        sa.Column("from_date", sa.DateTime(), nullable=True),
-        sa.Column("to_date", sa.DateTime(), nullable=True),
-        sa.Column(
-            "created_at",
-            sa.DateTime(),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
+        sa.Column("animal_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["animal_id"],
             ["animal.id"],
         ),
         sa.ForeignKeyConstraint(
             ["vet_id"],
-            ["animal.id"],
+            ["vet.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -400,20 +283,14 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_table("terapy")
+    op.drop_table("medical_record")
     op.drop_table("animal_log")
     op.drop_table("animal_entry")
     op.drop_table("animal_document")
     op.drop_table("adoption")
-    op.drop_table("procedure_document_checklist")
     op.drop_table("animal")
-    op.drop_table("procedure_document")
-    op.drop_table("procedure")
     op.drop_table("breed")
     op.drop_table("vet")
-    op.drop_table("users")
-    op.drop_table("procedure_kind")
-    op.drop_table("person")
     op.drop_table("document_kind")
     op.drop_table("document")
     op.drop_table("adopter")

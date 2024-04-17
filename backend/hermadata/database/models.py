@@ -8,6 +8,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    DECIMAL,
     text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -118,7 +119,7 @@ class AnimalLog(Base):
 
     data: Mapped[dict] = mapped_column(JSON, nullable=True)
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
+    # user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
@@ -148,23 +149,23 @@ class Adoption(Base):
     )
 
 
-class Person(Base):
-    __tablename__ = "person"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100))
-    surname: Mapped[str] = mapped_column(String(100))
-    fiscal_code: Mapped[str] = mapped_column(String(16))
-    birth_city_code: Mapped[str] = mapped_column(String(4))
-    birth_date: Mapped[Date] = mapped_column(Date())
-    residence_city_code: Mapped[str] = mapped_column(String(4))
-    phone: Mapped[str] = mapped_column(String(15))
+# class Person(Base):
+#     __tablename__ = "person"
+#     id: Mapped[int] = mapped_column(primary_key=True)
+#     name: Mapped[str] = mapped_column(String(100))
+#     surname: Mapped[str] = mapped_column(String(100))
+#     fiscal_code: Mapped[str] = mapped_column(String(16))
+#     birth_city_code: Mapped[str] = mapped_column(String(4))
+#     birth_date: Mapped[Date] = mapped_column(Date())
+#     residence_city_code: Mapped[str] = mapped_column(String(4))
+#     phone: Mapped[str] = mapped_column(String(15))
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_onupdate=func.now(), nullable=True
-    )
+#     created_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_default=func.now()
+#     )
+#     updated_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_onupdate=func.now(), nullable=True
+#     )
 
 
 class Adopter(Base):
@@ -193,10 +194,31 @@ class Vet(Base):
     __tablename__ = "vet"
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    name: Mapped[str] = mapped_column(String(100))
-    surname: Mapped[str] = mapped_column(String(100))
+    business_name: Mapped[str] = mapped_column(String(100))
+    fiscal_code: Mapped[str] = mapped_column(String(100))
 
-    animals: Mapped[list[Animal]] = relationship(back_populates="vet")
+    nome: Mapped[str] = mapped_column(String(100), nullable=True)
+    cognome: Mapped[str] = mapped_column(String(100), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+
+class MedicalRecord(Base):
+    __tablename__ = "medical_record"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    causal: Mapped[str] = mapped_column(String(100))
+
+    price: Mapped[int] = mapped_column(DECIMAL(15, 2))
+
+    vet_id: Mapped[int] = mapped_column(ForeignKey("vet.id"))
+
+    animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
 
 
 class Race(Base):
@@ -229,54 +251,54 @@ class Breed(Base):
     __table_args__ = (UniqueConstraint("name", "race_id", name="unique_breed"),)
 
 
-class User(Base):
-    __tablename__ = "users"
-    id: Mapped[int] = mapped_column(primary_key=True)
+# class User(Base):
+#     __tablename__ = "users"
+#     id: Mapped[int] = mapped_column(primary_key=True)
 
-    name: Mapped[str] = mapped_column(String(100), nullable=True)
-    surname: Mapped[str] = mapped_column(String(100), nullable=True)
+#     name: Mapped[str] = mapped_column(String(100), nullable=True)
+#     surname: Mapped[str] = mapped_column(String(100), nullable=True)
 
-    email: Mapped[str] = mapped_column(String(100))
+#     email: Mapped[str] = mapped_column(String(100))
 
-    password: Mapped[str] = mapped_column(String(15))
+#     password: Mapped[str] = mapped_column(String(15))
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_onupdate=func.now(), nullable=True
-    )
-    deleted_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
-
-
-class Procedure(Base):
-    __tablename__ = "procedure"
-    id: Mapped[int] = mapped_column(primary_key=True)
-
-    kind_id: Mapped[int] = mapped_column(ForeignKey("procedure_kind.id"))
-    status: Mapped[int] = mapped_column(server_default=text("0"))
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_onupdate=func.now(), nullable=True
-    )
-    closed_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
+#     created_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_default=func.now()
+#     )
+#     updated_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_onupdate=func.now(), nullable=True
+#     )
+#     deleted_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
 
 
-class ProcedureKind(Base):
-    __tablename__ = "procedure_kind"
+# class Procedure(Base):
+#     __tablename__ = "procedure"
+#     id: Mapped[int] = mapped_column(primary_key=True)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50))
+#     kind_id: Mapped[int] = mapped_column(ForeignKey("procedure_kind.id"))
+#     status: Mapped[int] = mapped_column(server_default=text("0"))
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_onupdate=func.now(), nullable=True
-    )
+#     created_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_default=func.now()
+#     )
+#     updated_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_onupdate=func.now(), nullable=True
+#     )
+#     closed_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
+
+
+# class ProcedureKind(Base):
+#     __tablename__ = "procedure_kind"
+
+#     id: Mapped[int] = mapped_column(primary_key=True)
+#     name: Mapped[str] = mapped_column(String(50))
+
+#     created_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_default=func.now()
+#     )
+#     updated_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_onupdate=func.now(), nullable=True
+#     )
 
 
 class Document(Base):
@@ -336,60 +358,60 @@ class AnimalDocument(Base):
     )
 
 
-class ProcedureDocument(Base):
-    __tablename__ = "procedure_document_checklist"
-    procedure_id: Mapped[int] = mapped_column(
-        ForeignKey("procedure.id"), primary_key=True
-    )
-    document_id: Mapped[int] = mapped_column(
-        ForeignKey("document.id"), primary_key=True
-    )
+# class ProcedureDocument(Base):
+#     __tablename__ = "procedure_document_checklist"
+#     procedure_id: Mapped[int] = mapped_column(
+#         ForeignKey("procedure.id"), primary_key=True
+#     )
+#     document_id: Mapped[int] = mapped_column(
+#         ForeignKey("document.id"), primary_key=True
+#     )
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_onupdate=func.now(), nullable=True
-    )
-
-
-class ProcedureDocumentChecklist(Base):
-    __tablename__ = "procedure_document"
-    procedure_kind_id: Mapped[int] = mapped_column(
-        ForeignKey("procedure_kind.id"), primary_key=True
-    )
-    document_kind_id: Mapped[int] = mapped_column(
-        ForeignKey("document_kind.id"), primary_key=True
-    )
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_onupdate=func.now(), nullable=True
-    )
+#     created_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_default=func.now()
+#     )
+#     updated_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_onupdate=func.now(), nullable=True
+#     )
 
 
-class Terapy(Base):
-    __tablename__ = "terapy"
-    id: Mapped[int] = mapped_column(primary_key=True)
+# class ProcedureDocumentChecklist(Base):
+#     __tablename__ = "procedure_document"
+#     procedure_kind_id: Mapped[int] = mapped_column(
+#         ForeignKey("procedure_kind.id"), primary_key=True
+#     )
+#     document_kind_id: Mapped[int] = mapped_column(
+#         ForeignKey("document_kind.id"), primary_key=True
+#     )
 
-    animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
-    vet_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
+#     created_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_default=func.now()
+#     )
+#     updated_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_onupdate=func.now(), nullable=True
+#     )
 
-    med_name: Mapped[str] = mapped_column(String(100))
 
-    notes: Mapped[str] = mapped_column(Text())
+# class Terapy(Base):
+#     __tablename__ = "terapy"
+#     id: Mapped[int] = mapped_column(primary_key=True)
 
-    from_date: Mapped[datetime] = mapped_column(nullable=True)
-    to_date: Mapped[datetime] = mapped_column(nullable=True)
+#     animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
+#     vet_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(), server_onupdate=func.now(), nullable=True
-    )
+#     med_name: Mapped[str] = mapped_column(String(100))
+
+#     notes: Mapped[str] = mapped_column(Text())
+
+#     from_date: Mapped[datetime] = mapped_column(nullable=True)
+#     to_date: Mapped[datetime] = mapped_column(nullable=True)
+
+#     created_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_default=func.now()
+#     )
+#     updated_at: Mapped[datetime] = mapped_column(
+#         DateTime(), server_onupdate=func.now(), nullable=True
+#     )
 
 
 class Provincia(Base):
