@@ -16,7 +16,9 @@ dependencies = [
     "uvicorn",
     "pydantic >= 2.4, < 3",
     "cryptography",
-    "python-multipart"
+    "python-multipart",
+    "pdfkit",
+    "jinja2"
 ]
 [tool.flake8]
 max-line-length = 120
