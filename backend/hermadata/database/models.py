@@ -9,7 +9,6 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     DECIMAL,
-    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func, expression
@@ -66,11 +65,6 @@ class Animal(Base):
     )
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(), nullable=True
-    )
-
-    vet: Mapped["Vet"] = relationship(back_populates="animals")
-    vet_id: Mapped[int | None] = mapped_column(
-        ForeignKey("vet.id"), nullable=True
     )
 
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
