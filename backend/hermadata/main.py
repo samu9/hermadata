@@ -12,6 +12,7 @@ from hermadata.routers import (
     document_router,
     race_router,
     util_router,
+    vet_router,
 )
 from hermadata.settings import Settings
 
@@ -36,6 +37,7 @@ app.include_router(breed_router.router)
 app.include_router(document_router.router)
 app.include_router(adopter_router.router)
 app.include_router(adoption_router.router)
+app.include_router(vet_router.router)
 
 
-logger.info("app set up")
+logger.info("hermadata set up")
