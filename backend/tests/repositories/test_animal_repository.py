@@ -283,3 +283,44 @@ def test_count_days(
     )
 
     assert result.total_days == 10
+
+    new_animal = NewAnimalModel(
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value
+    )
+
+    code = animal_repository.new_animal(new_animal)
+
+    animal_id = db_session.execute(
+        select(Animal.id).where(Animal.code == code)
+    ).scalar_one()
+
+    animal_repository.update(
+        animal_id,
+        UpdateAnimalModel(name="Test1", chip_code="000.000.000.000.000"),
+    )
+
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2020, 1, 10))
+    )
+
+    result = animal_repository.count_animal_days(
+        AnimalDaysQuery(
+            from_date=date(2020, 1, 1),
+            to_date=date(2020, 1, 31),
+            city_code="H501",
+        )
+    )
+
+    assert result.total_days == 46
+
+    assert len(result.items) == 2
+
+    result = animal_repository.count_animal_days(
+        AnimalDaysQuery(
+            from_date=date(2020, 1, 10),
+            to_date=date(2020, 1, 20),
+            city_code="H501",
+        )
+    )
+
+    assert result.total_days == 10 + 5
