@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import date, datetime, timedelta
 
-from sqlalchemy import and_, func, insert, select, update
+from sqlalchemy import and_, func, insert, or_, select, update
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from hermadata.constants import AnimalEvent
@@ -18,6 +18,9 @@ from hermadata.database.models import (
 from hermadata.models import PaginationResult
 from hermadata.repositories import BaseRepository
 from hermadata.repositories.animal.models import (
+    AnimalDaysItem,
+    AnimalDaysQuery,
+    AnimalDaysResult,
     AnimalDocumentModel,
     AnimalExit,
     AnimalGetQuery,
@@ -436,3 +439,62 @@ class SQLAnimalRepository(AnimalRepository):
             )
         )
         self.session.commit()
+
+    def count_animal_days(self, query: AnimalDaysQuery) -> AnimalDaysResult:
+        entries = self.session.execute(
+            select(
+                Animal.id,
+                Animal.name,
+                Animal.chip_code,
+                AnimalEntry.entry_date,
+                AnimalEntry.exit_date,
+            )
+            .where(
+                AnimalEntry.entry_date.is_not(None),
+                AnimalEntry.entry_date <= query.to_date,
+                or_(
+                    AnimalEntry.exit_date.is_(None),
+                    AnimalEntry.exit_date > query.from_date,
+                ),
+                AnimalEntry.origin_city_code == query.city_code,
+            )
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+        ).all()
+
+        result_map: dict[int, AnimalDaysItem] = {}
+
+        for (
+            animal_id,
+            animal_name,
+            animal_chip_code,
+            animal_entry_date,
+            animal_exit_date,
+        ) in entries:
+            result_map.setdefault(
+                animal_id,
+                AnimalDaysItem(
+                    animal_name=animal_name,
+                    animal_chip_code=animal_chip_code,
+                    animal_days=0,
+                ),
+            )
+
+            # we start from the next day after the entry
+            entry = max(animal_entry_date + timedelta(days=1), query.from_date)
+
+            exit = (
+                animal_exit_date
+                and min(animal_exit_date, query.to_date)
+                or query.to_date
+            ) + timedelta(days=1)
+
+            delta: timedelta = exit - entry
+
+            result_map[animal_id].animal_days += delta.days
+
+        result = AnimalDaysResult(
+            total_days=sum(r.animal_days for r in result_map.values()),
+            items=list(result_map.values()),
+        )
+
+        return result
