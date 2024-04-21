@@ -304,9 +304,20 @@ class SQLAnimalRepository(AnimalRepository):
         return code
 
     def complete_entry(self, animal_id: str, data: CompleteEntryModel):
+        entry_id = self.session.execute(
+            select(AnimalEntry.id).where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.entry_date.is_(None),
+            )
+        ).scalar()
+
+        if entry_id is None:
+            raise Exception(
+                f"complete entry: no entries to complete for animal {animal_id}"
+            )
         self.session.execute(
             update(AnimalEntry)
-            .where(AnimalEntry.animal_id == animal_id)
+            .where(AnimalEntry.id == entry_id)
             .values(entry_date=data.entry_date)
         )
         event_log = AnimalLog(
