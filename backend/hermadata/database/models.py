@@ -214,6 +214,12 @@ class MedicalRecord(Base):
 
     animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
 
+    performed_at: Mapped[datetime] = mapped_column(Date())
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+
 
 class Race(Base):
     __tablename__ = "race"
