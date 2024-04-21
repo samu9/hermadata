@@ -1,10 +1,10 @@
 from jinja2 import (
     Environment,
     FileSystemLoader,
-    PackageLoader,
     select_autoescape,
 )
 import pytest
+
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import Engine, create_engine
@@ -15,10 +15,16 @@ from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.storage.disk_storage import DiskStorage
 
 
+def pytest_sessionstart():
+    command.downgrade(Config("tests/alembic.ini"), "3bebd7731267")
+
+    command.upgrade(Config("tests/alembic.ini"), "head")
+
+
 @pytest.fixture(scope="function")
 def engine():
 
-    e = create_engine("mysql+pymysql://root:dev@localhost/hermadata-tests")
+    e = create_engine("mysql+pymysql://root:dev@localhost/hermadata_test")
 
     return e
 

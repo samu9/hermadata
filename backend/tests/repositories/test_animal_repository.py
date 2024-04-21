@@ -12,6 +12,7 @@ from hermadata.repositories.animal.animal_repository import (
     SQLAnimalRepository,
 )
 from hermadata.repositories.animal.models import (
+    AnimalDaysQuery,
     AnimalExit,
     CompleteEntryModel,
     NewAnimalModel,
@@ -205,3 +206,80 @@ def test_add_entry(db_session: Session, animal_repository: SQLAnimalRepository):
 
     assert len(entries) == 2
     assert entries[0].current is False
+
+
+def test_count_days(
+    db_session: Session, animal_repository: SQLAnimalRepository
+):
+    new_animal = NewAnimalModel(
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value
+    )
+
+    code = animal_repository.new_animal(new_animal)
+
+    animal_id = db_session.execute(
+        select(Animal.id).where(Animal.code == code)
+    ).scalar_one()
+
+    animal_repository.update(
+        animal_id,
+        UpdateAnimalModel(name="Test", chip_code="123.456.789.123.456"),
+    )
+
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2020, 1, 1))
+    )
+
+    animal_repository.exit(
+        animal_id,
+        AnimalExit(exit_date=date(2020, 1, 10), exit_type=ExitType.adoption),
+    )
+
+    animal_repository.add_entry(
+        animal_id=animal_id,
+        data=NewEntryModel(
+            rescue_city_code="H501", entry_type=EntryType.confiscation
+        ),
+    )
+
+    animal_repository.complete_entry(
+        animal_id=animal_id,
+        data=CompleteEntryModel(entry_date=date(2020, 1, 15)),
+    )
+
+    animal_repository.exit(
+        animal_id,
+        AnimalExit(
+            exit_date=date(2020, 2, 10), exit_type=ExitType.adoption.value
+        ),
+    )
+
+    result = animal_repository.count_animal_days(
+        AnimalDaysQuery(
+            from_date=date(2020, 1, 1),
+            to_date=date(2020, 1, 31),
+            city_code="H501",
+        )
+    )
+
+    assert result.total_days == 25
+
+    result = animal_repository.count_animal_days(
+        AnimalDaysQuery(
+            from_date=date(2020, 1, 11),
+            to_date=date(2020, 1, 31),
+            city_code="H501",
+        )
+    )
+
+    assert result.total_days == 16
+
+    result = animal_repository.count_animal_days(
+        AnimalDaysQuery(
+            from_date=date(2020, 2, 1),
+            to_date=date(2020, 2, 28),
+            city_code="H501",
+        )
+    )
+
+    assert result.total_days == 10
