@@ -228,3 +228,20 @@ class AnimalDocumentModel(BaseModel):
 class AnimalExit(BaseModel):
     exit_date: date
     exit_type: ExitType
+
+
+class AnimalDaysQuery(BaseModel):
+    from_date: date
+    to_date: date
+    city_code: str
+
+
+class AnimalDaysItem(BaseModel):
+    animal_name: str | None = None
+    animal_chip_code: str | None = None
+    animal_days: int
+
+
+class AnimalDaysResult(BaseModel):
+    items: list[AnimalDaysItem]
+    total_days: int
