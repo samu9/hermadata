@@ -322,8 +322,9 @@ class Document(Base):
 
 class DocumentKind(Base):
     __tablename__ = "document_kind"
-    name: Mapped[str] = mapped_column(String(50), unique=True)
     id: Mapped[int] = mapped_column(primary_key=True)
+    code: Mapped[str] = mapped_column(String(2), unique=True)
+    name: Mapped[str] = mapped_column(String(50), unique=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()

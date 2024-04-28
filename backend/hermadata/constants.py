@@ -108,3 +108,7 @@ class AnimalEvent(Enum):
 
 class ApiErrorCode(Enum):
     existing_chip_code = "ECC"
+
+
+class DocKindCode(Enum):
+    documento_ingresso = "IN"
