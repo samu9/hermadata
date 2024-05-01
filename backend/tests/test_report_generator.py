@@ -1,26 +1,22 @@
-from unittest.mock import patch, Mock
+from datetime import date
 
-from jinja2 import Environment, Template
 from hermadata.reports.report_generator import (
     ReportAnimalEntryVariables,
     ReportGenerator,
 )
 
 
-@patch.object(Environment, "get_template", spec=Template)
-def test_animal_entry_report(
-    mocked_template: Mock, report_generator: ReportGenerator
-):
-    def render(*args):
-        assert args
-
-        return bytes()
-
-    mocked_template.render = render
+def test_animal_entry_report(report_generator: ReportGenerator):
 
     variables = ReportAnimalEntryVariables(
-        city="Test", animal_name="Gino", animal_type="Gatto"
+        city="Test",
+        animal_name="Gino",
+        animal_type="Gatto",
+        entry_date=date(2020, 2, 1),
     )
     pdf = report_generator.build_animal_entry_report(variables)
+
+    with open("generated.pdf", "wb") as fp:
+        fp.write(pdf)
 
     assert pdf
