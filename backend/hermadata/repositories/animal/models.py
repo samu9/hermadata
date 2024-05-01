@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
-from hermadata.constants import EntryType, ExitType
+from hermadata.constants import DocKindCode, EntryType, ExitType
 from hermadata.database.models import Animal, AnimalEntry
 from hermadata.models import PaginationQuery
 
@@ -214,7 +214,7 @@ AnimalGetQuery = namedtuple("AnimalGetQuery", AnimalModel.model_fields.keys())
 
 class NewAnimalDocument(BaseModel):
     document_id: int
-    document_kind_id: int
+    document_kind_code: DocKindCode
     title: str
 
 
@@ -245,3 +245,23 @@ class AnimalDaysItem(BaseModel):
 class AnimalDaysResult(BaseModel):
     items: list[AnimalDaysItem]
     total_days: int
+
+
+class AddMedicalRecordModel(BaseModel):
+    causal: str
+    price: int
+    vet_id: int
+    performed_at: date
+
+
+class AnimalEntryModel(BaseModel):
+    animal_id: int
+    animal_name: str | None = None
+    entry_date: date
+    exit_date: date | None = None
+    entry_type: EntryType
+    exit_type: ExitType | None = None
+    origin_city_code: str
+    origin_city_name: str
+    animal_race: str
+    animal_race_id: str
