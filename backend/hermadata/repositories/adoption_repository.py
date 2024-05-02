@@ -28,9 +28,6 @@ class SQLAdopionRepository(BaseRepository):
         self.session = session
 
     def create(self, data: NewAdoption) -> int:
-        animal_entry_date = self.session.execute(
-            select(Animal.entry_date).where(Animal.id == data.animal_id)
-        ).one()
 
         existing_adoption = self.session.execute(
             select(Adoption.id).where(Adoption.animal_id == data.animal_id)
