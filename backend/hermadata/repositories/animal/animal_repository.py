@@ -331,7 +331,39 @@ class SQLAnimalRepository(AnimalRepository):
         self.session.add(event_log)
         self.session.commit()
 
-    def update(self, id: str, updates: UpdateAnimalModel):
+
+    def get_animal_entry(self, entry_id: int) -> AnimalEntryModel:
+        (
+            animal_entry,
+            animal_name,
+            animal_race_id,
+            animal_race,
+            origin_city_name,
+        ) = self.session.execute(
+            select(
+                AnimalEntry, Animal.name, Animal.race_id, Race.name, Comune.name
+            )
+            .select_from(AnimalEntry)
+            .join(Animal, AnimalEntry.animal_id == Animal.id)
+            .join(Race, Animal.race_id == Race.id)
+            .join(Comune, Comune.id == AnimalEntry.origin_city_code)
+            .where(AnimalEntry.id == entry_id)
+        ).one()
+        animal_entry: AnimalEntry
+        result = AnimalEntryModel(
+            animal_id=animal_entry.animal_id,
+            animal_name=animal_name,
+            entry_date=animal_entry.entry_date,
+            exit_date=animal_entry.exit_date,
+            entry_type=animal_entry.entry_type,
+            exit_type=animal_entry.exit_type,
+            origin_city_code=animal_entry.origin_city_code,
+            origin_city_name=origin_city_name,
+            animal_race=animal_race,
+            animal_race_id=animal_race_id,
+        )
+
+        return result
         values = updates.model_dump(exclude_none=True)
         if updates.chip_code:
             is_set = self.session.execute(
