@@ -399,6 +399,11 @@ class SQLAnimalRepository(AnimalRepository):
         return result.rowcount
 
     def new_document(self, animal_id: int, data: NewAnimalDocument):
+        document_kind_id = self.session.execute(
+            select(DocumentKind.id).where(
+                DocumentKind.code == data.document_kind_code.value
+            )
+        ).scalar_one()
         animal_document = AnimalDocument(
             animal_id=animal_id,
             document_id=data.document_id,
