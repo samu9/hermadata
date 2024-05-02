@@ -112,3 +112,9 @@ class ApiErrorCode(Enum):
 
 class DocKindCode(Enum):
     documento_ingresso = "IN"
+    iscrizione_anagrafie_canina = "IA"
+    spostamento_sanitario_rifugio = "SS"
+    uscita = "U"
+    documento_identita = "ID"
+    varie = "V"
+    assegnamento_chip = "C"
