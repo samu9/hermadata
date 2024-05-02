@@ -535,3 +535,11 @@ class SQLAnimalRepository(AnimalRepository):
         )
 
         return result
+
+    def add_medical_record(self, animal_id, data: AddMedicalRecordModel):
+        medical_record = MedicalRecord(animal_id=animal_id, **data.model_dump())
+        result = self.session.add(medical_record)
+
+        self.session.commit()
+
+        return result
