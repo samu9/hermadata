@@ -62,8 +62,9 @@ class AnimalSearchModel(PaginationQuery):
     not_present: bool = False
     chip_code: Optional[str] = None
 
+    # TODO: this is bugged, rewrite
     _sort_field_map: dict[str, MappedColumn] = {
-        "entry_date": AnimalEntry.entry_date
+        # "entry_date": AnimalEntry.entry_date
     }
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
@@ -221,7 +222,7 @@ class NewAnimalDocument(BaseModel):
 class AnimalDocumentModel(BaseModel):
     animal_id: int
     document_id: int
-    document_kind_id: int
+    document_kind_code: str
     created_at: datetime
 
 
