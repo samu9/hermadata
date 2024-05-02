@@ -1,17 +1,21 @@
 from ast import TypeVar
 from typing import Annotated, Any, Callable, Type
-from fastapi import Depends
 
+from fastapi import Depends
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy import Engine, create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
+
+from hermadata import __version__
+from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.document_repository import (
     SQLDocumentRepository,
     StorageType,
 )
+from hermadata.services.animal_service import AnimalService
 from hermadata.settings import Settings
 from hermadata.storage.disk_storage import DiskStorage
-from sqlalchemy.orm import Session
 
 
 def get_settings():
@@ -91,3 +95,40 @@ def get_repository(
             yield class_name(db_session)
 
     return factory
+
+
+def get_jinja_env() -> Environment:
+    jinja_env = Environment(
+        loader=FileSystemLoader("hermadata/reports/templates"),
+        autoescape=select_autoescape(),
+    )
+    jinja_env.globals = {
+        "software_name": "Hermadata",
+        "software_version": __version__,
+    }
+
+    return jinja_env
+
+
+def get_report_generator(
+    jinja_env: Annotated[Environment, Depends(get_jinja_env, use_cache=True)],
+):
+    return ReportGenerator(jinja_env=jinja_env)
+
+
+def get_animal_service(
+    disk_storage: Annotated[
+        DiskStorage, Depends(get_disk_storage, use_cache=True)
+    ],
+    report_generator: Annotated[
+        ReportGenerator, Depends(get_report_generator, use_cache=True)
+    ],
+):
+    service = AnimalService(
+        animal_repository=get_repository(SQLAnimalRepository),
+        document_repository=get_repository(SQLDocumentRepository),
+        report_generator=report_generator,
+        storage=disk_storage,
+    )
+
+    return service
