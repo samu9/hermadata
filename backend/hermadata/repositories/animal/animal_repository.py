@@ -14,14 +14,19 @@ from hermadata.database.models import (
     AnimalEntry,
     AnimalLog,
     Comune,
+    DocumentKind,
+    MedicalRecord,
+    Race,
 )
 from hermadata.models import PaginationResult
 from hermadata.repositories import BaseRepository
 from hermadata.repositories.animal.models import (
+    AddMedicalRecordModel,
     AnimalDaysItem,
     AnimalDaysQuery,
     AnimalDaysResult,
     AnimalDocumentModel,
+    AnimalEntryModel,
     AnimalExit,
     AnimalGetQuery,
     AnimalModel,
@@ -306,7 +311,7 @@ class SQLAnimalRepository(AnimalRepository):
 
         return code
 
-    def complete_entry(self, animal_id: str, data: CompleteEntryModel):
+    def complete_entry(self, animal_id: str, data: CompleteEntryModel) -> int:
         entry_id = self.session.execute(
             select(AnimalEntry.id).where(
                 AnimalEntry.animal_id == animal_id,
@@ -331,6 +336,7 @@ class SQLAnimalRepository(AnimalRepository):
         self.session.add(event_log)
         self.session.commit()
 
+        return entry_id
 
     def get_animal_entry(self, entry_id: int) -> AnimalEntryModel:
         (
@@ -364,6 +370,9 @@ class SQLAnimalRepository(AnimalRepository):
         )
 
         return result
+
+    def update(self, id: str, updates: UpdateAnimalModel) -> int:
+        """Return updated rowcound"""
         values = updates.model_dump(exclude_none=True)
         if updates.chip_code:
             is_set = self.session.execute(
@@ -407,13 +416,16 @@ class SQLAnimalRepository(AnimalRepository):
         animal_document = AnimalDocument(
             animal_id=animal_id,
             document_id=data.document_id,
-            document_kind_id=data.document_kind_id,
+            document_kind_id=document_kind_id,
         )
         self.session.add(animal_document)
         self.session.flush()
 
-        result = AnimalDocumentModel.model_validate(
-            animal_document, from_attributes=True
+        result = AnimalDocumentModel(
+            animal_id=animal_id,
+            document_id=data.document_id,
+            document_kind_code=data.document_kind_code.value,
+            created_at=animal_document.created_at,
         )
 
         self.session.commit()
@@ -424,19 +436,23 @@ class SQLAnimalRepository(AnimalRepository):
         result = self.session.execute(
             select(
                 AnimalDocument.document_id,
-                AnimalDocument.document_kind_id,
+                DocumentKind.code,
                 AnimalDocument.created_at,
-            ).where(AnimalDocument.animal_id == animal_id)
+            )
+            .join(
+                DocumentKind, DocumentKind.id == AnimalDocument.document_kind_id
+            )
+            .where(AnimalDocument.animal_id == animal_id)
         ).all()
 
         docs = [
             AnimalDocumentModel(
                 animal_id=animal_id,
                 document_id=document_id,
-                document_kind_id=document_kind_id,
+                document_kind_code=document_kind_code,
                 created_at=created_at,
             )
-            for document_id, document_kind_id, created_at in result
+            for document_id, document_kind_code, created_at in result
         ]
 
         return docs
