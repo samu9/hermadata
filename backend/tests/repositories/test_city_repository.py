@@ -5,7 +5,7 @@ from hermadata.repositories.city_repository import (
 
 
 def test_city_repository(db_session):
-    repo = SQLCityRepository(db_session())
+    repo = SQLCityRepository(db_session)
 
     province = repo.get_province()
 

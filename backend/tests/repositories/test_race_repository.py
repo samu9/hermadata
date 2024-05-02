@@ -4,18 +4,18 @@ from hermadata.repositories.race_repository import RaceModel, SQLRaceRepository
 
 
 def test_race_reository(db_session: Session):
-    repo = SQLRaceRepository(db_session())
+    repo = SQLRaceRepository(db_session)
 
-    repo.save(RaceModel(code="X", name="X"))
+    repo.save(RaceModel(id="X", name="X"))
 
     races = repo.get_all()
 
-    assert len(races) == 1
+    assert len(races) == 3
 
-    assert races[0].code == "X"
+    assert "X" in [r.id for r in races]
 
-    # repo.delete(code="X")
+    repo.delete(id_="X")
 
-    # races = repo.get_all()
+    races = repo.get_all()
 
-    # assert not races
+    assert "X" not in [r.id for r in races]

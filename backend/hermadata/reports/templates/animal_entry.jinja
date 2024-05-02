@@ -1,13 +1,22 @@
 {% extends "base.jinja" %} {% block content%}
 
 <div>
-    <table>
+    <table style="table-layout: fixed; width: 100%">
+        <col style="width: auto" />
+        <col style="width: auto" />
+        <col style="width: auto" />
+        <col style="width: auto" />
+        <tr style="text-align: left">
+            <th>Tipo</th>
+            <th>Nome</th>
+            <th>Comune</th>
+            <th>Data</th>
+        </tr>
         <tr>
-            <td>tipo</td>
             <td>{{ animal_type }}</td>
-
-            <td>Comune</td>
+            <td>{{ animal_name }}</td>
             <td>{{ city }}</td>
+            <td>{{ entry_date }}</td>
         </tr>
     </table>
 </div>

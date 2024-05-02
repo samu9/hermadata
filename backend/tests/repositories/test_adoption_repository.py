@@ -11,8 +11,6 @@ def test_create(db_session: Session):
     animal = Animal(
         code="1234567890123",
         race_id="C",
-        rescue_city_code="H501",
-        entry_type="a",
     )
     adopter = Adopter(
         name="A",

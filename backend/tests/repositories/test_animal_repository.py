@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import pytest
 from sqlalchemy import select
 
@@ -97,7 +97,7 @@ def test_save(db_session):
 
 
 def test_search(db_session: Session):
-    now = datetime.utcnow() - timedelta(seconds=10)
+    now = datetime.now(tz=timezone.utc) - timedelta(seconds=10)
     repo = SQLAnimalRepository(session=db_session)
     test_values = [
         NewAnimalModel(
@@ -119,7 +119,8 @@ def test_search(db_session: Session):
     for t in test_values:
         repo.new_animal(t)
 
-    result = repo.search(AnimalSearchModel(race_id="C", from_created_at=now))
+    query = AnimalSearchModel(race_id="C", from_created_at=now)
+    result = repo.search(query)
 
     assert result.total >= 2
     assert "A117" in [i.rescue_city_code for i in result.items]

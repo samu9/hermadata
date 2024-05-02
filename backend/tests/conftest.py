@@ -26,10 +26,12 @@ def pytest_sessionstart():
 
     command.upgrade(Config("tests/alembic.ini"), "head")
 
-
-def pytest_sessionfinish():
     for f in os.listdir("attic/storage"):
         os.remove(os.path.join("attic", "storage", f))
+
+
+def pytest_sessionfinish():
+    pass
 
 
 @pytest.fixture(scope="function")
