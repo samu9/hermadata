@@ -70,12 +70,8 @@ def import_doc_kinds(engine: Engine):
             rows = csv.reader(fp)
             for r in rows:
                 check = s.execute(
-                    select(DocumentKind.id).where(DocumentKind.name == r[0])
+                    select(DocumentKind.id).where(DocumentKind.code == r[0])
                 ).first()
                 if check:
                     continue
-                s.execute(
-                    insert(DocumentKind).values(
-                        name=r[0],
-                    )
-                )
+                s.execute(insert(DocumentKind).values(code=r[0], name=r[1]))
