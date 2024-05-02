@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, constr
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import delete, insert, select
 from hermadata.database.models import Race
 from hermadata.repositories import BaseRepository
@@ -8,12 +8,12 @@ from sqlalchemy.orm import Session
 class RaceModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str = constr(pattern=r"[A-Z]")
+    id: str = Field(pattern=r"[A-Z]")
     name: str
 
 
 class RaceQuery(BaseModel):
-    id: str = constr(pattern=r"[A-Z]")
+    id: str = Field(pattern=r"[A-Z]")
 
 
 class SQLRaceRepository(BaseRepository):
