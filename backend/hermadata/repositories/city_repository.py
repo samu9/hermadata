@@ -1,6 +1,5 @@
 from pydantic import BaseModel, ConfigDict, constr
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 from hermadata.database.models import Comune, Provincia
 from hermadata.repositories import SQLBaseRepository
 
@@ -21,12 +20,12 @@ class ComuneModel(BaseModel):
 
 
 class SQLCityRepository(SQLBaseRepository):
-    def __init__(self, session: Session) -> None:
-        super().__init__(session)
 
     def get_province(self) -> list[ProvinciaModel]:
         query_result = (
-            self.session.execute(select(Provincia).order_by(Provincia.name)).scalars().all()
+            self.session.execute(select(Provincia).order_by(Provincia.name))
+            .scalars()
+            .all()
         )
         result = [ProvinciaModel.model_validate(r) for r in query_result]
 
@@ -35,7 +34,9 @@ class SQLCityRepository(SQLBaseRepository):
     def get_comuni(self, provincia: str) -> list[ComuneModel]:
         query_result = (
             self.session.execute(
-                select(Comune).where(Comune.provincia == provincia).order_by(Comune.name)
+                select(Comune)
+                .where(Comune.provincia == provincia)
+                .order_by(Comune.name)
             )
             .scalars()
             .all()

@@ -2,8 +2,7 @@ from typing import Annotated
 from pydantic import AfterValidator, BaseModel, constr
 from sqlalchemy import delete, insert, select
 from hermadata.database.models import Breed, Race
-from hermadata.repositories import BaseRepository
-from sqlalchemy.orm import Session
+from hermadata.repositories import SQLBaseRepository
 
 
 class NewBreedModel(BaseModel):
@@ -17,9 +16,7 @@ class BreedModel(NewBreedModel):
     race_id: str
 
 
-class SQLBreedRepository(BaseRepository):
-    def __init__(self, session: Session) -> None:
-        self.session = session
+class SQLBreedRepository(SQLBaseRepository):
 
     def create(self, data: NewBreedModel):
         result = self.session.execute(insert(Breed).values(**data.model_dump()))

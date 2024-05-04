@@ -2,8 +2,7 @@ from datetime import date
 from pydantic import BaseModel
 from sqlalchemy import insert, select
 from hermadata.database.models import Adopter
-from hermadata.repositories import BaseRepository
-from sqlalchemy.orm import Session
+from hermadata.repositories import SQLBaseRepository
 
 
 class NewAdopter(BaseModel):
@@ -26,9 +25,7 @@ class AdopterQuery(BaseModel):
     fiscal_code: str | None = None
 
 
-class SQLAdopterRepository(BaseRepository):
-    def __init__(self, session: Session) -> None:
-        self.session = session
+class SQLAdopterRepository(SQLBaseRepository):
 
     def create(self, data: NewAdopter) -> AdopterModel:
         dump = data.model_dump()

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from sqlalchemy import insert, select
 from hermadata.database.models import Document, DocumentKind
-from hermadata.repositories import BaseRepository
+from hermadata.repositories import SQLBaseRepository
 from sqlalchemy.orm import Session
 
 from hermadata.storage.base import StorageInterface
@@ -38,9 +38,9 @@ class DocumentModel(BaseModel):
 StorageMap = dict[StorageType, StorageInterface]
 
 
-class SQLDocumentRepository(BaseRepository):
+class SQLDocumentRepository(SQLBaseRepository):
     def __init__(self, session: Session, storage: StorageMap = {}) -> None:
-        self.session = session
+        super().__init__()
         self.storage = storage
 
     def new_document_kind(self, data: NewDocKindModel):

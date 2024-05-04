@@ -3,7 +3,6 @@ import logging
 from datetime import date, datetime, timedelta
 
 from sqlalchemy import and_, func, insert, or_, select, update
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from hermadata.constants import AnimalEvent
 from hermadata.database.models import (
@@ -19,7 +18,7 @@ from hermadata.database.models import (
     Race,
 )
 from hermadata.models import PaginationResult
-from hermadata.repositories import BaseRepository
+from hermadata.repositories import SQLBaseRepository
 from hermadata.repositories.animal.models import (
     AddMedicalRecordModel,
     AnimalDaysItem,
@@ -58,14 +57,7 @@ class ExistingChipCodeException(Exception):
         super().__init__(*args)
 
 
-class AnimalRepository(BaseRepository):
-    def __init__(self) -> None:
-        super().__init__()
-
-
-class SQLAnimalRepository(AnimalRepository):
-    def __init__(self, session: Session) -> None:
-        self.session = session
+class SQLAnimalRepository(SQLBaseRepository):
 
     def save(self, model: AnimalModel):
         result = self.session.execute(

@@ -3,8 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy import select, update
 from hermadata.constants import ExitType
 from hermadata.database.models import Adoption, Animal
-from hermadata.repositories import BaseRepository
-from sqlalchemy.orm import Session
+from hermadata.repositories import SQLBaseRepository
 
 
 class ExistingAdoptionException(Exception):
@@ -23,9 +22,7 @@ class AdoptionModel(BaseModel):
     animal_id: int
 
 
-class SQLAdopionRepository(BaseRepository):
-    def __init__(self, session: Session) -> None:
-        self.session = session
+class SQLAdopionRepository(SQLBaseRepository):
 
     def create(self, data: NewAdoption) -> int:
 
