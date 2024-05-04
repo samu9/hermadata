@@ -3,6 +3,7 @@ import { docKindNameValidator } from "./validators"
 
 export const docKindSchema = z.object({
     id: z.number(),
+    code: z.string().length(2),
     name: docKindNameValidator,
 })
 

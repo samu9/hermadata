@@ -16,8 +16,8 @@ const AnimalDocs = () => {
 
     const docKindsMap =
         docKindsQuery.data?.reduce(
-            (result: { [key: number]: string }, current: DocKind) => {
-                result[current.id] = current.name
+            (result: { [key: string]: string }, current: DocKind) => {
+                result[current.code] = current.name
                 return result
             },
             {}
@@ -34,7 +34,7 @@ const AnimalDocs = () => {
                 value={
                     animalDocumentsQuery.data?.map((d) => ({
                         id: d.document_id,
-                        kind: docKindsMap[d.document_kind_id],
+                        kind: docKindsMap[d.document_kind_code],
                         created_at: d.created_at,
                     })) || []
                 }

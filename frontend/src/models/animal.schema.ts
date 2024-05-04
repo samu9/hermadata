@@ -101,7 +101,7 @@ export type PaginatedAnimalSearchResult = z.infer<
 
 export const animalDocUploadSchema = z.object({
     title: z.string().min(1),
-    document_kind_id: z.number().min(1),
+    document_kind_code: z.string().min(1),
     document_id: z.number(),
 })
 
@@ -110,7 +110,7 @@ export type AnimalDocUpload = z.infer<typeof animalDocUploadSchema>
 export const animalDocumentSchema = z.object({
     animal_id: z.number(),
     document_id: z.number(),
-    document_kind_id: z.number(),
+    document_kind_code: z.string(),
     created_at: dateFromString,
 })
 

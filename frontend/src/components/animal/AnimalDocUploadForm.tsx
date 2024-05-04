@@ -97,9 +97,9 @@ const AnimalDocUploadForm = (props: Props) => {
                     />
                     <ControlledDropdown
                         label="Tipo"
-                        fieldName="document_kind_id"
+                        fieldName="document_kind_code"
                         optionLabel="name"
-                        optionValue="id"
+                        optionValue="code"
                         options={docKindsQuery.data}
                         className="w-full"
                     />
