@@ -1,8 +1,9 @@
 from enum import Enum
 from uuid import uuid4
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from sqlalchemy import insert, select
+from hermadata.constants import DocKindCode
 from hermadata.database.models import Document, DocumentKind
 from hermadata.repositories import SQLBaseRepository
 from sqlalchemy.orm import Session
@@ -24,10 +25,12 @@ class NewDocument(BaseModel):
 
 class DocKindModel(BaseModel):
     id: int
+    code: str
     name: str
 
 
 class NewDocKindModel(BaseModel):
+    code: str = Field(length=2)
     name: str
 
 
@@ -42,6 +45,16 @@ class SQLDocumentRepository(SQLBaseRepository):
     def __init__(self, session: Session, storage: StorageMap = {}) -> None:
         super().__init__()
         self.storage = storage
+        self.document_kind_ids: dict[DocKindCode, int] = {}
+
+        with self(session):
+            self._init_document_kind_ids_map()
+
+    def _init_document_kind_ids_map(self):
+        data = self.get_all_document_kinds()
+        for d in data:
+            if d.code in DocKindCode:
+                self.document_kind_ids[DocKindCode(d.code)] = d.id
 
     def new_document_kind(self, data: NewDocKindModel):
         result = self.session.execute(
@@ -62,6 +75,12 @@ class SQLDocumentRepository(SQLBaseRepository):
         ]
 
         return result
+
+    def get_document_kind_id_by_code(self, code: DocKindCode):
+        kind_id = self.session.execute(
+            select(DocumentKind.id).where(DocumentKind.code == code)
+        ).scalar_one()
+        return kind_id
 
     def new_document(self, data: NewDocument) -> int:
         key = str(uuid4())
