@@ -29,10 +29,9 @@ def get_animal_id_by_code(db_session: Session, code: str) -> int:
     return animal_id
 
 
-def test_new_animal(db_session):
-    repo = SQLAnimalRepository(session=db_session)
+def test_new_animal(animal_repository: SQLAnimalRepository):
 
-    repo.new_animal(
+    animal_repository.new_animal(
         NewAnimalModel(
             race_id="C",
             rescue_city_code="H501",
@@ -96,9 +95,8 @@ def test_save(db_session):
     assert True
 
 
-def test_search(db_session: Session):
+def test_search(animal_repository: SQLAnimalRepository):
     now = datetime.now(tz=timezone.utc) - timedelta(seconds=10)
-    repo = SQLAnimalRepository(session=db_session)
     test_values = [
         NewAnimalModel(
             entry_type="R",
@@ -117,17 +115,16 @@ def test_search(db_session: Session):
         ),
     ]
     for t in test_values:
-        repo.new_animal(t)
+        animal_repository.new_animal(t)
 
     query = AnimalSearchModel(race_id="C", from_created_at=now)
-    result = repo.search(query)
+    result = animal_repository.search(query)
 
     assert result.total >= 2
     assert "A117" in [i.rescue_city_code for i in result.items]
 
 
-def test_update(db_session: Session):
-    repo = SQLAnimalRepository(session=db_session)
+def test_update(db_session: Session, animal_repository: SQLAnimalRepository):
 
     new_entry_data = NewAnimalModel(
         entry_type="R",
@@ -135,12 +132,12 @@ def test_update(db_session: Session):
         race_id="C",
     )
 
-    code = repo.new_animal(new_entry_data)
+    code = animal_repository.new_animal(new_entry_data)
 
     animal_id = db_session.execute(
         select(Animal.id).where(Animal.code == code)
     ).scalar()
-    repo.update(
+    animal_repository.update(
         animal_id,
         UpdateAnimalModel(
             name="Test Cat",
@@ -156,7 +153,7 @@ def test_update(db_session: Session):
 
     assert sterilized is True
 
-    repo.update(animal_id, UpdateAnimalModel(sterilized=False))
+    animal_repository.update(animal_id, UpdateAnimalModel(sterilized=False))
 
     name, sterilized = db_session.execute(
         select(Animal.name, Animal.sterilized).where(Animal.code == code)

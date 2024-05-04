@@ -7,7 +7,7 @@ from hermadata.repositories.adoption_repository import (
 from sqlalchemy.orm import Session
 
 
-def test_create(db_session: Session):
+def test_create(db_session: Session, adoption_repository: SQLAdopionRepository):
     animal = Animal(
         code="1234567890123",
         race_id="C",
@@ -25,9 +25,7 @@ def test_create(db_session: Session):
     db_session.add(adopter)
     db_session.flush()
 
-    repo = SQLAdopionRepository(db_session)
-
-    result = repo.create(
+    result = adoption_repository.create(
         NewAdoption(animal_id=animal.id, adopter_id=adopter.id)
     )
 
