@@ -7,7 +7,7 @@ from hermadata.constants import (
     FUR_LABELS,
     SIZE_LABELS,
 )
-from hermadata.dependancies import RepositoryFactory
+from hermadata.dependancies import get_repository
 from hermadata.models import UtilElement
 from hermadata.repositories.city_repository import (
     ComuneModel,
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/util")
 
 @router.get("/province", response_model=list[ProvinciaModel])
 def get_province(
-    repo: SQLCityRepository = Depends(RepositoryFactory(SQLCityRepository)),
+    repo: SQLCityRepository = Depends(get_repository(SQLCityRepository)),
 ):
     province = repo.get_province()
     return province
@@ -30,7 +30,7 @@ def get_province(
 @router.get("/comuni", response_model=list[ComuneModel])
 def get_comuni(
     provincia: str,
-    repo: SQLCityRepository = Depends(RepositoryFactory(SQLCityRepository)),
+    repo: SQLCityRepository = Depends(get_repository(SQLCityRepository)),
 ):
     comuni = repo.get_comuni(provincia=provincia)
     return comuni

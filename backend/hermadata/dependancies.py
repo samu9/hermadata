@@ -1,5 +1,5 @@
 from ast import TypeVar
-from typing import Annotated, Any, Callable, Type
+from typing import Annotated, Type
 
 from fastapi import Depends
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
 from hermadata.reports.report_generator import ReportGenerator
+from hermadata.repositories import SQLBaseRepository
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.document_repository import (
     SQLDocumentRepository,
@@ -18,15 +19,10 @@ from hermadata.settings import Settings
 from hermadata.storage.disk_storage import DiskStorage
 
 
-def get_settings():
-    settings = Settings()
-    return settings
+settings = Settings()
 
 
-def get_engine(
-    settings: Annotated[Settings, Depends(get_settings, use_cache=True)]
-):
-    settings = get_settings()
+def get_engine():
     engine = create_engine(settings.db.url)
     return engine
 
@@ -42,59 +38,43 @@ def get_session(engine: Annotated[Engine, Depends(get_engine)]):
         raise e
 
 
-Repo = TypeVar("T")
-
-
-def get_disk_storage(
-    settings: Annotated[Settings, Depends(get_settings, use_cache=True)]
-):
+def get_disk_storage():
     disk_storage = DiskStorage(settings.storage.disk.base_path)
 
     return disk_storage
 
 
-def document_repository_factory(
-    db_session: Annotated[Session, Depends(get_session)],
-    disk_storage: Annotated[
-        DiskStorage, Depends(get_disk_storage, use_cache=True)
-    ],
-):
-    storage = {StorageType.disk: disk_storage}
-    repo = SQLDocumentRepository(db_session, storage=storage)
-
-    yield repo
+Repo = TypeVar("T")
 
 
-def animal_repository_factory(
-    db_session: Annotated[Session, Depends(get_session)]
-):
-    repo = SQLAnimalRepository(db_session)
-    yield repo
+engine = get_engine()
+DBSession = sessionmaker(engine)
+disk_storage = get_disk_storage()
 
+animal_repository = SQLAnimalRepository()
 
-REPOSITORIES_FACTORIES = {SQLAnimalRepository: document_repository_factory}
+with DBSession.begin() as db_session:
+    document_repository = SQLDocumentRepository(
+        db_session, storage={StorageType.disk: disk_storage}
+    )
 
-
-class RepositoryFactory:
-    def __init__(self, repo_class: Type[Repo]) -> None:
-        self.repo_class = repo_class
-
-    def __call__(
-        self, db_session: Annotated[Session, Depends(get_session)]
-    ) -> Any:
-        yield self.repo_class(db_session)
+repository_map: dict[Type[SQLBaseRepository], SQLBaseRepository] = {
+    SQLAnimalRepository: animal_repository,
+    SQLDocumentRepository: document_repository,
+}
 
 
 def get_repository(
-    class_name: Type[Repo], readwrite=False
-) -> Callable[[], Repo]:
-    db_session_generator = get_session(readwrite)
+    repo: Type[SQLBaseRepository],
+):
+    def get(
+        db_session: Annotated[Session, Depends(get_session)],
+    ):
+        r = repository_map[repo]
+        with r(db_session):
+            yield r
 
-    def factory():
-        with db_session_generator as db_session:
-            yield class_name(db_session)
-
-    return factory
+    return get
 
 
 def get_jinja_env() -> Environment:
