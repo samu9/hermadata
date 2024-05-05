@@ -66,10 +66,12 @@ def DBSessionMaker(engine: Engine) -> Session:
 
 
 @pytest.fixture(scope="function")
-def db_session(DBSessionMaker: sessionmaker) -> Session:
-    session = DBSessionMaker()
+def db_session(
+    DBSessionMaker: sessionmaker,
+) -> Generator[Session, Session, None]:
 
-    return session
+    with DBSessionMaker.begin() as db_session:
+        yield db_session
 
 
 @pytest.fixture(scope="function")
@@ -94,11 +96,12 @@ def report_generator(jinja_env) -> ReportGenerator:
 
 @pytest.fixture(scope="function")
 def document_repository(
-    db_session: Session, disk_storage
+    db_session: Session, disk_storage, DBSessionMaker
 ) -> Generator[SQLDocumentRepository, SQLDocumentRepository, None]:
-    repo = SQLDocumentRepository(
-        db_session, storage={StorageType.disk: disk_storage}
-    )
+    with DBSessionMaker() as init_session:
+        repo = SQLDocumentRepository(
+            init_session, storage={StorageType.disk: disk_storage}
+        )
     with repo(db_session):
         yield repo
 
@@ -171,20 +174,31 @@ def animal_service(
 
 @pytest.fixture(scope="function")
 def make_animal(
-    db_session: Session, animal_repository: SQLAnimalRepository
+    DBSessionMaker: sessionmaker,
 ) -> Callable[[NewAnimalModel], int]:
-    def make(data: NewAnimalModel = None) -> int:
-        if data is None:
-            data = NewAnimalModel(
-                race_id="C",
-                rescue_city_code="H501",
-                entry_type=EntryType.rescue,
-            )
-        code = animal_repository.new_animal(data=data)
+    """
+    `db_session` and `animal_repository` fixtures are not used because
+    i want a separate session to be committed at the end of the function
+    in order to have the data available to other transactions
+    """
 
-        animal_id = db_session.execute(
-            select(Animal.id).where(Animal.code == code)
-        ).scalar()
+    animal_repository = SQLAnimalRepository()
+
+    def make(data: NewAnimalModel = None) -> int:
+        with DBSessionMaker.begin() as db_session, animal_repository(
+            db_session
+        ):
+            if data is None:
+                data = NewAnimalModel(
+                    race_id="C",
+                    rescue_city_code="H501",
+                    entry_type=EntryType.rescue,
+                )
+            code = animal_repository.new_animal(data=data)
+
+            animal_id = db_session.execute(
+                select(Animal.id).where(Animal.code == code)
+            ).scalar()
 
         return animal_id
 

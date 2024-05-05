@@ -49,7 +49,7 @@ def test_update_animal(
     affected = int(result.content.decode())
     assert affected == 1
 
-    with DBSessionMaker.begin() as db_session:
+    with DBSessionMaker() as db_session:
         animal = db_session.execute(
             select(Animal).where(Animal.id == animal_id)
         ).scalar_one()

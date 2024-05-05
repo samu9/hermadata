@@ -22,9 +22,9 @@ from typing import Callable
 
 def test_new_entry(
     disk_storage: DiskStorage,
-    db_session: Session,
     animal_service: AnimalService,
     make_animal: Callable[[NewAnimalModel], int],
+    db_session: Session,
 ):
     animal_id = make_animal(
         NewAnimalModel(
@@ -57,13 +57,7 @@ def test_update(
     make_animal: Callable[[NewAnimalModel], int],
     animal_service: AnimalService,
 ):
-    animal_id = make_animal(
-        NewAnimalModel(
-            race_id="C",
-            rescue_city_code="H501",
-            entry_type=EntryType.confiscation.value,
-        )
-    )
+    animal_id = make_animal()
 
     affected = animal_service.update(
         animal_id,

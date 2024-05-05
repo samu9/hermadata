@@ -95,7 +95,7 @@ def test_save(db_session):
     assert True
 
 
-def test_search(animal_repository: SQLAnimalRepository):
+def test_search(animal_repository: SQLAnimalRepository, make_animal):
     now = datetime.now(tz=timezone.utc) - timedelta(seconds=10)
     test_values = [
         NewAnimalModel(
@@ -115,7 +115,7 @@ def test_search(animal_repository: SQLAnimalRepository):
         ),
     ]
     for t in test_values:
-        animal_repository.new_animal(t)
+        make_animal(t)
 
     query = AnimalSearchModel(race_id="C", from_created_at=now)
     result = animal_repository.search(query)
