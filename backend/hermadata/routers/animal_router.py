@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import NoResultFound
-from hermadata.constants import ApiErrorCode
 
-from hermadata.dependancies import get_repository
+from hermadata.constants import ApiErrorCode
+from hermadata.dependancies import get_animal_service, get_repository
 from hermadata.models import ApiError, PaginationResult
 from hermadata.repositories.animal.animal_repository import (
     ExistingChipCodeException,
@@ -20,6 +20,7 @@ from hermadata.repositories.animal.models import (
     NewEntryModel,
     UpdateAnimalModel,
 )
+from hermadata.services.animal_service import AnimalService
 
 router = APIRouter(prefix="/animal")
 
@@ -67,10 +68,10 @@ def get_animal(
 def update_animal(
     animal_id: int,
     data: UpdateAnimalModel,
-    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
+    service: AnimalService = Depends(get_animal_service),
 ) -> int | ApiError:
     try:
-        result = repo.update(animal_id, data)
+        result = service.update(animal_id, data)
     except ExistingChipCodeException as e:
         return ApiError(
             code=ApiErrorCode.existing_chip_code,
@@ -114,9 +115,9 @@ def animal_exit(
 def complete_entry(
     animal_id: int,
     data: CompleteEntryModel,
-    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
+    service: AnimalService = Depends(get_animal_service),
 ):
-    repo.complete_entry(animal_id, data)
+    service.complete_entry(animal_id, data)
 
     return True
 
