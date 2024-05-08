@@ -60,7 +60,7 @@ class SQLDocumentRepository(SQLBaseRepository):
         result = self.session.execute(
             insert(DocumentKind).values(name=data.name)
         )
-        self.session.commit()
+        self.session.flush()
         new_kind = DocKindModel(id=result.lastrowid, name=data.name)
         return new_kind
 
@@ -93,7 +93,6 @@ class SQLDocumentRepository(SQLBaseRepository):
         self.session.add(doc)
         self.session.flush()
         doc_id = doc.id
-        self.session.commit()
         self.storage[data.storage_service].store_file(key, data.data)
 
         return doc_id

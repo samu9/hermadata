@@ -49,7 +49,7 @@ class SQLAdopionRepository(SQLBaseRepository):
                 )
                 .where(Animal.id == data.animal_id)
             )
-        self.session.commit()
+            self.session.flush()
 
         return result
 
@@ -69,4 +69,4 @@ class SQLAdopionRepository(SQLBaseRepository):
             )
             .where(Animal.id == adoption.animal_id)
         )
-        self.session.commit()
+        self.session.flush()

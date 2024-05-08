@@ -66,7 +66,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 race_id=model.race_id,
             )
         )
-        self.session.commit()
+        self.session.flush()
         return result
 
     def new_animal(self, data: NewAnimalModel) -> str:
@@ -94,7 +94,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.add(animal)
         self.session.add(animal_entry)
         self.session.add(event_log)
-        self.session.commit()
+        self.session.flush()
         return code
 
     def add_entry(self, animal_id: int, data: NewEntryModel) -> int:
@@ -134,7 +134,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             data=data.model_dump(),
         )
         self.session.add(event_log)
-        self.session.commit()
+        self.session.flush()
 
         return new_entry_id
 
@@ -326,7 +326,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             data=json.loads(data.model_dump_json()),
         )
         self.session.add(event_log)
-        self.session.commit()
+        self.session.flush()
 
         return entry_id
 
@@ -396,7 +396,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             data=json.loads(updates.model_dump_json()),
         )
         self.session.add(event_log)
-        self.session.commit()
+        self.session.flush()
         return result.rowcount
 
     def new_document(self, animal_id: int, data: NewAnimalDocument):
@@ -420,7 +420,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             created_at=animal_document.created_at,
         )
 
-        self.session.commit()
+        self.session.flush()
 
         return result
 
@@ -483,7 +483,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 exit_type=data.exit_type,
             )
         )
-        self.session.commit()
+        self.session.flush()
 
     def count_animal_days(self, query: AnimalDaysQuery) -> AnimalDaysResult:
         entries = self.session.execute(
@@ -548,6 +548,6 @@ class SQLAnimalRepository(SQLBaseRepository):
         medical_record = MedicalRecord(animal_id=animal_id, **data.model_dump())
         result = self.session.add(medical_record)
 
-        self.session.commit()
+        self.session.flush()
 
         return result
