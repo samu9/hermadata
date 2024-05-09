@@ -103,10 +103,16 @@ def get_animal_service(
     report_generator: Annotated[
         ReportGenerator, Depends(get_report_generator, use_cache=True)
     ],
+    animal_repository: Annotated[
+        ReportGenerator, Depends(get_repository(SQLAnimalRepository))
+    ],
+    document_repository: Annotated[
+        ReportGenerator, Depends(get_repository(SQLDocumentRepository))
+    ],
 ):
     service = AnimalService(
-        animal_repository=get_repository(SQLAnimalRepository),
-        document_repository=get_repository(SQLDocumentRepository),
+        animal_repository=animal_repository,
+        document_repository=document_repository,
         report_generator=report_generator,
         storage=disk_storage,
     )
