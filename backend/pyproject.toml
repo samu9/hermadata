@@ -18,7 +18,8 @@ dependencies = [
     "cryptography",
     "python-multipart",
     "pdfkit",
-    "jinja2"
+    "jinja2",
+    "openpyxl"
 ]
 [tool.flake8]
 max-line-length = 120
