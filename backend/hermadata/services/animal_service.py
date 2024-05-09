@@ -7,6 +7,7 @@ from hermadata.reports.report_generator import (
 )
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import (
+    AnimalDaysQuery,
     AnimalQueryModel,
     CompleteEntryModel,
     NewAnimalDocument,
@@ -114,3 +115,12 @@ class AnimalService:
 
     def exit(self, animal_id):
         pass
+
+    def animal_days_report(self, query: AnimalDaysQuery):
+        animal_days = self.animal_repository.count_animal_days(query)
+        filename, report = (
+            self.report_generator.generate_animal_days_count_report(
+                query, animal_days
+            )
+        )
+        return filename, report

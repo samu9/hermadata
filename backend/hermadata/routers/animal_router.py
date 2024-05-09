@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.exc import NoResultFound
 
 from hermadata.constants import ApiErrorCode
@@ -9,6 +9,7 @@ from hermadata.repositories.animal.animal_repository import (
     SQLAnimalRepository,
 )
 from hermadata.repositories.animal.models import (
+    AnimalDaysQuery,
     AnimalDocumentModel,
     AnimalExit,
     AnimalQueryModel,
@@ -139,3 +140,17 @@ def get_warnings(
     repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
 ):
     return
+
+
+@router.get("/days/report")
+def serve_animal_days_report(
+    query: AnimalDaysQuery = Depends(),
+    service: AnimalService = Depends(get_animal_service),
+):
+    filename, report = service.animal_days_report(query)
+
+    return Response(
+        content=report,
+        media_type="application/vnd.ms-excel",
+        headers={"filename": filename, "Content-Disposition": "attachment"},
+    )
