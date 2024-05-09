@@ -7,6 +7,8 @@ https://flit.pypa.io/
 ```
 flit install -s
 ```
+`-s`is used to install as symlink for development mode
+
 # Build
 ## Using Flit
 
