@@ -20,9 +20,12 @@ export const dateOnly = dateFromString.transform((d) => {
     if (!d) {
         return null
     }
-    d.setUTCDate(d.getDate())
-    d.setUTCHours(0, 0, 0, 0)
-    return new Date(d)
+    const tzoffset = d.getTimezoneOffset() * 60000 //offset in milliseconds
+    const withoutTimezone = new Date(d.valueOf() - tzoffset)
+        .toISOString()
+        .slice(0, -1)
+
+    return withoutTimezone
 })
 
 export const docKindNameValidator = z
