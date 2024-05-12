@@ -322,3 +322,28 @@ def test_count_days(
     )
 
     assert result.total_days == 10 + 5
+
+
+def test_count_days_same_day(
+    db_session: Session, animal_repository: SQLAnimalRepository, make_animal
+):
+    animal_id = make_animal()
+
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 4, 1))
+    )
+
+    animal_repository.exit(
+        animal_id,
+        AnimalExit(exit_date=date(2024, 4, 2), exit_type=ExitType.adoption),
+    )
+
+    days = animal_repository.count_animal_days(
+        AnimalDaysQuery(
+            from_date=date(2024, 3, 1),
+            to_date=date(2024, 4, 2),
+            city_code="H501",
+        )
+    )
+
+    assert days

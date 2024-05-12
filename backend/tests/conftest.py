@@ -12,8 +12,6 @@ from sqlalchemy.orm import Session, sessionmaker
 from hermadata import __version__
 from hermadata.constants import EntryType
 from hermadata.database.models import Animal
-from hermadata.dependancies import settings
-from hermadata.main import build_app
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.adopter_repository import SQLAdopterRepository
 from hermadata.repositories.adoption_repository import SQLAdopionRepository
@@ -207,9 +205,13 @@ def make_animal(
 
 @pytest.fixture(scope="function")
 def app():
+    from hermadata.settings import settings
 
     settings.db.url = "mysql+pymysql://root:dev@localhost/hermadata_test"
     settings.storage.disk.base_path = "attic/storage"
+
+    from hermadata.main import build_app
+
     app = build_app()
     test_app = TestClient(app)
 
