@@ -57,6 +57,10 @@ class ExistingChipCodeException(Exception):
         super().__init__(*args)
 
 
+class ExitNotValidException(Exception):
+    pass
+
+
 class SQLAnimalRepository(SQLBaseRepository):
 
     def save(self, model: AnimalModel):
@@ -464,6 +468,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             raise EntryNotCompleteException()
         if exit_date:
             raise Exception(f"animal {animal_id} already is exit!")
+
+        if data.exit_date < entry_date:
+            raise ExitNotValidException()
 
         animal_log = AnimalLog(
             animal_id=animal_id,
