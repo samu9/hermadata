@@ -151,6 +151,6 @@ def serve_animal_days_report(
 
     return Response(
         content=report,
-        media_type="application/vnd.ms-excel",
-        headers={"filename": filename, "Content-Disposition": "attachment"},
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
+        headers={"X-filename": filename},
     )
