@@ -1,37 +1,41 @@
-from ast import TypeVar
+import logging
+from threading import current_thread
 from typing import Annotated, Type
 
 from fastapi import Depends
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories import SQLBaseRepository
+from hermadata.repositories.adopter_repository import SQLAdopterRepository
+from hermadata.repositories.adoption_repository import SQLAdopionRepository
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
+from hermadata.repositories.breed_repository import SQLBreedRepository
+from hermadata.repositories.city_repository import SQLCityRepository
 from hermadata.repositories.document_repository import (
     SQLDocumentRepository,
     StorageType,
 )
+from hermadata.repositories.race_repository import SQLRaceRepository
 from hermadata.services.animal_service import AnimalService
-from hermadata.settings import Settings
+from hermadata.settings import settings
 from hermadata.storage.disk_storage import DiskStorage
 
 
-settings = Settings()
+logger = logging.getLogger(__name__)
+
+engine = create_engine(settings.db.url)
+
+SessionMaker = sessionmaker(engine)
 
 
-def get_engine():
-    engine = create_engine(settings.db.url)
-    return engine
-
-
-def get_session(engine: Annotated[Engine, Depends(get_engine)]):
-    session = sessionmaker(engine)
+def get_session():
 
     try:
-        with session.begin() as s:
+        with SessionMaker.begin() as s:
             yield s
     except Exception as e:
         s.rollback()
@@ -44,23 +48,31 @@ def get_disk_storage():
     return disk_storage
 
 
-Repo = TypeVar("T")
-
-
-engine = get_engine()
 DBSession = sessionmaker(engine)
 disk_storage = get_disk_storage()
 
-animal_repository = SQLAnimalRepository()
 
 with DBSession.begin() as db_session:
     document_repository = SQLDocumentRepository(
         db_session, storage={StorageType.disk: disk_storage}
     )
 
+
+race_repository = SQLRaceRepository()
+adoption_repository = SQLAdopionRepository()
+adopter_repository = SQLAdopterRepository()
+breed_repository = SQLBreedRepository()
+city_repository = SQLCityRepository()
+animal_repository = SQLAnimalRepository()
+
 repository_map: dict[Type[SQLBaseRepository], SQLBaseRepository] = {
     SQLAnimalRepository: animal_repository,
     SQLDocumentRepository: document_repository,
+    SQLRaceRepository: race_repository,
+    SQLAdopionRepository: adoption_repository,
+    SQLAdopterRepository: adopter_repository,
+    SQLBreedRepository: breed_repository,
+    SQLCityRepository: city_repository,
 }
 
 
@@ -71,8 +83,28 @@ def get_repository(
         db_session: Annotated[Session, Depends(get_session)],
     ):
         r = repository_map[repo]
-        with r(db_session):
+        r.local_session.session = db_session
+        logger.info(
+            "repo %s, set session %s, thread %s",
+            r.__class__,
+            r.session,
+            current_thread().ident,
+        )
+        try:
             yield r
+        except Exception as e:
+            logger.info(
+                "repo %s error - thread %s", r.__class__, current_thread().ident
+            )
+            raise e
+        finally:
+            # r.local_session.session = None
+            logger.info(
+                "repo %s, nulled session %s, thread %s",
+                r.__class__,
+                r.session,
+                current_thread().ident,
+            )
 
     return get
 
