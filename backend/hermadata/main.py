@@ -30,6 +30,7 @@ def build_app():
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["X-filename"],
     )
     app.include_router(animal_router.router)
     app.include_router(util_router.router)
