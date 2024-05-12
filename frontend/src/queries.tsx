@@ -64,7 +64,6 @@ export const useAnimalFurTypesQuery = () =>
 export const useAnimalDocumentsQuery = (animal_id: number) =>
     useQuery(["animal-documents", animal_id], {
         queryFn: () => apiService.getAnimalDocuments(animal_id),
-        staleTime: Infinity,
         placeholderData: [],
     })
 // export const useNewEntryMutation = useMutation({
