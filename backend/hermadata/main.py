@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from hermadata.routers import (
     adopter_router,
-    adoption_router,
     animal_router,
     breed_router,
     document_router,
@@ -38,7 +37,6 @@ def build_app():
     app.include_router(breed_router.router)
     app.include_router(document_router.router)
     app.include_router(adopter_router.router)
-    app.include_router(adoption_router.router)
     app.include_router(vet_router.router)
 
     logger.info("hermadata set up")
