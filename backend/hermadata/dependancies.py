@@ -1,4 +1,5 @@
 import logging
+import os
 from threading import current_thread
 from typing import Annotated, Type
 
@@ -110,8 +111,11 @@ def get_repository(
 
 
 def get_jinja_env() -> Environment:
+    templates_dir = os.path.join(
+        os.path.dirname(__file__), "reports", "templates"
+    )
     jinja_env = Environment(
-        loader=FileSystemLoader("hermadata/reports/templates"),
+        loader=FileSystemLoader(templates_dir),
         autoescape=select_autoescape(),
     )
     jinja_env.globals = {
