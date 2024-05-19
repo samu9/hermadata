@@ -106,18 +106,29 @@ class SQLAnimalRepository(SQLBaseRepository):
             select(Animal.id).where(Animal.id == animal_id)
         ).one()
 
-        is_present = self.session.execute(
-            select(AnimalEntry.id).where(
+        last_entry_id, exit_date = self.session.execute(
+            select(AnimalEntry.id, AnimalEntry.exit_date).where(
                 AnimalEntry.animal_id == animal_id,
                 AnimalEntry.current.is_(True),
-                AnimalEntry.exit_date.is_(None),
             )
-        ).scalar()
+        ).first()
 
-        if is_present:
+        if not exit_date:
             raise Exception(
                 f"animal id {animal_id} has already an active entry"
             )
+
+        adoptions_update = self.session.execute(
+            update(Adoption)
+            .where(
+                Adoption.animal_id == animal_id,
+                Adoption.animal_entry_id == last_entry_id,
+                Adoption.returned_at.is_(None),
+            )
+            .values(returned_at=datetime.now().date())
+        )
+        if adoptions_update.rowcount == 1:
+            logger.info("adoption closed by new entry for animal %s", animal_id)
         self.session.execute(
             update(AnimalEntry)
             .where(
