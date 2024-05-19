@@ -1,10 +1,10 @@
 import json
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import and_, func, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError
-from hermadata.constants import AnimalEvent
+from hermadata.constants import AnimalEvent, ExitType
 from hermadata.database.models import (
     Adopter,
     Adoption,
@@ -19,6 +19,11 @@ from hermadata.database.models import (
 )
 from hermadata.models import PaginationResult
 from hermadata.repositories import SQLBaseRepository
+from hermadata.repositories.adoption_repository import (
+    AdoptionModel,
+    ExistingAdoptionException,
+    NewAdoption,
+)
 from hermadata.repositories.animal.models import (
     AddMedicalRecordModel,
     AnimalDaysItem,
@@ -486,6 +491,10 @@ class SQLAnimalRepository(SQLBaseRepository):
         if data.exit_date < entry_date:
             raise ExitNotValidException()
 
+        if data.exit_type == ExitType.adoption:
+            adoption_data = NewAdoption.model_validate(data.exit_data)
+            self.new_adoption(adoption_data)
+
         animal_log = AnimalLog(
             animal_id=animal_id,
             data=json.loads(data.model_dump_json()),
@@ -505,6 +514,45 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
         )
         self.session.flush()
+
+    def new_adoption(self, data: NewAdoption) -> AdoptionModel:
+
+        existing_adoption = self.session.execute(
+            select(Adoption.id).where(
+                Adoption.animal_id == data.animal_id,
+                Adoption.returned_at.is_(None),
+            )
+        ).first()
+
+        if existing_adoption:
+            raise ExistingAdoptionException
+
+        current_entry_id = self.session.execute(
+            select(AnimalEntry.id).where(
+                AnimalEntry.animal_id == data.animal_id,
+                AnimalEntry.current.is_(True),
+                AnimalEntry.exit_date.is_(None),
+            )
+        ).scalar()
+
+        if not current_entry_id:
+            raise Exception(
+                f"animal {data.animal_id} has no current entry with null exit date"
+            )
+
+        adoption = Adoption(
+            animal_id=data.animal_id,
+            adopter_id=data.adopter_id,
+            animal_entry_id=current_entry_id,
+            completed_at=(
+                datetime.now(tz=timezone.utc) if data.completed else None
+            ),
+        )
+        self.session.add(adoption)
+        self.session.flush()
+        result = AdoptionModel.model_validate(adoption, from_attributes=True)
+
+        return result
 
     def count_animal_days(self, query: AnimalDaysQuery) -> AnimalDaysResult:
         entries = self.session.execute(
