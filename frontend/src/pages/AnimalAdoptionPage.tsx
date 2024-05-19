@@ -15,7 +15,11 @@ import SearchAdopter from "../components/adoption/SearchAdopter"
 import { PageTitle, SubTitle } from "../components/typography"
 import { apiService } from "../main"
 import { Adopter } from "../models/adopter.schema"
-import { NewAnimalAdoption } from "../models/animal.schema"
+import {
+    AnimalExit,
+    animalExitSchema,
+    NewAnimalAdoption,
+} from "../models/animal.schema"
 import { useAnimalQuery } from "../queries"
 
 enum Section {
@@ -39,22 +43,12 @@ const AnimalAdoptionPage = () => {
 
     const newAdoptionMutation = useMutation({
         mutationKey: "new-adoption",
-        mutationFn: (data: NewAnimalAdoption) =>
-            apiService.newAnimalAdoption(data),
+        mutationFn: (data: AnimalExit) => apiService.animalExit(data),
         onSuccess: (data, variables) => {
-            console.log(data)
-            if (variables.completed) {
-                toast.current?.show({
-                    severity: "success",
-                    summary: "Adozione completata!",
-                })
-            } else {
-                toast.current?.show({
-                    severity: "info",
-                    summary: "Adozione salvata",
-                    content: "Vai alla scheda animale per completarla",
-                })
-            }
+            toast.current?.show({
+                severity: "success",
+                summary: "Adozione completata!",
+            })
             navigate(`/animal/${variables.animal_id}`)
         },
     })
@@ -63,11 +57,19 @@ const AnimalAdoptionPage = () => {
         if (!adopter) {
             return
         }
-        newAdoptionMutation.mutate({
+        const adoptionData: NewAnimalAdoption = {
             animal_id: parseInt(id),
             adopter_id: adopter.id,
             completed,
+        }
+        const exitPayload: AnimalExit = animalExitSchema.parse({
+            exit_data: adoptionData,
+            exit_type: "A",
+            exit_date: new Date(),
+            animal_id: parseInt(id),
         })
+
+        newAdoptionMutation.mutate(exitPayload)
     }
     const dialogFooter = (
         <div>

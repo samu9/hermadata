@@ -142,6 +142,7 @@ export const animalExitSchema = z.object({
     animal_id: z.number(),
     exit_type: z.string(),
     exit_date: dateOnly,
+    exit_data: z.record(z.string(), z.any()).nullish(),
 })
 
 export type AnimalExit = z.infer<typeof animalExitSchema>
