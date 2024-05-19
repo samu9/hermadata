@@ -14,12 +14,13 @@ export const dateFromString = z.preprocess(
     (arg) => (typeof arg == "string" ? new Date(arg) : arg),
     z.date().nullable()
 )
-export const dateOnly = dateFromString.transform((d) => {
+export const dateOnly = dateFromString.transform((d: Date | null) => {
     // prime-react calendar returns a date at 0 hour at local time.
     // this results at an UTC date for the previous day at 23 hour.
     if (!d) {
         return null
     }
+    d.setHours(0, 0, 0, 0)
     const tzoffset = d.getTimezoneOffset() * 60000 //offset in milliseconds
     const withoutTimezone = new Date(d.valueOf() - tzoffset)
         .toISOString()
