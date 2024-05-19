@@ -1,5 +1,5 @@
 from collections import namedtuple
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any, Callable, Iterable, NamedTuple, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -86,14 +86,14 @@ class AnimalSearchModel(PaginationQuery):
         "from_created_at": WhereClauseMapItem(lambda v: Animal.created_at >= v),
         "to_created_at": WhereClauseMapItem(lambda v: Animal.created_at <= v),
         "present": WhereClauseMapItem(
-            lambda v: v
-            and (
+            lambda v: (
                 or_(
                     AnimalEntry.exit_date.is_(None),
                     AnimalEntry.exit_date > datetime.now().date(),
-                ),
-            )
-            or None,
+                )
+                if v
+                else None
+            ),
             in_or=True,
         ),
         "not_present": WhereClauseMapItem(
@@ -229,6 +229,7 @@ class AnimalDocumentModel(BaseModel):
 class AnimalExit(BaseModel):
     exit_date: date
     exit_type: ExitType
+    exit_data: dict | None = None
 
 
 class AnimalDaysQuery(BaseModel):
@@ -266,3 +267,15 @@ class AnimalEntryModel(BaseModel):
     origin_city_name: str
     animal_race: str
     animal_race_id: str
+
+
+class NewAdoption(BaseModel):
+    animal_id: int
+    adopter_id: int
+    completed: bool | None = None
+
+
+class AdoptionModel(BaseModel):
+    id: int
+    adopter_id: int
+    animal_id: int

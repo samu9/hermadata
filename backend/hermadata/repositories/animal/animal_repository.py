@@ -19,13 +19,10 @@ from hermadata.database.models import (
 )
 from hermadata.models import PaginationResult
 from hermadata.repositories import SQLBaseRepository
-from hermadata.repositories.adoption_repository import (
-    AdoptionModel,
-    ExistingAdoptionException,
-    NewAdoption,
-)
+
 from hermadata.repositories.animal.models import (
     AddMedicalRecordModel,
+    AdoptionModel,
     AnimalDaysItem,
     AnimalDaysQuery,
     AnimalDaysResult,
@@ -39,6 +36,7 @@ from hermadata.repositories.animal.models import (
     AnimalSearchResult,
     AnimalSearchResultQuery,
     CompleteEntryModel,
+    NewAdoption,
     NewAnimalDocument,
     NewAnimalModel,
     NewEntryModel,
@@ -63,6 +61,10 @@ class ExistingChipCodeException(Exception):
 
 
 class ExitNotValidException(Exception):
+    pass
+
+
+class ExistingAdoptionException(Exception):
     pass
 
 
