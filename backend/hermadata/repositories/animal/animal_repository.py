@@ -120,7 +120,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
         self.session.execute(
             update(AnimalEntry)
-            .where(AnimalEntry.animal_id, AnimalEntry.current.is_(True))
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
             .values(current=False)
         )
 
