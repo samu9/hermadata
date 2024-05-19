@@ -19,8 +19,7 @@
             "module": "uvicorn",
             "args": [
                 "hermadata.main:app",
-                "--reload",
-                "--log-config=hermadata/log-configs.json"
+                "--log-config=hermadata/log-configs.json",
             ],
             "jinja": true,
             "justMyCode": true
