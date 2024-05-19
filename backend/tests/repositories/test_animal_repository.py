@@ -230,7 +230,7 @@ def test_count_days(
 
     animal_repository.exit(
         animal_id,
-        AnimalExit(exit_date=date(2020, 1, 10), exit_type=ExitType.adoption),
+        AnimalExit(exit_date=date(2020, 1, 10), exit_type=ExitType.disappeared),
     )
 
     animal_repository.add_entry(
@@ -248,7 +248,7 @@ def test_count_days(
     animal_repository.exit(
         animal_id,
         AnimalExit(
-            exit_date=date(2020, 2, 10), exit_type=ExitType.adoption.value
+            exit_date=date(2020, 2, 10), exit_type=ExitType.disappeared.value
         ),
     )
 
@@ -335,7 +335,7 @@ def test_count_days_same_day(
 
     animal_repository.exit(
         animal_id,
-        AnimalExit(exit_date=date(2024, 4, 2), exit_type=ExitType.adoption),
+        AnimalExit(exit_date=date(2024, 4, 2), exit_type=ExitType.disappeared),
     )
 
     days = animal_repository.count_animal_days(
