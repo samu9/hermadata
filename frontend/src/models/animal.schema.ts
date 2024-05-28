@@ -40,6 +40,9 @@ export const animalSchema = z.object({
     chip_code_set: z.boolean(),
     img_path: z.string().nullable(),
     sex: z.number().nullable(),
+    notes: z.string().nullish(),
+    fur: z.number().nullish(),
+    size: z.number().nullish(),
 })
 
 export type Animal = z.infer<typeof animalSchema>
