@@ -1,3 +1,6 @@
+# 0.4.1
+## FIXES
+- add db pool recycle config to prevent "Mysql has gone away" error
 # 0.4.0
 ## IMPROVEMENTS
 - change repositories initialization and db session management
