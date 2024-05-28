@@ -28,7 +28,7 @@ from hermadata.storage.disk_storage import DiskStorage
 
 logger = logging.getLogger(__name__)
 
-engine = create_engine(settings.db.url, settings.db.pool_recycle)
+engine = create_engine(**settings.db.model_dump())
 
 SessionMaker = sessionmaker(engine)
 
