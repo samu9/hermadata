@@ -9,6 +9,10 @@ flit install -s
 ```
 `-s`is used to install as symlink for development mode
 
+# Dependancies
+### wkhtmltopdf
+`apt install wkhtmltopdf`
+
 # Build
 ## Using Flit
 
