@@ -12,7 +12,7 @@ class EntryType(str, Enum):
 ENTRY_TYPE_LABELS = {
     EntryType.rescue: "Recupero",
     EntryType.confiscation: "Sequestro",
-    EntryType.private_surrender: "Confermento da privato",
+    EntryType.private_surrender: "Conferimento da privato",
     EntryType.quitclaim: "Rinuncia di proprietà",
     EntryType.temporary_owner_surrender: "Conferimento temporaneo del padrone",
 }
@@ -67,7 +67,7 @@ class AnimalFur(IntEnum):
 
 
 FUR_LABELS = {
-    AnimalFur.very_short: "Rado",
+    AnimalFur.very_short: "Raso",
     AnimalFur.short: "Corto",
     AnimalFur.curly: "Riccio",
     AnimalFur.semilong: "Semilungo",
