@@ -1,5 +1,5 @@
 from collections import namedtuple
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Any, Callable, Iterable, NamedTuple, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
