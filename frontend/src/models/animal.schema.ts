@@ -34,6 +34,8 @@ export const animalSchema = z.object({
     exit_date: dateOnly.nullish(),
     exit_type: z.string().nullish(),
 
+    birth_date: dateOnly.nullish(),
+
     stage: z.string().nullish(),
     adoptability_index: z.number().optional(),
     chip_code: z.string().nullish(),
