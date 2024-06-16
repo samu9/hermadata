@@ -1,3 +1,7 @@
+# 0.4.2
+## FIXES
+- fix document types initial data
+- fix config loading
 # 0.4.1
 ## FIXES
 - add db pool recycle config to prevent "Mysql has gone away" error
