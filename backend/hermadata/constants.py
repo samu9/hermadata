@@ -7,6 +7,7 @@ class EntryType(str, Enum):
     private_surrender = "P"
     quitclaim = "Q"
     temporary_owner_surrender = "T"
+    other_structure_surrender = "O"
 
 
 ENTRY_TYPE_LABELS = {
@@ -15,6 +16,7 @@ ENTRY_TYPE_LABELS = {
     EntryType.private_surrender: "Conferimento da privato",
     EntryType.quitclaim: "Rinuncia di proprietà",
     EntryType.temporary_owner_surrender: "Conferimento temporaneo del padrone",
+    EntryType.other_structure_surrender: "Cessione da altra struttura",
 }
 
 
