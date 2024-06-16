@@ -72,7 +72,7 @@ class AnimalSearchModel(PaginationQuery):
             lambda v: Animal.chip_code.like(f"%{v}%")
         ),
         "rescue_city_code": WhereClauseMapItem(
-            lambda v: Animal.rescue_city_code == v
+            lambda v: AnimalEntry.origin_city_code == v
         ),
         "entry_type": WhereClauseMapItem(lambda v: AnimalEntry.entry_type == v),
         "exit_type": WhereClauseMapItem(lambda v: AnimalEntry.exit_type == v),
