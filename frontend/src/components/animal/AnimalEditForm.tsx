@@ -31,7 +31,9 @@ const AnimalEditForm = () => {
     const animalFurTypesQuery = useAnimalFurTypesQuery()
     const form = useForm<AnimalEdit>({
         resolver: zodResolver(animalEditSchema),
-        defaultValues: { ...animalEditSchema.parse(animalQuery.data) },
+        defaultValues: {
+            ...animalEditSchema.parse(animalQuery.data),
+        },
     })
     const toast = useRef<Toast>(null)
 
