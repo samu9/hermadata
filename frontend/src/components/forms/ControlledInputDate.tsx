@@ -37,7 +37,7 @@ const ControlledInputDate = <T extends FieldValues>(props: Props<T>) => {
                         </InputLabel>
                         <Calendar
                             inputId={field.name}
-                            value={new Date(field.value)}
+                            value={field.value ?? new Date(field.value)}
                             onChange={field.onChange}
                             dateFormat="dd/mm/yy"
                             className="w-full"
