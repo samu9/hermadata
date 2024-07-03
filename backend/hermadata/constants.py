@@ -25,6 +25,7 @@ class ExitType(str, Enum):
     death = "D"
     return_ = "R"
     disappeared = "I"
+    custody = "C"
 
 
 EXIT_TYPE_LABELS = {
@@ -119,4 +120,4 @@ class DocKindCode(Enum):
     uscita = "U"
     documento_identita = "ID"
     varie = "V"
-    assegnamento_chip = "C"
+    attribuzione_chip = "C"
