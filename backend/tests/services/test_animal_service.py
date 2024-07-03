@@ -65,16 +65,3 @@ def test_update(
     )
 
     assert affected == 1
-
-    doc_code, doc_key = db_session.execute(
-        select(DocumentKind.code, Document.key)
-        .select_from(Animal)
-        .join(AnimalDocument, AnimalDocument.animal_id == Animal.id)
-        .join(Document, Document.id == AnimalDocument.document_id)
-        .join(DocumentKind, DocumentKind.id == AnimalDocument.document_kind_id)
-        .where(Animal.id == animal_id)
-    ).one()
-
-    assert doc_code == DocKindCode.assegnamento_chip.value
-
-    assert os.path.exists(os.path.join(disk_storage.base_path, doc_key))

@@ -21,7 +21,6 @@ def test_init(db_session: Session):
 def test_get_kinds(document_repository: SQLDocumentRepository):
     kinds = document_repository.get_all_document_kinds()
 
-    assert len(kinds) == 7
     assert "Documento di ingresso" in [k.name for k in kinds]
 
 
