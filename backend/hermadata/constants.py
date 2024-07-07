@@ -121,3 +121,5 @@ class DocKindCode(Enum):
     documento_identita = "ID"
     varie = "V"
     attribuzione_chip = "C"
+    affido = "AF"
+    adozione = "AD"
