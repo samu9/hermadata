@@ -1,11 +1,13 @@
-from hermadata.constants import DocKindCode
+from hermadata.constants import DocKindCode, ExitType
 from hermadata.reports.report_generator import (
+    ReportAdoptionVariables,
     ReportAnimalEntryVariables,
     ReportGenerator,
 )
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
+    AnimalExit,
     CompleteEntryModel,
     NewAnimalDocument,
     UpdateAnimalModel,
@@ -82,8 +84,46 @@ class AnimalService:
             ),
         )
 
-    def exit(self, animal_id):
-        pass
+    def exit(self, animal_id: int, data: AnimalExit):
+        self.animal_repository.exit(animal_id, data)
+
+        report = None
+        if data.exit_type == ExitType.adoption:
+            # generate adoption document
+            # report = self.report_generator.build_adoption_report(
+            #     ReportAdoptionVariables()
+            # )
+            filename = "adozione_"
+            doc_kind_code = DocKindCode.adozione
+
+        if data.exit_type == ExitType.custody:
+            # generate custody document
+            # report = self.report_generator.build_adoption_report(
+            #     ReportAdoptionVariables()
+            # )
+            filename = "affido_"
+            doc_kind_code = DocKindCode.affido
+
+        if report:
+            filename += animal_id
+
+            document_id = self.document_repository.new_document(
+                NewDocument(
+                    storage_service=StorageType.disk,
+                    filename=filename,
+                    data=report,
+                    mimetype="application/pdf",
+                )
+            )
+
+            self.animal_repository.new_document(
+                animal_id,
+                NewAnimalDocument(
+                    document_id=document_id,
+                    document_kind_code=doc_kind_code,
+                    title=filename,
+                ),
+            )
 
     def animal_days_report(self, query: AnimalDaysQuery):
         animal_days = self.animal_repository.count_animal_days(query)
