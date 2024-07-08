@@ -46,6 +46,28 @@ class ReportChipAssignmentVariables(ReportDefaultVariables):
     )(transform_date_to_string)
 
 
+class ReportAdoptionVariables(ReportDefaultVariables):
+    title: str = "DOCUMENTO DI ADOZIONE"
+    animal_name: str
+    chip_code: str
+    exit_date: str
+
+    transform_exit_date = field_validator("exit_date", mode="before")(
+        transform_date_to_string
+    )
+
+
+class ReportCustodyVariables(ReportDefaultVariables):
+    title: str = "DOCUMENTO DI AFFIDO"
+    animal_name: str
+    chip_code: str
+    exit_date: str
+
+    transform_exit_date = field_validator("exit_date", mode="before")(
+        transform_date_to_string
+    )
+
+
 class ReportFormat(Enum):
     pdf = "application/pdf"
     excel = "xls"
@@ -75,6 +97,14 @@ class ReportGenerator:
         self, variables: ReportChipAssignmentVariables
     ) -> bytes:
         return self._build_template("chip_assignment.jinja", variables)
+
+    def build_adoption_report(
+        self, variables: ReportAdoptionVariables
+    ) -> bytes:
+        return self._build_template("adoption.jinja", variables)
+
+    def build_custody_report(self, variables: ReportCustodyVariables) -> bytes:
+        return self._build_template("custody.jinja", variables)
 
     def generate_animal_days_count_report(
         self,
