@@ -29,6 +29,7 @@ import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProv
 import { classNames } from "primereact/utils"
 import { InputText } from "primereact/inputtext"
 import { useEntryTypesMap, useExitTypesMap } from "../../hooks/useMaps"
+import UncontrolledRacesDropdown from "../forms/uncontrolled/UncontrolledRacesDropdown"
 
 type LazyTableState = {
     first: number
@@ -67,11 +68,16 @@ const AnimalList = () => {
     const [totalRecords, setTotalRecords] = useState(0)
     const [provinciaProvenienzaFilter, setProvinciaProvenienzaFilter] =
         useState<string | undefined>(undefined)
+
     const [lazyState, setLazyState] = useState<LazyTableState>({
         first: 0,
         rows: 10,
         page: 1,
         filters: {
+            race_id: {
+                matchMode: FilterMatchMode.EQUALS,
+                value: null,
+            },
             chip_code: {
                 matchMode: FilterMatchMode.EQUALS,
                 value: null,
@@ -131,6 +137,18 @@ const AnimalList = () => {
         )
     }
 
+    const raceFilterTemplate = (
+        options: ColumnFilterElementTemplateOptions
+    ) => {
+        return (
+            <div>
+                <UncontrolledRacesDropdown
+                    value={options.value}
+                    onChange={(value) => options.filterCallback(value)}
+                />
+            </div>
+        )
+    }
     const selectFilterTemplate = (
         options: { id: string; label: string }[],
         templateOptions: ColumnFilterElementTemplateOptions
@@ -182,6 +200,8 @@ const AnimalList = () => {
                 lazyState.filters["chip_code"] as DataTableFilterMetaData
             ).value,
             name: (lazyState.filters["name"] as DataTableFilterMetaData).value,
+            race_id: (lazyState.filters["race_id"] as DataTableFilterMetaData)
+                .value,
         })
     }, [lazyState])
     return (
@@ -230,12 +250,17 @@ const AnimalList = () => {
                 }
             >
                 <Column
+                    header="Tipo"
                     body={(animal: AnimalSearchResult) => (
                         <FontAwesomeIcon
                             className="text-lg  "
                             icon={RACE_ICON_MAP[animal.race_id]}
                         />
                     )}
+                    filter
+                    filterElement={raceFilterTemplate}
+                    showFilterMatchModes={false}
+                    filterField="race_id"
                 />
                 <Column
                     field="name"
