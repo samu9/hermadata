@@ -7,14 +7,16 @@ class EntryType(str, Enum):
     private_surrender = "P"
     quitclaim = "Q"
     temporary_owner_surrender = "T"
+    other_structure_surrender = "O"
 
 
 ENTRY_TYPE_LABELS = {
     EntryType.rescue: "Recupero",
     EntryType.confiscation: "Sequestro",
-    EntryType.private_surrender: "Confermento da privato",
+    EntryType.private_surrender: "Conferimento da privato",
     EntryType.quitclaim: "Rinuncia di proprietà",
     EntryType.temporary_owner_surrender: "Conferimento temporaneo del padrone",
+    EntryType.other_structure_surrender: "Cessione da altra struttura",
 }
 
 
@@ -23,6 +25,7 @@ class ExitType(str, Enum):
     death = "D"
     return_ = "R"
     disappeared = "I"
+    custody = "C"
 
 
 EXIT_TYPE_LABELS = {
@@ -67,7 +70,7 @@ class AnimalFur(IntEnum):
 
 
 FUR_LABELS = {
-    AnimalFur.very_short: "Rado",
+    AnimalFur.very_short: "Raso",
     AnimalFur.short: "Corto",
     AnimalFur.curly: "Riccio",
     AnimalFur.semilong: "Semilungo",
@@ -117,4 +120,6 @@ class DocKindCode(Enum):
     uscita = "U"
     documento_identita = "ID"
     varie = "V"
-    assegnamento_chip = "C"
+    attribuzione_chip = "C"
+    affido = "AF"
+    adozione = "AD"

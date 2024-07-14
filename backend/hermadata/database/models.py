@@ -126,6 +126,8 @@ class Adoption(Base):
     animal: Mapped[Animal] = relationship(back_populates="adoptions")
 
     animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
+    animal_entry_id: Mapped[int] = mapped_column(ForeignKey("animal_entry.id"))
+
     adopter_id: Mapped[int] = mapped_column(ForeignKey("adopter.id"))
 
     created_at: Mapped[datetime] = mapped_column(

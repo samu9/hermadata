@@ -22,9 +22,9 @@ from typing import Callable
 
 def test_new_entry(
     disk_storage: DiskStorage,
-    db_session: Session,
     animal_service: AnimalService,
     make_animal: Callable[[NewAnimalModel], int],
+    db_session: Session,
 ):
     animal_id = make_animal(
         NewAnimalModel(
@@ -57,13 +57,7 @@ def test_update(
     make_animal: Callable[[NewAnimalModel], int],
     animal_service: AnimalService,
 ):
-    animal_id = make_animal(
-        NewAnimalModel(
-            race_id="C",
-            rescue_city_code="H501",
-            entry_type=EntryType.confiscation.value,
-        )
-    )
+    animal_id = make_animal()
 
     affected = animal_service.update(
         animal_id,
@@ -71,16 +65,3 @@ def test_update(
     )
 
     assert affected == 1
-
-    doc_code, doc_key = db_session.execute(
-        select(DocumentKind.code, Document.key)
-        .select_from(Animal)
-        .join(AnimalDocument, AnimalDocument.animal_id == Animal.id)
-        .join(Document, Document.id == AnimalDocument.document_id)
-        .join(DocumentKind, DocumentKind.id == AnimalDocument.document_kind_id)
-        .where(Animal.id == animal_id)
-    ).one()
-
-    assert doc_code == DocKindCode.assegnamento_chip.value
-
-    assert os.path.exists(os.path.join(disk_storage.base_path, doc_key))

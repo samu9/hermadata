@@ -34,12 +34,17 @@ export const animalSchema = z.object({
     exit_date: dateOnly.nullish(),
     exit_type: z.string().nullish(),
 
+    birth_date: dateOnly.nullish(),
+
     stage: z.string().nullish(),
     adoptability_index: z.number().optional(),
     chip_code: z.string().nullish(),
     chip_code_set: z.boolean(),
     img_path: z.string().nullable(),
     sex: z.number().nullable(),
+    notes: z.string().nullish(),
+    fur: z.number().nullish(),
+    size: z.number().nullish(),
 })
 
 export type Animal = z.infer<typeof animalSchema>
@@ -142,6 +147,15 @@ export const animalExitSchema = z.object({
     animal_id: z.number(),
     exit_type: z.string(),
     exit_date: dateOnly,
+    exit_data: z.record(z.string(), z.any()).nullish(),
 })
 
 export type AnimalExit = z.infer<typeof animalExitSchema>
+
+export const animalDaysRequestSchema = z.object({
+    from_date: dateOnly,
+    to_date: dateOnly,
+    city_code: z.string(),
+})
+
+export type AnimalDaysRequestSchema = z.infer<typeof animalDaysRequestSchema>

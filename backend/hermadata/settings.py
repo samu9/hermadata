@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class DBSettings(BaseSettings):
     url: str
+    pool_recycle: int = 3600
 
 
 class DiskStorageSettings(BaseSettings):

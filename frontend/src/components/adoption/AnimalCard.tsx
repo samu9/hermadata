@@ -19,7 +19,7 @@ const AnimalCard = (props: Props) => {
                     <span className="text-sm">
                         entrato il{" "}
                         <span className="font-bold">
-                            {format(props.data.entry_date, "dd/MM/y")}
+                            {format(new Date(props.data.entry_date), "dd/MM/y")}
                         </span>
                     </span>
                 )}

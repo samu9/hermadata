@@ -1,13 +1,13 @@
-from datetime import datetime
-from hermadata.constants import DocKindCode
+from hermadata.constants import DocKindCode, ExitType
 from hermadata.reports.report_generator import (
+    ReportAdoptionVariables,
     ReportAnimalEntryVariables,
-    ReportChipAssignmentVariables,
     ReportGenerator,
 )
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import (
-    AnimalQueryModel,
+    AnimalDaysQuery,
+    AnimalExit,
     CompleteEntryModel,
     NewAnimalDocument,
     UpdateAnimalModel,
@@ -42,40 +42,12 @@ class AnimalService:
                 self.document_kind_ids[DocKindCode(d.code)] = d.id
 
     def update(self, animal_id: int, data: UpdateAnimalModel):
-        animal_data = self.animal_repository.get(AnimalQueryModel(id=animal_id))
 
         affected = self.animal_repository.update(animal_id, data)
 
         if not affected:
             raise Exception(f"no animals affected by update, {animal_id=}")
 
-        if data.chip_code and not animal_data.chip_code_set:
-            pdf = self.report_generator.build_chip_assignment_report(
-                ReportChipAssignmentVariables(
-                    chip_code=data.chip_code,
-                    animal_name=animal_data.name or data.name,
-                    assignment_date=datetime.now().date(),
-                )
-            )
-            filename = f"assegnamento_chip_{animal_data.name}"
-
-            document_id = self.document_repository.new_document(
-                NewDocument(
-                    storage_service=StorageType.disk,
-                    filename=filename,
-                    data=pdf,
-                    mimetype="application/pdf",
-                )
-            )
-
-            self.animal_repository.new_document(
-                animal_id,
-                NewAnimalDocument(
-                    document_id=document_id,
-                    document_kind_code=DocKindCode.assegnamento_chip,
-                    title="ingresso",
-                ),
-            )
         return affected
 
     def complete_entry(self, animal_id: int, data: CompleteEntryModel):
@@ -112,5 +84,52 @@ class AnimalService:
             ),
         )
 
-    def exit(self, animal_id):
-        pass
+    def exit(self, animal_id: int, data: AnimalExit):
+        self.animal_repository.exit(animal_id, data)
+
+        report = None
+        if data.exit_type == ExitType.adoption:
+            # generate adoption document
+            # report = self.report_generator.build_adoption_report(
+            #     ReportAdoptionVariables()
+            # )
+            filename = "adozione_"
+            doc_kind_code = DocKindCode.adozione
+
+        if data.exit_type == ExitType.custody:
+            # generate custody document
+            # report = self.report_generator.build_adoption_report(
+            #     ReportAdoptionVariables()
+            # )
+            filename = "affido_"
+            doc_kind_code = DocKindCode.affido
+
+        if report:
+            filename += animal_id
+
+            document_id = self.document_repository.new_document(
+                NewDocument(
+                    storage_service=StorageType.disk,
+                    filename=filename,
+                    data=report,
+                    mimetype="application/pdf",
+                )
+            )
+
+            self.animal_repository.new_document(
+                animal_id,
+                NewAnimalDocument(
+                    document_id=document_id,
+                    document_kind_code=doc_kind_code,
+                    title=filename,
+                ),
+            )
+
+    def animal_days_report(self, query: AnimalDaysQuery):
+        animal_days = self.animal_repository.count_animal_days(query)
+        filename, report = (
+            self.report_generator.generate_animal_days_count_report(
+                query, animal_days
+            )
+        )
+        return filename, report

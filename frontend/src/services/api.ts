@@ -3,6 +3,7 @@ import { Adopter, NewAdopter } from "../models/adopter.schema"
 import {
     Animal,
     AnimalCompleteEntry,
+    AnimalDaysRequestSchema as AnimalDaysRequest,
     AnimalDocUpload,
     AnimalDocument,
     AnimalEdit,
@@ -15,6 +16,7 @@ import {
     animalSchema,
     paginatedAnimalSearchResultSchema,
 } from "../models/animal.schema"
+import { ApiError } from "../models/api.schema"
 import { Breed, NewBreed } from "../models/breed.schema"
 import {
     ComuneSchema,
@@ -26,7 +28,6 @@ import { DocKind, NewDocKind } from "../models/docs.schema"
 import { Race, raceSchema } from "../models/race.schema"
 import { IntUtilItem } from "../models/util.schema"
 import ApiEndpoints from "./apiEndpoints"
-import { ApiError } from "../models/api.schema"
 
 class ApiService {
     inst: AxiosInstance
@@ -262,6 +263,20 @@ class ApiService {
         )
 
         return result
+    }
+
+    async animalDaysReport(data: AnimalDaysRequest) {
+        const result = await this.inst.get(ApiEndpoints.animal.daysReport, {
+            params: data,
+            responseType: "blob",
+        })
+        console.log(result.headers)
+        const filename = result.headers["x-filename"].toString()
+        const filetype = result.headers["content-type"]?.toString()
+        const url = window.URL.createObjectURL(
+            new Blob([result.data], { type: filetype })
+        )
+        return { url, filename }
     }
 }
 

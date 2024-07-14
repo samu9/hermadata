@@ -22,7 +22,7 @@ const ControlledInputDate = <T extends FieldValues>(props: Props<T>) => {
         <Controller
             name={props.fieldName}
             control={control}
-            rules={{ required: "Name - Surname is required." }}
+            rules={{}}
             render={({ field, fieldState }) => (
                 <>
                     {/* <label
@@ -37,7 +37,7 @@ const ControlledInputDate = <T extends FieldValues>(props: Props<T>) => {
                         </InputLabel>
                         <Calendar
                             inputId={field.name}
-                            value={field.value}
+                            value={field.value ? new Date(field.value) : null}
                             onChange={field.onChange}
                             dateFormat="dd/mm/yy"
                             className="w-full"

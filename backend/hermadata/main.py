@@ -1,12 +1,12 @@
 import json
 import logging
+import logging.config
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from hermadata.routers import (
     adopter_router,
-    adoption_router,
     animal_router,
     breed_router,
     document_router,
@@ -14,30 +14,34 @@ from hermadata.routers import (
     util_router,
     vet_router,
 )
-from hermadata.settings import Settings
 
 logging.config.dictConfig(json.load(open("hermadata/log-configs.json")))
 
 logger = logging.getLogger(__name__)
 
-settings = Settings()
-app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-app.include_router(animal_router.router)
-app.include_router(util_router.router)
-app.include_router(race_router.router)
-app.include_router(breed_router.router)
-app.include_router(document_router.router)
-app.include_router(adopter_router.router)
-app.include_router(adoption_router.router)
-app.include_router(vet_router.router)
+def build_app():
+    app = FastAPI()
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["X-filename"],
+    )
+    app.include_router(animal_router.router)
+    app.include_router(util_router.router)
+    app.include_router(race_router.router)
+    app.include_router(breed_router.router)
+    app.include_router(document_router.router)
+    app.include_router(adopter_router.router)
+    app.include_router(vet_router.router)
+
+    logger.info("hermadata set up")
+
+    return app
 
 
-logger.info("hermadata set up")
+app = build_app()

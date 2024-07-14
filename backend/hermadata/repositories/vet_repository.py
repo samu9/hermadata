@@ -1,8 +1,7 @@
 from pydantic import BaseModel, constr
 from sqlalchemy import insert, select
 from hermadata.database.models import Vet
-from hermadata.repositories import BaseRepository
-from sqlalchemy.orm import Session
+from hermadata.repositories import SQLBaseRepository
 
 
 class VetModel(BaseModel):
@@ -20,9 +19,7 @@ class VetQuery(BaseModel):
     business_name: str
 
 
-class SQLVetRepository(BaseRepository):
-    def __init__(self, session: Session) -> None:
-        self.session = session
+class SQLVetRepository(SQLBaseRepository):
 
     def create(self, data: VetModel) -> VetModel:
         dump = data.model_dump(exclude_none=True)

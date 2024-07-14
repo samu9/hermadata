@@ -1,11 +1,15 @@
 from datetime import date, datetime
+from enum import Enum
+from io import BytesIO
+import openpyxl
 import pdfkit
-from jinja2 import (
-    Environment,
-    FileSystemLoader,
-    select_autoescape,
-)
+from jinja2 import Environment
 from pydantic import BaseModel, Field, field_validator
+
+from hermadata.repositories.animal.models import (
+    AnimalDaysQuery,
+    AnimalDaysResult,
+)
 
 
 def transform_date_to_string(raw: date) -> str:
@@ -42,6 +46,33 @@ class ReportChipAssignmentVariables(ReportDefaultVariables):
     )(transform_date_to_string)
 
 
+class ReportAdoptionVariables(ReportDefaultVariables):
+    title: str = "DOCUMENTO DI ADOZIONE"
+    animal_name: str
+    chip_code: str
+    exit_date: str
+
+    transform_exit_date = field_validator("exit_date", mode="before")(
+        transform_date_to_string
+    )
+
+
+class ReportCustodyVariables(ReportDefaultVariables):
+    title: str = "DOCUMENTO DI AFFIDO"
+    animal_name: str
+    chip_code: str
+    exit_date: str
+
+    transform_exit_date = field_validator("exit_date", mode="before")(
+        transform_date_to_string
+    )
+
+
+class ReportFormat(Enum):
+    pdf = "application/pdf"
+    excel = "xls"
+
+
 class ReportGenerator:
     def __init__(self, jinja_env: Environment) -> None:
         self.jinja_env = jinja_env
@@ -67,22 +98,38 @@ class ReportGenerator:
     ) -> bytes:
         return self._build_template("chip_assignment.jinja", variables)
 
+    def build_adoption_report(
+        self, variables: ReportAdoptionVariables
+    ) -> bytes:
+        return self._build_template("adoption.jinja", variables)
 
-if __name__ == "__main__":
-    jinja_env = Environment(
-        loader=FileSystemLoader("hermadata/reports/templates"),
-        autoescape=select_autoescape(),
-    )
-    jinja_env.globals = {
-        "software_name": "Hermadata",
-        "software_version": "0.1.0.0",
-    }
-    report_generator = ReportGenerator(jinja_env=jinja_env)
+    def build_custody_report(self, variables: ReportCustodyVariables) -> bytes:
+        return self._build_template("custody.jinja", variables)
 
-    variables = ReportAnimalEntryVariables(
-        city="Montecatini Terme", animal_name="Gino", animal_type="Cane"
-    )
-    pdf = report_generator.build_animal_entry_report(variables)
+    def generate_animal_days_count_report(
+        self,
+        query: AnimalDaysQuery,
+        data: AnimalDaysResult,
+        format: ReportFormat = ReportFormat.excel,
+    ) -> tuple[str, bytes]:
+        if format != ReportFormat.excel:
+            raise Exception("format not supported")
 
-    with open("test.pdf", "wb") as fp:
-        fp.write(pdf)
+        wb = openpyxl.Workbook()
+
+        ws = wb.active
+        ws.append(["Nome", "Chip", "Giorni"])
+        for d in data.items:
+            ws.append([d.animal_name, d.animal_chip_code, d.animal_days])
+
+        ws.append([])
+        ws.append(["Totale", "", data.total_days])
+
+        filename = f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}.xls"
+
+        fp = BytesIO()
+        wb.save(fp)
+
+        bytes_data = fp.getvalue()
+
+        return filename, bytes_data

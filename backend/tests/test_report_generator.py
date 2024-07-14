@@ -5,6 +5,11 @@ from hermadata.reports.report_generator import (
     ReportChipAssignmentVariables,
     ReportGenerator,
 )
+from hermadata.repositories.animal.models import (
+    AnimalDaysItem,
+    AnimalDaysQuery,
+    AnimalDaysResult,
+)
 
 
 def test_animal_entry_report(report_generator: ReportGenerator):
@@ -36,3 +41,31 @@ def test_chip_assignment_report(report_generator: ReportGenerator):
         fp.write(pdf)
 
     assert pdf
+
+
+def test_animal_days_report(report_generator: ReportGenerator):
+    data = AnimalDaysResult(
+        items=[
+            AnimalDaysItem(
+                animal_name="Test",
+                animal_chip_code="123.123.123.123.123",
+                animal_days=5,
+            )
+        ],
+        total_days=5,
+    )
+    filename, report = report_generator.generate_animal_days_count_report(
+        AnimalDaysQuery(
+            from_date=date(2023, 1, 1),
+            to_date=date(2023, 2, 1),
+            city_code="H501",
+        ),
+        data,
+    )
+
+    assert isinstance(filename, str)
+
+    with open("attic/storage/generated.xls", "wb") as fp:
+        fp.write(report)
+
+    assert isinstance(report, bytes)

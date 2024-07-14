@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
 
-from hermadata.dependancies import document_repository_factory
+from hermadata.dependancies import get_repository
 from hermadata.repositories.document_repository import (
     DocKindModel,
     NewDocKindModel,
@@ -17,7 +17,9 @@ router = APIRouter(prefix="/document")
 @router.post("", response_model=int)
 def new_document(
     doc: UploadFile,
-    doc_repo: SQLDocumentRepository = Depends(document_repository_factory),
+    doc_repo: SQLDocumentRepository = Depends(
+        get_repository(SQLDocumentRepository)
+    ),
 ):
     result = doc_repo.new_document(
         NewDocument(
@@ -33,7 +35,9 @@ def new_document(
 
 @router.get("/kind")
 def get_document_kinds(
-    doc_repo: SQLDocumentRepository = Depends(document_repository_factory),
+    doc_repo: SQLDocumentRepository = Depends(
+        get_repository(SQLDocumentRepository)
+    ),
 ):
     kinds = doc_repo.get_all_document_kinds()
     return kinds
@@ -42,7 +46,9 @@ def get_document_kinds(
 @router.post("/kind", response_model=DocKindModel)
 def create_new_kind(
     data: NewDocKindModel,
-    doc_repo: SQLDocumentRepository = Depends(document_repository_factory),
+    doc_repo: SQLDocumentRepository = Depends(
+        get_repository(SQLDocumentRepository)
+    ),
 ):
     try:
         new_doc_kind = doc_repo.new_document_kind(data)
@@ -60,7 +66,9 @@ def create_new_kind(
 @router.get("/{document_id}", response_class=Response)
 def serve_document(
     document_id: int,
-    doc_repo: SQLDocumentRepository = Depends(document_repository_factory),
+    doc_repo: SQLDocumentRepository = Depends(
+        get_repository(SQLDocumentRepository)
+    ),
 ):
     data, content_type = doc_repo.get_data(document_id)
 

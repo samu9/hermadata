@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.exc import NoResultFound
-from hermadata.constants import ApiErrorCode
 
-from hermadata.dependancies import animal_repository_factory
+from hermadata.constants import ApiErrorCode
+from hermadata.dependancies import get_animal_service, get_repository
 from hermadata.models import ApiError, PaginationResult
 from hermadata.repositories.animal.animal_repository import (
     ExistingChipCodeException,
     SQLAnimalRepository,
 )
 from hermadata.repositories.animal.models import (
+    AnimalDaysQuery,
     AnimalDocumentModel,
     AnimalExit,
     AnimalQueryModel,
@@ -20,6 +21,7 @@ from hermadata.repositories.animal.models import (
     NewEntryModel,
     UpdateAnimalModel,
 )
+from hermadata.services.animal_service import AnimalService
 
 router = APIRouter(prefix="/animal")
 
@@ -27,8 +29,8 @@ router = APIRouter(prefix="/animal")
 @router.post("")
 def new_animal_entry(
     data: NewAnimalModel,
-    repo: SQLAnimalRepository = Depends(animal_repository_factory),
-):
+    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
+) -> str:
     animal_code = repo.new_animal(data)
 
     return animal_code
@@ -42,7 +44,7 @@ def get_animal_list():
 @router.get("/search", response_model=PaginationResult[AnimalSearchResult])
 def search_animals(
     query: AnimalSearchModel = Depends(),
-    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
 ):
     # Here `Depends`is used to use a pydantic model as query params.
     result = repo.search(query)
@@ -53,7 +55,7 @@ def search_animals(
 @router.get("/{animal_id}")
 def get_animal(
     animal_id: int,
-    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
 ):
     try:
         animal_data = repo.get(AnimalQueryModel(id=animal_id))
@@ -65,12 +67,12 @@ def get_animal(
 
 @router.post("/{animal_id}", response_model=int | ApiError)
 def update_animal(
-    animal_id: str,
+    animal_id: int,
     data: UpdateAnimalModel,
-    repo: SQLAnimalRepository = Depends(animal_repository_factory),
-):
+    service: AnimalService = Depends(get_animal_service),
+) -> int | ApiError:
     try:
-        result = repo.update(animal_id, data)
+        result = service.update(animal_id, data)
     except ExistingChipCodeException as e:
         return ApiError(
             code=ApiErrorCode.existing_chip_code,
@@ -82,7 +84,7 @@ def update_animal(
 @router.get("/{animal_id}/document", response_model=list[AnimalDocumentModel])
 def get_animal_documents(
     animal_id: int,
-    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
 ):
     docs = repo.get_documents(animal_id)
 
@@ -93,7 +95,7 @@ def get_animal_documents(
 def upload_animal_document(
     animal_id: int,
     data: NewAnimalDocument,
-    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
 ):
     result = repo.new_document(animal_id, data)
     return result
@@ -103,7 +105,7 @@ def upload_animal_document(
 def animal_exit(
     animal_id: int,
     data: AnimalExit,
-    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
 ):
     repo.exit(animal_id, data)
 
@@ -114,9 +116,9 @@ def animal_exit(
 def complete_entry(
     animal_id: int,
     data: CompleteEntryModel,
-    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+    service: AnimalService = Depends(get_animal_service),
 ):
-    repo.complete_entry(animal_id, data)
+    service.complete_entry(animal_id, data)
 
     return True
 
@@ -125,7 +127,7 @@ def complete_entry(
 def add_entry(
     animal_id: int,
     data: NewEntryModel,
-    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
 ):
     result = repo.add_entry(animal_id, data)
 
@@ -135,6 +137,20 @@ def add_entry(
 @router.get("/{animal_id}/warning")
 def get_warnings(
     animal_id: int,
-    repo: SQLAnimalRepository = Depends(animal_repository_factory),
+    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
 ):
     return
+
+
+@router.get("/days/report")
+def serve_animal_days_report(
+    query: AnimalDaysQuery = Depends(),
+    service: AnimalService = Depends(get_animal_service),
+):
+    filename, report = service.animal_days_report(query)
+
+    return Response(
+        content=report,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
+        headers={"X-filename": filename},
+    )

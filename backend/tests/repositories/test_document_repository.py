@@ -2,6 +2,7 @@ import os
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from hermadata.constants import DocKindCode
 from hermadata.database.models import Document
 from hermadata.repositories.document_repository import (
     NewDocument,
@@ -11,23 +12,30 @@ from hermadata.repositories.document_repository import (
 from hermadata.storage.disk_storage import DiskStorage
 
 
-def test_get_kinds(db_session: Session):
+def test_init(db_session: Session):
     repo = SQLDocumentRepository(db_session)
-    kinds = repo.get_all_document_kinds()
 
-    assert len(kinds) == 7
+    assert DocKindCode.documento_ingresso in repo.document_kind_ids
+
+
+def test_get_kinds(document_repository: SQLDocumentRepository):
+    kinds = document_repository.get_all_document_kinds()
+
     assert "Documento di ingresso" in [k.name for k in kinds]
 
 
-def test_new_document(db_session: Session, disk_storage: DiskStorage):
-    repo = SQLDocumentRepository(db_session, {StorageType.disk: disk_storage})
+def test_new_document(
+    document_repository: SQLDocumentRepository,
+    db_session: Session,
+    disk_storage: DiskStorage,
+):
     data = NewDocument(
         storage_service=StorageType.disk,
         filename="test.pdf",
         mimetype="application/pdf",
         data=bytes(),
     )
-    result = repo.new_document(data)
+    result = document_repository.new_document(data)
 
     doc_key = db_session.execute(
         select(Document.key).where(Document.id == result)

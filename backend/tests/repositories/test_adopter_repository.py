@@ -6,10 +6,9 @@ from hermadata.repositories.adopter_repository import (
 )
 
 
-def test_save_and_search(db_session):
-    repo = SQLAdopterRepository(session=db_session)
+def test_save_and_search(adopter_repository: SQLAdopterRepository):
 
-    repo.create(
+    adopter_repository.create(
         NewAdopter(
             name="Mario",
             surname="Bianchi",
@@ -21,6 +20,8 @@ def test_save_and_search(db_session):
         )
     )
 
-    result = repo.search(AdopterQuery(fiscal_code="AAAAAA12Z12Z123A"))
+    result = adopter_repository.search(
+        AdopterQuery(fiscal_code="AAAAAA12Z12Z123A")
+    )
 
     assert len(result) == 1
