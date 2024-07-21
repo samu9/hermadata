@@ -129,6 +129,7 @@ export const animalSearchQuerySchema = paginationQuerySchema.extend({
     not_present: z.boolean().nullish(),
     name: z.string().nullish(),
     chip_code: z.string().nullish(),
+    race_id: z.string().nullish(),
     sort_field: z.string().nullish(),
     sort_order: z.number().nullish(),
 })
