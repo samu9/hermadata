@@ -1,5 +1,6 @@
 from collections import namedtuple
 from datetime import date, datetime
+from enum import Enum
 from typing import Any, Callable, Iterable, NamedTuple, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -39,11 +40,18 @@ class NewEntryModel(BaseModel):
     entry_type: str
 
 
+class AnimalSearchSortField(str, Enum):
+    name = "name"
+    entry_date = "entry_date"
+    entry_city = "entry_city"
+    created_at = "created_at"
+
+
 class AnimalSearchModel(PaginationQuery):
     from_index: int | None = None
     to_index: int | None = None
 
-    sort_field: str | None = None
+    sort_field: AnimalSearchSortField | None = None
     sort_order: int | None = None
 
     race_id: Optional[str] = None
@@ -64,7 +72,9 @@ class AnimalSearchModel(PaginationQuery):
 
     # TODO: this is bugged, rewrite
     _sort_field_map: dict[str, MappedColumn] = {
-        # "entry_date": AnimalEntry.entry_date
+        AnimalSearchSortField.entry_date: AnimalEntry.entry_date,
+        AnimalSearchSortField.created_at: Animal.created_at,
+        AnimalSearchSortField.entry_city: AnimalEntry.origin_city_code,
     }
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
