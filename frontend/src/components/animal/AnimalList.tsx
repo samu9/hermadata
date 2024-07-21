@@ -177,7 +177,6 @@ const AnimalList = () => {
         setLazyState(event)
     }
     const onSort = (event: DataTableSortEvent) => {
-        console.log(event)
         setLazyState({ ...lazyState, ...event })
     }
     useEffect(() => {
@@ -296,6 +295,8 @@ const AnimalList = () => {
                     body={(animal: AnimalSearchResult) =>
                         `${animal.rescue_city} (${animal.rescue_province})`
                     }
+                    sortable
+                    sortField="entry_city"
                 />
                 <Column
                     body={(animal: AnimalSearchResult) =>
