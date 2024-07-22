@@ -21,7 +21,9 @@ router = APIRouter(prefix="/util")
 
 @router.get("/province", response_model=list[ProvinciaModel])
 def get_province(
-    repo: SQLCityRepository = Depends(get_repository(SQLCityRepository)),
+    repo: SQLCityRepository = Depends(
+        get_repository(SQLCityRepository), use_cache=False
+    ),
 ):
     province = repo.get_province()
     return province
@@ -30,7 +32,9 @@ def get_province(
 @router.get("/comuni", response_model=list[ComuneModel])
 def get_comuni(
     provincia: str,
-    repo: SQLCityRepository = Depends(get_repository(SQLCityRepository)),
+    repo: SQLCityRepository = Depends(
+        get_repository(SQLCityRepository), use_cache=False
+    ),
 ):
     comuni = repo.get_comuni(provincia=provincia)
     return comuni

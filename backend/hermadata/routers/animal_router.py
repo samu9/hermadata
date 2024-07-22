@@ -1,3 +1,4 @@
+from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.exc import NoResultFound
 
@@ -43,8 +44,10 @@ def get_animal_list():
 
 @router.get("/search", response_model=PaginationResult[AnimalSearchResult])
 def search_animals(
-    query: AnimalSearchModel = Depends(),
-    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
+    query: Annotated[AnimalSearchModel, Depends(use_cache=False)],
+    repo: Annotated[
+        SQLAnimalRepository, Depends(get_repository(SQLAnimalRepository))
+    ],
 ):
     # Here `Depends`is used to use a pydantic model as query params.
     result = repo.search(query)

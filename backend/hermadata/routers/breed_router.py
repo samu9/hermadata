@@ -13,7 +13,9 @@ router = APIRouter(prefix="/breed")
 
 @router.get("", response_model=list[BreedModel])
 def get_all(
-    repo: SQLBreedRepository = Depends(get_repository(SQLBreedRepository)),
+    repo: SQLBreedRepository = Depends(
+        get_repository(SQLBreedRepository), use_cache=False
+    ),
     race_id: str = Query(),
 ):
     races = repo.get_all(race_id)
