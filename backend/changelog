@@ -1,15 +1,22 @@
+# 0.5
+## IMPROVEMENTS:
+- add sortable animal search query
+
 # 0.4.2
 ## FIXES
 - fix document types initial data
 - fix config loading
+
 # 0.4.1
 ## FIXES
 - add db pool recycle config to prevent "Mysql has gone away" error
+
 # 0.4.0
 ## IMPROVEMENTS
 - change repositories initialization and db session management
 ## FIXES
 - fix animal entry data not correctly being saved
+
 # 0.3.0
 ## IMPROVEMENTS
 - add chip code validation in update animal
