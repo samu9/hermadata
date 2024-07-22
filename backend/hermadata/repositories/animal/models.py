@@ -46,12 +46,21 @@ class AnimalSearchSortField(str, Enum):
     entry_city = "entry_city"
     created_at = "created_at"
 
+    # TODO: this is bugged, rewrite
+
+
+SORT_FIELD_MAP: dict[str, MappedColumn] = {
+    AnimalSearchSortField.entry_date: AnimalEntry.entry_date,
+    AnimalSearchSortField.created_at: Animal.created_at,
+    AnimalSearchSortField.entry_city: AnimalEntry.origin_city_code,
+}
+
 
 class AnimalSearchModel(PaginationQuery):
     from_index: int | None = None
     to_index: int | None = None
 
-    sort_field: AnimalSearchSortField | None = None
+    sort_field: str | None = None
     sort_order: int | None = None
 
     race_id: Optional[str] = None
@@ -70,12 +79,6 @@ class AnimalSearchModel(PaginationQuery):
     not_present: bool = False
     chip_code: Optional[str] = None
 
-    # TODO: this is bugged, rewrite
-    _sort_field_map: dict[str, MappedColumn] = {
-        AnimalSearchSortField.entry_date: AnimalEntry.entry_date,
-        AnimalSearchSortField.created_at: Animal.created_at,
-        AnimalSearchSortField.entry_city: AnimalEntry.origin_city_code,
-    }
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
         "chip_code": WhereClauseMapItem(
@@ -122,10 +125,10 @@ class AnimalSearchModel(PaginationQuery):
     def as_order_by_clause(self) -> MappedColumn | None:
         if (
             not (self.sort_field and self.sort_order)
-            and self.sort_field not in self._sort_field_map
+            and self.sort_field not in SORT_FIELD_MAP
         ):
             return Animal.created_at.desc()
-        column: MappedColumn = self._sort_field_map[self.sort_field]
+        column: MappedColumn = SORT_FIELD_MAP[self.sort_field]
         if self.sort_order == 1:
             return column.asc()
         if self.sort_order == -1:
