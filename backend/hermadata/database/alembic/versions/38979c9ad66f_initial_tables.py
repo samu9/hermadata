@@ -11,8 +11,6 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-from hermadata.database.alembic.import_initial_data import import_doc_kinds
-
 
 # revision identifiers, used by Alembic.
 revision: str = "38979c9ad66f"
@@ -290,7 +288,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###
-    import_doc_kinds(op.get_bind())
 
 
 def downgrade() -> None:
