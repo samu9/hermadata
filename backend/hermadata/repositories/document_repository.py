@@ -64,9 +64,15 @@ class SQLDocumentRepository(SQLBaseRepository):
         new_kind = DocKindModel(id=result.lastrowid, name=data.name)
         return new_kind
 
-    def get_all_document_kinds(self):
+    def get_document_kinds(self, uploadable: bool = False):
         select_result = (
-            self.session.execute(select(DocumentKind)).scalars().all()
+            self.session.execute(
+                select(DocumentKind).where(
+                    DocumentKind.uploadable == uploadable
+                )
+            )
+            .scalars()
+            .all()
         )
 
         result = [
