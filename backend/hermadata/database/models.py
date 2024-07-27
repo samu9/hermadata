@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from sqlalchemy import (
     JSON,
+    Boolean,
     Date,
     DateTime,
     ForeignKey,
@@ -9,6 +10,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     DECIMAL,
+    true,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func, expression
@@ -328,6 +330,13 @@ class DocumentKind(Base):
     code: Mapped[str] = mapped_column(String(2), unique=True)
     name: Mapped[str] = mapped_column(String(50), unique=True)
 
+    uploadable: Mapped[bool] = mapped_column(
+        Boolean(), server_default=true(), default=True
+    )
+    rendered: Mapped[bool] = mapped_column(
+        Boolean(), server_default=true(), default=True
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )
@@ -340,6 +349,7 @@ class AnimalDocument(Base):
     __tablename__ = "animal_document"
     id: Mapped[int] = mapped_column(primary_key=True)
 
+    title: Mapped[str] = mapped_column(String(100), nullable=True)
     animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
     document_id: Mapped[int] = mapped_column(ForeignKey("document.id"))
     document_kind_id = mapped_column(ForeignKey("document_kind.id"))
