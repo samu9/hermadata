@@ -1,6 +1,6 @@
 import csv
 import os
-from sqlalchemy import Engine, insert, select
+from sqlalchemy import Engine, insert, select, update
 from sqlalchemy.orm import sessionmaker
 from hermadata.database.models import Comune, DocumentKind, Provincia, Race
 
@@ -69,9 +69,28 @@ def import_doc_kinds(engine: Engine):
         with open(os.path.join(INITIAL_DATA_DIR, "doc-kinds.csv"), "r") as fp:
             rows = csv.reader(fp)
             for r in rows:
+                code, name, uploadable, rendered = r
+                uploadable = int(uploadable)
+                rendered = int(rendered)
                 check = s.execute(
-                    select(DocumentKind.id).where(DocumentKind.code == r[0])
+                    select(DocumentKind.id).where(DocumentKind.code == code)
                 ).first()
                 if check:
+                    s.execute(
+                        update(DocumentKind)
+                        .values(
+                            name=name,
+                            uploadable=uploadable,
+                            rendered=rendered,
+                        )
+                        .where(DocumentKind.code == code)
+                    )
                     continue
-                s.execute(insert(DocumentKind).values(code=r[0], name=r[1]))
+                s.execute(
+                    insert(DocumentKind).values(
+                        code=code,
+                        name=name,
+                        uploadable=uploadable,
+                        rendered=rendered,
+                    )
+                )
