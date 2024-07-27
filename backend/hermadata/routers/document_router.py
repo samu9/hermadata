@@ -39,7 +39,7 @@ def get_document_kinds(
         get_repository(SQLDocumentRepository)
     ),
 ):
-    kinds = doc_repo.get_all_document_kinds()
+    kinds = doc_repo.get_document_kinds(uploadable=True)
     return kinds
 
 
