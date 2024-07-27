@@ -1,9 +1,9 @@
 from collections import namedtuple
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, Callable, Iterable, NamedTuple, Optional
+from typing import Annotated, Any, Callable, Iterable, NamedTuple, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
@@ -229,7 +229,7 @@ AnimalGetQuery = namedtuple("AnimalGetQuery", AnimalModel.model_fields.keys())
 class NewAnimalDocument(BaseModel):
     document_id: int
     document_kind_code: DocKindCode
-    title: str
+    title: Annotated[str, StringConstraints(max_length=100)]
 
 
 class AnimalDocumentModel(BaseModel):
