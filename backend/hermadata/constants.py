@@ -114,6 +114,7 @@ class ApiErrorCode(Enum):
 
 
 class DocKindCode(Enum):
+    comunicazione_ingresso = "CI"
     documento_ingresso = "IN"
     iscrizione_anagrafie_canina = "IA"
     spostamento_sanitario_rifugio = "SS"
