@@ -1,12 +1,13 @@
-IN,Documento di ingresso
-IA,Iscrizione anagrafe canina
-SS,Spostamento sanitario/rifugio
-U,Uscita
-ID,Documento identità
-V,Varie
-C, Attribuzione chip
-CM, Certificato morte
-DS, Denuncia Smarrimento
-AF, Affido
-AD, Adozione
-RP, Restituzione proprietario
+CI,Comunicazione di ingresso,0,1
+IN,Documento di ingresso,1,0
+IA,Iscrizione anagrafe canina,1,0
+SS,Spostamento sanitario/rifugio,1,0
+U,Uscita,0,1
+ID,Documento identità,1,0
+V,Varie,1,1
+C,Attribuzione chip,0,1
+CM,Certificato morte,1,0
+DS,Denuncia Smarrimento,1,0
+AF,Affido,1,1
+AD,Adozione,1,1
+RP,Restituzione proprietario,1,1
