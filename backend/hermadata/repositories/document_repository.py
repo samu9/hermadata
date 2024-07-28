@@ -27,6 +27,7 @@ class DocKindModel(BaseModel):
     id: int
     code: str
     name: str
+    uploadable: bool
 
 
 class NewDocKindModel(BaseModel):
@@ -81,7 +82,7 @@ class SQLDocumentRepository(SQLBaseRepository):
 
         return result
 
-    def get_document_kind_id_by_code(self, code: DocKindCode):
+    def get_document_kind_id_by_code(self, code: DocKindCode) -> DocKindModel:
         kind_id = self.session.execute(
             select(DocumentKind.id).where(DocumentKind.code == code)
         ).scalar_one()
