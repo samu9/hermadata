@@ -434,6 +434,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_id=animal_id,
             document_id=data.document_id,
             document_kind_id=document_kind_id,
+            title=data.title,
         )
         self.session.add(animal_document)
         self.session.flush()
