@@ -46,7 +46,7 @@ def test_new_entry(
         .join(DocumentKind, DocumentKind.id == AnimalDocument.document_kind_id)
         .where(Animal.id == animal_id)
     ).one()
-    assert doc_code == DocKindCode.documento_ingresso.value
+    assert doc_code == DocKindCode.comunicazione_ingresso.value
 
     assert os.path.exists(os.path.join(disk_storage.base_path, doc_key))
 

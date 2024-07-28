@@ -100,4 +100,4 @@ def test_complete_entry(
             .where(AnimalDocument.animal_id == animal_id)
         ).scalar()
 
-        assert doc_kind == DocKindCode.documento_ingresso.value
+        assert doc_kind == DocKindCode.comunicazione_ingresso.value

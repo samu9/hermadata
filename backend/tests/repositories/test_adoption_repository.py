@@ -1,10 +1,11 @@
 from datetime import date
 from hermadata.database.models import Adopter, Animal
 from hermadata.repositories.adoption_repository import (
-    NewAdoption,
     SQLAdopionRepository,
 )
 from sqlalchemy.orm import Session
+
+from hermadata.repositories.animal.models import NewAdoption
 
 
 def test_create(db_session: Session, adoption_repository: SQLAdopionRepository):
