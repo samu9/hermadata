@@ -64,13 +64,12 @@ class SQLDocumentRepository(SQLBaseRepository):
         new_kind = DocKindModel(id=result.lastrowid, name=data.name)
         return new_kind
 
-    def get_document_kinds(self, uploadable: bool = False):
+    def get_document_kinds(self, uploadable: bool = None):
+        where = {}
+        if uploadable is not None:
+            where[DocumentKind.uploadable] = uploadable
         select_result = (
-            self.session.execute(
-                select(DocumentKind).where(
-                    DocumentKind.uploadable == uploadable
-                )
-            )
+            self.session.execute(select(DocumentKind).where(*where))
             .scalars()
             .all()
         )
