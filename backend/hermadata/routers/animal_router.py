@@ -22,6 +22,7 @@ from hermadata.repositories.animal.models import (
     NewEntryModel,
     UpdateAnimalModel,
 )
+from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.services.animal_service import AnimalService
 
 router = APIRouter(prefix="/animal")
@@ -98,9 +99,21 @@ def get_animal_documents(
 def upload_animal_document(
     animal_id: int,
     data: NewAnimalDocument,
-    repo: SQLAnimalRepository = Depends(get_repository(SQLAnimalRepository)),
+    animal_repo: SQLAnimalRepository = Depends(
+        get_repository(SQLAnimalRepository)
+    ),
+    doc_repo: SQLDocumentRepository = Depends(
+        get_repository(SQLDocumentRepository)
+    ),
 ):
-    result = repo.new_document(animal_id, data)
+    doc_kind = doc_repo.get_document_kind_id_by_code(data.document_kind_code)
+
+    if not doc_kind.uploadable:
+        raise HTTPException(
+            status_code=400,
+            detail={"message": "This document kind cannot be uploaded"},
+        )
+    result = animal_repo.new_document(animal_id, data)
     return result
 
 
