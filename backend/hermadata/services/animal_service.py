@@ -1,6 +1,5 @@
 from hermadata.constants import DocKindCode, ExitType
 from hermadata.reports.report_generator import (
-    ReportAdoptionVariables,
     ReportAnimalEntryVariables,
     ReportGenerator,
 )
@@ -79,7 +78,7 @@ class AnimalService:
             entry.animal_id,
             NewAnimalDocument(
                 document_id=document_id,
-                document_kind_code=DocKindCode.documento_ingresso,
+                document_kind_code=DocKindCode.comunicazione_ingresso,
                 title="ingresso",
             ),
         )
