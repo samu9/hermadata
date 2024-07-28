@@ -36,7 +36,7 @@ class AnimalService:
         self.document_kind_ids: dict[DocKindCode, int] = {}
 
     def _init_document_kind_ids_map(self):
-        data = self.document_repository.get_all_document_kinds()
+        data = self.document_repository.get_document_kinds()
         for d in data:
             if d.code in DocKindCode:
                 self.document_kind_ids[DocKindCode(d.code)] = d.id
