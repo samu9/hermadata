@@ -19,7 +19,7 @@ def test_init(db_session: Session):
 
 
 def test_get_kinds(document_repository: SQLDocumentRepository):
-    kinds = document_repository.get_all_document_kinds()
+    kinds = document_repository.get_document_kinds()
 
     assert "Documento di ingresso" in [k.name for k in kinds]
 
