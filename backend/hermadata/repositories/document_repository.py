@@ -86,7 +86,7 @@ class SQLDocumentRepository(SQLBaseRepository):
         kind_id = self.session.execute(
             select(DocumentKind.id).where(DocumentKind.code == code)
         ).scalar_one()
-        return kind_id
+        return DocKindModel.model_validate(kind_id)
 
     def new_document(self, data: NewDocument) -> int:
         key = str(uuid4())
