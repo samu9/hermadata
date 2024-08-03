@@ -5,6 +5,7 @@ export const docKindSchema = z.object({
     id: z.number(),
     code: z.string().length(2),
     name: docKindNameValidator,
+    uploadable: z.boolean(),
 })
 
 export type DocKind = z.infer<typeof docKindSchema>
