@@ -48,8 +48,8 @@ const AnimalDocUploadForm = (props: Props) => {
             })
             queryClient.setQueryData(
                 ["animal-documents", parseInt(id!)],
+                //@ts-ignore
                 (old: Updater<AnimalDocument[], AnimalDocument[]>) => [
-                    //@ts-ignore
                     ...old,
                     result,
                 ]
@@ -100,7 +100,9 @@ const AnimalDocUploadForm = (props: Props) => {
                         fieldName="document_kind_code"
                         optionLabel="name"
                         optionValue="code"
-                        options={docKindsQuery.data}
+                        options={docKindsQuery.data?.filter(
+                            (d) => d.uploadable
+                        )}
                         className="w-full"
                     />
                     <div className="flex items-center gap-3">
