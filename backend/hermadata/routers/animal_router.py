@@ -106,7 +106,7 @@ def upload_animal_document(
         get_repository(SQLDocumentRepository)
     ),
 ):
-    doc_kind = doc_repo.get_document_kind_id_by_code(data.document_kind_code)
+    doc_kind = doc_repo.get_document_kind_by_code(data.document_kind_code)
 
     if not doc_kind.uploadable:
         raise HTTPException(
