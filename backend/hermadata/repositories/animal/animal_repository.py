@@ -495,7 +495,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             raise ExitNotValidException()
 
         if data.exit_type == ExitType.adoption:
-            adoption_data = NewAdoption.model_validate(data.exit_data)
+            adoption_data = NewAdoption(
+                animal_id=animal_id, adopter_id=data.adopter_id
+            )
             self.new_adoption(adoption_data)
 
         animal_log = AnimalLog(
