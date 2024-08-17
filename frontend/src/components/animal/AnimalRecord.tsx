@@ -19,7 +19,14 @@ type Props = {
     data: Animal
 }
 
-const items = [
+type Item = {
+    label: string
+    icon: JSX.Element
+    path: string
+    disabled?: boolean
+}
+
+const generateItems = (data: Animal): Item[] => [
     {
         label: "Panoramica",
         icon: <FontAwesomeIcon icon={faHome} fixedWidth className="px-1" />,
@@ -45,18 +52,27 @@ const items = [
         icon: <FontAwesomeIcon icon={faPencil} fixedWidth className="px-1" />,
         path: "edit",
     },
-    {
-        label: "Uscita",
-        icon: (
-            <FontAwesomeIcon icon={faCircleXmark} fixedWidth className="px-1" />
-        ),
-        path: "exit",
-    },
+    ...((!Boolean(data.exit_date) && [
+        {
+            label: "Uscita",
+            icon: (
+                <FontAwesomeIcon
+                    icon={faCircleXmark}
+                    fixedWidth
+                    className="px-1"
+                />
+            ),
+            path: "exit",
+            disabled: Boolean(data.exit_date),
+        },
+    ]) ||
+        []),
 ]
 
 const AnimalRecord = (props: Props) => {
     const navigate = useNavigate()
     const location = useLocation()
+    const items: Item[] = generateItems(props.data)
     const [activeIndex, setActiveIndex] = useState(1)
     useEffect(() => {
         const pathElements = location.pathname.split("/").filter((e) => e)
@@ -83,7 +99,9 @@ const AnimalRecord = (props: Props) => {
                 }}
                 role="menuitem"
                 to={tabItem.path}
-                className={classNames(options.className)}
+                className={classNames(options.className, "w-[150px]", {
+                    "text-yellow-300": item.disabled,
+                })}
             >
                 <span className={options.iconClassName}>{item.icon}</span>
                 <span className={options.labelClassName}>{item.label}</span>
