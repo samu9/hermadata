@@ -1,5 +1,6 @@
 import { useQuery } from "react-query"
 import { apiService } from "./main"
+import { AdopterSearch } from "./models/adopter.schema"
 import { AnimalSearchQuery } from "./models/animal.schema"
 
 export const useAnimalSearchQuery = (queryData: AnimalSearchQuery) =>
@@ -99,5 +100,11 @@ export const useExitTypesQuery = () =>
         queryKey: ["exit-types"],
         queryFn: () => apiService.getExitTypes(),
         placeholderData: [],
+        staleTime: Infinity,
+    })
+
+export const useAdopterSearchQuery = (queryData: AdopterSearch) =>
+    useQuery(["adopter-search", queryData], {
+        queryFn: () => apiService.searchAdopter(queryData),
         staleTime: Infinity,
     })
