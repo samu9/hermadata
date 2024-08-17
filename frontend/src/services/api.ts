@@ -1,5 +1,10 @@
 import axios, { AxiosInstance } from "axios"
-import { Adopter, NewAdopter } from "../models/adopter.schema"
+import {
+    Adopter,
+    AdopterSearch,
+    NewAdopter,
+    PaginatedAdopterSearchResult,
+} from "../models/adopter.schema"
 import {
     Animal,
     AnimalCompleteEntry,
@@ -240,10 +245,13 @@ class ApiService {
         return result
     }
 
-    async searchAdopter(fiscalCode: string): Promise<Adopter[]> {
-        const result = await this.get<Adopter[]>(ApiEndpoints.adopter.search, {
-            fiscal_code: fiscalCode,
-        })
+    async searchAdopter(
+        query: AdopterSearch
+    ): Promise<PaginatedAdopterSearchResult> {
+        const result = await this.get<PaginatedAdopterSearchResult>(
+            ApiEndpoints.adopter.search,
+            query
+        )
 
         return result
     }
