@@ -1,3 +1,10 @@
+# 0.6
+# IMPROVEMENTS:
+- add uploadable and rendered document kind flags
+- rendered documents upon animal entry is CI, no more IN
+  - query for updating old data
+- add animal doc title
+
 # 0.5
 ## IMPROVEMENTS:
 - add sortable animal search query
