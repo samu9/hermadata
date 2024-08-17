@@ -1,5 +1,9 @@
 import { z } from "zod"
 import { dateOnly } from "./validators"
+import {
+    createPaginatedResponseSchema,
+    paginationQuerySchema,
+} from "./pagination.schema"
 
 export const newAdopterSchema = z.object({
     name: z.string().min(1),
@@ -18,3 +22,20 @@ export const adopterSchema = newAdopterSchema.extend({
 })
 
 export type Adopter = z.infer<typeof adopterSchema>
+
+export const adopterSearchSchema = paginationQuerySchema.extend({
+    name: z.string().nullish(),
+    surname: z.string().nullish(),
+    fiscal_code: z.string().nullish(),
+    sort_field: z.string().nullish(),
+    sort_order: z.number().nullish(),
+})
+
+export type AdopterSearch = z.infer<typeof adopterSearchSchema>
+
+export const paginatedAdopterSearchResultSchema =
+    createPaginatedResponseSchema(adopterSchema)
+
+export type PaginatedAdopterSearchResult = z.infer<
+    typeof paginatedAdopterSearchResultSchema
+>
