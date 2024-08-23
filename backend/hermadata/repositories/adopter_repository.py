@@ -1,7 +1,10 @@
 from datetime import date
+
 from pydantic import BaseModel
 from sqlalchemy import func, insert, select
-from hermadata.database.models import Adopter, Animal
+from sqlalchemy.orm import MappedColumn
+
+from hermadata.database.models import Adopter
 from hermadata.models import PaginationResult, SearchQuery
 from hermadata.repositories import SQLBaseRepository
 from hermadata.repositories.animal.models import WhereClauseMapItem
@@ -34,6 +37,9 @@ class AdopterSearchQuery(SearchQuery):
         ),
     }
 
+    def as_order_by_clause(self) -> MappedColumn:
+        return Adopter.created_at
+
 
 class SQLAdopterRepository(SQLBaseRepository):
 
@@ -47,24 +53,21 @@ class SQLAdopterRepository(SQLBaseRepository):
 
         return AdopterModel(**dump, id=adopter_id)
 
-    def search(self, query: AdopterSearchQuery) -> list[AdopterModel]:
+    def search(self, query: AdopterSearchQuery) -> PaginationResult:
         where = query.as_where_clause()
 
         total = self.session.execute(
             select(func.count("*")).select_from(Adopter).where(*where)
         ).scalar_one()
         stmt = (
-            select(Adopter)
-            .select_from(Animal)
-            .where(*where)
-            .order_by(query.as_order_by_clause())
+            select(Adopter).where(*where).order_by(query.as_order_by_clause())
         )
         if query.from_index is not None:
             stmt = stmt.offset(query.from_index)
         if query.to_index is not None:
             stmt = stmt.limit(query.to_index - query.from_index or 0)
 
-        result = self.session.execute(stmt).all()
+        result = self.session.execute(stmt).scalars()
 
         response = [
             AdopterModel.model_validate(r, from_attributes=True) for r in result
