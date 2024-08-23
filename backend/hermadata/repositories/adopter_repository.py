@@ -1,8 +1,10 @@
 from datetime import date
 from pydantic import BaseModel
-from sqlalchemy import insert, select
-from hermadata.database.models import Adopter
+from sqlalchemy import func, insert, select
+from hermadata.database.models import Adopter, Animal
+from hermadata.models import PaginationResult, SearchQuery
 from hermadata.repositories import SQLBaseRepository
+from hermadata.repositories.animal.models import WhereClauseMapItem
 
 
 class NewAdopter(BaseModel):
@@ -19,10 +21,18 @@ class AdopterModel(NewAdopter):
     id: int
 
 
-class AdopterQuery(BaseModel):
+class AdopterSearchQuery(SearchQuery):
     name: str | None = None
     surname: str | None = None
     fiscal_code: str | None = None
+
+    _where_clause_map: dict[str, WhereClauseMapItem] = {
+        "name": WhereClauseMapItem(lambda v: Adopter.name.like(f"{v}%")),
+        "surname": WhereClauseMapItem(lambda v: Adopter.surname.like(f"{v}%")),
+        "fiscal_code": WhereClauseMapItem(
+            lambda v: Adopter.fiscal_code.like(f"{v}%")
+        ),
+    }
 
 
 class SQLAdopterRepository(SQLBaseRepository):
@@ -37,17 +47,27 @@ class SQLAdopterRepository(SQLBaseRepository):
 
         return AdopterModel(**dump, id=adopter_id)
 
-    def search(self, query: AdopterQuery) -> list[AdopterModel]:
-        where = []
-        if query.fiscal_code is not None:
-            where.append(Adopter.fiscal_code == query.fiscal_code)
+    def search(self, query: AdopterSearchQuery) -> list[AdopterModel]:
+        where = query.as_where_clause()
 
-        result = (
-            self.session.execute(select(Adopter).where(*where)).scalars().all()
+        total = self.session.execute(
+            select(func.count("*")).select_from(Adopter).where(*where)
+        ).scalar_one()
+        stmt = (
+            select(Adopter)
+            .select_from(Animal)
+            .where(*where)
+            .order_by(query.as_order_by_clause())
         )
+        if query.from_index is not None:
+            stmt = stmt.offset(query.from_index)
+        if query.to_index is not None:
+            stmt = stmt.limit(query.to_index - query.from_index or 0)
 
-        adopters = [
+        result = self.session.execute(stmt).all()
+
+        response = [
             AdopterModel.model_validate(r, from_attributes=True) for r in result
         ]
 
-        return adopters
+        return PaginationResult(items=response, total=total)
