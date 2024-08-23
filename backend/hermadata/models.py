@@ -1,9 +1,10 @@
 from typing import Generic, Iterable, TypeVar
+
 from pydantic import BaseModel
+from sqlalchemy import or_
+from sqlalchemy.orm import MappedColumn
 
 from hermadata.constants import ApiErrorCode
-from sqlalchemy import or_
-
 
 T = TypeVar("T")
 
@@ -36,6 +37,8 @@ class SearchQuery(PaginationQuery):
         if or_elems:
             where.append(or_(*or_elems))
         return where
+
+    def as_order_by_clause(self) -> MappedColumn | None: ...
 
 
 class PaginationResult(BaseModel, Generic[T]):
