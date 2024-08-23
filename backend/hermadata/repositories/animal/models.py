@@ -57,11 +57,6 @@ SORT_FIELD_MAP: dict[str, MappedColumn] = {
 
 
 class AnimalSearchModel(PaginationQuery):
-    from_index: int | None = None
-    to_index: int | None = None
-
-    sort_field: str | None = None
-    sort_order: int | None = None
 
     race_id: Optional[str] = None
     code: Optional[str] = None
