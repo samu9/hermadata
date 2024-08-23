@@ -1,6 +1,6 @@
 from datetime import date
 from hermadata.repositories.adopter_repository import (
-    AdopterQuery,
+    AdopterSearchQuery,
     NewAdopter,
     SQLAdopterRepository,
 )
@@ -21,7 +21,7 @@ def test_save_and_search(adopter_repository: SQLAdopterRepository):
     )
 
     result = adopter_repository.search(
-        AdopterQuery(fiscal_code="AAAAAA12Z12Z123A")
+        AdopterSearchQuery(fiscal_code="AAAAAA12Z12Z123A")
     )
 
-    assert len(result) == 1
+    assert result.total == 1
