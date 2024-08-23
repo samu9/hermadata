@@ -1,6 +1,6 @@
 from enum import Enum
 from uuid import uuid4
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, constr
 
 from sqlalchemy import insert, select
 from hermadata.constants import DocKindCode
@@ -31,7 +31,7 @@ class DocKindModel(BaseModel):
 
 
 class NewDocKindModel(BaseModel):
-    code: str = Field(length=2)
+    code: str = constr(max_length=2)
     name: str
 
 
