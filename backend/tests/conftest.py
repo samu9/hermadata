@@ -6,7 +6,7 @@ from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from sqlalchemy import Engine, create_engine, select
+from sqlalchemy import Engine, create_engine, select, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
@@ -27,14 +27,39 @@ from hermadata.repositories.vet_repository import SQLVetRepository
 from hermadata.services.animal_service import AnimalService
 from hermadata.storage.disk_storage import DiskStorage
 
+TRUNCATE_QUERY = "TRUNCATE TABLE {}"
+
+TABLES = [
+    "adoption",
+    "animal_entry",
+    "animal_log",
+    "animal_document",
+    "document",
+    "adopter",
+    "medical_record",
+    "vet",
+    "animal",
+]
+
 
 def pytest_sessionstart():
-    command.downgrade(Config("tests/alembic.ini"), "3bebd7731267")
 
-    command.upgrade(Config("tests/alembic.ini"), "head")
+    alembic_config = Config("tests/alembic.ini")
+
+    command.upgrade(alembic_config, "head")
 
     for f in os.listdir("attic/storage"):
         os.remove(os.path.join("attic", "storage", f))
+
+    e = create_engine("mysql+pymysql://root:dev@localhost/hermadata_test")
+
+    session = sessionmaker(bind=e)
+
+    with session() as db_session:
+        db_session.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
+        for t in TABLES:
+            db_session.execute(text(TRUNCATE_QUERY.format(t)))
+        db_session.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
 
 
 def pytest_sessionfinish():
