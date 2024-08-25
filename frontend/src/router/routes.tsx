@@ -11,6 +11,7 @@ import AnimalProfilePage from "../pages/AnimalProfilePage"
 import AnimalsPage from "../pages/AnimalsPage"
 import HomePage from "../pages/HomePage"
 import DataExtractionsPage from "../pages/DataExtractionsPage"
+import AdoptersPage from "../pages/AdoptersPage"
 
 const routes: RouteObject[] = [
     {
@@ -62,7 +63,7 @@ const routes: RouteObject[] = [
             },
             {
                 path: "adopters",
-                element: <NewAdopterForm />,
+                element: <AdoptersPage />,
             },
             {
                 path: "exports",
