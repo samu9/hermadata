@@ -77,7 +77,12 @@ const AnimalExitForm = () => {
     useEffect(() => {
         const values = getValues()
 
-        setShowAdopterForm(["A"].includes(values.exit_type))
+        setShowAdopterForm(
+            [
+                "A",
+                //, "R"
+            ].includes(values.exit_type)
+        )
     }, [watch()])
     return (
         <div>
@@ -124,7 +129,6 @@ const AnimalExitForm = () => {
                                 <FontAwesomeIcon icon={faAdd} />
                             </Button>
                         </div>
-                        {adopterAction == "add" && <NewAdopterForm />}
                         {adopterAction == "search" && (
                             <SearchAdopter
                                 onSelected={(a) =>
@@ -144,7 +148,14 @@ const AnimalExitForm = () => {
                 header={"Aggiungi adottante"}
                 onHide={() => setDialogVisible(false)}
             >
-                <NewAdopterForm />
+                <NewAdopterForm
+                    onSaved={(a) => {
+                        setValue("adopter_id", a.id, {
+                            shouldDirty: true,
+                        })
+                        setDialogVisible(false)
+                    }}
+                />
             </Dialog>
             <Toast ref={toast} position="bottom-right" />
         </div>
