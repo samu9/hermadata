@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
 
 from hermadata.dependancies import get_repository
+from hermadata.models import PaginationResult
 from hermadata.repositories.adopter_repository import (
     AdopterModel,
-    AdopterQuery,
+    AdopterSearchQuery,
     NewAdopter,
     SQLAdopterRepository,
 )
@@ -21,9 +22,19 @@ def create_adopter(
     return adopter
 
 
-@router.get("/", response_model=list[AdopterModel])
+@router.get("/", response_model=AdopterModel)
+def get_adopter(
+    query: AdopterSearchQuery = Depends(),
+    repo: SQLAdopterRepository = Depends(get_repository(SQLAdopterRepository)),
+):
+    result = repo.search(query)
+
+    return result
+
+
+@router.get("/search", response_model=PaginationResult[AdopterModel])
 def search_adopter(
-    query: AdopterQuery = Depends(),
+    query: AdopterSearchQuery = Depends(),
     repo: SQLAdopterRepository = Depends(get_repository(SQLAdopterRepository)),
 ):
     result = repo.search(query)
