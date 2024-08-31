@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
 import { useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
-import { useMutation } from "react-query"
+import { useMutation, useQueryClient } from "react-query"
 import { apiService } from "../../main"
 import {
     Adopter,
@@ -29,11 +29,15 @@ const NewAdopterForm = (props: Props) => {
     const form = useForm<NewAdopter>({
         resolver: zodResolver(newAdopterSchema),
     })
+    const queryClient = useQueryClient()
 
     const newAdopterMutation = useMutation({
         mutationKey: "new-adopter",
         mutationFn: (data: NewAdopter) => apiService.newAdopter(data),
         onSuccess: (data) => {
+            queryClient.invalidateQueries({
+                queryKey: ["adopter-search"],
+            })
             props.onSaved?.(data)
         },
     })
