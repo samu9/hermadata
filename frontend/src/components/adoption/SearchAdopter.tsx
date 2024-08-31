@@ -33,12 +33,13 @@ type SearchAdopterProps = {
 const SearchAdopter = (props: SearchAdopterProps) => {
     const [fiscalCode, setFiscalCode] = useState<string | null>(null)
     const [results, setResults] = useState<Adopter[]>([])
+
     const searchQuery = useQuery(["adopter", fiscalCode], {
         enabled: false,
-        queryFn: () => apiService.searchAdopter(fiscalCode!),
+        queryFn: () => apiService.searchAdopter({ fiscal_code: fiscalCode }!),
         onSuccess: (results) => {
-            setResults(results)
-            if (results.length == 0) {
+            setResults(results.items)
+            if (results.total == 0) {
                 props.onNoResultsCallback()
             }
         },
