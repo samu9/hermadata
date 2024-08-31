@@ -28,7 +28,8 @@ const ApiEndpoints = {
     },
     adopter: {
         create: "/adopter",
-        search: "/adopter",
+        get: "/adopter",
+        search: "/adopter/search",
     },
     adoption: {
         create: "/adoption",
