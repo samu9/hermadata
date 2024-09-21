@@ -6,12 +6,17 @@ class DBSettings(BaseSettings):
     pool_recycle: int = 3600
 
 
+class S3StorageSettings(BaseSettings):
+    bucket: str
+
+
 class DiskStorageSettings(BaseSettings):
     base_path: str
 
 
 class StorageSettings(BaseSettings):
     disk: DiskStorageSettings
+    s3: S3StorageSettings
 
 
 class Settings(BaseSettings):
