@@ -24,7 +24,7 @@ from hermadata.repositories.race_repository import SQLRaceRepository
 from hermadata.services.animal_service import AnimalService
 from hermadata.settings import settings
 from hermadata.storage.disk_storage import DiskStorage
-
+from hermadata.storage.s3_storage import S3Storage
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,12 @@ def get_session():
         raise e
 
 
+def get_s3_storage():
+    s3_storage = S3Storage(settings.storage.s3.bucket)
+
+    return s3_storage
+
+
 def get_disk_storage():
     disk_storage = DiskStorage(settings.storage.disk.base_path)
 
@@ -51,11 +57,15 @@ def get_disk_storage():
 
 DBSession = sessionmaker(engine)
 disk_storage = get_disk_storage()
-
+s3_storage = get_s3_storage()
 
 with DBSession.begin() as db_session:
     document_repository = SQLDocumentRepository(
-        db_session, storage={StorageType.disk: disk_storage}
+        db_session,
+        storage={
+            StorageType.disk: disk_storage,
+            StorageType.aws_s3: s3_storage,
+        },
     )
 
 
