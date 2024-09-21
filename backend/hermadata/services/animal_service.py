@@ -67,7 +67,7 @@ class AnimalService:
 
         document_id = self.document_repository.new_document(
             NewDocument(
-                storage_service=StorageType.disk,
+                storage_service=StorageType.aws_s3,
                 filename=filename,
                 data=report,
                 mimetype="application/pdf",
@@ -108,7 +108,7 @@ class AnimalService:
 
             document_id = self.document_repository.new_document(
                 NewDocument(
-                    storage_service=StorageType.disk,
+                    storage_service=StorageType.aws_s3,
                     filename=filename,
                     data=report,
                     mimetype="application/pdf",

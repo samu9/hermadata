@@ -26,7 +26,7 @@ def new_document(
             data=doc.file.read(),
             filename=doc.filename,
             mimetype=doc.content_type,
-            storage_service=StorageType.disk,
+            storage_service=StorageType.aws_s3,
         )
     )
 
