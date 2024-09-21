@@ -22,7 +22,10 @@
                 "--log-config=hermadata/log-configs.json",
             ],
             "jinja": true,
-            "justMyCode": true
+            "justMyCode": false,
+            "env": {
+                "AWS_PROFILE": "hermadata"
+            }
         }
     ]
 }
