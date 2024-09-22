@@ -14,7 +14,6 @@ from hermadata.repositories.animal.models import (
 from hermadata.repositories.document_repository import (
     NewDocument,
     SQLDocumentRepository,
-    StorageType,
 )
 from hermadata.storage.base import StorageInterface
 
@@ -67,7 +66,6 @@ class AnimalService:
 
         document_id = self.document_repository.new_document(
             NewDocument(
-                storage_service=StorageType.aws_s3,
                 filename=filename,
                 data=report,
                 mimetype="application/pdf",
@@ -108,7 +106,6 @@ class AnimalService:
 
             document_id = self.document_repository.new_document(
                 NewDocument(
-                    storage_service=StorageType.aws_s3,
                     filename=filename,
                     data=report,
                     mimetype="application/pdf",
