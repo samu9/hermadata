@@ -17,7 +17,7 @@ class StorageType(Enum):
 
 
 class NewDocument(BaseModel):
-    storage_service: StorageType
+    storage_service: StorageType | None = None
     filename: str
     data: bytes
     mimetype: str
@@ -43,11 +43,16 @@ StorageMap = dict[StorageType, StorageInterface]
 
 
 class SQLDocumentRepository(SQLBaseRepository):
-    def __init__(self, session: Session, storage: StorageMap = {}) -> None:
+    def __init__(
+        self,
+        session: Session,
+        selected_storage: StorageType,
+        storage: StorageMap = {},
+    ) -> None:
         super().__init__()
         self.storage = storage
         self.document_kind_ids: dict[DocKindCode, int] = {}
-
+        self.selected_storage = selected_storage
         with self(session):
             self._init_document_kind_ids_map()
 
@@ -91,7 +96,7 @@ class SQLDocumentRepository(SQLBaseRepository):
     def new_document(self, data: NewDocument) -> int:
         key = str(uuid4())
         doc = Document(
-            storage_service=data.storage_service.value,
+            storage_service=self.selected_storage.value,
             key=key,
             filename=data.filename,
             mimetype=data.mimetype,
@@ -99,7 +104,7 @@ class SQLDocumentRepository(SQLBaseRepository):
         self.session.add(doc)
         self.session.flush()
         doc_id = doc.id
-        self.storage[data.storage_service].store_file(key, data.data)
+        self.storage[self.selected_storage].store_file(key, data.data)
 
         return doc_id
 

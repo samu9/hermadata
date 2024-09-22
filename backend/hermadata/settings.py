@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from hermadata.repositories.document_repository import StorageType
+
 
 class DBSettings(BaseSettings):
     url: str
@@ -17,6 +19,7 @@ class DiskStorageSettings(BaseSettings):
 class StorageSettings(BaseSettings):
     disk: DiskStorageSettings
     s3: S3StorageSettings
+    selected: StorageType
 
 
 class Settings(BaseSettings):

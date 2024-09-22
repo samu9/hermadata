@@ -66,6 +66,7 @@ with DBSession.begin() as db_session:
             StorageType.disk: disk_storage,
             StorageType.aws_s3: s3_storage,
         },
+        selected_storage=settings.storage.selected,
     )
 
 

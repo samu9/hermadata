@@ -13,7 +13,7 @@ from hermadata.storage.disk_storage import DiskStorage
 
 
 def test_init(db_session: Session):
-    repo = SQLDocumentRepository(db_session)
+    repo = SQLDocumentRepository(db_session, selected_storage=StorageType.disk)
 
     assert DocKindCode.documento_ingresso in repo.document_kind_ids
 
@@ -30,7 +30,6 @@ def test_new_document(
     disk_storage: DiskStorage,
 ):
     data = NewDocument(
-        storage_service=StorageType.disk,
         filename="test.pdf",
         mimetype="application/pdf",
         data=bytes(),

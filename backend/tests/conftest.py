@@ -123,7 +123,9 @@ def document_repository(
 ) -> Generator[SQLDocumentRepository, SQLDocumentRepository, None]:
     with DBSessionMaker() as init_session:
         repo = SQLDocumentRepository(
-            init_session, storage={StorageType.disk: disk_storage}
+            init_session,
+            storage={StorageType.disk: disk_storage},
+            selected_storage=StorageType.disk,
         )
     with repo(db_session):
         yield repo
@@ -234,6 +236,7 @@ def app():
 
     settings.db.url = "mysql+pymysql://root:dev@localhost/hermadata_test"
     settings.storage.disk.base_path = "attic/storage"
+    settings.storage.selected = StorageType.disk
 
     from hermadata.main import build_app
 
