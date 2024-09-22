@@ -21,6 +21,7 @@ class S3Storage(StorageInterface):
             )
         except ClientError as e:
             logger.error(f"Failed to store file '{file_name}': {e}")
+            raise e
 
     def retrieve_file(self, file_name):
         try:
