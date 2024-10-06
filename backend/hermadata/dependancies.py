@@ -34,13 +34,16 @@ SessionMaker = sessionmaker(engine)
 
 
 def get_session():
-
+    session = SessionMaker()
     try:
-        with SessionMaker.begin() as s:
-            yield s
+        yield session
+        session.commit()
     except Exception as e:
-        s.rollback()
-        raise e
+        session.rollback()
+        logger.error("Session rollback because of exception: %s", e)
+        raise
+    finally:
+        session.close()
 
 
 def get_s3_storage():
@@ -151,10 +154,10 @@ def get_animal_service(
         ReportGenerator, Depends(get_report_generator, use_cache=True)
     ],
     animal_repository: Annotated[
-        ReportGenerator, Depends(get_repository(SQLAnimalRepository))
+        SQLAnimalRepository, Depends(get_repository(SQLAnimalRepository))
     ],
     document_repository: Annotated[
-        ReportGenerator, Depends(get_repository(SQLDocumentRepository))
+        SQLDocumentRepository, Depends(get_repository(SQLDocumentRepository))
     ],
 ):
     service = AnimalService(
