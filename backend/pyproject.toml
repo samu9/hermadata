@@ -19,7 +19,8 @@ dependencies = [
     "python-multipart",
     "pdfkit",
     "jinja2",
-    "openpyxl"
+    "openpyxl",
+    "boto3 >=1, < 2"
 ]
 [tool.flake8]
 max-line-length = 120
