@@ -1,6 +1,8 @@
 from typing import Annotated
+
 from pydantic import AfterValidator, BaseModel, constr
 from sqlalchemy import delete, insert, select
+
 from hermadata.database.models import Breed, Race
 from hermadata.repositories import SQLBaseRepository
 
