@@ -1,19 +1,15 @@
-from enum import Enum
 from uuid import uuid4
+from fastapi import Depends
 from pydantic import BaseModel, constr
 
 from sqlalchemy import insert, select
-from hermadata.constants import DocKindCode
+from hermadata.constants import DocKindCode, StorageType
 from hermadata.database.models import Document, DocumentKind
+from hermadata.dependancies import get_session, get_storage_map
 from hermadata.repositories import SQLBaseRepository
 from sqlalchemy.orm import Session
 
 from hermadata.storage.base import StorageInterface
-
-
-class StorageType(Enum):
-    disk = "dd"
-    aws_s3 = "s3"
 
 
 class NewDocument(BaseModel):
@@ -42,19 +38,22 @@ class DocumentModel(BaseModel):
 StorageMap = dict[StorageType, StorageInterface]
 
 
+class DocumentKindsMap:
+    def __init__(self, session: Session = Depends(get_session)):
+        select_result = session.execute(select(DocumentKind)).scalars().all()
+
+
 class SQLDocumentRepository(SQLBaseRepository):
     def __init__(
         self,
-        session: Session,
-        selected_storage: StorageType,
-        storage: StorageMap = {},
+        *args,
+        selected_storage: StorageType = StorageType.aws_s3,
+        storage: StorageMap = Depends(get_storage_map),
     ) -> None:
-        super().__init__()
+        super().__init__(*args)
         self.storage = storage
         self.document_kind_ids: dict[DocKindCode, int] = {}
         self.selected_storage = selected_storage
-        with self(session):
-            self._init_document_kind_ids_map()
 
     def _init_document_kind_ids_map(self):
         data = self.get_document_kinds()

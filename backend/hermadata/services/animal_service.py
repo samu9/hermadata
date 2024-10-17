@@ -1,4 +1,6 @@
+from fastapi import Depends
 from hermadata.constants import DocKindCode, ExitType
+from hermadata.dependancies import get_s3_storage
 from hermadata.reports.report_generator import (
     ReportAnimalEntryVariables,
     ReportGenerator,
@@ -21,10 +23,12 @@ from hermadata.storage.base import StorageInterface
 class AnimalService:
     def __init__(
         self,
-        animal_repository: SQLAnimalRepository,
-        document_repository: SQLDocumentRepository,
-        report_generator: ReportGenerator,
-        storage: StorageInterface,
+        animal_repository: SQLAnimalRepository = Depends(SQLAnimalRepository),
+        document_repository: SQLDocumentRepository = Depends(
+            SQLDocumentRepository
+        ),
+        report_generator: ReportGenerator = Depends(ReportGenerator),
+        storage: StorageInterface = Depends(get_s3_storage),
     ) -> None:
         self.animal_repository = animal_repository
         self.document_repository = document_repository
