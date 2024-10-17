@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from pymysql import IntegrityError
 
-from hermadata.dependancies import get_repository
 from hermadata.repositories.breed_repository import (
     NewBreedModel,
     BreedModel,
@@ -13,9 +12,7 @@ router = APIRouter(prefix="/breed")
 
 @router.get("", response_model=list[BreedModel])
 def get_all(
-    repo: SQLBreedRepository = Depends(
-        get_repository(SQLBreedRepository), use_cache=False
-    ),
+    repo: SQLBreedRepository = Depends(SQLBreedRepository),
     race_id: str = Query(),
 ):
     races = repo.get_all(race_id)
@@ -26,7 +23,7 @@ def get_all(
 @router.post("", response_model=BreedModel)
 def create_race(
     data: NewBreedModel,
-    repo: SQLBreedRepository = Depends(get_repository(SQLBreedRepository)),
+    repo: SQLBreedRepository = Depends(SQLBreedRepository),
 ):
     try:
         breed_id = repo.create(data)
