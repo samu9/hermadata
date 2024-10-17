@@ -1,6 +1,11 @@
 from enum import Enum, IntEnum, auto
 
 
+class StorageType(Enum):
+    disk = "dd"
+    aws_s3 = "s3"
+
+
 class EntryType(str, Enum):
     rescue = "R"
     confiscation = "C"
