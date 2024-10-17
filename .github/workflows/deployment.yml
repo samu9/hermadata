@@ -45,7 +45,7 @@ jobs:
         pip install *.tar.gz --force-reinstall
         rm *.tar.gz
         export NVM_DIR=~/.nvm
-        pm2 status hermdata-backend
+        pm2 restart hermdata-backend
         EOF
       env:
         REMOTE_USER: ${{ secrets.REMOTE_USER }}
