@@ -9,6 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
+from hermadata.constants import StorageType
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories import SQLBaseRepository
 from hermadata.repositories.adopter_repository import SQLAdopterRepository
@@ -16,10 +17,7 @@ from hermadata.repositories.adoption_repository import SQLAdopionRepository
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
-from hermadata.repositories.document_repository import (
-    SQLDocumentRepository,
-    StorageType,
-)
+from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.repositories.race_repository import SQLRaceRepository
 from hermadata.services.animal_service import AnimalService
 from hermadata.settings import settings

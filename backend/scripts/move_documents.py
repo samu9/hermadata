@@ -3,8 +3,8 @@ import os
 from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import sessionmaker
 
+from hermadata.constants import StorageType
 from hermadata.database.models import Document
-from hermadata.repositories.document_repository import StorageType
 from hermadata.settings import settings
 from hermadata.dependancies import get_s3_storage
 
@@ -53,9 +53,4 @@ def upload_pdfs_to_s3():
 
 
 if __name__ == "__main__":
-    # Define your directory path and S3 bucket name here
-    directory_path = "attic/file_to_move"
-    bucket_name = "hermadata-documents"
-
-    # Call the function to upload PDFs to S3
     upload_pdfs_to_s3()

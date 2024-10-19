@@ -2,12 +2,11 @@ import os
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from hermadata.constants import DocKindCode
+from hermadata.constants import DocKindCode, StorageType
 from hermadata.database.models import Document
 from hermadata.repositories.document_repository import (
     NewDocument,
     SQLDocumentRepository,
-    StorageType,
 )
 from hermadata.storage.disk_storage import DiskStorage
 

@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from hermadata.repositories.document_repository import StorageType
+from hermadata.constants import StorageType
 
 
 class DBSettings(BaseSettings):

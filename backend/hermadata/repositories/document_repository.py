@@ -1,19 +1,13 @@
-from enum import Enum
 from uuid import uuid4
 from pydantic import BaseModel, constr
 
 from sqlalchemy import insert, select
-from hermadata.constants import DocKindCode
+from hermadata.constants import DocKindCode, StorageType
 from hermadata.database.models import Document, DocumentKind
 from hermadata.repositories import SQLBaseRepository
 from sqlalchemy.orm import Session
 
 from hermadata.storage.base import StorageInterface
-
-
-class StorageType(Enum):
-    disk = "dd"
-    aws_s3 = "s3"
 
 
 class NewDocument(BaseModel):
