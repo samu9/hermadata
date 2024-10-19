@@ -38,21 +38,25 @@ class DocumentModel(BaseModel):
 StorageMap = dict[StorageType, StorageInterface]
 
 
-class DocumentKindsMap:
-    def __init__(self, session: Session = Depends(get_session)):
-        select_result = session.execute(select(DocumentKind)).scalars().all()
+def build_document_kinds_map(session: Session = Depends(get_session)):
+    select_result = session.execute(select(DocumentKind)).scalars().all()
+
+    map_ = {r.code: r.id for r in select_result}
+
+    return map_
 
 
 class SQLDocumentRepository(SQLBaseRepository):
     def __init__(
         self,
-        *args,
+        session=Depends(get_session),
         selected_storage: StorageType = StorageType.aws_s3,
         storage: StorageMap = Depends(get_storage_map),
+        document_kind_ids=Depends(build_document_kinds_map, use_cache=True),
     ) -> None:
-        super().__init__(*args)
+        super().__init__(session)
         self.storage = storage
-        self.document_kind_ids: dict[DocKindCode, int] = {}
+        self.document_kind_ids: dict[DocKindCode, int] = document_kind_ids
         self.selected_storage = selected_storage
 
     def _init_document_kind_ids_map(self):
