@@ -73,8 +73,7 @@ def update_animal(
     service: Annotated[AnimalService, Depends(AnimalService)],
 ) -> int | ApiError:
     try:
-        # result = service.update(animal_id, data)
-        result = 1
+        result = service.update(animal_id, data)
     except ExistingChipCodeException as e:
         return ApiError(
             code=ApiErrorCode.existing_chip_code,
