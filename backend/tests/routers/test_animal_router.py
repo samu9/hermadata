@@ -40,9 +40,7 @@ def test_create_animal(app: TestClient, db_session: Session):
     assert animal_id
 
 
-def test_update_animal(
-    app: TestClient, make_animal, DBSessionMaker: sessionmaker
-):
+def test_update_animal(app: TestClient, make_animal, DBSessionMaker):
     animal_id = make_animal(
         NewAnimalModel(
             race_id="C",
@@ -66,9 +64,9 @@ def test_update_animal(
             select(Animal).where(Animal.id == animal_id)
         ).scalar_one()
 
-        assert animal.name == "Test"
-        assert animal.chip_code == "123.123.123.123.123"
-        assert animal.chip_code_set
+    assert animal.name == "Test"
+    assert animal.chip_code == "123.123.123.123.123"
+    assert animal.chip_code_set
 
 
 def test_complete_entry(

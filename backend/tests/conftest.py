@@ -118,70 +118,56 @@ def report_generator(jinja_env) -> ReportGenerator:
 
 @pytest.fixture(scope="function")
 def document_repository(
-    db_session: Session, disk_storage, DBSessionMaker
+    db_session: Session, disk_storage
 ) -> Generator[SQLDocumentRepository, SQLDocumentRepository, None]:
-    with DBSessionMaker() as init_session:
-        repo = SQLDocumentRepository(
-            init_session,
-            storage={StorageType.disk: disk_storage},
-            selected_storage=StorageType.disk,
-        )
-    with repo(db_session):
-        yield repo
+    SQLDocumentRepository.factory(
+        db_session,
+        storage={StorageType.disk: disk_storage},
+        selected_storage=StorageType.disk,
+    )
+    return SQLDocumentRepository(db_session)
 
 
 @pytest.fixture(scope="function")
 def adopter_repository(
     db_session: Session,
 ) -> Generator[SQLAdopterRepository, SQLAdopterRepository, None]:
-    repo = SQLAdopterRepository()
-    with repo(db_session):
-        yield repo
+    return SQLAdopterRepository(db_session)
 
 
 @pytest.fixture(scope="function")
 def adoption_repository(
     db_session: Session,
 ) -> Generator[SQLAdopionRepository, SQLAdopionRepository, None]:
-    repo = SQLAdopionRepository()
-    with repo(db_session):
-        yield repo
+    return SQLAdopionRepository(db_session)
 
 
 @pytest.fixture(scope="function")
 def animal_repository(
     db_session: Session,
 ) -> Generator[SQLAnimalRepository, SQLAnimalRepository, None]:
-    repo = SQLAnimalRepository()
-    with repo(db_session):
-        yield repo
+    return SQLAnimalRepository(db_session)
 
 
 @pytest.fixture(scope="function")
 def vet_repository(
     db_session: Session,
 ) -> Generator[SQLVetRepository, SQLVetRepository, None]:
-    repo = SQLVetRepository()
-    with repo(db_session):
-        yield repo
+    return SQLVetRepository(db_session)
 
 
 @pytest.fixture(scope="function")
 def race_repository(
     db_session: Session,
 ) -> Generator[SQLRaceRepository, SQLRaceRepository, None]:
-    repo = SQLRaceRepository()
-    with repo(db_session):
-        yield repo
+    return SQLRaceRepository(db_session)
 
 
 @pytest.fixture(scope="function")
 def city_repository(
     db_session: Session,
 ) -> Generator[SQLCityRepository, SQLCityRepository, None]:
-    repo = SQLCityRepository()
-    with repo(db_session):
-        yield repo
+    return SQLCityRepository(db_session)
 
 
 @pytest.fixture(scope="function")
@@ -206,12 +192,9 @@ def make_animal(
     in order to have the data available to other transactions
     """
 
-    animal_repository = SQLAnimalRepository()
-
     def make(data: NewAnimalModel = None) -> int:
-        with DBSessionMaker.begin() as db_session, animal_repository(
-            db_session
-        ):
+        with DBSessionMaker.begin() as db_session:
+            animal_repository = SQLAnimalRepository(db_session)
             if data is None:
                 data = NewAnimalModel(
                     race_id="C",
@@ -223,8 +206,7 @@ def make_animal(
             animal_id = db_session.execute(
                 select(Animal.id).where(Animal.code == code)
             ).scalar()
-
-        return animal_id
+            return animal_id
 
     return make
 
