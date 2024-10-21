@@ -18,9 +18,7 @@ from hermadata.repositories.adoption_repository import SQLAdopionRepository
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import NewAnimalModel
 from hermadata.repositories.city_repository import SQLCityRepository
-from hermadata.repositories.document_repository import (
-    SQLDocumentRepository,
-)
+from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.repositories.race_repository import SQLRaceRepository
 from hermadata.repositories.vet_repository import SQLVetRepository
 from hermadata.services.animal_service import AnimalService

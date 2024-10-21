@@ -9,8 +9,6 @@ from sqlalchemy.orm import sessionmaker
 
 from hermadata import __version__
 from hermadata.constants import StorageType
-
-
 from hermadata.settings import settings
 from hermadata.storage.disk_storage import DiskStorage
 from hermadata.storage.s3_storage import S3Storage
