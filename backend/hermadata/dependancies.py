@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from hermadata import __version__
 from hermadata.constants import StorageType
 
+
 from hermadata.settings import settings
 from hermadata.storage.disk_storage import DiskStorage
 from hermadata.storage.s3_storage import S3Storage
@@ -17,10 +18,16 @@ from hermadata.storage.s3_storage import S3Storage
 logger = logging.getLogger(__name__)
 
 
-def get_session():
+def get_session_maker():
     engine = create_engine(**settings.db.model_dump())
 
     SessionMaker = sessionmaker(engine)
+
+    return SessionMaker
+
+
+def get_session(SessionMaker: Annotated[sessionmaker, get_session_maker]):
+
     session = SessionMaker()
     try:
         yield session
