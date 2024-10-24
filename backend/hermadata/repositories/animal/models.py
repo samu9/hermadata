@@ -241,10 +241,21 @@ class AnimalExit(BaseModel):
     adopter_id: int | None = None  # TODO: add validation based on exit_type
 
 
-class AnimalDaysQuery(BaseModel):
+class ExtractionQuery(BaseModel):
     from_date: date
     to_date: date
+
+
+class AnimalDaysQuery(ExtractionQuery):
     city_code: str
+
+
+class AnimalEntriesQuery(ExtractionQuery):
+    entry_type: EntryType
+
+
+class AnimalExitsQuery(ExtractionQuery):
+    exit_type: ExitType
 
 
 class AnimalDaysItem(BaseModel):
@@ -256,6 +267,19 @@ class AnimalDaysItem(BaseModel):
 class AnimalDaysResult(BaseModel):
     items: list[AnimalDaysItem]
     total_days: int
+
+
+class AnimalEntriesItem(BaseModel):
+    animal_name: str | None = None
+    animal_chip_code: str | None = None
+    entry_date: date
+    entry_type: EntryType
+    entry_city: str
+
+
+class AnimalEntriesResult(BaseModel):
+    items: list[AnimalEntriesItem]
+    total: int
 
 
 class AddMedicalRecordModel(BaseModel):

@@ -27,6 +27,8 @@ from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalDaysResult,
     AnimalDocumentModel,
+    AnimalEntriesItem,
+    AnimalEntriesResult,
     AnimalEntryModel,
     AnimalExit,
     AnimalGetQuery,
@@ -616,6 +618,45 @@ class SQLAnimalRepository(SQLBaseRepository):
             items=list(result_map.values()),
         )
 
+        return result
+
+    def count_animal_entries(
+        self, query: AnimalEntriesItem
+    ) -> AnimalEntriesResult:
+        stmt = (
+            select(
+                Animal.id,
+                Animal.name,
+                Animal.chip_code,
+                AnimalEntry.entry_date,
+                Comune.name,
+            )
+            .where(
+                AnimalEntry.entry_date.is_not(None),
+                AnimalEntry.entry_date <= query.to_date,
+                AnimalEntry.entry_date >= query.from_date,
+            )
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+            .join(Comune, AnimalEntry.origin_city_code == Comune.id)
+        )
+
+        entries = self.session.execute(stmt).all()
+
+        if query.entry_type:
+            stmt = stmt.where(AnimalEntry.entry_type == query.city_code)
+
+        result = AnimalEntriesResult(
+            items=[
+                AnimalEntriesItem(
+                    animal_chip_code=animal_chip_code,
+                    animal_name=animal_name,
+                    entry_date=animal_entry_date,
+                    entry_city=entry_city,
+                )
+                for animal_id, animal_name, animal_chip_code, animal_entry_date, entry_city in entries
+            ],
+            total=len(entries),
+        )
         return result
 
     def add_medical_record(self, animal_id, data: AddMedicalRecordModel):

@@ -8,6 +8,7 @@ from hermadata.reports.report_generator import (
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
+    AnimalEntriesQuery,
     AnimalExit,
     CompleteEntryModel,
     NewAnimalDocument,
@@ -132,4 +133,13 @@ class AnimalService:
                 query, animal_days
             )
         )
+        return filename, report
+
+    def entries_report(self, query: AnimalEntriesQuery):
+        entries = self.animal_repository.count_animal_entries(query)
+
+        filename, report = self.report_generator.generate_animal_entries_report(
+            query, entries
+        )
+
         return filename, report

@@ -12,6 +12,8 @@ from hermadata.dependancies import get_jinja_env
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalDaysResult,
+    AnimalEntriesQuery,
+    AnimalEntriesResult,
 )
 
 
@@ -129,6 +131,39 @@ class ReportGenerator:
         ws.append(["Totale", "", data.total_days])
 
         filename = f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}.xls"
+
+        fp = BytesIO()
+        wb.save(fp)
+
+        bytes_data = fp.getvalue()
+
+        return filename, bytes_data
+
+    def generate_animal_entries_report(
+        self,
+        query: AnimalEntriesQuery,
+        data: AnimalEntriesResult,
+        format: ReportFormat = ReportFormat.excel,
+    ) -> tuple[str, bytes]:
+        if format != ReportFormat.excel:
+            raise Exception("format not supported")
+
+        wb = openpyxl.Workbook()
+
+        ws = wb.active
+        ws.append(["Nome", "Chip", "Data ingresso", "Tipo Ingresso", "Comune"])
+        for d in data.items:
+            ws.append(
+                [
+                    d.animal_name,
+                    d.animal_chip_code,
+                    d.entry_date,
+                    d.entry_type,
+                    d.entry_city,
+                ]
+            )
+
+        filename = f"ingressi_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}.xls"
 
         fp = BytesIO()
         wb.save(fp)
