@@ -1,11 +1,14 @@
 from datetime import date, datetime
 from enum import Enum
 from io import BytesIO
+
 import openpyxl
 import pdfkit
+from fastapi import Depends
 from jinja2 import Environment
 from pydantic import BaseModel, Field, field_validator
 
+from hermadata.dependancies import get_jinja_env
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalDaysResult,
@@ -74,7 +77,7 @@ class ReportFormat(Enum):
 
 
 class ReportGenerator:
-    def __init__(self, jinja_env: Environment) -> None:
+    def __init__(self, jinja_env: Environment = Depends(get_jinja_env)) -> None:
         self.jinja_env = jinja_env
 
     def _build_template(

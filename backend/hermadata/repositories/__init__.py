@@ -1,7 +1,9 @@
 import logging
 from threading import local
-import threading
+from fastapi import Depends
 from sqlalchemy.orm import Session
+
+from hermadata.dependancies import get_session
 
 logger = logging.getLogger(__name__)
 
@@ -10,41 +12,20 @@ class BaseRepository:
     pass
 
 
-class LocalSession(local):
-    session: Session
-
-
 class SQLBaseRepository(BaseRepository):
-    def __init__(self) -> None:
-        self.local_session = LocalSession()
-        self.local_session.session = None
+    _instance = None
+    _local = local()
 
-    def __call__(self, session: Session):
-        logger.debug(
-            "%s:__call__ - thread:%s setting session %s",
-            self.__class__.__name__,
-            threading.get_ident(),
-            session,
-        )
-        self.local_session.session = session
-        return self
+    def instance_init(cls, *args, **kwargs):
+        pass
 
-    def __enter__(self):
-        logger.debug(
-            "%s:__enter__ - thread:%s",
-            self.__class__.__name__,
-            threading.get_ident(),
-        )
-        return self
+    @classmethod
+    def factory(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(SQLBaseRepository, cls).__new__(cls)
+        return cls._instance
 
-    def __exit__(self, *args, **kwargs):
-        logger.debug(
-            "%s:__exit__ - thread:%s",
-            self.__class__.__name__,
-            threading.get_ident(),
-        )
-        self.local_session.session = None
-
-    @property
-    def session(self) -> Session:
-        return self.local_session.session
+    def __init__(self, session: Session = Depends(get_session)):
+        if not self._instance:
+            self.factory()
+        self.session = session
