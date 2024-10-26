@@ -1,5 +1,6 @@
 import os
 from typing import Callable, Generator
+from unittest.mock import patch
 
 import pytest
 from alembic import command
@@ -118,54 +119,62 @@ def report_generator(jinja_env) -> ReportGenerator:
 def document_repository(
     db_session: Session, disk_storage
 ) -> Generator[SQLDocumentRepository, SQLDocumentRepository, None]:
-    SQLDocumentRepository.factory(
+
+    repo = SQLDocumentRepository(
         db_session,
         storage={StorageType.disk: disk_storage},
         selected_storage=StorageType.disk,
     )
-    return SQLDocumentRepository(db_session)
+    return repo(db_session)
 
 
 @pytest.fixture(scope="function")
 def adopter_repository(
     db_session: Session,
 ) -> Generator[SQLAdopterRepository, SQLAdopterRepository, None]:
-    return SQLAdopterRepository(db_session)
+    repo = SQLAdopterRepository()
+    return repo(db_session)
 
 
 @pytest.fixture(scope="function")
 def adoption_repository(
     db_session: Session,
 ) -> Generator[SQLAdopionRepository, SQLAdopionRepository, None]:
-    return SQLAdopionRepository(db_session)
+    repo = SQLAdopionRepository()
+    return repo(db_session)
 
 
 @pytest.fixture(scope="function")
 def animal_repository(
     db_session: Session,
 ) -> Generator[SQLAnimalRepository, SQLAnimalRepository, None]:
-    return SQLAnimalRepository(db_session)
+    repo = SQLAnimalRepository()
+    return repo(db_session)
 
 
 @pytest.fixture(scope="function")
 def vet_repository(
     db_session: Session,
 ) -> Generator[SQLVetRepository, SQLVetRepository, None]:
-    return SQLVetRepository(db_session)
+    repo = SQLVetRepository()
+    return repo(db_session)
 
 
 @pytest.fixture(scope="function")
 def race_repository(
     db_session: Session,
 ) -> Generator[SQLRaceRepository, SQLRaceRepository, None]:
-    return SQLRaceRepository(db_session)
+    repo = SQLRaceRepository()
+    return repo(db_session)
 
 
 @pytest.fixture(scope="function")
 def city_repository(
     db_session: Session,
 ) -> Generator[SQLCityRepository, SQLCityRepository, None]:
-    return SQLCityRepository(db_session)
+
+    repo = SQLCityRepository()
+    return repo(db_session)
 
 
 @pytest.fixture(scope="function")
@@ -183,6 +192,8 @@ def animal_service(
 @pytest.fixture(scope="function")
 def make_animal(
     DBSessionMaker: sessionmaker,
+    db_session: Session,
+    animal_repository: SQLAnimalRepository,
 ) -> Callable[[NewAnimalModel], int]:
     """
     `db_session` and `animal_repository` fixtures are not used because
@@ -191,35 +202,40 @@ def make_animal(
     """
 
     def make(data: NewAnimalModel = None) -> int:
-        with DBSessionMaker.begin() as db_session:
-            animal_repository = SQLAnimalRepository(db_session)
-            if data is None:
-                data = NewAnimalModel(
-                    race_id="C",
-                    rescue_city_code="H501",
-                    entry_type=EntryType.rescue,
-                )
-            code = animal_repository.new_animal(data=data)
+        if data is None:
+            data = NewAnimalModel(
+                race_id="C",
+                rescue_city_code="H501",
+                entry_type=EntryType.rescue,
+            )
+        code = animal_repository.new_animal(data=data)
 
-            animal_id = db_session.execute(
-                select(Animal.id).where(Animal.code == code)
-            ).scalar()
-            return animal_id
+        animal_id = db_session.execute(
+            select(Animal.id).where(Animal.code == code)
+        ).scalar()
+        return animal_id
 
     return make
 
 
 @pytest.fixture(scope="function")
-def app():
+def app(db_session):
     from hermadata.settings import settings
 
     settings.db.url = "mysql+pymysql://root:dev@localhost/hermadata_test"
     settings.storage.disk.base_path = "attic/storage"
     settings.storage.selected = StorageType.disk
 
-    from hermadata.main import build_app
+    with patch("hermadata.dependancies.get_db_session") as get_session_mock:
 
-    app = build_app()
-    test_app = TestClient(app)
+        def get_db_session():
+            yield db_session
 
-    return test_app
+        get_session_mock.side_effect = get_db_session
+
+        from hermadata.main import build_app
+
+        app = build_app()
+        test_app = TestClient(app)
+
+        yield test_app

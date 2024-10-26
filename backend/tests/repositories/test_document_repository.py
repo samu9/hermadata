@@ -12,11 +12,10 @@ from hermadata.storage.disk_storage import DiskStorage
 
 
 def test_init(db_session: Session):
-    SQLDocumentRepository.factory(
+
+    repo = SQLDocumentRepository(
         db_session, storage={}, selected_storage=StorageType.disk
     )
-
-    repo = SQLDocumentRepository(db_session)
     assert DocKindCode.documento_ingresso in repo.document_kind_ids
 
 
