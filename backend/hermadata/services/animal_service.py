@@ -40,6 +40,7 @@ class AnimalService:
     def __call__(self, session: Session = Depends(get_db_session)):
         self.animal_repository(session)
         self.document_repository(session)
+        return self
 
     def _init_document_kind_ids_map(self):
         data = self.document_repository.get_document_kinds()
