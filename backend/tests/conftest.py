@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from hermadata import __version__
 from hermadata.constants import EntryType, StorageType
 from hermadata.database.models import Animal
+from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.adopter_repository import SQLAdopterRepository
 from hermadata.repositories.adoption_repository import SQLAdopionRepository
@@ -226,16 +227,15 @@ def app(db_session):
     settings.storage.disk.base_path = "attic/storage"
     settings.storage.selected = StorageType.disk
 
-    with patch("hermadata.dependancies.get_db_session") as get_session_mock:
+    def get_db_session_override():
+        yield db_session
 
-        def get_db_session():
-            yield db_session
+    from hermadata.main import build_app
 
-        get_session_mock.side_effect = get_db_session
+    app = build_app()
 
-        from hermadata.main import build_app
+    app.dependency_overrides[get_db_session] = get_db_session_override
 
-        app = build_app()
-        test_app = TestClient(app)
+    test_app = TestClient(app)
 
-        yield test_app
+    yield test_app
