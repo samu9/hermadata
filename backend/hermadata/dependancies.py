@@ -24,7 +24,9 @@ def get_session_maker():
     return SessionMaker
 
 
-def get_session(SessionMaker: Annotated[sessionmaker, get_session_maker]):
+def get_db_session(
+    SessionMaker: Annotated[sessionmaker, Depends(get_session_maker)]
+):
 
     session = SessionMaker()
     try:
