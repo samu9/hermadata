@@ -1,5 +1,5 @@
-from sqlalchemy import insert, select
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from hermadata.database.models import Animal
 
