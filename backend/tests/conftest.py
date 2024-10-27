@@ -1,6 +1,5 @@
 import os
 from typing import Callable, Generator
-from unittest.mock import patch
 
 import pytest
 from alembic import command
