@@ -6,7 +6,6 @@ from hermadata.constants import DocKindCode, StorageType
 from hermadata.database.models import Document, DocumentKind
 from hermadata.repositories import SQLBaseRepository
 from sqlalchemy.orm import Session
-
 from hermadata.storage.base import StorageInterface
 
 
@@ -37,18 +36,18 @@ StorageMap = dict[StorageType, StorageInterface]
 
 
 class SQLDocumentRepository(SQLBaseRepository):
+    document_kind_ids = {}
+
     def __init__(
         self,
         session: Session,
         selected_storage: StorageType,
-        storage: StorageMap = {},
-    ) -> None:
-        super().__init__()
+        storage: StorageMap,
+    ):
+        self.session = session
         self.storage = storage
-        self.document_kind_ids: dict[DocKindCode, int] = {}
         self.selected_storage = selected_storage
-        with self(session):
-            self._init_document_kind_ids_map()
+        self._init_document_kind_ids_map()
 
     def _init_document_kind_ids_map(self):
         data = self.get_document_kinds()

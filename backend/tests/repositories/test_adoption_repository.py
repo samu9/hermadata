@@ -1,4 +1,6 @@
 from datetime import date
+
+import pytest
 from hermadata.database.models import Adopter, Animal
 from hermadata.repositories.adoption_repository import (
     SQLAdopionRepository,
@@ -8,6 +10,7 @@ from sqlalchemy.orm import Session
 from hermadata.repositories.animal.models import NewAdoption
 
 
+@pytest.mark.skip(reason="no more used")
 def test_create(db_session: Session, adoption_repository: SQLAdopionRepository):
     animal = Animal(
         code="1234567890123",

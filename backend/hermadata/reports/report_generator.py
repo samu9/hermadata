@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from enum import Enum
 from io import BytesIO
+
 import openpyxl
 import pdfkit
 from jinja2 import Environment

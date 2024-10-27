@@ -1,37 +1,33 @@
 import logging
 import os
-from threading import current_thread
-from typing import Annotated, Type
+from typing import Annotated
 
 from fastapi import Depends
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from hermadata import __version__
 from hermadata.constants import StorageType
-from hermadata.reports.report_generator import ReportGenerator
-from hermadata.repositories import SQLBaseRepository
-from hermadata.repositories.adopter_repository import SQLAdopterRepository
-from hermadata.repositories.adoption_repository import SQLAdopionRepository
-from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
-from hermadata.repositories.breed_repository import SQLBreedRepository
-from hermadata.repositories.city_repository import SQLCityRepository
-from hermadata.repositories.document_repository import SQLDocumentRepository
-from hermadata.repositories.race_repository import SQLRaceRepository
-from hermadata.services.animal_service import AnimalService
 from hermadata.settings import settings
 from hermadata.storage.disk_storage import DiskStorage
 from hermadata.storage.s3_storage import S3Storage
 
 logger = logging.getLogger(__name__)
 
-engine = create_engine(**settings.db.model_dump())
 
-SessionMaker = sessionmaker(engine)
+def get_session_maker():
+    engine = create_engine(**settings.db.model_dump())
+
+    SessionMaker = sessionmaker(engine)
+
+    return SessionMaker
 
 
-def get_session():
+def get_db_session(
+    SessionMaker: Annotated[sessionmaker, Depends(get_session_maker)]
+):
+
     session = SessionMaker()
     try:
         yield session
@@ -39,7 +35,7 @@ def get_session():
     except Exception as e:
         session.rollback()
         logger.error("Session rollback because of exception: %s", e)
-        raise
+        raise e
     finally:
         session.close()
 
@@ -56,70 +52,14 @@ def get_disk_storage():
     return disk_storage
 
 
-DBSession = sessionmaker(engine)
-disk_storage = get_disk_storage()
-s3_storage = get_s3_storage()
-
-with DBSession.begin() as db_session:
-    document_repository = SQLDocumentRepository(
-        db_session,
-        storage={
-            StorageType.disk: disk_storage,
-            StorageType.aws_s3: s3_storage,
-        },
-        selected_storage=settings.storage.selected,
-    )
-
-
-race_repository = SQLRaceRepository()
-adoption_repository = SQLAdopionRepository()
-adopter_repository = SQLAdopterRepository()
-breed_repository = SQLBreedRepository()
-city_repository = SQLCityRepository()
-animal_repository = SQLAnimalRepository()
-
-repository_map: dict[Type[SQLBaseRepository], SQLBaseRepository] = {
-    SQLAnimalRepository: animal_repository,
-    SQLDocumentRepository: document_repository,
-    SQLRaceRepository: race_repository,
-    SQLAdopionRepository: adoption_repository,
-    SQLAdopterRepository: adopter_repository,
-    SQLBreedRepository: breed_repository,
-    SQLCityRepository: city_repository,
-}
-
-
-def get_repository(
-    repo: Type[SQLBaseRepository],
+def get_storage_map(
+    disk_storage: Annotated[DiskStorage, Depends(get_disk_storage)],
+    s3_storage: Annotated[S3Storage, Depends(get_s3_storage)],
 ):
-    def get(
-        db_session: Annotated[Session, Depends(get_session)],
-    ):
-        r = repository_map[repo]
-        r.local_session.session = db_session
-        logger.info(
-            "repo %s, set session %s, thread %s",
-            r.__class__,
-            r.session,
-            current_thread().ident,
-        )
-        try:
-            yield r
-        except Exception as e:
-            logger.info(
-                "repo %s error - thread %s", r.__class__, current_thread().ident
-            )
-            raise e
-        finally:
-            # r.local_session.session = None
-            logger.info(
-                "repo %s, nulled session %s, thread %s",
-                r.__class__,
-                r.session,
-                current_thread().ident,
-            )
-
-    return get
+    return {
+        StorageType.disk: disk_storage,
+        StorageType.aws_s3: s3_storage,
+    }
 
 
 def get_jinja_env() -> Environment:
@@ -136,33 +76,3 @@ def get_jinja_env() -> Environment:
     }
 
     return jinja_env
-
-
-def get_report_generator(
-    jinja_env: Annotated[Environment, Depends(get_jinja_env, use_cache=True)],
-):
-    return ReportGenerator(jinja_env=jinja_env)
-
-
-def get_animal_service(
-    disk_storage: Annotated[
-        DiskStorage, Depends(get_disk_storage, use_cache=True)
-    ],
-    report_generator: Annotated[
-        ReportGenerator, Depends(get_report_generator, use_cache=True)
-    ],
-    animal_repository: Annotated[
-        SQLAnimalRepository, Depends(get_repository(SQLAnimalRepository))
-    ],
-    document_repository: Annotated[
-        SQLDocumentRepository, Depends(get_repository(SQLDocumentRepository))
-    ],
-):
-    service = AnimalService(
-        animal_repository=animal_repository,
-        document_repository=document_repository,
-        report_generator=report_generator,
-        storage=disk_storage,
-    )
-
-    return service

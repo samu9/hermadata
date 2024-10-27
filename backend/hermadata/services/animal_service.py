@@ -1,4 +1,8 @@
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
 from hermadata.constants import DocKindCode, ExitType
+from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import (
     ReportAnimalEntryVariables,
     ReportGenerator,
@@ -32,6 +36,11 @@ class AnimalService:
         self.storage = storage
 
         self.document_kind_ids: dict[DocKindCode, int] = {}
+
+    def __call__(self, session: Session = Depends(get_db_session)):
+        self.animal_repository(session)
+        self.document_repository(session)
+        return self
 
     def _init_document_kind_ids_map(self):
         data = self.document_repository.get_document_kinds()

@@ -5,6 +5,7 @@ import logging.config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+
 from hermadata.routers import (
     adopter_router,
     animal_router,
@@ -15,13 +16,15 @@ from hermadata.routers import (
     vet_router,
 )
 
+
 logging.config.dictConfig(json.load(open("hermadata/log-configs.json")))
 
 logger = logging.getLogger(__name__)
 
 
 def build_app():
-    app = FastAPI()
+
+    app = FastAPI(lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware,
@@ -42,6 +45,11 @@ def build_app():
     logger.info("hermadata set up")
 
     return app
+
+
+def lifespan(app: FastAPI):
+
+    yield
 
 
 app = build_app()
