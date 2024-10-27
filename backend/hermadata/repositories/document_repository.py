@@ -38,19 +38,16 @@ StorageMap = dict[StorageType, StorageInterface]
 class SQLDocumentRepository(SQLBaseRepository):
     document_kind_ids = {}
 
-    @classmethod
-    def factory(
-        cls,
+    def __init__(
+        self,
         session: Session,
         selected_storage: StorageType,
         storage: StorageMap,
     ):
-        super().factory()
-        instance = cls(session)
-
-        cls.storage = storage
-        cls.selected_storage = selected_storage
-        cls._init_document_kind_ids_map(instance)
+        self.session = session
+        self.storage = storage
+        self.selected_storage = selected_storage
+        self._init_document_kind_ids_map()
 
     def _init_document_kind_ids_map(self):
         data = self.get_document_kinds()

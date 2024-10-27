@@ -6,13 +6,14 @@ from hermadata.repositories.breed_repository import (
     BreedModel,
     SQLBreedRepository,
 )
+from hermadata.initializations import breed_repository
 
 router = APIRouter(prefix="/breed")
 
 
 @router.get("", response_model=list[BreedModel])
 def get_all(
-    repo: SQLBreedRepository = Depends(SQLBreedRepository),
+    repo: SQLBreedRepository = Depends(breed_repository),
     race_id: str = Query(),
 ):
     races = repo.get_all(race_id)
@@ -23,7 +24,7 @@ def get_all(
 @router.post("", response_model=BreedModel)
 def create_race(
     data: NewBreedModel,
-    repo: SQLBreedRepository = Depends(SQLBreedRepository),
+    repo: SQLBreedRepository = Depends(breed_repository),
 ):
     try:
         breed_id = repo.create(data)

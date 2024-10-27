@@ -14,7 +14,7 @@ from hermadata.repositories.animal.models import (
     NewAnimalModel,
     UpdateAnimalModel,
 )
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
 
 
@@ -40,7 +40,7 @@ def test_create_animal(app: TestClient, db_session: Session):
     assert animal_id
 
 
-def test_update_animal(app: TestClient, make_animal, DBSessionMaker):
+def test_update_animal(app: TestClient, make_animal, db_session):
     animal_id = make_animal(
         NewAnimalModel(
             race_id="C",
@@ -54,24 +54,22 @@ def test_update_animal(app: TestClient, make_animal, DBSessionMaker):
             name="Test", chip_code="123.123.123.123.123"
         ).model_dump()
     )
+
     result = app.post(f"/animal/{animal_id}", json=update_data)
 
     affected = int(result.content.decode())
     assert affected == 1
 
-    with DBSessionMaker() as db_session:
-        animal = db_session.execute(
-            select(Animal).where(Animal.id == animal_id)
-        ).scalar_one()
+    animal = db_session.execute(
+        select(Animal).where(Animal.id == animal_id)
+    ).scalar_one()
 
     assert animal.name == "Test"
     assert animal.chip_code == "123.123.123.123.123"
     assert animal.chip_code_set
 
 
-def test_complete_entry(
-    app: TestClient, make_animal, DBSessionMaker: sessionmaker
-):
+def test_complete_entry(app: TestClient, make_animal, db_session: Session):
     animal_id = make_animal()
 
     entry_date = (datetime.now() + timedelta(days=1)).date()
@@ -82,20 +80,18 @@ def test_complete_entry(
     result = app.post(f"/animal/{animal_id}/entry/complete", json=data)
 
     assert result.status_code == 200
-    with DBSessionMaker() as s:
-        e: AnimalEntry = s.execute(
-            select(AnimalEntry).where(AnimalEntry.animal_id == animal_id)
-        ).scalar_one()
 
-        assert e.entry_date == entry_date
+    e: AnimalEntry = db_session.execute(
+        select(AnimalEntry).where(AnimalEntry.animal_id == animal_id)
+    ).scalar_one()
 
-        doc_kind: AnimalDocument = s.execute(
-            select(DocumentKind.code)
-            .select_from(AnimalDocument)
-            .join(
-                DocumentKind, AnimalDocument.document_kind_id == DocumentKind.id
-            )
-            .where(AnimalDocument.animal_id == animal_id)
-        ).scalar()
+    assert e.entry_date == entry_date
 
-        assert doc_kind == DocKindCode.comunicazione_ingresso.value
+    doc_kind: AnimalDocument = db_session.execute(
+        select(DocumentKind.code)
+        .select_from(AnimalDocument)
+        .join(DocumentKind, AnimalDocument.document_kind_id == DocumentKind.id)
+        .where(AnimalDocument.animal_id == animal_id)
+    ).scalar()
+
+    assert doc_kind == DocKindCode.comunicazione_ingresso.value

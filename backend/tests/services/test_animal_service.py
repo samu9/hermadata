@@ -52,8 +52,6 @@ def test_new_entry(
 
 
 def test_update(
-    disk_storage: DiskStorage,
-    db_session: Session,
     make_animal: Callable[[NewAnimalModel], int],
     animal_service: AnimalService,
 ):

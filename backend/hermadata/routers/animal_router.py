@@ -23,6 +23,11 @@ from hermadata.repositories.animal.models import (
 )
 from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.services.animal_service import AnimalService
+from hermadata.initializations import (
+    animal_repository,
+    animal_service,
+    document_repository,
+)
 
 router = APIRouter(prefix="/animal")
 
@@ -30,7 +35,7 @@ router = APIRouter(prefix="/animal")
 @router.post("")
 def new_animal_entry(
     data: NewAnimalModel,
-    repo: SQLAnimalRepository = Depends(SQLAnimalRepository),
+    repo: SQLAnimalRepository = Depends(animal_repository),
 ) -> str:
     animal_code = repo.new_animal(data)
 
@@ -45,7 +50,7 @@ def get_animal_list():
 @router.get("/search", response_model=PaginationResult[AnimalSearchResult])
 def search_animals(
     query: Annotated[AnimalSearchModel, Depends(use_cache=False)],
-    repo: Annotated[SQLAnimalRepository, Depends(SQLAnimalRepository)],
+    repo: Annotated[SQLAnimalRepository, Depends(animal_repository)],
 ):
     # Here `Depends`is used to use a pydantic model as query params.
     result = repo.search(query)
@@ -56,7 +61,7 @@ def search_animals(
 @router.get("/{animal_id}")
 def get_animal(
     animal_id: int,
-    repo: SQLAnimalRepository = Depends(SQLAnimalRepository),
+    repo: SQLAnimalRepository = Depends(animal_repository),
 ):
     try:
         animal_data = repo.get(AnimalQueryModel(id=animal_id))
@@ -70,7 +75,7 @@ def get_animal(
 def update_animal(
     animal_id: int,
     data: UpdateAnimalModel,
-    service: Annotated[AnimalService, Depends(AnimalService)],
+    service: Annotated[AnimalService, Depends(animal_service)],
 ) -> int | ApiError:
     try:
         result = service.update(animal_id, data)
@@ -85,7 +90,7 @@ def update_animal(
 @router.get("/{animal_id}/document", response_model=list[AnimalDocumentModel])
 def get_animal_documents(
     animal_id: int,
-    repo: SQLAnimalRepository = Depends(SQLAnimalRepository),
+    repo: SQLAnimalRepository = Depends(animal_repository),
 ):
     docs = repo.get_documents(animal_id)
 
@@ -96,8 +101,8 @@ def get_animal_documents(
 def upload_animal_document(
     animal_id: int,
     data: NewAnimalDocument,
-    animal_repo: SQLAnimalRepository = Depends(SQLAnimalRepository),
-    doc_repo: SQLDocumentRepository = Depends(SQLDocumentRepository),
+    animal_repo: SQLAnimalRepository = Depends(animal_repository),
+    doc_repo: SQLDocumentRepository = Depends(document_repository),
 ):
     doc_kind = doc_repo.get_document_kind_by_code(data.document_kind_code)
 
@@ -114,7 +119,7 @@ def upload_animal_document(
 def animal_exit(
     animal_id: int,
     data: AnimalExit,
-    repo: SQLAnimalRepository = Depends(SQLAnimalRepository),
+    repo: SQLAnimalRepository = Depends(animal_repository),
 ):
     repo.exit(animal_id, data)
 
@@ -125,7 +130,7 @@ def animal_exit(
 def complete_entry(
     animal_id: int,
     data: CompleteEntryModel,
-    service: AnimalService = Depends(AnimalService),
+    service: AnimalService = Depends(animal_service),
 ):
     service.complete_entry(animal_id, data)
 
@@ -136,7 +141,7 @@ def complete_entry(
 def add_entry(
     animal_id: int,
     data: NewEntryModel,
-    repo: SQLAnimalRepository = Depends(SQLAnimalRepository),
+    repo: SQLAnimalRepository = Depends(animal_repository),
 ):
     result = repo.add_entry(animal_id, data)
 
@@ -146,7 +151,7 @@ def add_entry(
 @router.get("/{animal_id}/warning")
 def get_warnings(
     animal_id: int,
-    repo: SQLAnimalRepository = Depends(SQLAnimalRepository),
+    repo: SQLAnimalRepository = Depends(animal_repository),
 ):
     return
 
@@ -154,7 +159,7 @@ def get_warnings(
 @router.get("/days/report")
 def serve_animal_days_report(
     query: AnimalDaysQuery = Depends(),
-    service: AnimalService = Depends(AnimalService),
+    service: AnimalService = Depends(animal_service),
 ):
     filename, report = service.animal_days_report(query)
 

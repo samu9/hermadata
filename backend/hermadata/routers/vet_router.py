@@ -5,7 +5,7 @@ from hermadata.repositories.vet_repository import (
     VetModel,
     VetQuery,
 )
-
+from hermadata.initializations import vet_repository
 
 router = APIRouter(prefix="/vet")
 
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/vet")
 @router.post("/", response_model=VetModel)
 def create_vet(
     data: VetModel,
-    repo: SQLVetRepository = Depends(SQLVetRepository),
+    repo: SQLVetRepository = Depends(vet_repository),
 ):
     adopter = repo.create(data)
     return adopter
@@ -22,7 +22,7 @@ def create_vet(
 @router.get("/", response_model=list[VetModel])
 def search_adopter(
     query: VetQuery = Depends(),
-    repo: SQLVetRepository = Depends(SQLVetRepository),
+    repo: SQLVetRepository = Depends(vet_repository),
 ):
     result = repo.search(query)
 
