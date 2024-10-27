@@ -5,7 +5,7 @@ from hermadata.repositories import SQLBaseRepository
 from sqlalchemy.orm import Session
 
 
-@pytest.skip()
+@pytest.mark.skip()
 def test_local_session(db_session: Session):
     repo = SQLBaseRepository()
 
