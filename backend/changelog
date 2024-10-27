@@ -1,41 +1,65 @@
-# 0.6
+# 0.7
+
 # IMPROVEMENTS:
-- add uploadable and rendered document kind flags
-- rendered documents upon animal entry is CI, no more IN
-  - query for updating old data
-- add animal doc title
-- add adopter search
+
+-   improved dependancy system using callable instances
+
+# 0.6
+
+# IMPROVEMENTS:
+
+-   add uploadable and rendered document kind flags
+-   rendered documents upon animal entry is CI, no more IN
+    -   query for updating old data
+-   add animal doc title
+-   add adopter search
 
 # 0.5
+
 ## IMPROVEMENTS:
-- add sortable animal search query
+
+-   add sortable animal search query
 
 # 0.4.2
+
 ## FIXES
-- fix document types initial data
-- fix config loading
+
+-   fix document types initial data
+-   fix config loading
 
 # 0.4.1
+
 ## FIXES
-- add db pool recycle config to prevent "Mysql has gone away" error
+
+-   add db pool recycle config to prevent "Mysql has gone away" error
 
 # 0.4.0
+
 ## IMPROVEMENTS
-- change repositories initialization and db session management
+
+-   change repositories initialization and db session management
+
 ## FIXES
-- fix animal entry data not correctly being saved
+
+-   fix animal entry data not correctly being saved
 
 # 0.3.0
+
 ## IMPROVEMENTS
-- add chip code validation in update animal
+
+-   add chip code validation in update animal
+
 ## FIXES
-- fixed animal search sort order using map
+
+-   fixed animal search sort order using map
 
 # 0.2.0
-- updated constants:
-    - added entry types
-    - added exit types
-    - added fur types
+
+-   updated constants:
+    -   added entry types
+    -   added exit types
+    -   added fur types
 
 # 0.1.0
-- first release
+
+-   first release
