@@ -7,16 +7,28 @@ import pdfkit
 from jinja2 import Environment
 from pydantic import BaseModel, Field, field_validator
 
+from hermadata.constants import ENTRY_TYPE_LABELS, EXIT_TYPE_LABELS
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalDaysResult,
+    AnimalEntriesItem,
     AnimalEntriesQuery,
-    AnimalEntriesResult,
+    AnimalExitsItem,
+    AnimalExitsQuery,
+    AnimalReportResult,
 )
 
 
 def transform_date_to_string(raw: date) -> str:
     return raw.strftime("%d/%m/%Y")
+
+
+class ReportFormat(Enum):
+    pdf = "application/pdf"
+    excel = "xls"
+
+
+DEFAULT_EXTENSIONS: dict[ReportFormat, str] = {ReportFormat.excel: "xlsx"}
 
 
 class ReportDefaultVariables(BaseModel):
@@ -71,11 +83,6 @@ class ReportCustodyVariables(ReportDefaultVariables):
     )
 
 
-class ReportFormat(Enum):
-    pdf = "application/pdf"
-    excel = "xls"
-
-
 class ReportGenerator:
     def __init__(self, jinja_env: Environment) -> None:
         self.jinja_env = jinja_env
@@ -128,7 +135,10 @@ class ReportGenerator:
         ws.append([])
         ws.append(["Totale", "", data.total_days])
 
-        filename = f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}.xls"
+        filename = (
+            f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}"
+            f".{DEFAULT_EXTENSIONS[format]}"
+        )
 
         fp = BytesIO()
         wb.save(fp)
@@ -140,7 +150,7 @@ class ReportGenerator:
     def generate_animal_entries_report(
         self,
         query: AnimalEntriesQuery,
-        data: AnimalEntriesResult,
+        data: AnimalReportResult[AnimalEntriesItem],
         format: ReportFormat = ReportFormat.excel,
     ) -> tuple[str, bytes]:
         if format != ReportFormat.excel:
@@ -149,19 +159,84 @@ class ReportGenerator:
         wb = openpyxl.Workbook()
 
         ws = wb.active
-        ws.append(["Nome", "Chip", "Data ingresso", "Tipo Ingresso", "Comune"])
+        ws.append(
+            [
+                "Tipo",
+                "Nome",
+                "Chip",
+                "Data nascita",
+                "Sesso",
+                "Data ingresso",
+                "Tipo Ingresso",
+                "Comune",
+            ]
+        )
         for d in data.items:
             ws.append(
                 [
+                    d.animal_race,
                     d.animal_name,
                     d.animal_chip_code,
+                    d.animal_birth_date,
+                    d.animal_sex,
                     d.entry_date,
-                    d.entry_type,
+                    ENTRY_TYPE_LABELS[d.entry_type],
                     d.entry_city,
                 ]
             )
 
-        filename = f"ingressi_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}.xls"
+        filename = (
+            f"ingressi_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}"
+            f".{DEFAULT_EXTENSIONS[format]}"
+        )
+
+        fp = BytesIO()
+        wb.save(fp)
+
+        bytes_data = fp.getvalue()
+
+        return filename, bytes_data
+
+    def generate_animal_exits_report(
+        self,
+        query: AnimalExitsQuery,
+        data: AnimalReportResult[AnimalExitsItem],
+        format: ReportFormat = ReportFormat.excel,
+    ) -> tuple[str, bytes]:
+        if format != ReportFormat.excel:
+            raise Exception("format not supported")
+
+        wb = openpyxl.Workbook()
+
+        ws = wb.active
+        ws.append(
+            [
+                "Tipo",
+                "Nome",
+                "Chip",
+                "Data nascita",
+                "Sesso",
+                "Data uscita",
+                "Tipo uscita",
+            ]
+        )
+        for d in data.items:
+            ws.append(
+                [
+                    d.animal_race,
+                    d.animal_name,
+                    d.animal_chip_code,
+                    d.animal_birth_date,
+                    d.animal_sex,
+                    d.exit_date,
+                    EXIT_TYPE_LABELS[d.exit_type],
+                ]
+            )
+
+        filename = (
+            f"ingressi_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}"
+            f".{DEFAULT_EXTENSIONS[format]}"
+        )
 
         fp = BytesIO()
         wb.save(fp)
