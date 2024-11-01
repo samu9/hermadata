@@ -1,9 +1,19 @@
 from collections import namedtuple
 from datetime import date, datetime
 from enum import Enum
-from typing import Annotated, Any, Callable, Iterable, NamedTuple, Optional
+from typing import (
+    Annotated,
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    NamedTuple,
+    Optional,
+    TypeVar,
+)
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
@@ -12,6 +22,8 @@ from hermadata.database.models import Animal, AnimalEntry
 from hermadata.models import PaginationQuery
 
 rescue_city_code_PATTERN = r"[A-Z]\d{3}"
+
+T = TypeVar("T")
 
 
 class WhereClauseMapItem(NamedTuple):
@@ -244,18 +256,19 @@ class AnimalExit(BaseModel):
 class ExtractionQuery(BaseModel):
     from_date: date
     to_date: date
-
-
-class AnimalDaysQuery(ExtractionQuery):
     city_code: str
 
 
+class AnimalDaysQuery(ExtractionQuery):
+    pass
+
+
 class AnimalEntriesQuery(ExtractionQuery):
-    entry_type: EntryType
+    entry_type: EntryType | None = None
 
 
 class AnimalExitsQuery(ExtractionQuery):
-    exit_type: ExitType
+    exit_type: ExitType | None = None
 
 
 class AnimalDaysItem(BaseModel):
@@ -269,17 +282,28 @@ class AnimalDaysResult(BaseModel):
     total_days: int
 
 
-class AnimalEntriesItem(BaseModel):
+class AnimalReportBaseItem(BaseModel):
+    animal_race: str
     animal_name: str | None = None
     animal_chip_code: str | None = None
+    animal_birth_date: date | None = None
+    animal_sex: str | None = None
+
+
+class AnimalEntriesItem(AnimalReportBaseItem):
     entry_date: date
     entry_type: EntryType
     entry_city: str
 
 
-class AnimalEntriesResult(BaseModel):
-    items: list[AnimalEntriesItem]
+class AnimalReportResult(BaseModel, Generic[T]):
+    items: list[T]
     total: int
+
+
+class AnimalExitsItem(AnimalReportBaseItem):
+    exit_date: date
+    exit_type: ExitType
 
 
 class AddMedicalRecordModel(BaseModel):
