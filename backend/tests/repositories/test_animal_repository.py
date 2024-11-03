@@ -14,6 +14,7 @@ from hermadata.repositories.animal.animal_repository import (
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalExit,
+    AnimalExitsQuery,
     CompleteEntryModel,
     NewAnimalModel,
     NewEntryModel,
@@ -347,3 +348,54 @@ def test_count_days_same_day(
     )
 
     assert days
+
+
+def test_count_exits(
+    empty_db, make_animal, animal_repository: SQLAnimalRepository
+):
+    animal_id1 = make_animal()
+
+    animal_repository.complete_entry(
+        animal_id1, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
+
+    animal_repository.exit(
+        animal_id1,
+        AnimalExit(exit_date=date(2024, 1, 3), exit_type=ExitType.death),
+    )
+
+    animal_id2 = make_animal()
+
+    animal_repository.complete_entry(
+        animal_id2, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
+
+    animal_repository.exit(
+        animal_id2,
+        AnimalExit(exit_date=date(2024, 3, 1), exit_type=ExitType.death),
+    )
+
+    query = AnimalExitsQuery(
+        from_date=date(2024, 1, 1),
+        to_date=date(2024, 2, 1),
+        exit_type=ExitType.death,
+        city_code="H501",
+    )
+
+    result = animal_repository.count_animal_exits(query)
+
+    assert result.total == 1
+    assert result.items[0].exit_date == date(2024, 1, 3)
+    assert result.items[0].exit_type == ExitType.death
+
+    query = AnimalExitsQuery(
+        from_date=date(2024, 1, 1),
+        to_date=date(2024, 4, 1),
+        exit_type=ExitType.death,
+        city_code="H501",
+    )
+
+    result = animal_repository.count_animal_exits(query)
+
+    assert result.total == 2
+    assert result.items[1].exit_date == date(2024, 3, 1)
