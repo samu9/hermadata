@@ -19,7 +19,7 @@ from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
 from hermadata.constants import DocKindCode, EntryType, ExitType
 from hermadata.database.models import Animal, AnimalEntry
-from hermadata.models import PaginationQuery
+from hermadata.models import PaginationQuery, Sex
 
 rescue_city_code_PATTERN = r"[A-Z]\d{3}"
 
@@ -287,7 +287,7 @@ class AnimalReportBaseItem(BaseModel):
     animal_name: str | None = None
     animal_chip_code: str | None = None
     animal_birth_date: date | None = None
-    animal_sex: str | None = None
+    animal_sex: Sex | None = None
 
 
 class AnimalEntriesItem(AnimalReportBaseItem):
