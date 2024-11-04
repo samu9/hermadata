@@ -25,6 +25,8 @@ const ApiEndpoints = {
         newDocument: (id: number) => `/animal/${id}/document`,
         exit: (id: number) => `/animal/${id}/exit`,
         daysReport: `/animal/days/report`,
+        entriesReport: `/animal/entries/report`,
+        exitsReport: `/animal/exits/report`,
     },
     adopter: {
         create: "/adopter",

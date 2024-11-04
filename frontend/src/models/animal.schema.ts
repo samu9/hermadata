@@ -161,3 +161,17 @@ export const animalDaysRequestSchema = z.object({
 })
 
 export type AnimalDaysRequestSchema = z.infer<typeof animalDaysRequestSchema>
+
+export const animalEntriesReportSchema = animalDaysRequestSchema.extend({
+    entry_type: z.string(),
+})
+
+export type AnimalEntriesReportSchema = z.infer<
+    typeof animalEntriesReportSchema
+>
+
+export const animalExitsReportSchema = animalDaysRequestSchema.extend({
+    exit_type: z.string(),
+})
+
+export type AnimalExitsReportSchema = z.infer<typeof animalExitsReportSchema>

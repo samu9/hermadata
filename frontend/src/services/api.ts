@@ -12,7 +12,9 @@ import {
     AnimalDocUpload,
     AnimalDocument,
     AnimalEdit,
+    AnimalEntriesReportSchema,
     AnimalExit,
+    AnimalExitsReportSchema,
     AnimalSearchQuery,
     NewAnimalAdoption,
     NewAnimalEntry,
@@ -275,6 +277,34 @@ class ApiService {
 
     async animalDaysReport(data: AnimalDaysRequest) {
         const result = await this.inst.get(ApiEndpoints.animal.daysReport, {
+            params: data,
+            responseType: "blob",
+        })
+        console.log(result.headers)
+        const filename = result.headers["x-filename"].toString()
+        const filetype = result.headers["content-type"]?.toString()
+        const url = window.URL.createObjectURL(
+            new Blob([result.data], { type: filetype })
+        )
+        return { url, filename }
+    }
+
+    async animalEntriesReport(data: AnimalEntriesReportSchema) {
+        const result = await this.inst.get(ApiEndpoints.animal.entriesReport, {
+            params: data,
+            responseType: "blob",
+        })
+        console.log(result.headers)
+        const filename = result.headers["x-filename"].toString()
+        const filetype = result.headers["content-type"]?.toString()
+        const url = window.URL.createObjectURL(
+            new Blob([result.data], { type: filetype })
+        )
+        return { url, filename }
+    }
+
+    async animalExitsReport(data: AnimalExitsReportSchema) {
+        const result = await this.inst.get(ApiEndpoints.animal.exitsReport, {
             params: data,
             responseType: "blob",
         })
