@@ -234,7 +234,7 @@ class ReportGenerator:
             )
 
         filename = (
-            f"ingressi_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}"
+            f"uscite_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}"
             f".{DEFAULT_EXTENSIONS[format]}"
         )
 
