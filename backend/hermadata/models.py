@@ -1,6 +1,6 @@
-from typing import Generic, Iterable, TypeVar
+from typing import Annotated, Generic, Iterable, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, BeforeValidator, constr
 from sqlalchemy import or_
 from sqlalchemy.orm import MappedColumn
 
@@ -55,3 +55,16 @@ class ApiError(BaseModel):
     code: ApiErrorCode
     content: dict
     message: str | None = None
+
+
+def int_to_sex(v: int | str) -> str:
+    if isinstance(v, int):
+        if v > 1:
+            raise ValueError("int value representing sex must be 0 or 1")
+        if v == 0:
+            return "M"
+        if v == 1:
+            return "F"
+
+
+Sex = Annotated[constr(pattern=r"[MF]"), BeforeValidator(int_to_sex)]

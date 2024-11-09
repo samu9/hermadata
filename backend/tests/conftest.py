@@ -6,12 +6,12 @@ from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from sqlalchemy import Engine, create_engine, select, text
+from sqlalchemy import Engine, create_engine, delete, select, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
 from hermadata.constants import EntryType, StorageType
-from hermadata.database.models import Animal
+from hermadata.database.models import Adopter, Adoption, Animal, AnimalEntry
 from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.adopter_repository import SQLAdopterRepository
@@ -238,3 +238,11 @@ def app(db_session):
     test_app = TestClient(app)
 
     yield test_app
+
+
+@pytest.fixture(scope="function")
+def empty_db(db_session: Session):
+    db_session.execute(delete(AnimalEntry))
+    db_session.execute(delete(Animal))
+    db_session.execute(delete(Adoption))
+    db_session.execute(delete(Adopter))

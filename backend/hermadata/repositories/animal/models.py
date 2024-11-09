@@ -1,17 +1,29 @@
 from collections import namedtuple
 from datetime import date, datetime
 from enum import Enum
-from typing import Annotated, Any, Callable, Iterable, NamedTuple, Optional
+from typing import (
+    Annotated,
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    NamedTuple,
+    Optional,
+    TypeVar,
+)
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
 from hermadata.constants import DocKindCode, EntryType, ExitType
 from hermadata.database.models import Animal, AnimalEntry
-from hermadata.models import PaginationQuery
+from hermadata.models import PaginationQuery, Sex
 
 rescue_city_code_PATTERN = r"[A-Z]\d{3}"
+
+T = TypeVar("T")
 
 
 class WhereClauseMapItem(NamedTuple):
@@ -241,10 +253,22 @@ class AnimalExit(BaseModel):
     adopter_id: int | None = None  # TODO: add validation based on exit_type
 
 
-class AnimalDaysQuery(BaseModel):
+class ExtractionQuery(BaseModel):
     from_date: date
     to_date: date
     city_code: str
+
+
+class AnimalDaysQuery(ExtractionQuery):
+    pass
+
+
+class AnimalEntriesQuery(ExtractionQuery):
+    entry_type: EntryType | None = None
+
+
+class AnimalExitsQuery(ExtractionQuery):
+    exit_type: ExitType | None = None
 
 
 class AnimalDaysItem(BaseModel):
@@ -256,6 +280,30 @@ class AnimalDaysItem(BaseModel):
 class AnimalDaysResult(BaseModel):
     items: list[AnimalDaysItem]
     total_days: int
+
+
+class AnimalReportBaseItem(BaseModel):
+    animal_race: str
+    animal_name: str | None = None
+    animal_chip_code: str | None = None
+    animal_birth_date: date | None = None
+    animal_sex: Sex | None = None
+
+
+class AnimalEntriesItem(AnimalReportBaseItem):
+    entry_date: date
+    entry_type: EntryType
+    entry_city: str
+
+
+class AnimalReportResult(BaseModel, Generic[T]):
+    items: list[T]
+    total: int
+
+
+class AnimalExitsItem(AnimalReportBaseItem):
+    exit_date: date
+    exit_type: ExitType
 
 
 class AddMedicalRecordModel(BaseModel):

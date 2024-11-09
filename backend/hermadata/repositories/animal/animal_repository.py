@@ -27,11 +27,16 @@ from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalDaysResult,
     AnimalDocumentModel,
+    AnimalEntriesItem,
+    AnimalEntriesQuery,
     AnimalEntryModel,
     AnimalExit,
+    AnimalExitsItem,
+    AnimalExitsQuery,
     AnimalGetQuery,
     AnimalModel,
     AnimalQueryModel,
+    AnimalReportResult,
     AnimalSearchModel,
     AnimalSearchResult,
     AnimalSearchResultQuery,
@@ -616,6 +621,122 @@ class SQLAnimalRepository(SQLBaseRepository):
             items=list(result_map.values()),
         )
 
+        return result
+
+    def count_animal_entries(
+        self, query: AnimalEntriesQuery
+    ) -> AnimalReportResult[AnimalEntriesItem]:
+        stmt = (
+            select(
+                Animal.id,
+                Race.name,
+                Animal.name,
+                Animal.birth_date,
+                Animal.sex,
+                Animal.chip_code,
+                AnimalEntry.entry_date,
+                AnimalEntry.entry_type,
+                Comune.name,
+            )
+            .where(
+                AnimalEntry.entry_date.is_not(None),
+                AnimalEntry.entry_date <= query.to_date,
+                AnimalEntry.entry_date >= query.from_date,
+            )
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+            .join(Race, Race.id == Animal.race_id)
+            .join(Comune, AnimalEntry.origin_city_code == Comune.id)
+        )
+        if query.city_code:
+            stmt = stmt.where(AnimalEntry.origin_city_code == query.city_code)
+
+        if query.entry_type:
+            stmt = stmt.where(AnimalEntry.entry_type == query.entry_type)
+
+        entries = self.session.execute(stmt).all()
+
+        result = AnimalReportResult[AnimalEntriesItem](
+            items=[
+                AnimalEntriesItem(
+                    animal_race=animal_race,
+                    animal_chip_code=animal_chip_code,
+                    animal_name=animal_name,
+                    animal_sex=animal_sex,
+                    animal_birth_date=animal_birth_date,
+                    entry_date=animal_entry_date,
+                    entry_type=entry_type,
+                    entry_city=entry_city,
+                )
+                for (
+                    animal_id,
+                    animal_race,
+                    animal_name,
+                    animal_birth_date,
+                    animal_sex,
+                    animal_chip_code,
+                    animal_entry_date,
+                    entry_type,
+                    entry_city,
+                ) in entries
+            ],
+            total=len(entries),
+        )
+        return result
+
+    def count_animal_exits(
+        self, query: AnimalExitsQuery
+    ) -> AnimalReportResult[AnimalExitsItem]:
+        stmt = (
+            select(
+                Animal.id,
+                Race.name,
+                Animal.name,
+                Animal.birth_date,
+                Animal.sex,
+                Animal.chip_code,
+                AnimalEntry.exit_date,
+                AnimalEntry.exit_type,
+            )
+            .where(
+                AnimalEntry.exit_date.is_not(None),
+                AnimalEntry.exit_date <= query.to_date,
+                AnimalEntry.exit_date >= query.from_date,
+            )
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+            .join(Race, Race.id == Animal.race_id)
+        )
+        if query.city_code:
+            stmt = stmt.where(AnimalEntry.origin_city_code == query.city_code)
+
+        if query.exit_type:
+            stmt = stmt.where(AnimalEntry.exit_type == query.exit_type)
+
+        exits = self.session.execute(stmt).all()
+
+        result = AnimalReportResult[AnimalExitsItem](
+            items=[
+                AnimalExitsItem(
+                    animal_race=animal_race,
+                    animal_chip_code=animal_chip_code,
+                    animal_name=animal_name,
+                    animal_sex=animal_sex,
+                    animal_birth_date=animal_birth_date,
+                    exit_date=animal_exit_date,
+                    exit_type=exit_type,
+                )
+                for (
+                    animal_id,
+                    animal_race,
+                    animal_name,
+                    animal_birth_date,
+                    animal_sex,
+                    animal_chip_code,
+                    animal_exit_date,
+                    exit_type,
+                ) in exits
+            ],
+            total=len(exits),
+        )
         return result
 
     def add_medical_record(self, animal_id, data: AddMedicalRecordModel):

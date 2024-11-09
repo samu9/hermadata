@@ -11,7 +11,9 @@ from hermadata.repositories.animal.animal_repository import (
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalDocumentModel,
+    AnimalEntriesQuery,
     AnimalExit,
+    AnimalExitsQuery,
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
@@ -161,7 +163,35 @@ def serve_animal_days_report(
     query: AnimalDaysQuery = Depends(),
     service: AnimalService = Depends(animal_service),
 ):
-    filename, report = service.animal_days_report(query)
+    filename, report = service.days_report(query)
+
+    return Response(
+        content=report,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
+        headers={"X-filename": filename},
+    )
+
+
+@router.get("/entries/report")
+def serve_animal_entries_report(
+    query: AnimalEntriesQuery = Depends(),
+    service: AnimalService = Depends(animal_service),
+):
+    filename, report = service.entries_report(query)
+
+    return Response(
+        content=report,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
+        headers={"X-filename": filename},
+    )
+
+
+@router.get("/exits/report")
+def serve_animal_exits_report(
+    query: AnimalExitsQuery = Depends(),
+    service: AnimalService = Depends(animal_service),
+):
+    filename, report = service.exits_report(query)
 
     return Response(
         content=report,
