@@ -51,6 +51,7 @@ const SideMenu = () => {
                         <MenuElement to="/animal" label="Animali" />
                         <MenuElement to="/exports" label="Estrazioni" />
                         <MenuElement to="/adopters" label="Adottanti" />
+                        <MenuElement to="/vets" label="Veterinari" />
                     </div>
                 </div>
             </div>

@@ -35,6 +35,7 @@ import { DocKind, NewDocKind } from "../models/docs.schema"
 import { Race, raceSchema } from "../models/race.schema"
 import { IntUtilItem } from "../models/util.schema"
 import ApiEndpoints from "./apiEndpoints"
+import { PaginatedVetSearchResult, VetSearch } from "../models/vet.schema"
 
 class ApiService {
     inst: AxiosInstance
@@ -315,6 +316,15 @@ class ApiService {
             new Blob([result.data], { type: filetype })
         )
         return { url, filename }
+    }
+
+    async searchVet(query: VetSearch): Promise<PaginatedVetSearchResult> {
+        const result = await this.get<PaginatedVetSearchResult>(
+            ApiEndpoints.vet.search,
+            query
+        )
+
+        return result
     }
 }
 

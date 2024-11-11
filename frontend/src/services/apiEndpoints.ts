@@ -44,5 +44,9 @@ const ApiEndpoints = {
         getAnimalSizes: "/util/animal-size",
         getAnimalFurTypes: "/util/animal-fur",
     },
+    vet: {
+        create: "/vet",
+        search: "/vet/search",
+    },
 }
 export default ApiEndpoints

@@ -1,17 +1,17 @@
 import { Outlet, RouteObject, UIMatch } from "react-router-dom"
 import App from "../App"
-import NewAdopterForm from "../components/adopter/NewAdopterForm"
 import AnimalDocs from "../components/animal/AnimalDocs"
 import AnimalEditForm from "../components/animal/AnimalEditForm"
 import AnimalEvents from "../components/animal/AnimalEvents"
 import AnimalExitForm from "../components/animal/AnimalExitForm"
 import AnimalOverview from "../components/animal/AnimalOverview"
+import AdoptersPage from "../pages/AdoptersPage"
 import AnimalAdoptionPage from "../pages/AnimalAdoptionPage"
 import AnimalProfilePage from "../pages/AnimalProfilePage"
 import AnimalsPage from "../pages/AnimalsPage"
-import HomePage from "../pages/HomePage"
 import DataExtractionsPage from "../pages/DataExtractionsPage"
-import AdoptersPage from "../pages/AdoptersPage"
+import HomePage from "../pages/HomePage"
+import VetsPage from "../pages/VetsPage"
 
 const routes: RouteObject[] = [
     {
@@ -64,6 +64,10 @@ const routes: RouteObject[] = [
             {
                 path: "adopters",
                 element: <AdoptersPage />,
+            },
+            {
+                path: "vets",
+                element: <VetsPage />,
             },
             {
                 path: "exports",
