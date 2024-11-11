@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from hermadata.repositories.vet_repository import (
     SQLVetRepository,
     VetModel,
-    VetQuery,
+    SearchVetQuery,
 )
 from hermadata.initializations import vet_repository
 
@@ -19,9 +19,9 @@ def create_vet(
     return adopter
 
 
-@router.get("/", response_model=list[VetModel])
-def search_adopter(
-    query: VetQuery = Depends(),
+@router.get("/search", response_model=list[VetModel])
+def search_vet(
+    query: SearchVetQuery = Depends(),
     repo: SQLVetRepository = Depends(vet_repository),
 ):
     result = repo.search(query)
