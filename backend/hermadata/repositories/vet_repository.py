@@ -1,6 +1,7 @@
 from pydantic import BaseModel, constr
 from sqlalchemy import insert, select
 from hermadata.database.models import Vet
+from hermadata.models import SearchQuery
 from hermadata.repositories import SQLBaseRepository
 
 
@@ -14,9 +15,9 @@ class VetModel(BaseModel):
     surname: str | None = None
 
 
-class VetQuery(BaseModel):
-    fiscal_code: str
-    business_name: str
+class SearchVetQuery(SearchQuery):
+    fiscal_code: str | None = None
+    business_name: str | None = None
 
 
 class SQLVetRepository(SQLBaseRepository):
@@ -31,7 +32,7 @@ class SQLVetRepository(SQLBaseRepository):
 
         return VetModel(**dump, id=adopter_id)
 
-    def search(self, query: VetQuery) -> list[VetModel]:
+    def search(self, query: SearchVetQuery) -> list[VetModel]:
         where = []
         if query.fiscal_code is not None:
             where.append(Vet.fiscal_code.like(f"{query.fiscal_code}%"))
