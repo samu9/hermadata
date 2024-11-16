@@ -195,8 +195,8 @@ class Vet(Base):
     business_name: Mapped[str] = mapped_column(String(100))
     fiscal_code: Mapped[str] = mapped_column(String(100))
 
-    nome: Mapped[str] = mapped_column(String(100), nullable=True)
-    cognome: Mapped[str] = mapped_column(String(100), nullable=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=True)
+    surname: Mapped[str] = mapped_column(String(100), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
