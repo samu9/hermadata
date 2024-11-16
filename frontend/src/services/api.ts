@@ -35,7 +35,12 @@ import { DocKind, NewDocKind } from "../models/docs.schema"
 import { Race, raceSchema } from "../models/race.schema"
 import { IntUtilItem } from "../models/util.schema"
 import ApiEndpoints from "./apiEndpoints"
-import { PaginatedVetSearchResult, VetSearch } from "../models/vet.schema"
+import {
+    NewVet,
+    PaginatedVetSearchResult,
+    Vet,
+    VetSearch,
+} from "../models/vet.schema"
 
 class ApiService {
     inst: AxiosInstance
@@ -323,6 +328,12 @@ class ApiService {
             ApiEndpoints.vet.search,
             query
         )
+
+        return result
+    }
+
+    async newVet(data: NewVet): Promise<Vet> {
+        const result = await this.post<Vet>(ApiEndpoints.vet.create, data)
 
         return result
     }
