@@ -2,6 +2,15 @@ import { Divider } from "primereact/divider"
 import { MenuItem } from "primereact/menuitem"
 import { NavLink, Navigate } from "react-router-dom"
 import LoggedUserCard from "../LoggedUserCard"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { IconProp } from "@fortawesome/fontawesome-svg-core"
+import {
+    faDatabase,
+    faDog,
+    faHome,
+    faPerson,
+    faUserDoctor,
+} from "@fortawesome/free-solid-svg-icons"
 
 type CustomMenuItem = MenuItem & { route?: string }
 
@@ -19,10 +28,18 @@ const menuItems: CustomMenuItem[] = [
 type MenuElementProps = {
     to: string
     label: string | React.ReactNode
+    icon?: IconProp
 }
 const MenuElement = (props: MenuElementProps) => (
     <NavLink to={props.to}>
-        <div className="p-2 w-full bg-slate-200 rounded hover:bg-slate-50 font-light">
+        <div className="p-2 w-full bg-slate-200 rounded hover:bg-slate-50 font-light flex gap-2 items-center">
+            {props.icon && (
+                <FontAwesomeIcon
+                    fixedWidth
+                    className="text-sm text-gray-700"
+                    icon={props.icon}
+                />
+            )}
             {props.label}
         </div>
     </NavLink>
@@ -46,12 +63,28 @@ const SideMenu = () => {
                 <Divider />
                 <div>
                     <div className="mb-2 font-bold text-slate-700">Menu</div>
-                    <div className="flex flex-col gap-1">
-                        <MenuElement to="/" label="Home" />
-                        <MenuElement to="/animal" label="Animali" />
-                        <MenuElement to="/exports" label="Estrazioni" />
-                        <MenuElement to="/adopters" label="Adottanti" />
-                        <MenuElement to="/vets" label="Veterinari" />
+                    <div className="flex flex-col gap-2">
+                        <MenuElement icon={faHome} to="/" label="Home" />
+                        <MenuElement
+                            icon={faDog}
+                            to="/animal"
+                            label="Animali"
+                        />
+                        <MenuElement
+                            icon={faPerson}
+                            to="/adopters"
+                            label="Adottanti"
+                        />
+                        <MenuElement
+                            icon={faUserDoctor}
+                            to="/vets"
+                            label="Veterinari"
+                        />
+                        <MenuElement
+                            icon={faDatabase}
+                            to="/exports"
+                            label="Estrazioni"
+                        />
                     </div>
                 </div>
             </div>
