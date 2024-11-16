@@ -241,6 +241,7 @@ const AnimalList = () => {
                 sortOrder={lazyState.sortOrder as SortOrder}
                 totalRecords={totalRecords}
                 lazy
+                emptyMessage="Nessun risultato"
                 rowClassName={(rowData) =>
                     classNames({
                         "bg-slate-100":

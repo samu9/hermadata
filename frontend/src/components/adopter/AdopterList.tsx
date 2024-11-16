@@ -11,6 +11,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { AdopterSearch } from "../../models/adopter.schema"
 import { useAdopterSearchQuery } from "../../queries"
+import { FilterMatchMode } from "primereact/api"
 
 type LazyTableState = {
     first: number
@@ -29,10 +30,10 @@ const AdopterList = () => {
         rows: 10,
         page: 1,
         filters: {
-            // race_id: {
-            //     matchMode: FilterMatchMode.EQUALS,
-            //     value: null,
-            // },
+            name: {
+                matchMode: FilterMatchMode.STARTS_WITH,
+                value: null,
+            },
         },
     })
     const [queryData, setQueryData] = useState<AdopterSearch>({
@@ -90,6 +91,8 @@ const AdopterList = () => {
                 sortOrder={lazyState.sortOrder as SortOrder}
                 totalRecords={totalRecords}
                 lazy
+                emptyMessage="Nessun risultato"
+
                 // rowClassName={(rowData) => classNames({})}
             >
                 <Column
