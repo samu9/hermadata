@@ -1,5 +1,6 @@
+import NewItemButton from "../components/NewItemButton"
 import { PageTitle } from "../components/typography"
-import NewVetButton from "../components/vet/NewVetButton"
+import NewVetForm from "../components/vet/NewVetForm"
 import VetList from "../components/vet/VetList"
 
 const VetsPage = () => {
@@ -7,7 +8,11 @@ const VetsPage = () => {
         <div>
             <PageTitle>Veterinari</PageTitle>
             <VetList />
-            <NewVetButton />
+            <NewItemButton
+                label="Nuovo veterinario"
+                successLabel="Nuovo veterinario"
+                formComponent={<NewVetForm />}
+            />
         </div>
     )
 }
