@@ -1,11 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
-import { useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 import { apiService } from "../../main"
 import { NewVet, newVetSchema, Vet } from "../../models/vet.schema"
-import { useComuniQuery } from "../../queries"
 import ControlledInputText from "../forms/ControlledInputText"
 
 type Props = {
@@ -13,12 +11,6 @@ type Props = {
 }
 
 const NewVetForm = (props: Props) => {
-    const [provinciaNascita, setProvinciaNascita] = useState<string>()
-    const [provinciaResidenza, setProvinciaResidenza] = useState<string>()
-
-    const comuneNascitaQuery = useComuniQuery(provinciaNascita)
-    const comuneResidenzaQuery = useComuniQuery(provinciaResidenza)
-
     const form = useForm<NewVet>({
         resolver: zodResolver(newVetSchema),
     })
