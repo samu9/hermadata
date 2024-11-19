@@ -10,7 +10,7 @@ import { InputText } from "primereact/inputtext"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { AdopterSearch } from "../../models/adopter.schema"
-import { useAdopterSearchQuery, useVetSearchQuery } from "../../queries"
+import { useVetSearchQuery } from "../../queries"
 
 type LazyTableState = {
     first: number
@@ -89,22 +89,6 @@ const VetList = () => {
                 // rowClassName={(rowData) => classNames({})}
             >
                 <Column
-                    field="name"
-                    header="Nome"
-                    filter
-                    showFilterMatchModes={false}
-                    filterElement={textFilterTemplate}
-                    filterField="name"
-                />
-                <Column
-                    field="surname"
-                    header="Cognome"
-                    filter
-                    showFilterMatchModes={false}
-                    filterElement={textFilterTemplate}
-                    filterField="surname"
-                />
-                <Column
                     field="business_name"
                     header="Denominazione"
                     filter
@@ -119,6 +103,22 @@ const VetList = () => {
                     showFilterMatchModes={false}
                     filterElement={textFilterTemplate}
                     filterField="fiscal_code"
+                />
+                <Column
+                    field="name"
+                    header="Nome"
+                    filter
+                    showFilterMatchModes={false}
+                    filterElement={textFilterTemplate}
+                    filterField="name"
+                />
+                <Column
+                    field="surname"
+                    header="Cognome"
+                    filter
+                    showFilterMatchModes={false}
+                    filterElement={textFilterTemplate}
+                    filterField="surname"
                 />
             </DataTable>
         </div>
