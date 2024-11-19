@@ -1,7 +1,7 @@
 from pydantic import BaseModel, constr
-from sqlalchemy import insert, select
-from hermadata.database.models import Vet
-from hermadata.models import SearchQuery
+from sqlalchemy import func, insert, select
+from hermadata.database.models import MedicalRecord, Vet
+from hermadata.models import PaginationResult, SearchQuery
 from hermadata.repositories import SQLBaseRepository
 
 
@@ -18,6 +18,13 @@ class VetModel(BaseModel):
 class SearchVetQuery(SearchQuery):
     fiscal_code: str | None = None
     business_name: str | None = None
+
+
+class AddMedicalRecordModel(BaseModel):
+    causal: str
+    price: int
+    animal_id: int
+    performed_at: date
 
 
 class SQLVetRepository(SQLBaseRepository):
@@ -46,4 +53,9 @@ class SQLVetRepository(SQLBaseRepository):
             VetModel.model_validate(r, from_attributes=True) for r in result
         ]
 
-        return adopters
+        return PaginationResult(items=adopters, total=total)
+
+    def add_medical_record(self, vet_id: int, data: AddMedicalRecordModel):
+        record = MedicalRecord(**data.model_dump(), vet_id=vet_id)
+        self.session.add(record)
+        self.session.flush()
