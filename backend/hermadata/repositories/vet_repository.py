@@ -37,8 +37,13 @@ class SQLVetRepository(SQLBaseRepository):
         if query.fiscal_code is not None:
             where.append(Vet.fiscal_code.like(f"{query.fiscal_code}%"))
 
+        total = self.session.execute(
+            select(func.count("*")).select_from(Vet).where(*where)
+        ).scalar_one()
         result = self.session.execute(select(Vet).where(*where)).scalars().all()
 
-        adopters = [Vet.model_validate(r, from_attributes=True) for r in result]
+        adopters = [
+            VetModel.model_validate(r, from_attributes=True) for r in result
+        ]
 
         return adopters
