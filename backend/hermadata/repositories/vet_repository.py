@@ -1,3 +1,4 @@
+from datetime import date
 from pydantic import BaseModel, constr
 from sqlalchemy import func, insert, select
 from hermadata.database.models import MedicalRecord, Vet
