@@ -4,12 +4,16 @@ import {
     paginationQuerySchema,
 } from "./pagination.schema"
 
+const FISCAL_CODE = z.union([
+    z.string().min(16).max(16),
+    z.string().regex(/^\d{9}$/),
+])
 export const newVetSchema = z.object({
-    name: z.string().min(1),
-    surname: z.string().min(1),
+    name: z.string().nullish(),
+    surname: z.string().nullish(),
     business_name: z.string(),
-    fiscal_code: z.string().min(16).max(16),
-    phone: z.string().min(9),
+    fiscal_code: FISCAL_CODE,
+    phone: z.string().min(9).nullable(),
 })
 
 export type NewVet = z.infer<typeof newVetSchema>
@@ -23,7 +27,7 @@ export type Vet = z.infer<typeof vetSchema>
 export const vetSearchSchema = paginationQuerySchema.extend({
     name: z.string().nullish(),
     surname: z.string().nullish(),
-    fiscal_code: z.string().nullish(),
+    fiscal_code: FISCAL_CODE.nullish(),
     sort_field: z.string().nullish(),
     sort_order: z.number().nullish(),
 })
