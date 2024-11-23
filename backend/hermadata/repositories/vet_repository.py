@@ -1,7 +1,7 @@
 from datetime import date
 from pydantic import BaseModel, constr
 from sqlalchemy import func, insert, select
-from hermadata.database.models import MedicalRecord, Vet
+from hermadata.database.models import VetServiceRecord, Vet
 from hermadata.models import PaginationResult, SearchQuery
 from hermadata.repositories import SQLBaseRepository
 
@@ -56,7 +56,7 @@ class SQLVetRepository(SQLBaseRepository):
 
         return PaginationResult(items=adopters, total=total)
 
-    def add_medical_record(self, vet_id: int, data: AddMedicalRecordModel):
-        record = MedicalRecord(**data.model_dump(), vet_id=vet_id)
+    def add_vet_service_record(self, vet_id: int, data: AddMedicalRecordModel):
+        record = VetServiceRecord(**data.model_dump(), vet_id=vet_id)
         self.session.add(record)
         self.session.flush()
