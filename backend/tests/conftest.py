@@ -11,7 +11,15 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
 from hermadata.constants import EntryType, StorageType
-from hermadata.database.models import Adopter, Adoption, Animal, AnimalEntry
+from hermadata.database.models import (
+    Adopter,
+    Adoption,
+    Animal,
+    AnimalDocument,
+    AnimalEntry,
+    AnimalLog,
+    Document,
+)
 from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.adopter_repository import SQLAdopterRepository
@@ -34,7 +42,7 @@ TABLES = [
     "animal_document",
     "document",
     "adopter",
-    "medical_record",
+    "vet_service_record",
     "vet",
     "animal",
 ]
@@ -243,6 +251,9 @@ def app(db_session):
 @pytest.fixture(scope="function")
 def empty_db(db_session: Session):
     db_session.execute(delete(AnimalEntry))
+    db_session.execute(delete(AnimalLog))
+    db_session.execute(delete(AnimalDocument))
+    db_session.execute(delete(Document))
     db_session.execute(delete(Animal))
     db_session.execute(delete(Adoption))
     db_session.execute(delete(Adopter))
