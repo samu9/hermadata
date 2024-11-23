@@ -129,3 +129,20 @@ class DocKindCode(Enum):
     attribuzione_chip = "C"
     affido = "AF"
     adozione = "AD"
+
+
+class RecurrenceType(IntEnum):
+    DAILY = auto()
+    WEEKLY = auto()
+    MONTHLY = auto()
+    YEARLY = auto()
+    CUSTOM = auto()
+
+
+RECURRENCE_LABELS: dict[RecurrenceType, str] = {
+    RecurrenceType.DAILY: "giornaliera",
+    RecurrenceType.WEEKLY: "settimanale",
+    RecurrenceType.MONTHLY: "mensile",
+    RecurrenceType.YEARLY: "annuale",
+    RecurrenceType.CUSTOM: "custom",
+}
