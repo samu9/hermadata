@@ -1,6 +1,6 @@
 from typing import Annotated, Generic, Iterable, TypeVar
 
-from pydantic import BaseModel, BeforeValidator, constr
+from pydantic import BaseModel, BeforeValidator, StringConstraints, constr
 from sqlalchemy import or_
 from sqlalchemy.orm import MappedColumn
 
@@ -65,6 +65,9 @@ def int_to_sex(v: int | str) -> str:
             return "M"
         if v == 1:
             return "F"
+    return v
 
 
-Sex = Annotated[constr(pattern=r"[MF]"), BeforeValidator(int_to_sex)]
+Sex = Annotated[
+    str, StringConstraints(pattern=r"[MF]"), BeforeValidator(int_to_sex)
+]
