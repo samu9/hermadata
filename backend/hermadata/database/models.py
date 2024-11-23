@@ -410,11 +410,13 @@ class Therapy(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
+    animal_id: Mapped[int] = mapped_column(ForeignKey(Animal.id))
+
+    vet_id: Mapped[int] = mapped_column(ForeignKey(Vet.id), nullable=True)
 
     name: Mapped[str] = mapped_column(String(100))
 
-    notes: Mapped[str] = mapped_column(Text())
+    notes: Mapped[str] = mapped_column(Text(), nullable=True)
 
     from_date: Mapped[datetime] = mapped_column(nullable=True)
 
@@ -436,12 +438,6 @@ class TherapyRecord(Base):
     # TODO: add user id which performed the recurrent therapy
     __tablename__ = "therapy_record"
     id: Mapped[int] = mapped_column(primary_key=True)
-
-    # vet id needed?
-
-    vet_service_record_id = mapped_column(
-        ForeignKey(VetServiceRecord.id), nullable=True
-    )
 
     notes: Mapped[str] = mapped_column(Text())
 

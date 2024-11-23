@@ -25,8 +25,9 @@ def upgrade() -> None:
         "therapy",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("animal_id", sa.Integer(), nullable=False),
+        sa.Column("vet_id", sa.Integer(), nullable=True),
         sa.Column("name", sa.String(length=100), nullable=False),
-        sa.Column("notes", sa.Text(), nullable=False),
+        sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("from_date", sa.DateTime(), nullable=True),
         sa.Column("to_date", sa.DateTime(), nullable=True),
         sa.Column("recurrence", sa.Integer(), nullable=True),
@@ -42,22 +43,21 @@ def upgrade() -> None:
             ["animal_id"],
             ["animal.id"],
         ),
+        sa.ForeignKeyConstraint(
+            ["vet_id"],
+            ["vet.id"],
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "therapy_record",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("vet_service_record_id", sa.Integer(), nullable=True),
         sa.Column("notes", sa.Text(), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(),
             server_default=sa.text("now()"),
             nullable=False,
-        ),
-        sa.ForeignKeyConstraint(
-            ["vet_service_record_id"],
-            ["vet_service_record.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
