@@ -420,7 +420,9 @@ class Therapy(Base):
 
     to_date: Mapped[datetime] = mapped_column(nullable=True)
 
-    recurrency: Mapped[int] = mapped_column(nullable=True)
+    recurrence: Mapped[int] = mapped_column(nullable=True)
+
+    custom_recurrence_days: Mapped[int] = mapped_column(nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()

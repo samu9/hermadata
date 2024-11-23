@@ -29,7 +29,8 @@ def upgrade() -> None:
         sa.Column("notes", sa.Text(), nullable=False),
         sa.Column("from_date", sa.DateTime(), nullable=True),
         sa.Column("to_date", sa.DateTime(), nullable=True),
-        sa.Column("recurrency", sa.Integer(), nullable=True),
+        sa.Column("recurrence", sa.Integer(), nullable=True),
+        sa.Column("custom_recurrence_days", sa.Integer(), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(),
