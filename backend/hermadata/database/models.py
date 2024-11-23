@@ -206,8 +206,8 @@ class Vet(Base):
     )
 
 
-class MedicalRecord(Base):
-    __tablename__ = "medical_record"
+class VetServiceRecord(Base):
+    __tablename__ = "vet_service_record"
     id: Mapped[int] = mapped_column(primary_key=True)
 
     causal: Mapped[str] = mapped_column(String(100))
@@ -405,26 +405,47 @@ class AnimalDocument(Base):
 #     )
 
 
-# class Terapy(Base):
-#     __tablename__ = "terapy"
-#     id: Mapped[int] = mapped_column(primary_key=True)
+class Therapy(Base):
+    __tablename__ = "therapy"
 
-#     animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
-#     vet_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-#     med_name: Mapped[str] = mapped_column(String(100))
+    animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
 
-#     notes: Mapped[str] = mapped_column(Text())
+    name: Mapped[str] = mapped_column(String(100))
 
-#     from_date: Mapped[datetime] = mapped_column(nullable=True)
-#     to_date: Mapped[datetime] = mapped_column(nullable=True)
+    notes: Mapped[str] = mapped_column(Text())
 
-#     created_at: Mapped[datetime] = mapped_column(
-#         DateTime(), server_default=func.now()
-#     )
-#     updated_at: Mapped[datetime] = mapped_column(
-#         DateTime(), server_onupdate=func.now(), nullable=True
-#     )
+    from_date: Mapped[datetime] = mapped_column(nullable=True)
+
+    to_date: Mapped[datetime] = mapped_column(nullable=True)
+
+    recurrency: Mapped[int] = mapped_column(nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+
+class TherapyRecord(Base):
+    # TODO: add user id which performed the recurrent therapy
+    __tablename__ = "therapy_record"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    # vet id needed?
+
+    vet_service_record_id = mapped_column(
+        ForeignKey(VetServiceRecord.id), nullable=True
+    )
+
+    notes: Mapped[str] = mapped_column(Text())
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
 
 
 class Provincia(Base):
