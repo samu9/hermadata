@@ -57,7 +57,6 @@ class Animal(Base):
     size: Mapped[AnimalSize | None] = mapped_column(Integer(), nullable=True)
     fur: Mapped[AnimalFur | None] = mapped_column(Integer(), nullable=True)
     # features: Mapped[str] = mapped_column(String(100), nullable=True)
-    # medical_treatments: Mapped[str] = mapped_column(String(100), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
@@ -72,7 +71,9 @@ class Animal(Base):
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
     img_path: Mapped[str] = mapped_column(String(100), nullable=True)
 
-    entries: Mapped[list["AnimalEntry"]] = relationship(back_populates="animal")
+    entries: Mapped[list["AnimalEntry"]] = relationship(
+        back_populates="animal"
+    )
     adoptions: Mapped[list["Adoption"]] = relationship(back_populates="animal")
     logs: Mapped[list["AnimalLog"]] = relationship(back_populates="animal")
 
@@ -115,7 +116,8 @@ class AnimalLog(Base):
 
     data: Mapped[dict] = mapped_column(JSON, nullable=True)
 
-    # user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
+    # user_id: Mapped[int] = mapped_column(ForeignKey("users.id"),
+    #  nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
@@ -252,7 +254,9 @@ class Breed(Base):
         DateTime(), server_onupdate=func.now(), nullable=True
     )
 
-    __table_args__ = (UniqueConstraint("name", "race_id", name="unique_breed"),)
+    __table_args__ = (
+        UniqueConstraint("name", "race_id", name="unique_breed"),
+    )
 
 
 # class User(Base):
