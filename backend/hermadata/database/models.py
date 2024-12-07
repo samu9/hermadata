@@ -94,6 +94,9 @@ class AnimalEntry(Base):
     exit_date: Mapped[date] = mapped_column(Date(), nullable=True)
     exit_type: Mapped[ExitType] = mapped_column(String(1), nullable=True)
 
+    entry_notes: Mapped[str] = mapped_column(Text, nullable=True)
+    exit_notes: Mapped[str] = mapped_column(Text, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )
