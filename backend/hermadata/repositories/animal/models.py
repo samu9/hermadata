@@ -17,7 +17,12 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
-from hermadata.constants import DocKindCode, EntryType, ExitType
+from hermadata.constants import (
+    DocKindCode,
+    EntryType,
+    ExitType,
+    RecurrenceType,
+)
 from hermadata.database.models import Animal, AnimalEntry
 from hermadata.models import PaginationQuery, Sex
 
@@ -94,7 +99,9 @@ class AnimalSearchModel(PaginationQuery):
         "rescue_city_code": WhereClauseMapItem(
             lambda v: AnimalEntry.origin_city_code == v
         ),
-        "entry_type": WhereClauseMapItem(lambda v: AnimalEntry.entry_type == v),
+        "entry_type": WhereClauseMapItem(
+            lambda v: AnimalEntry.entry_type == v
+        ),
         "exit_type": WhereClauseMapItem(lambda v: AnimalEntry.exit_type == v),
         "race_id": WhereClauseMapItem(lambda v: Animal.race_id == v),
         "from_entry_date": WhereClauseMapItem(
@@ -103,7 +110,9 @@ class AnimalSearchModel(PaginationQuery):
         "to_entry_date": WhereClauseMapItem(
             lambda v: AnimalEntry.entry_date <= v
         ),
-        "from_created_at": WhereClauseMapItem(lambda v: Animal.created_at >= v),
+        "from_created_at": WhereClauseMapItem(
+            lambda v: Animal.created_at >= v
+        ),
         "to_created_at": WhereClauseMapItem(lambda v: Animal.created_at <= v),
         "present": WhereClauseMapItem(
             lambda v: (
@@ -336,3 +345,13 @@ class AdoptionModel(BaseModel):
     id: int
     adopter_id: int
     animal_id: int
+
+
+class MedicalActivityModel(BaseModel):
+    recurrence_type: RecurrenceType | None
+    recurrence_value: int | None
+    name: str
+    vet_id: int | None = None
+    from_date: date | None = None
+    to_date: date | None = None
+    notes: str | None = None

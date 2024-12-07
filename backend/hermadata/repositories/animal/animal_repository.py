@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import and_, func, insert, or_, select, update
+from sqlalchemy import Interval, and_, func, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from hermadata.constants import AnimalEvent, ExitType
 from hermadata.database.models import (
@@ -14,6 +14,8 @@ from hermadata.database.models import (
     AnimalLog,
     Comune,
     DocumentKind,
+    MedicalActivity,
+    MedicalActivityRecord,
     VetServiceRecord,
     Race,
 )
@@ -45,8 +47,10 @@ from hermadata.repositories.animal.models import (
     NewAnimalDocument,
     NewAnimalModel,
     NewEntryModel,
+    MedicalActivityModel,
     UpdateAnimalModel,
 )
+from hermadata.utils import recurrence_to_sql_interval
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +144,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             .values(returned_at=datetime.now().date())
         )
         if adoptions_update.rowcount == 1:
-            logger.info("adoption closed by new entry for animal %s", animal_id)
+            logger.info(
+                "adoption closed by new entry for animal %s", animal_id
+            )
         self.session.execute(
             update(AnimalEntry)
             .where(
@@ -242,7 +248,8 @@ class SQLAnimalRepository(SQLBaseRepository):
         self, query: AnimalSearchModel
     ) -> PaginationResult[AnimalSearchResult]:
         """
-        Return the minimum data set of a list of animals which match the search query.
+        Return the minimum data set of a list of
+        animals which match the search query.
         """
 
         where = query.as_where_clause()
@@ -343,7 +350,8 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         if entry_id is None:
             raise Exception(
-                f"complete entry: no entries to complete for animal {animal_id}"
+                "complete entry: no entries to complete "
+                f"for animal {animal_id}"
             )
         self.session.execute(
             update(AnimalEntry)
@@ -369,7 +377,11 @@ class SQLAnimalRepository(SQLBaseRepository):
             origin_city_name,
         ) = self.session.execute(
             select(
-                AnimalEntry, Animal.name, Animal.race_id, Race.name, Comune.name
+                AnimalEntry,
+                Animal.name,
+                Animal.race_id,
+                Race.name,
+                Comune.name,
             )
             .select_from(AnimalEntry)
             .join(Animal, AnimalEntry.animal_id == Animal.id)
@@ -463,7 +475,8 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalDocument.created_at,
             )
             .join(
-                DocumentKind, DocumentKind.id == AnimalDocument.document_kind_id
+                DocumentKind,
+                DocumentKind.id == AnimalDocument.document_kind_id,
             )
             .where(AnimalDocument.animal_id == animal_id)
         ).all()
@@ -547,7 +560,8 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         if not current_entry_id:
             raise Exception(
-                f"animal {data.animal_id} has no current entry with null exit date"
+                f"animal {data.animal_id} has no current "
+                "entry with null exit date"
             )
 
         adoption = Adoption(
@@ -739,12 +753,85 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
         return result
 
-    def add_medical_record(self, animal_id, data: AddMedicalRecordModel):
+    def add_vet_service_record(self, animal_id, data: AddMedicalRecordModel):
         medical_record = VetServiceRecord(
             animal_id=animal_id, **data.model_dump()
         )
         result = self.session.add(medical_record)
 
         self.session.flush()
+
+        return result
+
+    def new_medical_activity(self, animal_id, data: MedicalActivityModel):
+
+        return self.add_entity(
+            MedicalActivity,
+            animal_id=animal_id,
+            **data.model_dump(),
+        )
+
+    def add_medical_activity_record(self, therapy_id: int):
+        return self.add_entity(MedicalActivityRecord, therapy_id=therapy_id)
+
+    def get_pending_medical_activities(self, animal_id: int | None = None):
+        last_record = (
+            select(
+                MedicalActivityRecord.medical_activity_id,
+                func.max(MedicalActivityRecord.created_at).label(
+                    "last_record"
+                ),
+            )
+            .join(
+                MedicalActivity,
+                MedicalActivity.id
+                == MedicalActivityRecord.medical_activity_id,
+            )
+            .group_by(
+                MedicalActivity.animal_id,
+                MedicalActivityRecord.medical_activity_id,
+            )
+        ).subquery()
+
+        stmt = (
+            select(
+                MedicalActivity.id,
+                MedicalActivity.animal_id,
+                last_record.c.last_record,
+            )
+            .join(
+                last_record,
+                last_record.c.therapy_id == MedicalActivity.id,
+                isouter=True,
+            )
+            .join(Animal, Animal.id == MedicalActivity.animal_id)
+            .where(
+                or_(
+                    and_(
+                        MedicalActivity.to_date.is_not(None),
+                        MedicalActivity.to_date >= datetime.now().date(),
+                    ),
+                    MedicalActivity.to_date.is_(None),
+                ),
+                or_(
+                    and_(
+                        MedicalActivity.from_date.is_not(None),
+                        MedicalActivity.from_date < datetime.now().date(),
+                    ),
+                    MedicalActivity.from_date.is_(None),
+                ),
+                or_(
+                    last_record.c.therapy_id.is_(None),
+                    last_record.c.last_record
+                    >= func.now()
+                    - func.Interval(
+                        MedicalActivity.recurrence_type,
+                        MedicalActivity.recurrence_value,
+                    ),
+                ),
+            )
+        )
+
+        result = self.session.execute(stmt).all()
 
         return result
