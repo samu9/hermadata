@@ -1,10 +1,14 @@
 import logging
+from typing import Type, TypeVar
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from hermadata.dependancies import get_db_session
 
 logger = logging.getLogger(__name__)
+
+
+EntityT = TypeVar("EntityT")
 
 
 class BaseRepository:
@@ -17,7 +21,7 @@ class SQLBaseRepository(BaseRepository):
         self.session = session
         return self
 
-    def add_entity(self, model_class, **kwargs):
+    def add_entity(self, model_class: Type[EntityT], **kwargs) -> EntityT:
         """
         General method to add a new entity to the database.
 
