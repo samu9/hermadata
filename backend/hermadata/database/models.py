@@ -439,7 +439,7 @@ class MedicalActivity(Base):
 
 
 class MedicalActivityRecord(Base):
-    # TODO: add user id which performed the recurrent therapy
+    # TODO: add user id which performed the recurrent medical_activity
     __tablename__ = "medical_activity_record"
     id: Mapped[int] = mapped_column(primary_key=True)
 

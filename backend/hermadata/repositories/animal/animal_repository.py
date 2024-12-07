@@ -771,8 +771,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             **data.model_dump(),
         )
 
-    def add_medical_activity_record(self, therapy_id: int):
-        return self.add_entity(MedicalActivityRecord, therapy_id=therapy_id)
+    def add_medical_activity_record(self, medical_activity_id: int):
+        return self.add_entity(
+            MedicalActivityRecord, medical_activity_id=medical_activity_id
+        )
 
     def get_pending_medical_activities(self, animal_id: int | None = None):
         last_record = (
@@ -801,7 +803,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
             .join(
                 last_record,
-                last_record.c.therapy_id == MedicalActivity.id,
+                last_record.c.medical_activity_id == MedicalActivity.id,
                 isouter=True,
             )
             .join(Animal, Animal.id == MedicalActivity.animal_id)
@@ -821,7 +823,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                     MedicalActivity.from_date.is_(None),
                 ),
                 or_(
-                    last_record.c.therapy_id.is_(None),
+                    last_record.c.medical_activity_id.is_(None),
                     last_record.c.last_record
                     >= func.now()
                     - func.Interval(
