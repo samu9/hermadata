@@ -20,6 +20,7 @@ import { faAdd, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
 import { SubTitle } from "../typography"
 import NewAdopterForm from "../adopter/NewAdopterForm"
 import { Dialog } from "primereact/dialog"
+import ControlledTextarea from "../forms/ControlledTextarea"
 
 const AnimalExitForm = () => {
     const { id } = useParams()
@@ -104,6 +105,7 @@ const AnimalExitForm = () => {
                                 options={exitTypesQuery.data}
                             />
                         </div>
+                        <ControlledTextarea fieldName="notes" label="Note" />
                         <Button disabled={!isValid} type="submit">
                             Salva
                         </Button>

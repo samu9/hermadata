@@ -150,6 +150,7 @@ export const animalExitSchema = z.object({
     exit_date: dateOnly,
     exit_data: z.record(z.string(), z.any()).nullish(),
     adopter_id: z.number().nullish(),
+    notes: z.string().nullish(),
 })
 
 export type AnimalExit = z.infer<typeof animalExitSchema>
