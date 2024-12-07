@@ -8,6 +8,7 @@ import {
     faDatabase,
     faDog,
     faHome,
+    faListDots,
     faPerson,
     faUserDoctor,
 } from "@fortawesome/free-solid-svg-icons"
@@ -15,7 +16,7 @@ import {
 type CustomMenuItem = MenuItem & { route?: string }
 
 const menuItems: CustomMenuItem[] = [
-    { label: "Home", route: "/" },
+    { label: "Bacheca", route: "/" },
     {
         label: "Animali",
         route: "/animals",
@@ -64,7 +65,7 @@ const SideMenu = () => {
                 <div>
                     <div className="mb-2 font-bold text-slate-700">Menu</div>
                     <div className="flex flex-col gap-2">
-                        <MenuElement icon={faHome} to="/" label="Home" />
+                        <MenuElement icon={faListDots} to="/" label="Bacheca" />
                         <MenuElement
                             icon={faDog}
                             to="/animal"
