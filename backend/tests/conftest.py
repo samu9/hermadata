@@ -19,6 +19,9 @@ from hermadata.database.models import (
     AnimalEntry,
     AnimalLog,
     Document,
+    MedicalActivity,
+    MedicalActivityRecord,
+    Vet,
 )
 from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import ReportGenerator
@@ -29,7 +32,7 @@ from hermadata.repositories.animal.models import NewAnimalModel
 from hermadata.repositories.city_repository import SQLCityRepository
 from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.repositories.race_repository import SQLRaceRepository
-from hermadata.repositories.vet_repository import SQLVetRepository
+from hermadata.repositories.vet_repository import SQLVetRepository, VetModel
 from hermadata.services.animal_service import AnimalService
 from hermadata.storage.disk_storage import DiskStorage
 
@@ -199,7 +202,6 @@ def animal_service(
 
 @pytest.fixture(scope="function")
 def make_animal(
-    DBSessionMaker: sessionmaker,
     db_session: Session,
     animal_repository: SQLAnimalRepository,
 ) -> Callable[[NewAnimalModel], int]:
@@ -222,6 +224,25 @@ def make_animal(
             select(Animal.id).where(Animal.code == code)
         ).scalar()
         return animal_id
+
+    return make
+
+
+@pytest.fixture(scope="function")
+def make_vet(
+    vet_repository: SQLVetRepository,
+) -> Callable[[VetModel], int]:
+    def make(data: VetModel = None) -> int:
+        if data is None:
+            data = VetModel(
+                business_name="Veterinario",
+                fiscal_code="12345678912",
+                name="Mario",
+                surname="Rossi",
+            )
+        vet = vet_repository.create(data=data)
+
+        return vet.id
 
     return make
 
@@ -250,6 +271,8 @@ def app(db_session):
 
 @pytest.fixture(scope="function")
 def empty_db(db_session: Session):
+    db_session.execute(delete(MedicalActivityRecord))
+    db_session.execute(delete(MedicalActivity))
     db_session.execute(delete(AnimalEntry))
     db_session.execute(delete(AnimalLog))
     db_session.execute(delete(AnimalDocument))

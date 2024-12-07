@@ -1,10 +1,14 @@
 from datetime import date, datetime, timedelta, timezone
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from sqlalchemy.orm import Session
-from hermadata.constants import EntryType, ExitType
-from hermadata.database.models import Animal, AnimalEntry
+from hermadata.constants import EntryType, ExitType, RecurrenceType
+from hermadata.database.models import (
+    Animal,
+    AnimalEntry,
+    MedicalActivityRecord,
+)
 
 from hermadata.repositories.animal.animal_repository import (
     AnimalModel,
@@ -18,6 +22,7 @@ from hermadata.repositories.animal.models import (
     CompleteEntryModel,
     NewAnimalModel,
     NewEntryModel,
+    MedicalActivityModel,
     UpdateAnimalModel,
 )
 
@@ -165,7 +170,9 @@ def test_update(db_session: Session, animal_repository: SQLAnimalRepository):
     assert sterilized is False
 
 
-def test_add_entry(db_session: Session, animal_repository: SQLAnimalRepository):
+def test_add_entry(
+    db_session: Session, animal_repository: SQLAnimalRepository
+):
     data = NewAnimalModel(
         race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
     )
@@ -231,7 +238,9 @@ def test_count_days(
 
     animal_repository.exit(
         animal_id,
-        AnimalExit(exit_date=date(2020, 1, 10), exit_type=ExitType.disappeared),
+        AnimalExit(
+            exit_date=date(2020, 1, 10), exit_type=ExitType.disappeared
+        ),
     )
 
     animal_repository.add_entry(
@@ -399,3 +408,69 @@ def test_count_exits(
 
     assert result.total == 2
     assert result.items[1].exit_date == date(2024, 3, 1)
+
+
+def test_add_medical_activity_and_records(
+    make_animal, make_vet, animal_repository: SQLAnimalRepository
+):
+    animal_id = make_animal()
+    vet_id = make_vet()
+
+    data = MedicalActivityModel(
+        recurrence_type=RecurrenceType.WEEKLY,
+        recurrence_value=1,
+        vet_id=vet_id,
+        name="Medicinale",
+        from_date=date(2020, 1, 1),
+    )
+
+    medical_activity = animal_repository.new_medical_activity(
+        animal_id=animal_id, data=data
+    )
+
+    assert medical_activity.from_date == date(2020, 1, 1)
+
+    assert medical_activity.animal_id == animal_id
+
+    medical_activity_record = animal_repository.add_medical_activity_record(
+        medical_activity_id=medical_activity.id
+    )
+
+    assert medical_activity_record.created_at.date() == datetime.now().date()
+
+
+def test_get_pending_therapies(
+    empty_db, make_animal, animal_repository: SQLAnimalRepository
+):
+    animal1_id = make_animal()
+    animal2_id = make_animal()
+
+    medical_activity = animal_repository.new_medical_activity(
+        animal_id=animal1_id,
+        data=MedicalActivityModel(
+            recurrence_type=RecurrenceType.WEEKLY,
+            recurrence_value=1,
+            name="Test",
+            from_date=(datetime.now() - timedelta(days=10)).date(),
+        ),
+    )
+
+    animal_repository.add_medical_activity_record(medical_activity.id)
+
+    animal_repository.session.execute(
+        update(MedicalActivityRecord)
+        .where(
+            MedicalActivityRecord.medical_activity_id == medical_activity.id
+        )
+        .values(
+            {
+                MedicalActivityRecord.created_at: datetime.now()
+                - timedelta(days=8)
+            }
+        )
+    )
+    result = animal_repository.get_pending_medical_activities(
+        animal_id=animal1_id
+    )
+
+    assert result
