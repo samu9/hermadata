@@ -409,8 +409,8 @@ class AnimalDocument(Base):
 #     )
 
 
-class Therapy(Base):
-    __tablename__ = "therapy"
+class MedicalActivity(Base):
+    __tablename__ = "medical_activity"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -422,14 +422,14 @@ class Therapy(Base):
 
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
 
-    from_date: Mapped[datetime] = mapped_column(nullable=True)
+    from_date: Mapped[date] = mapped_column(nullable=True)
 
-    to_date: Mapped[datetime] = mapped_column(nullable=True)
+    to_date: Mapped[date] = mapped_column(nullable=True)
 
-    recurrence: Mapped[int] = mapped_column(nullable=True)
+    recurrence_type: Mapped[str] = mapped_column(String(10), nullable=True)
+    recurrence_value: Mapped[int] = mapped_column(nullable=True)
 
-    custom_recurrence_days: Mapped[int] = mapped_column(nullable=True)
-
+    scheduled_date: Mapped[date] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )
@@ -438,12 +438,16 @@ class Therapy(Base):
     )
 
 
-class TherapyRecord(Base):
+class MedicalActivityRecord(Base):
     # TODO: add user id which performed the recurrent therapy
-    __tablename__ = "therapy_record"
+    __tablename__ = "medical_activity_record"
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    notes: Mapped[str] = mapped_column(Text())
+    medical_activity_id: Mapped[int] = mapped_column(
+        ForeignKey(MedicalActivity.id)
+    )
+
+    notes: Mapped[str] = mapped_column(Text(), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
