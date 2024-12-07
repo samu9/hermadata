@@ -260,6 +260,7 @@ class AnimalExit(BaseModel):
     exit_type: ExitType
     exit_data: dict | None = None
     adopter_id: int | None = None  # TODO: add validation based on exit_type
+    notes: str | None = None
 
 
 class ExtractionQuery(BaseModel):

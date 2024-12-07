@@ -534,6 +534,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             .values(
                 exit_date=data.exit_date,
                 exit_type=data.exit_type,
+                exit_notes=data.notes,
             )
         )
         self.session.flush()
