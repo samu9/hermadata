@@ -131,12 +131,11 @@ class DocKindCode(Enum):
     adozione = "AD"
 
 
-class RecurrenceType(IntEnum):
-    DAILY = auto()
-    WEEKLY = auto()
-    MONTHLY = auto()
-    YEARLY = auto()
-    CUSTOM = auto()
+class RecurrenceType(str, Enum):
+    DAILY = "day"
+    WEEKLY = "week"
+    MONTHLY = "month"
+    YEARLY = "year"
 
 
 RECURRENCE_LABELS: dict[RecurrenceType, str] = {
@@ -144,5 +143,4 @@ RECURRENCE_LABELS: dict[RecurrenceType, str] = {
     RecurrenceType.WEEKLY: "settimanale",
     RecurrenceType.MONTHLY: "mensile",
     RecurrenceType.YEARLY: "annuale",
-    RecurrenceType.CUSTOM: "custom",
 }
