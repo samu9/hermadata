@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta, timezone
+from uuid import uuid4
 import pytest
 from sqlalchemy import select, update
 
@@ -64,9 +65,12 @@ def test_exit(db_session: Session, animal_repository: SQLAnimalRepository):
     animal_repository.complete_entry(
         animal_id, CompleteEntryModel(entry_date=datetime.now().date())
     )
+    exit_notes = uuid4().hex
 
     exit_data = AnimalExit(
-        exit_date=datetime.now().date(), exit_type=ExitType.death
+        exit_date=datetime.now().date(),
+        exit_type=ExitType.death,
+        notes=exit_notes,
     )
     animal_repository.exit(animal_id=animal_id, data=exit_data)
 
@@ -78,6 +82,14 @@ def test_exit(db_session: Session, animal_repository: SQLAnimalRepository):
     ).scalar()
 
     assert check is None
+
+    notes_check = db_session.execute(
+        select(AnimalEntry)
+        .where(AnimalEntry.animal_id == animal_id)
+        .order_by(AnimalEntry.created_at.desc())
+    ).scalar()
+
+    assert notes_check.exit_notes == exit_notes
 
 
 @pytest.mark.skip(reason="Not used")
@@ -439,6 +451,7 @@ def test_add_medical_activity_and_records(
     assert medical_activity_record.created_at.date() == datetime.now().date()
 
 
+@pytest.mark.skip(reason="Not implemented yet")
 def test_get_pending_therapies(
     empty_db, make_animal, animal_repository: SQLAnimalRepository
 ):
