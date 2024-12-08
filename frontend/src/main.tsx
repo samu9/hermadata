@@ -1,5 +1,5 @@
-import "./index.css"
 import "primereact/resources/themes/lara-light-indigo/theme.css"
+import "./index.css"
 
 import "primeicons/primeicons.css"
 
@@ -10,6 +10,8 @@ import ApiService from "./services/api.ts"
 
 import { PrimeReactProvider } from "primereact/api"
 import { RouterProvider, createBrowserRouter } from "react-router-dom"
+import Loader from "./components/Loader.tsx"
+import { LoaderProvider } from "./contexts/Loader.tsx"
 import routes from "./router/routes.tsx"
 
 // locale("it")
@@ -29,7 +31,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <QueryClientProvider client={queryClient}>
             <PrimeReactProvider value={{}}>
-                <RouterProvider router={router} />
+                <LoaderProvider>
+                    <RouterProvider router={router} />
+                    <Loader />
+                </LoaderProvider>
             </PrimeReactProvider>
         </QueryClientProvider>
     </React.StrictMode>
