@@ -9,6 +9,7 @@ import {
     animalCompleteEntrySchema,
 } from "../../models/animal.schema"
 import ControlledInputDate from "../forms/ControlledInputDate"
+import { useLoader } from "../../contexts/Loader"
 
 type Props = {
     animal_id: string
@@ -20,11 +21,20 @@ const AnimalCompleteEntryForm = (props: Props) => {
     })
 
     const queryClient = useQueryClient()
+    const { startLoading, stopLoading } = useLoader()
 
     const completeEntryMutation = useMutation({
         mutationFn: (data: AnimalCompleteEntry) =>
             apiService.completeAnimalEntry(props.animal_id, data),
         mutationKey: ["complete-animal-entry"],
+        onMutate: () => {
+            // Start loading before the mutation is executed
+            startLoading()
+        },
+        onSettled: () => {
+            // Optionally, ensure loading stops regardless of success or error
+            stopLoading()
+        },
         onSuccess: (data, variables) => {
             queryClient.setQueryData(
                 ["animal", props.animal_id],
