@@ -1,0 +1,83 @@
+{% extends "base.jinja" %} {% block content%}
+
+<div>
+    <div>
+        <p>
+            Il/la sottoscritto/a <strong>Luigi Vescovini</strong> per
+            <strong>ASSOCIAZIONE AMICI DEGLI ANIMALI - ODV</strong>, residente
+            in <strong>51016 Montecatini Terme in Via delle Padulette</strong>,
+            tel. <strong>3503060217</strong>, in qualità di proprietario del
+            cane iscritto all'Anagrafe Canina Regionale rispondente al seguente
+            stato segnaletico:
+        </p>
+
+        <table class="py-2">
+            <tr class="border-b border-1">
+                <td>Razza</td>
+                <td>{{ animal_breed }}</td>
+            </tr>
+            <tr>
+                <td>Sesso</td>
+                <td>{{ animal_sex }}</td>
+            </tr>
+            <tr>
+                <td>Età</td>
+                <td>{{ animal_age }}</td>
+            </tr>
+            <tr>
+                <td>Mantello</td>
+                <td>{{ animal_fur_type }}</td>
+            </tr>
+            <tr>
+                <td>Colore</td>
+                <td>{{ animal_fur_color }}</td>
+            </tr>
+            <tr>
+                <td>Nome</td>
+                <td>{{ animal_name }}</td>
+            </tr>
+            <tr>
+                <td>Codice di Identificazione</td>
+                <td>{{ animal_chip_code }}</td>
+            </tr>
+            <tr>
+                <td>Arrivato da</td>
+                <td>{{ animal_origin_city }}</td>
+            </tr>
+            <tr>
+                <td>Il</td>
+                <td>{{ animal_entry_date }}</td>
+            </tr>
+        </table>
+
+        <div class="section">
+            <p>DICHIARA<br />(ART. 1 D.P.R. 20 ottobre 1998 n.403)</p>
+            <ul>
+                <li>
+                    che il suddetto cane è {% if variation_type.value == "I" %}
+                    scomparso {% elif variation_type.value == "D" %} deceduto {%
+                    elif variation_type.value == "C" %} stato ceduto il al Sig.
+                    {{ adopter.surname }} {{ adopter.name }} nato il
+                    {{ adopter.birtdate }} a {{ adopter.birthcity }}, residente
+                    in {{ adopter.residence_city }} tel. {{ adopter.phone }}
+                    {%endif%} il
+                    {{ variation_date }}
+                </li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>
+                La presente viene redatta ai sensi dell'articolo 19 della L.R.
+                08/04/1995 n°43
+            </p>
+        </div>
+
+        <div class="signature">
+            <p>51016 Montecatini Terme, lì __________________</p>
+            <p>Firma del proprietario __________________________</p>
+            <p>Firma per accettazione __________________________</p>
+        </div>
+    </div>
+    {% endblock %}
+</div>
