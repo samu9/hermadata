@@ -129,6 +129,7 @@ class DocKindCode(Enum):
     attribuzione_chip = "C"
     affido = "AF"
     adozione = "AD"
+    variazione = "VA"
 
 
 class RecurrenceType(str, Enum):
