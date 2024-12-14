@@ -18,18 +18,18 @@ dependencies = [
     "pydantic >= 2.4, < 3",
     "cryptography",
     "python-multipart",
-    "pdfkit",
     "jinja2",
     "openpyxl",
     "boto3 >=1, < 2",
     "pydantic >= 2.9, <3",
-    "pydantic-settings >= 2.6, <3"
+    "pydantic-settings >= 2.6, <3",
+    "weasyprint>=63.1",
 ]
 [tool.flake8]
 max-line-length = 120
 
 [tool.black]
-line-length = 80
+line-length = 79
 
 [dependency-groups]
 dev = [

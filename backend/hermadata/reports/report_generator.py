@@ -3,7 +3,6 @@ from enum import Enum
 from io import BytesIO
 
 import openpyxl
-import pdfkit
 from jinja2 import Environment
 from pydantic import (
     BaseModel,
@@ -13,6 +12,7 @@ from pydantic import (
     field_validator,
     model_serializer,
 )
+from weasyprint import CSS, HTML
 
 from hermadata.constants import ENTRY_TYPE_LABELS, EXIT_TYPE_LABELS, ExitType
 from hermadata.repositories.animal.models import (
@@ -138,9 +138,19 @@ class ReportGenerator:
 
         rendered_html = template.render(**variables.model_dump())
 
-        pdf = pdfkit.from_string(input=rendered_html)
+        with open("output.html", "w") as fp:
+            fp.write(rendered_html)
 
-        return pdf
+        target = BytesIO()
+
+        HTML(string=rendered_html).write_pdf(
+            target=target,
+            stylesheets=[
+                CSS(filename="hermadata/reports/templates/tailwind.css")
+            ],
+        )
+
+        return target.getvalue()
 
     def build_animal_entry_report(
         self, variables: ReportAnimalEntryVariables
