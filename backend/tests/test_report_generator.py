@@ -3,12 +3,14 @@ from io import BytesIO
 
 from openpyxl import load_workbook
 
-from hermadata.constants import EntryType
+from hermadata.constants import EntryType, ExitType
 from hermadata.reports.report_generator import (
+    AdopterVariables,
     ReportAnimalEntryVariables,
     ReportChipAssignmentVariables,
     ReportFormat,
     ReportGenerator,
+    ReportVariationVariables,
 )
 from hermadata.repositories.animal.models import (
     AnimalDaysItem,
@@ -73,8 +75,8 @@ def test_animal_days_report(report_generator: ReportGenerator):
 
     assert isinstance(filename, str)
     assert (
-        filename
-        == f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}.xlsx"
+        filename == f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}"
+        f"_{query.to_date.strftime('%Y-%m-%d')}.xlsx"
     )
     with open("attic/storage/generated.xls", "wb") as fp:
         fp.write(report)
@@ -109,8 +111,8 @@ def test_animal_entries_report(empty_db, report_generator: ReportGenerator):
     )
 
     assert (
-        filename
-        == f"ingressi_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}.xlsx"
+        filename == f"ingressi_{query.from_date.strftime('%Y-%m-%d')}"
+        f"_{query.to_date.strftime('%Y-%m-%d')}.xlsx"
     )
     file_ = BytesIO(report)
     wb = load_workbook(file_)
@@ -123,3 +125,30 @@ def test_animal_entries_report(empty_db, report_generator: ReportGenerator):
     assert rows[1][0].value == "Cane"
     assert rows[1][1].value == "Dino"
     assert rows[1][4].value == "M"
+
+
+def test_variation_report(report_generator: ReportGenerator):
+
+    variables = ReportVariationVariables(
+        animal_name="Gino",
+        animal_chip_code="111.111.111.111.111",
+        animal_fur_type="lungo",
+        animal_age=12,
+        animal_breed="Chihuahua",
+        animal_fur_color="binaco",
+        variation_date=datetime.now().date(),
+        adopter=AdopterVariables(
+            name="Mario",
+            surname="Rossi",
+            residence_city="Montecatini Terme",
+        ),
+        variation_type=ExitType.custody,
+        animal_origin_city="Montecatini terme",
+        animal_sex="maschio",
+    )
+    pdf = report_generator.build_variation_report(variables)
+
+    with open("attic/storage/generated.pdf", "wb") as fp:
+        fp.write(pdf)
+
+    assert pdf
