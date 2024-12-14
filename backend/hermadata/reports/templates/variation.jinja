@@ -11,47 +11,50 @@
             stato segnaletico:
         </p>
 
-        <table class="py-2">
-            <tr class="border-b border-1">
+        <table class="my-4">
+            <tr class="border-b">
                 <td>Razza</td>
                 <td>{{ animal_breed }}</td>
             </tr>
-            <tr>
+            <tr class="border-b">
                 <td>Sesso</td>
                 <td>{{ animal_sex }}</td>
             </tr>
-            <tr>
+            <tr class="border-b">
                 <td>Età</td>
                 <td>{{ animal_age }}</td>
             </tr>
-            <tr>
+            <tr class="border-b">
                 <td>Mantello</td>
                 <td>{{ animal_fur_type }}</td>
             </tr>
-            <tr>
+            <tr class="border-b">
                 <td>Colore</td>
                 <td>{{ animal_fur_color }}</td>
             </tr>
-            <tr>
+            <tr class="border-b">
                 <td>Nome</td>
                 <td>{{ animal_name }}</td>
             </tr>
-            <tr>
+            <tr class="border-b">
                 <td>Codice di Identificazione</td>
                 <td>{{ animal_chip_code }}</td>
             </tr>
-            <tr>
+            <tr class="border-b">
                 <td>Arrivato da</td>
                 <td>{{ animal_origin_city }}</td>
             </tr>
-            <tr>
+            <tr class="border-b">
                 <td>Il</td>
                 <td>{{ animal_entry_date }}</td>
             </tr>
         </table>
 
         <div class="section">
-            <p>DICHIARA<br />(ART. 1 D.P.R. 20 ottobre 1998 n.403)</p>
+            <p class="w-full text-center my-4">
+                <span class="font-bold">DICHIARA</span><br />(ART. 1 D.P.R. 20
+                ottobre 1998 n.403)
+            </p>
             <ul>
                 <li>
                     che il suddetto cane è {% if variation_type.value == "I" %}
@@ -73,10 +76,16 @@
             </p>
         </div>
 
-        <div class="signature">
-            <p>51016 Montecatini Terme, lì __________________</p>
-            <p>Firma del proprietario __________________________</p>
-            <p>Firma per accettazione __________________________</p>
+        <div class="flex mt-8">
+            <p class="flex-grow w-full">
+                51016 Montecatini Terme, lì __________________
+            </p>
+            <div>
+                <p class="mb-4">
+                    Firma del proprietario __________________________
+                </p>
+                <p>Firma per accettazione __________________________</p>
+            </div>
         </div>
     </div>
     {% endblock %}
