@@ -5,9 +5,16 @@ from io import BytesIO
 import openpyxl
 import pdfkit
 from jinja2 import Environment
-from pydantic import BaseModel, Field, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    SerializerFunctionWrapHandler,
+    field_serializer,
+    field_validator,
+    model_serializer,
+)
 
-from hermadata.constants import ENTRY_TYPE_LABELS, EXIT_TYPE_LABELS
+from hermadata.constants import ENTRY_TYPE_LABELS, EXIT_TYPE_LABELS, ExitType
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalDaysResult,
@@ -36,6 +43,20 @@ class ReportDefaultVariables(BaseModel):
         default_factory=lambda: datetime.now().date().strftime("%Y-%m-%d")
     )
     title: str
+
+    # @field_serializer("day")
+    # def serialize_day(self, day: date):
+    #     return day.strftime("%Y-%m-%d")
+
+    # @model_serializer(mode="wrap")
+    # def serialize_model(self, nxt: SerializerFunctionWrapHandler):
+    #     dump = nxt()
+    #     dump = {}
+    #     for k, v in dump.items():
+    #         if isinstance(v, date):
+    #             dump[k] = v.strftime("%d/%m/%Y")
+
+    #     return dump
 
 
 class ReportAnimalEntryVariables(ReportDefaultVariables):
@@ -164,7 +185,8 @@ class ReportGenerator:
         ws.append(["Totale", "", data.total_days])
 
         filename = (
-            f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}"
+            f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}"
+            f"_{query.to_date.strftime('%Y-%m-%d')}"
             f".{DEFAULT_EXTENSIONS[format]}"
         )
 
@@ -214,7 +236,8 @@ class ReportGenerator:
             )
 
         filename = (
-            f"ingressi_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}"
+            f"ingressi_{query.from_date.strftime('%Y-%m-%d')}"
+            f"_{query.to_date.strftime('%Y-%m-%d')}"
             f".{DEFAULT_EXTENSIONS[format]}"
         )
 
@@ -262,7 +285,8 @@ class ReportGenerator:
             )
 
         filename = (
-            f"uscite_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}"
+            f"uscite_{query.from_date.strftime('%Y-%m-%d')}"
+            f"_{query.to_date.strftime('%Y-%m-%d')}"
             f".{DEFAULT_EXTENSIONS[format]}"
         )
 
