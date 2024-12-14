@@ -61,6 +61,29 @@ class ReportChipAssignmentVariables(ReportDefaultVariables):
     )(transform_date_to_string)
 
 
+class AdopterVariables(BaseModel):
+    name: str
+    surname: str
+    residence_city: str
+    residence_address: str | None = None
+
+
+class ReportVariationVariables(ReportDefaultVariables):
+    title: str = "VARIAZIONE"
+    animal_name: str | None = None
+    animal_chip_code: str
+    animal_breed: str
+    animal_fur_type: str
+    animal_fur_color: str
+    animal_sex: str
+    animal_age: int
+    animal_origin_city: str
+    adopter: AdopterVariables | None = None
+
+    variation_type: ExitType  # scomparso, deceduto, stato ceduto
+    variation_date: date
+
+
 class ReportAdoptionVariables(ReportDefaultVariables):
     title: str = "DOCUMENTO DI ADOZIONE"
     animal_name: str
@@ -115,6 +138,11 @@ class ReportGenerator:
 
     def build_custody_report(self, variables: ReportCustodyVariables) -> bytes:
         return self._build_template("custody.jinja", variables)
+
+    def build_variation_report(
+        self, variables: ReportVariationVariables
+    ) -> bytes:
+        return self._build_template("variation.jinja", variables)
 
     def generate_animal_days_count_report(
         self,
