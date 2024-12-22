@@ -1,16 +1,16 @@
 from datetime import date, datetime, timedelta, timezone
 from uuid import uuid4
+
 import pytest
 from sqlalchemy import select, update
-
 from sqlalchemy.orm import Session
-from hermadata.constants import EntryType, ExitType, RecurrenceType
+
+from hermadata.constants import AnimalFur, EntryType, ExitType, RecurrenceType
 from hermadata.database.models import (
     Animal,
     AnimalEntry,
     MedicalActivityRecord,
 )
-
 from hermadata.repositories.animal.animal_repository import (
     AnimalModel,
     AnimalSearchModel,
@@ -21,10 +21,14 @@ from hermadata.repositories.animal.models import (
     AnimalExit,
     AnimalExitsQuery,
     CompleteEntryModel,
+    MedicalActivityModel,
     NewAnimalModel,
     NewEntryModel,
-    MedicalActivityModel,
     UpdateAnimalModel,
+)
+from hermadata.repositories.breed_repository import (
+    NewBreedModel,
+    SQLBreedRepository,
 )
 
 
@@ -449,6 +453,42 @@ def test_add_medical_activity_and_records(
     )
 
     assert medical_activity_record.created_at.date() == datetime.now().date()
+
+
+def test_get_variation_report_variables(
+    empty_db,
+    make_animal,
+    animal_repository: SQLAnimalRepository,
+    breed_repository: SQLBreedRepository,
+):
+    animal_id = make_animal()
+
+    breed = breed_repository.create(
+        data=NewBreedModel(race_id="C", name="Test")
+    )
+
+    animal_repository.update(
+        animal_id,
+        updates=UpdateAnimalModel(
+            name="Gino",
+            birth_date=datetime.now().date() - timedelta(days=365 * 4 - 1),
+            chip_code="123.123.123.123.123",
+            fur=AnimalFur.cordato,
+            sex=0,
+            breed_id=breed.id,
+        ),
+    )
+    animal_repository.complete_entry(
+        animal_id, data=CompleteEntryModel(entry_date=datetime.now().date())
+    )
+
+    variables = animal_repository.get_variation_report_variables(
+        animal_id=animal_id,
+        variation_type=ExitType.adoption,
+        variation_date=datetime.now().date(),
+    )
+
+    assert variables.animal.age == 3
 
 
 @pytest.mark.skip(reason="Not implemented yet")

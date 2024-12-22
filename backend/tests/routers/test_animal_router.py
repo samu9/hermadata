@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
+
+from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from hermadata.constants import DocKindCode, EntryType
 from hermadata.database.models import (
@@ -14,8 +17,7 @@ from hermadata.repositories.animal.models import (
     NewAnimalModel,
     UpdateAnimalModel,
 )
-from sqlalchemy.orm import Session
-from fastapi.encoders import jsonable_encoder
+from tests.utils import random_chip_code
 
 
 def test_create_animal(app: TestClient, db_session: Session):
@@ -48,11 +50,10 @@ def test_update_animal(app: TestClient, make_animal, db_session):
             entry_type=EntryType.confiscation.value,
         )
     )
+    chip_code = random_chip_code()
 
     update_data = jsonable_encoder(
-        UpdateAnimalModel(
-            name="Test", chip_code="123.123.123.123.123"
-        ).model_dump()
+        UpdateAnimalModel(name="Test", chip_code=chip_code).model_dump()
     )
 
     result = app.post(f"/animal/{animal_id}", json=update_data)
@@ -65,7 +66,7 @@ def test_update_animal(app: TestClient, make_animal, db_session):
     ).scalar_one()
 
     assert animal.name == "Test"
-    assert animal.chip_code == "123.123.123.123.123"
+    assert animal.chip_code == chip_code
     assert animal.chip_code_set
 
 

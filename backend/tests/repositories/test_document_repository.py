@@ -1,4 +1,5 @@
 import os
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -34,6 +35,7 @@ def test_new_document(
         filename="test.pdf",
         mimetype="application/pdf",
         data=bytes(),
+        is_uploaded=True,
     )
     result = document_repository.new_document(data)
 
