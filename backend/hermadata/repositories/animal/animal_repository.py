@@ -2,7 +2,17 @@ import json
 import logging
 from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import Interval, and_, func, insert, or_, select, update
+from sqlalchemy import (
+    Interval,
+    and_,
+    extract,
+    func,
+    insert,
+    or_,
+    select,
+    text,
+    update,
+)
 from sqlalchemy.exc import IntegrityError
 from hermadata.constants import AnimalEvent, ExitType
 from hermadata.database.models import (
@@ -12,6 +22,7 @@ from hermadata.database.models import (
     AnimalDocument,
     AnimalEntry,
     AnimalLog,
+    Breed,
     Comune,
     DocumentKind,
     MedicalActivity,
@@ -20,6 +31,10 @@ from hermadata.database.models import (
     Race,
 )
 from hermadata.models import PaginationResult
+from hermadata.reports.report_generator import (
+    AnimalVariables,
+    ReportVariationVariables,
+)
 from hermadata.repositories import SQLBaseRepository
 
 from hermadata.repositories.animal.models import (
@@ -78,6 +93,9 @@ class ExistingAdoptionException(Exception):
 
 
 class SQLAnimalRepository(SQLBaseRepository):
+    animal_birth_date_to_age = func.TIMESTAMPDIFF(
+        text("year"), Animal.birth_date, func.current_date()
+    )
 
     def save(self, model: AnimalModel):
         result = self.session.execute(
@@ -838,3 +856,46 @@ class SQLAnimalRepository(SQLBaseRepository):
         result = self.session.execute(stmt).all()
 
         return result
+
+    def get_variation_report_variables(
+        self,
+        animal_id: int,
+        variation_type: ExitType,
+        variation_date: date,
+        adopter_id: int | None = None,
+    ):
+        data = self.session.execute(
+            select(
+                Animal.name,
+                Animal.chip_code,
+                Breed.name.label("breed"),
+                Animal.sex,
+                self.animal_birth_date_to_age.label("age"),
+                Animal.fur.label("fur_type"),
+                Animal.color.label("fur_color"),
+                Comune.name.label("origin_city"),
+                AnimalEntry.entry_date,
+            )
+            .join(
+                AnimalEntry,
+                and_(
+                    AnimalEntry.animal_id == Animal.id,
+                    AnimalEntry.current.is_(True),
+                ),
+            )
+            .join(Comune, AnimalEntry.origin_city_code == Comune.id)
+            .join(Breed, Breed.id == Animal.breed_id, isouter=True)
+            .join(Race, Race.id == Animal.race_id)
+            .where(Animal.id == animal_id)
+        ).one()
+
+        animal_variables = AnimalVariables.model_validate(
+            dict(zip(data._fields, data))
+        )
+        variables = ReportVariationVariables(
+            variation_type=variation_type,
+            animal=animal_variables,
+            variation_date=variation_date,
+        )
+
+        return variables
