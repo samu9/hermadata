@@ -14,7 +14,13 @@ from pydantic import (
 )
 from weasyprint import CSS, HTML
 
-from hermadata.constants import ENTRY_TYPE_LABELS, EXIT_TYPE_LABELS, ExitType
+from hermadata.constants import (
+    ENTRY_TYPE_LABELS,
+    EXIT_TYPE_LABELS,
+    FUR_LABELS,
+    AnimalFur,
+    ExitType,
+)
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalDaysResult,
@@ -38,25 +44,27 @@ class ReportFormat(Enum):
 DEFAULT_EXTENSIONS: dict[ReportFormat, str] = {ReportFormat.excel: "xlsx"}
 
 
-class ReportDefaultVariables(BaseModel):
-    day: str = Field(
-        default_factory=lambda: datetime.now().date().strftime("%Y-%m-%d")
-    )
+class BaseVariables(BaseModel):
+
+    @model_serializer(mode="wrap")
+    def serialize_model(self, nxt: SerializerFunctionWrapHandler):
+        dump = {}
+        for k in self.model_fields_set:
+            v = getattr(self, k)
+            if isinstance(v, date):
+                dump[k] = v.strftime("%d/%m/%Y")
+            else:
+                dump[k] = nxt(v)
+        return dump
+
+
+class ReportDefaultVariables(BaseVariables):
+    day: str = Field(default_factory=lambda: datetime.now().date())
     title: str
 
-    # @field_serializer("day")
-    # def serialize_day(self, day: date):
-    #     return day.strftime("%Y-%m-%d")
-
-    # @model_serializer(mode="wrap")
-    # def serialize_model(self, nxt: SerializerFunctionWrapHandler):
-    #     dump = nxt()
-    #     dump = {}
-    #     for k, v in dump.items():
-    #         if isinstance(v, date):
-    #             dump[k] = v.strftime("%d/%m/%Y")
-
-    #     return dump
+    @field_serializer("day")
+    def serialize_day(self, day: date):
+        return day.strftime("%Y-%m-%d")
 
 
 class ReportAnimalEntryVariables(ReportDefaultVariables):
@@ -89,16 +97,33 @@ class AdopterVariables(BaseModel):
     residence_address: str | None = None
 
 
+class AnimalVariables(BaseVariables):
+    name: str | None = None
+    chip_code: str
+    breed: str | None = None
+    sex: str | None = None
+    age: int | None = None
+    fur_type: str | None = None
+    fur_color: str | int | None = None
+    origin_city: str
+    entry_date: date
+
+    @field_validator("sex", mode="before")
+    def validate_sex(value: int | str):
+        if isinstance(value, int):
+            value = "M" if value == 0 else "F"
+        return value
+
+    @field_validator("fur_type", mode="before")
+    def validate_fur(value: int | str):
+        if isinstance(value, int):
+            value = FUR_LABELS[AnimalFur(value)]
+        return value
+
+
 class ReportVariationVariables(ReportDefaultVariables):
     title: str = "VARIAZIONE"
-    animal_name: str | None = None
-    animal_chip_code: str
-    animal_breed: str
-    animal_fur_type: str
-    animal_fur_color: str
-    animal_sex: str
-    animal_age: int
-    animal_origin_city: str
+    animal: AnimalVariables
     adopter: AdopterVariables | None = None
 
     variation_type: ExitType  # scomparso, deceduto, stato ceduto
