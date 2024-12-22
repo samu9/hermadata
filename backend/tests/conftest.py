@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
 from hermadata.constants import EntryType, StorageType
+from hermadata.database.alembic.import_initial_data import import_doc_kinds
 from hermadata.database.models import (
     Adopter,
     Adoption,
@@ -18,6 +19,7 @@ from hermadata.database.models import (
     AnimalDocument,
     AnimalEntry,
     AnimalLog,
+    Breed,
     Document,
     MedicalActivity,
     MedicalActivityRecord,
@@ -29,6 +31,7 @@ from hermadata.repositories.adopter_repository import SQLAdopterRepository
 from hermadata.repositories.adoption_repository import SQLAdopionRepository
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import NewAnimalModel
+from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
 from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.repositories.race_repository import SQLRaceRepository
@@ -63,6 +66,8 @@ def pytest_sessionstart():
     e = create_engine("mysql+pymysql://root:dev@localhost/hermadata_test")
 
     session = sessionmaker(bind=e)
+
+    import_doc_kinds(e)
 
     with session() as db_session:
         db_session.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
@@ -189,6 +194,15 @@ def city_repository(
 
 
 @pytest.fixture(scope="function")
+def breed_repository(
+    db_session: Session,
+) -> Generator[SQLBreedRepository, SQLBreedRepository, None]:
+
+    repo = SQLBreedRepository()
+    return repo(db_session)
+
+
+@pytest.fixture(scope="function")
 def animal_service(
     animal_repository, document_repository, report_generator, disk_storage
 ) -> AnimalService:
@@ -280,3 +294,4 @@ def empty_db(db_session: Session):
     db_session.execute(delete(Animal))
     db_session.execute(delete(Adoption))
     db_session.execute(delete(Adopter))
+    db_session.execute(delete(Breed))
