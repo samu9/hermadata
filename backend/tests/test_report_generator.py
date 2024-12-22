@@ -6,6 +6,7 @@ from openpyxl import load_workbook
 from hermadata.constants import EntryType, ExitType
 from hermadata.reports.report_generator import (
     AdopterVariables,
+    AnimalVariables,
     ReportAnimalEntryVariables,
     ReportChipAssignmentVariables,
     ReportFormat,
@@ -130,12 +131,17 @@ def test_animal_entries_report(empty_db, report_generator: ReportGenerator):
 def test_variation_report(report_generator: ReportGenerator):
 
     variables = ReportVariationVariables(
-        animal_name="Gino",
-        animal_chip_code="111.111.111.111.111",
-        animal_fur_type="lungo",
-        animal_age=12,
-        animal_breed="Chihuahua",
-        animal_fur_color="binaco",
+        animal=AnimalVariables(
+            name="Gino",
+            chip_code="111.111.111.111.111",
+            fur_type="lungo",
+            age=12,
+            breed="Chihuahua",
+            fur_color="binaco",
+            origin_city="Montecatini terme",
+            sex="maschio",
+            entry_date=datetime.now().date(),
+        ),
         variation_date=datetime.now().date(),
         adopter=AdopterVariables(
             name="Mario",
@@ -143,12 +149,28 @@ def test_variation_report(report_generator: ReportGenerator):
             residence_city="Montecatini Terme",
         ),
         variation_type=ExitType.custody,
-        animal_origin_city="Montecatini terme",
-        animal_sex="maschio",
     )
     pdf = report_generator.build_variation_report(variables)
 
-    with open("attic/storage/generated.pdf", "wb") as fp:
-        fp.write(pdf)
-
     assert pdf
+
+
+def test_models():
+    v = AnimalVariables(
+        name="test",
+        age=4,
+        breed="test",
+        chip_code="test",
+        entry_date=date(2022, 4, 5),
+        fur_color="test",
+        fur_type="test",
+        origin_city="test",
+        sex="M",
+    )
+
+    assert v.age == 4
+
+    dump = v.model_dump()
+
+    assert dump["entry_date"] == "05/04/2022"
+    assert dump["age"] == 4
