@@ -1,3 +1,4 @@
+from datetime import date
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
@@ -73,13 +74,15 @@ class AnimalService:
             )
         )
 
-        filename = f"ingresso_{entry.animal_name}_{entry.entry_date.strftime('%Y-%m-%d')}"
+        filename = f"ingresso_{entry.animal_name}_"
+        f"{entry.entry_date.strftime('%Y-%m-%d')}"
 
         document_id = self.document_repository.new_document(
             NewDocument(
                 filename=filename,
                 data=report,
                 mimetype="application/pdf",
+                is_uploaded=False,
             )
         )
 
@@ -144,8 +147,10 @@ class AnimalService:
     def entries_report(self, query: AnimalEntriesQuery):
         entries = self.animal_repository.count_animal_entries(query)
 
-        filename, report = self.report_generator.generate_animal_entries_report(
-            query, entries
+        filename, report = (
+            self.report_generator.generate_animal_entries_report(
+                query, entries
+            )
         )
 
         return filename, report
@@ -158,3 +163,33 @@ class AnimalService:
         )
 
         return filename, report
+
+    def generate_variation_report(
+        self, animal_id: int, variation_type: ExitType, variation_date: date
+    ):
+        variables = self.animal_repository.get_variation_report_variables(
+            animal_id=animal_id,
+            variation_date=variation_date,
+            variation_type=variation_type,
+        )
+
+        pdf = self.report_generator.build_variation_report(variables)
+
+        new_document_id = self.document_repository.new_document(
+            data=NewDocument(
+                storage_service=self.document_repository.selected_storage,
+                filename=f"variazione_{variables.animal.chip_code}.pdf",
+                data=pdf,
+                mimetype="application/pdf",
+                is_uploaded=False,
+            )
+        )
+
+        self.animal_repository.new_document(
+            animal_id=animal_id,
+            data=NewAnimalDocument(
+                document_id=new_document_id,
+                document_kind_code=DocKindCode.variazione,
+                title="Variazione",
+            ),
+        )
