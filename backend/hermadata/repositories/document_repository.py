@@ -14,6 +14,7 @@ class NewDocument(BaseModel):
     filename: str
     data: bytes
     mimetype: str
+    is_uploaded: bool
 
 
 class DocKindModel(BaseModel):
@@ -93,6 +94,7 @@ class SQLDocumentRepository(SQLBaseRepository):
             key=key,
             filename=data.filename,
             mimetype=data.mimetype,
+            uploaded_or_rendered=data.is_uploaded,
         )
         self.session.add(doc)
         self.session.flush()
