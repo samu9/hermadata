@@ -171,7 +171,7 @@ class ReportGenerator:
         HTML(string=rendered_html).write_pdf(
             target=target,
             stylesheets=[
-                CSS(filename="hermadata/reports/templates/tailwind.css")
+                CSS(filename="hermadata/reports/static/tailwind.css")
             ],
         )
 
