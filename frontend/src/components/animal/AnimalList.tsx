@@ -221,6 +221,15 @@ const AnimalList = () => {
                         setQueryData({ ...queryData, not_present: e.value })
                     }
                 />
+
+                <SwitchFilter
+                    label="Sanitario / Rifugio"
+                    checked={false}
+                    onChange={
+                        (e) => null
+                        // setQueryData({ ...queryData, not_present: e.value })
+                    }
+                />
             </div>
 
             <DataTable
