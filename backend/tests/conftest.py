@@ -1,3 +1,4 @@
+from datetime import date
 import os
 from typing import Callable, Generator
 
@@ -27,7 +28,11 @@ from hermadata.database.models import (
 )
 from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import ReportGenerator
-from hermadata.repositories.adopter_repository import SQLAdopterRepository
+from hermadata.repositories.adopter_repository import (
+    AdopterModel,
+    NewAdopter,
+    SQLAdopterRepository,
+)
 from hermadata.repositories.adoption_repository import SQLAdopionRepository
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import NewAnimalModel
@@ -243,6 +248,28 @@ def make_animal(
 
 
 @pytest.fixture(scope="function")
+def make_adopter(
+    adopter_repository: SQLAdopterRepository,
+) -> Callable[[NewAdopter], int]:
+    def make(data: AdopterModel = None) -> int:
+        if data is None:
+            data = NewAdopter(
+                fiscal_code="RSSMRO11A22B123A",
+                name="Mario",
+                surname="Rossi",
+                birth_city_code="H501",
+                birth_date=date(1970, 2, 3),
+                phone="1234567890",
+                residence_city_code="H501",
+            )
+        adopter = adopter_repository.create(data=data)
+
+        return adopter.id
+
+    return make
+
+
+@pytest.fixture(scope="function")
 def make_vet(
     vet_repository: SQLVetRepository,
 ) -> Callable[[VetModel], int]:
@@ -287,11 +314,11 @@ def app(db_session):
 def empty_db(db_session: Session):
     db_session.execute(delete(MedicalActivityRecord))
     db_session.execute(delete(MedicalActivity))
+    db_session.execute(delete(Adoption))
     db_session.execute(delete(AnimalEntry))
     db_session.execute(delete(AnimalLog))
     db_session.execute(delete(AnimalDocument))
     db_session.execute(delete(Document))
     db_session.execute(delete(Animal))
-    db_session.execute(delete(Adoption))
     db_session.execute(delete(Adopter))
     db_session.execute(delete(Breed))
