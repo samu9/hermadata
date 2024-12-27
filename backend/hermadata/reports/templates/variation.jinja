@@ -20,12 +20,16 @@
             <li>
                 che il suddetto cane è {% if variation_type.value == "I" %}
                 scomparso {% elif variation_type.value == "D" %} deceduto {%
-                elif variation_type.value == "C" %} stato ceduto il al Sig.
+                elif variation_type.value == "C" %} stato ceduto al Sig.
                 {{ adopter.surname }} {{ adopter.name }} nato il
                 {{ adopter.birtdate }} a {{ adopter.birthcity }}, residente in
                 {{ adopter.residence_city }} tel. {{ adopter.phone }}
+                {%elif variation_type.value == 'A'%} stato adottato dal Sig.
+                {{ adopter.surname }} {{ adopter.name }} nato il
+                {{ adopter.birth_date }} a {{ adopter.birth_city }}, residente
+                in {{ adopter.residence_city }} tel. {{ adopter.phone }}
                 {%endif%} il
-                {{ variation_date }}
+                {{ variation_date }}.
             </li>
         </ul>
     </div>
