@@ -96,7 +96,7 @@ def test_variation_report_adoption(
         ),
     )
 
-    animal_service.exit(
+    animal_service.animal_repository.exit(
         animal_id,
         data=AnimalExit(
             exit_date=datetime.now().date(),
@@ -145,7 +145,7 @@ def test_variation_report_death(
             sex=0,
         ),
     )
-    animal_service.exit(
+    animal_service.animal_repository.exit(
         animal_id,
         data=AnimalExit(
             exit_date=datetime.now().date(), exit_type=ExitType.death
