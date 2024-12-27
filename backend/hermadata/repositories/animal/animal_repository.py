@@ -69,6 +69,8 @@ from hermadata.utils import recurrence_to_sql_interval
 
 logger = logging.getLogger(__name__)
 
+ADOPTER_EXIT_TYPES: list[ExitType] = [ExitType.adoption, ExitType.custody]
+
 
 class EntryNotCompleteException(Exception):
     pass
@@ -857,13 +859,48 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return result
 
-    def get_variation_report_variables(
-        self,
-        animal_id: int,
-        variation_type: ExitType,
-        variation_date: date,
-        adopter_id: int | None = None,
-    ):
+    def get_variation_report_variables(self, animal_id: int):
+        comune_residence = aliased(Comune)
+        comune_birth = aliased(Comune)
+
+        variation_data = self.session.execute(
+            select(
+                AnimalEntry.exit_date,
+                AnimalEntry.exit_type,
+                Adopter.name,
+                Adopter.surname,
+                Adopter.fiscal_code,
+                Adopter.birth_date,
+                comune_residence.name.label("residence_city"),
+                comune_birth.name.label("birth_city"),
+                Adopter.phone,
+            )
+            .join(
+                Adoption,
+                Adoption.animal_entry_id == AnimalEntry.id,
+                isouter=True,
+            )
+            .join(Adopter, Adopter.id == Adoption.adopter_id, isouter=True)
+            .join(
+                comune_residence,
+                Adopter.residence_city_code == comune_residence.id,
+                isouter=True,
+            )
+            .join(
+                comune_birth,
+                Adopter.birth_city_code == comune_birth.id,
+                isouter=True,
+            )
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
+        ).one()
+
+        variation_data = dict(zip(variation_data._fields, variation_data))
+        variation_date = variation_data["exit_date"]
+        variation_type = variation_data["exit_type"]
+
         data = self.session.execute(
             select(
                 Animal.name,
@@ -889,6 +926,12 @@ class SQLAnimalRepository(SQLBaseRepository):
             .where(Animal.id == animal_id)
         ).one()
 
+        adopter = (
+            variation_type in ADOPTER_EXIT_TYPES
+            and AdopterVariables.model_validate(variation_data)
+            or None
+        )
+
         animal_variables = AnimalVariables.model_validate(
             dict(zip(data._fields, data))
         )
@@ -896,6 +939,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             variation_type=variation_type,
             animal=animal_variables,
             variation_date=variation_date,
+            adopter=adopter,
         )
 
         return variables
