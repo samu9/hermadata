@@ -1,4 +1,3 @@
-from datetime import date
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
@@ -134,6 +133,8 @@ class AnimalService:
                     title=filename,
                 ),
             )
+
+        self.generate_variation_report(animal_id)
 
     def days_report(self, query: AnimalDaysQuery):
         animal_days = self.animal_repository.count_animal_days(query)
