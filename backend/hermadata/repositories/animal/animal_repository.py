@@ -14,6 +14,8 @@ from sqlalchemy import (
     update,
 )
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import aliased
+
 from hermadata.constants import AnimalEvent, ExitType
 from hermadata.database.models import (
     Adopter,
@@ -27,16 +29,16 @@ from hermadata.database.models import (
     DocumentKind,
     MedicalActivity,
     MedicalActivityRecord,
-    VetServiceRecord,
     Race,
+    VetServiceRecord,
 )
 from hermadata.models import PaginationResult
 from hermadata.reports.report_generator import (
+    AdopterVariables,
     AnimalVariables,
     ReportVariationVariables,
 )
 from hermadata.repositories import SQLBaseRepository
-
 from hermadata.repositories.animal.models import (
     AddMedicalRecordModel,
     AdoptionModel,
@@ -58,11 +60,11 @@ from hermadata.repositories.animal.models import (
     AnimalSearchResult,
     AnimalSearchResultQuery,
     CompleteEntryModel,
+    MedicalActivityModel,
     NewAdoption,
     NewAnimalDocument,
     NewAnimalModel,
     NewEntryModel,
-    MedicalActivityModel,
     UpdateAnimalModel,
 )
 from hermadata.utils import recurrence_to_sql_interval
@@ -482,8 +484,6 @@ class SQLAnimalRepository(SQLBaseRepository):
             document_kind_code=data.document_kind_code.value,
             created_at=animal_document.created_at,
         )
-
-        self.session.flush()
 
         return result
 
