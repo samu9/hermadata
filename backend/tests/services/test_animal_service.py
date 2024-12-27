@@ -18,6 +18,7 @@ from hermadata.repositories.animal.models import (
     NewAnimalModel,
     UpdateAnimalModel,
 )
+from hermadata.repositories.adopter_repository import AdopterModel
 from hermadata.services.animal_service import AnimalService
 from hermadata.storage.disk_storage import DiskStorage
 from tests.utils import random_chip_code
@@ -68,7 +69,60 @@ def test_update(
     assert affected == 1
 
 
-def test_variation_report(
+def test_variation_report_adoption(
+    make_animal: Callable[[NewAnimalModel], int],
+    make_adopter: Callable[[AdopterModel], AdopterModel],
+    animal_service: AnimalService,
+):
+    animal_id = make_animal()
+
+    animal_service.complete_entry(
+        animal_id,
+        data=CompleteEntryModel(
+            entry_date=datetime.now().date() - timedelta(days=10)
+        ),
+    )
+
+    adopter_id = make_adopter()
+
+    animal_service.update(
+        animal_id,
+        data=UpdateAnimalModel(
+            birth_date=datetime.now().date() - timedelta(days=366),
+            chip_code=random_chip_code(),
+            fur=AnimalFur.cordato,
+            name="Test",
+            sex=0,
+        ),
+    )
+
+    animal_service.exit(
+        animal_id,
+        data=AnimalExit(
+            exit_date=datetime.now().date(),
+            exit_type=ExitType.adoption,
+            adopter_id=adopter_id,
+        ),
+    )
+
+    animal_service.generate_variation_report(animal_id)
+
+    animal_service.animal_repository.session.execute(
+        select(DocumentKind.code)
+        .select_from(AnimalDocument)
+        .join(Document, Document.id == AnimalDocument.document_id)
+        .join(
+            DocumentKind,
+            DocumentKind.id == AnimalDocument.document_kind_id,
+        )
+        .where(
+            AnimalDocument.animal_id == animal_id,
+            DocumentKind.code == DocKindCode.variazione.value,
+        )
+    ).scalar_one()
+
+
+def test_variation_report_death(
     make_animal: Callable[[NewAnimalModel], int],
     animal_service: AnimalService,
 ):
@@ -98,8 +152,18 @@ def test_variation_report(
         ),
     )
 
-    animal_service.generate_variation_report(
-        animal_id,
-        variation_type=ExitType.death,
-        variation_date=datetime.now().date(),
-    )
+    animal_service.generate_variation_report(animal_id)
+
+    animal_service.animal_repository.session.execute(
+        select(DocumentKind.code)
+        .select_from(AnimalDocument)
+        .join(Document, Document.id == AnimalDocument.document_id)
+        .join(
+            DocumentKind,
+            DocumentKind.id == AnimalDocument.document_kind_id,
+        )
+        .where(
+            AnimalDocument.animal_id == animal_id,
+            DocumentKind.code == DocKindCode.variazione.value,
+        )
+    ).scalar_one()

@@ -147,6 +147,8 @@ def test_variation_report(report_generator: ReportGenerator):
             name="Mario",
             surname="Rossi",
             residence_city="Montecatini Terme",
+            birth_city="Roma",
+            birth_date=date(1979, 2, 3),
         ),
         variation_type=ExitType.custody,
     )
@@ -174,3 +176,13 @@ def test_models():
 
     assert dump["entry_date"] == "05/04/2022"
     assert dump["age"] == 4
+
+    r = ReportVariationVariables(
+        animal=v,
+        variation_type=ExitType.adoption,
+        variation_date=datetime.now().date(),
+    )
+
+    dump = r.model_dump()
+
+    assert dump["animal"]["age"] == 4

@@ -482,10 +482,15 @@ def test_get_variation_report_variables(
         animal_id, data=CompleteEntryModel(entry_date=datetime.now().date())
     )
 
+    animal_repository.exit(
+        animal_id,
+        data=AnimalExit(
+            exit_date=datetime.now().date(), exit_type=ExitType.disappeared
+        ),
+    )
+
     variables = animal_repository.get_variation_report_variables(
-        animal_id=animal_id,
-        variation_type=ExitType.adoption,
-        variation_date=datetime.now().date(),
+        animal_id=animal_id
     )
 
     assert variables.animal.age == 3
