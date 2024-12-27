@@ -9,10 +9,8 @@ from pydantic import (
     BaseModel,
     Field,
     PlainSerializer,
-    SerializerFunctionWrapHandler,
     field_serializer,
     field_validator,
-    model_serializer,
 )
 from weasyprint import CSS, HTML
 
