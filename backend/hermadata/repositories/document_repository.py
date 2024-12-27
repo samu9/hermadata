@@ -94,7 +94,7 @@ class SQLDocumentRepository(SQLBaseRepository):
             key=key,
             filename=data.filename,
             mimetype=data.mimetype,
-            uploaded_or_rendered=data.is_uploaded,
+            is_uploaded=data.is_uploaded,
         )
         self.session.add(doc)
         self.session.flush()

@@ -323,7 +323,7 @@ class Document(Base):
     filename: Mapped[str] = mapped_column(String(100))
     mimetype: Mapped[str] = mapped_column(String(50))
 
-    uploaded_or_rendered: Mapped[str] = mapped_column(Boolean, nullable=False)
+    is_uploaded: Mapped[str] = mapped_column(Boolean, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
