@@ -164,13 +164,9 @@ class AnimalService:
 
         return filename, report
 
-    def generate_variation_report(
-        self, animal_id: int, variation_type: ExitType, variation_date: date
-    ):
+    def generate_variation_report(self, animal_id: int):
         variables = self.animal_repository.get_variation_report_variables(
-            animal_id=animal_id,
-            variation_date=variation_date,
-            variation_type=variation_type,
+            animal_id=animal_id
         )
 
         pdf = self.report_generator.build_variation_report(variables)
