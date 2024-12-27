@@ -1,12 +1,14 @@
 from datetime import date, datetime
 from enum import Enum
 from io import BytesIO
+from typing import Annotated
 
 import openpyxl
 from jinja2 import Environment
 from pydantic import (
     BaseModel,
     Field,
+    PlainSerializer,
     SerializerFunctionWrapHandler,
     field_serializer,
     field_validator,
@@ -31,6 +33,10 @@ from hermadata.repositories.animal.models import (
     AnimalReportResult,
 )
 
+ReportDate = Annotated[
+    date, PlainSerializer(lambda x: x.strftime("%d/%m/%Y"), return_type=str)
+]
+
 
 def transform_date_to_string(raw: date) -> str:
     return raw.strftime("%d/%m/%Y")
@@ -45,21 +51,11 @@ DEFAULT_EXTENSIONS: dict[ReportFormat, str] = {ReportFormat.excel: "xlsx"}
 
 
 class BaseVariables(BaseModel):
-
-    @model_serializer(mode="wrap")
-    def serialize_model(self, nxt: SerializerFunctionWrapHandler):
-        dump = {}
-        for k in self.model_fields_set:
-            v = getattr(self, k)
-            if isinstance(v, date):
-                dump[k] = v.strftime("%d/%m/%Y")
-            else:
-                dump[k] = nxt(v)
-        return dump
+    pass
 
 
 class ReportDefaultVariables(BaseVariables):
-    day: str = Field(default_factory=lambda: datetime.now().date())
+    day: ReportDate = Field(default_factory=lambda: datetime.now().date())
     title: str
 
     @field_serializer("day")
@@ -72,41 +68,35 @@ class ReportAnimalEntryVariables(ReportDefaultVariables):
     city: str
     animal_type: str
     animal_name: str | None = None
-    entry_date: str
-
-    transform_entry_date = field_validator("entry_date", mode="before")(
-        transform_date_to_string
-    )
+    entry_date: ReportDate
 
 
 class ReportChipAssignmentVariables(ReportDefaultVariables):
     title: str = "ASSEGNAMENTO CHIP"
     animal_name: str | None = None
     chip_code: str
-    assignment_date: str
-
-    transform_assignment_date = field_validator(
-        "assignment_date", mode="before"
-    )(transform_date_to_string)
+    assignment_date: ReportDate
 
 
 class AdopterVariables(BaseModel):
     name: str
     surname: str
     residence_city: str
-    residence_address: str | None = None
+    residence_address: str | None = ""
+    birth_city: str
+    birth_date: ReportDate
 
 
 class AnimalVariables(BaseVariables):
-    name: str | None = None
+    name: str | None = ""
     chip_code: str
-    breed: str | None = None
-    sex: str | None = None
-    age: int | None = None
-    fur_type: str | None = None
-    fur_color: str | int | None = None
+    breed: str | None = ""
+    sex: str | None = ""
+    age: int | None = ""
+    fur_type: str | None = ""
+    fur_color: str | int | None = ""
     origin_city: str
-    entry_date: date
+    entry_date: ReportDate
 
     @field_validator("sex", mode="before")
     def validate_sex(value: int | str):
@@ -127,29 +117,21 @@ class ReportVariationVariables(ReportDefaultVariables):
     adopter: AdopterVariables | None = None
 
     variation_type: ExitType  # scomparso, deceduto, stato ceduto
-    variation_date: date
+    variation_date: ReportDate
 
 
 class ReportAdoptionVariables(ReportDefaultVariables):
     title: str = "DOCUMENTO DI ADOZIONE"
     animal_name: str
     chip_code: str
-    exit_date: str
-
-    transform_exit_date = field_validator("exit_date", mode="before")(
-        transform_date_to_string
-    )
+    exit_date: ReportDate
 
 
 class ReportCustodyVariables(ReportDefaultVariables):
     title: str = "DOCUMENTO DI AFFIDO"
     animal_name: str
     chip_code: str
-    exit_date: str
-
-    transform_exit_date = field_validator("exit_date", mode="before")(
-        transform_date_to_string
-    )
+    exit_date: ReportDate
 
 
 class ReportGenerator:
