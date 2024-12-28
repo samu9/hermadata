@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.exc import NoResultFound
 
-from hermadata.constants import ApiErrorCode
+from hermadata.constants import EXCEL_MEDIA_TYPE, ApiErrorCode
 from hermadata.models import ApiError, PaginationResult
 from hermadata.repositories.animal.animal_repository import (
     ExistingChipCodeException,
@@ -121,9 +121,9 @@ def upload_animal_document(
 def animal_exit(
     animal_id: int,
     data: AnimalExit,
-    repo: SQLAnimalRepository = Depends(animal_repository),
+    service: AnimalService = Depends(animal_service),
 ):
-    repo.exit(animal_id, data)
+    service.exit(animal_id, data)
 
     return True
 
