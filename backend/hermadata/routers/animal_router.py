@@ -167,7 +167,7 @@ def serve_animal_days_report(
 
     return Response(
         content=report,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
+        media_type=EXCEL_MEDIA_TYPE,
         headers={"X-filename": filename},
     )
 
@@ -181,7 +181,7 @@ def serve_animal_entries_report(
 
     return Response(
         content=report,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
+        media_type=EXCEL_MEDIA_TYPE,
         headers={"X-filename": filename},
     )
 
@@ -195,6 +195,6 @@ def serve_animal_exits_report(
 
     return Response(
         content=report,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
+        media_type=EXCEL_MEDIA_TYPE,
         headers={"X-filename": filename},
     )
