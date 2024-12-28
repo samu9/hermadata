@@ -25,6 +25,9 @@ dependencies = [
     "pydantic-settings >= 2.6, <3",
     "weasyprint>=63.1",
 ]
+[project.scripts]
+import-doc-kinds="hermadata.database.alembic.import_initial_data:import_doc_kinds"
+
 [tool.flake8]
 max-line-length = 120
 
