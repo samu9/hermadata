@@ -244,7 +244,7 @@ AnimalGetQuery = namedtuple("AnimalGetQuery", AnimalModel.model_fields.keys())
 
 class NewAnimalDocument(BaseModel):
     document_id: int
-    document_kind_code: DocKindCode
+    document_kind_code: str
     title: Annotated[str, StringConstraints(max_length=100)]
 
 
