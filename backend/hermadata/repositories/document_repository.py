@@ -81,9 +81,9 @@ class SQLDocumentRepository(SQLBaseRepository):
 
         return result
 
-    def get_document_kind_by_code(self, code: DocKindCode) -> DocKindModel:
+    def get_document_kind_by_code(self, code: str) -> DocKindModel:
         kind = self.session.execute(
-            select(DocumentKind).where(DocumentKind.code == code.value)
+            select(DocumentKind).where(DocumentKind.code == code)
         ).scalar_one()
         return DocKindModel.model_validate(kind, from_attributes=True)
 
