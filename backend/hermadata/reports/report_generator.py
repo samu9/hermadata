@@ -124,9 +124,10 @@ class ReportVariationVariables(ReportDefaultVariables):
 
 class ReportAdoptionVariables(ReportDefaultVariables):
     title: str = "DOCUMENTO DI ADOZIONE"
-    animal_name: str
-    chip_code: str
+    animal: AnimalVariables
+    adopter: AdopterVariables
     exit_date: ReportDate
+    notes: NullableString = ""
 
 
 class ReportCustodyVariables(ReportDefaultVariables):
