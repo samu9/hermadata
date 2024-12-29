@@ -36,6 +36,7 @@ from hermadata.models import PaginationResult
 from hermadata.reports.report_generator import (
     AdopterVariables,
     AnimalVariables,
+    ReportAdoptionVariables,
     ReportVariationVariables,
 )
 from hermadata.repositories import SQLBaseRepository
@@ -859,50 +860,9 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return result
 
-    def get_variation_report_variables(self, animal_id: int):
-        comune_residence = aliased(Comune)
-        comune_birth = aliased(Comune)
-
-        variation_data = self.session.execute(
-            select(
-                AnimalEntry.exit_date,
-                AnimalEntry.exit_type,
-                AnimalEntry.exit_notes,
-                Adopter.name,
-                Adopter.surname,
-                Adopter.fiscal_code,
-                Adopter.birth_date,
-                comune_residence.name.label("residence_city"),
-                comune_birth.name.label("birth_city"),
-                Adopter.phone,
-            )
-            .join(
-                Adoption,
-                Adoption.animal_entry_id == AnimalEntry.id,
-                isouter=True,
-            )
-            .join(Adopter, Adopter.id == Adoption.adopter_id, isouter=True)
-            .join(
-                comune_residence,
-                Adopter.residence_city_code == comune_residence.id,
-                isouter=True,
-            )
-            .join(
-                comune_birth,
-                Adopter.birth_city_code == comune_birth.id,
-                isouter=True,
-            )
-            .where(
-                AnimalEntry.animal_id == animal_id,
-                AnimalEntry.current.is_(True),
-            )
-        ).one()
-
-        variation_data = dict(zip(variation_data._fields, variation_data))
-        variation_date = variation_data["exit_date"]
-        variation_type = variation_data["exit_type"]
-        notes = variation_data["exit_notes"]
-
+    def _get_animal_data_report_variables(
+        self, animal_id: int
+    ) -> AnimalVariables:
         data = self.session.execute(
             select(
                 Animal.name,
@@ -928,15 +888,110 @@ class SQLAnimalRepository(SQLBaseRepository):
             .where(Animal.id == animal_id)
         ).one()
 
-        adopter = (
-            variation_type in ADOPTER_EXIT_TYPES
-            and AdopterVariables.model_validate(variation_data)
-            or None
-        )
-
         animal_variables = AnimalVariables.model_validate(
             dict(zip(data._fields, data))
         )
+        return animal_variables
+
+    def _get_adopter_data_report_variables(
+        self, adopter_id: int
+    ) -> AdopterVariables:
+        comune_residence = aliased(Comune)
+        comune_birth = aliased(Comune)
+
+        data = self.session.execute(
+            select(
+                Adopter.name,
+                Adopter.surname,
+                Adopter.fiscal_code,
+                Adopter.birth_date,
+                comune_residence.name.label("residence_city"),
+                comune_birth.name.label("birth_city"),
+                Adopter.phone,
+            )
+            .join(
+                comune_residence,
+                Adopter.residence_city_code == comune_residence.id,
+                isouter=True,
+            )
+            .join(
+                comune_birth,
+                Adopter.birth_city_code == comune_birth.id,
+                isouter=True,
+            )
+            .where(Adopter.id == adopter_id)
+        ).one()
+        adopter_variables = AdopterVariables.model_validate(
+            dict(zip(data._fields, data))
+        )
+
+        return adopter_variables
+
+    def get_adoption_report_variables(self, animal_id: int):
+        adoption_date, exit_type, notes, adopter_id = self.session.execute(
+            select(
+                AnimalEntry.exit_date,
+                AnimalEntry.exit_type,
+                AnimalEntry.exit_notes,
+                Adoption.adopter_id,
+            )
+            .select_from(AnimalEntry)
+            .join(
+                Adoption,
+                Adoption.animal_entry_id == AnimalEntry.id,
+            )
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
+        ).one()
+
+        if exit_type not in ADOPTER_EXIT_TYPES:
+            raise Exception("last exit is not an adoption")
+
+        adopter = self._get_adopter_data_report_variables(adopter_id)
+        animal_variables = self._get_animal_data_report_variables(animal_id)
+
+        variables = ReportAdoptionVariables(
+            animal=animal_variables,
+            exit_date=adoption_date,
+            adopter=adopter,
+            notes=notes,
+        )
+
+        return variables
+
+    def get_variation_report_variables(self, animal_id: int):
+
+        variation_date, variation_type, notes, adopter_id = (
+            self.session.execute(
+                select(
+                    AnimalEntry.exit_date,
+                    AnimalEntry.exit_type,
+                    AnimalEntry.exit_notes,
+                    Adoption.adopter_id,
+                )
+                .select_from(AnimalEntry)
+                .join(
+                    Adoption,
+                    Adoption.animal_entry_id == AnimalEntry.id,
+                    isouter=True,
+                )
+                .where(
+                    AnimalEntry.animal_id == animal_id,
+                    AnimalEntry.current.is_(True),
+                )
+            ).one()
+        )
+
+        adopter = (
+            variation_type in ADOPTER_EXIT_TYPES
+            and self._get_adopter_data_report_variables(adopter_id)
+            or None
+        )
+
+        animal_variables = self._get_animal_data_report_variables(animal_id)
+
         variables = ReportVariationVariables(
             variation_type=variation_type,
             animal=animal_variables,
