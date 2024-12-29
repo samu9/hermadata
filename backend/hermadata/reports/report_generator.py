@@ -36,7 +36,9 @@ ReportDate = Annotated[
     date, PlainSerializer(lambda x: x.strftime("%d/%m/%Y"), return_type=str)
 ]
 
-NullableString = Annotated[str | None, AfterValidator(lambda x: x or "")]
+NullableString = Annotated[
+    str | None, Field(default=""), AfterValidator(lambda x: x or "")
+]
 
 
 def transform_date_to_string(raw: date) -> str:
@@ -119,7 +121,7 @@ class ReportVariationVariables(ReportDefaultVariables):
 
     variation_type: ExitType  # scomparso, deceduto, stato ceduto
     variation_date: ReportDate
-    notes: NullableString = ""
+    notes: NullableString
 
 
 class ReportAdoptionVariables(ReportDefaultVariables):
@@ -127,7 +129,7 @@ class ReportAdoptionVariables(ReportDefaultVariables):
     animal: AnimalVariables
     adopter: AdopterVariables
     exit_date: ReportDate
-    notes: NullableString = ""
+    notes: NullableString
 
 
 class ReportCustodyVariables(ReportDefaultVariables):
