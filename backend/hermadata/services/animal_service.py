@@ -165,6 +165,32 @@ class AnimalService:
 
         return filename, report
 
+    def generate_adoption_report(self, animal_id: int):
+        variables = self.animal_repository.get_adoption_report_variables(
+            animal_id
+        )
+
+        pdf = self.report_generator.build_adoption_report(variables)
+
+        new_document_id = self.document_repository.new_document(
+            data=NewDocument(
+                storage_service=self.document_repository.selected_storage,
+                filename=f"adozione_{variables.animal.chip_code}.pdf",
+                data=pdf,
+                mimetype="application/pdf",
+                is_uploaded=False,
+            )
+        )
+
+        self.animal_repository.new_document(
+            animal_id=animal_id,
+            data=NewAnimalDocument(
+                document_id=new_document_id,
+                document_kind_code=DocKindCode.adozione,
+                title=f"Adozione {variables.animal.chip_code}",
+            ),
+        )
+
     def generate_variation_report(self, animal_id: int):
         variables = self.animal_repository.get_variation_report_variables(
             animal_id=animal_id
