@@ -119,7 +119,7 @@ class ReportVariationVariables(ReportDefaultVariables):
 
     variation_type: ExitType  # scomparso, deceduto, stato ceduto
     variation_date: ReportDate
-    notes: NullableString
+    notes: NullableString = ""
 
 
 class ReportAdoptionVariables(ReportDefaultVariables):
