@@ -102,6 +102,7 @@ def test_variation_report_adoption(
             exit_date=datetime.now().date(),
             exit_type=ExitType.adoption,
             adopter_id=adopter_id,
+            notes="Test",
         ),
     )
 
