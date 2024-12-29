@@ -6,6 +6,7 @@ from typing import Annotated
 import openpyxl
 from jinja2 import Environment
 from pydantic import (
+    AfterValidator,
     BaseModel,
     Field,
     PlainSerializer,
@@ -34,6 +35,8 @@ from hermadata.repositories.animal.models import (
 ReportDate = Annotated[
     date, PlainSerializer(lambda x: x.strftime("%d/%m/%Y"), return_type=str)
 ]
+
+NullableString = Annotated[str | None, AfterValidator(lambda x: x or "")]
 
 
 def transform_date_to_string(raw: date) -> str:
@@ -110,12 +113,13 @@ class AnimalVariables(BaseVariables):
 
 
 class ReportVariationVariables(ReportDefaultVariables):
-    title: str = "VARIAZIONE"
+    title: str = "COMUNICAZIONE DI VARIAZIONE"
     animal: AnimalVariables
     adopter: AdopterVariables | None = None
 
     variation_type: ExitType  # scomparso, deceduto, stato ceduto
     variation_date: ReportDate
+    notes: NullableString
 
 
 class ReportAdoptionVariables(ReportDefaultVariables):
