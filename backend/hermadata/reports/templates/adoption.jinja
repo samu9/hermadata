@@ -7,16 +7,16 @@
             <span class="font-bold">DICHIARAZIONE</span>
         </p>
         <div>
-            <p>
+            <p class="pb-2">
                 Il sottoscritto {{ adopter.surname }} {{ adopter.name }} nato il
-                {{ adopter.birtdate }} a {{ adopter.birthcity }}, residente in
-                {{ adopter.residence_city }} tel. {{ adopter.phone }}
+                {{ adopter.birth_date }} a {{ adopter.birth_city }}, residente
+                in {{ adopter.residence_city }} tel. {{ adopter.phone }}
                 in qualità di affidatario dell'animale di cui sopra, si impegna
                 a mantenere lo stesso in buone condizioni presso la propria
                 residenza o al seguente domicilio, e a non cederlo se non previa
                 segnalazione al servizio dell'Azienda USL 3 Zona Valdinievole.
             </p>
-            <p>
+            <p class="pb-2">
                 Si impegna altresì a dichiarare allo stesso servizio lo
                 smarrimento o il decesso dell'animale e a mostrare l'animale
                 affidato al personale all'uopo incaricato nel corso dei
@@ -29,8 +29,8 @@
         <div class="mt-2">Note: {{ notes }}</div>
     </div>
 
-    <div class="w-full">
-        <div class="ml-auto flex flex-col items-center">
+    <div class="flex justify-end mt-4">
+        <div class="flex flex-col items-center">
             <div>Firma dell'affidatario dell'animale</div>
             <div class="mt-8">__________________________</div>
         </div>
