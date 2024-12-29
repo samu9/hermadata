@@ -867,6 +867,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             select(
                 AnimalEntry.exit_date,
                 AnimalEntry.exit_type,
+                AnimalEntry.exit_notes,
                 Adopter.name,
                 Adopter.surname,
                 Adopter.fiscal_code,
@@ -900,6 +901,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         variation_data = dict(zip(variation_data._fields, variation_data))
         variation_date = variation_data["exit_date"]
         variation_type = variation_data["exit_type"]
+        notes = variation_data["exit_notes"]
 
         data = self.session.execute(
             select(
@@ -940,6 +942,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal=animal_variables,
             variation_date=variation_date,
             adopter=adopter,
+            notes=notes,
         )
 
         return variables
