@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from io import BytesIO
 
 from openpyxl import load_workbook
@@ -7,6 +7,7 @@ from hermadata.constants import EntryType, ExitType
 from hermadata.reports.report_generator import (
     AdopterVariables,
     AnimalVariables,
+    ReportAdoptionVariables,
     ReportAnimalEntryVariables,
     ReportChipAssignmentVariables,
     ReportFormat,
@@ -154,6 +155,39 @@ def test_variation_report(report_generator: ReportGenerator):
     )
     pdf = report_generator.build_variation_report(variables)
 
+    assert pdf
+
+
+def test_adoption_report(report_generator: ReportGenerator):
+    variables = ReportAdoptionVariables(
+        animal=AnimalVariables(
+            name="Gino",
+            chip_code="111.111.111.111.111",
+            fur_type="lungo",
+            age=12,
+            breed="Chihuahua",
+            fur_color="binaco",
+            origin_city="Montecatini terme",
+            sex="maschio",
+            entry_date=datetime.now().date() - timedelta(days=30),
+        ),
+        adopter=AdopterVariables(
+            name="Mario",
+            surname="Rossi",
+            residence_city="Montecatini Terme",
+            birth_city="Roma",
+            birth_date=date(1979, 2, 3),
+            residence_address="Via test",
+            phone="123456789",
+        ),
+        exit_date=datetime.now().date(),
+        notes="Test",
+    )
+
+    pdf = report_generator.build_adoption_report(variables)
+
+    with open("adoption.pdf", "wb") as fp:
+        fp.write(pdf)
     assert pdf
 
 
