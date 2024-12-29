@@ -10,7 +10,9 @@ C,Attribuzione chip,0,1
 CM,Certificato morte,1,0
 DS,Denuncia Smarrimento,1,0
 AF,Affido,1,1
+AFF,Affido firmato,1,0
 AD,Adozione,1,1
+ADF,Adozione firmato,1,0
 RP,Restituzione proprietario,1,1
 RR,Documento richiesta di recupero,0,1
 VA,Variazione,0,1
