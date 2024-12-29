@@ -467,7 +467,7 @@ class SQLAnimalRepository(SQLBaseRepository):
     def new_document(self, animal_id: int, data: NewAnimalDocument):
         document_kind_id = self.session.execute(
             select(DocumentKind.id).where(
-                DocumentKind.code == data.document_kind_code.value
+                DocumentKind.code == data.document_kind_code
             )
         ).scalar_one()
         animal_document = AnimalDocument(
@@ -482,7 +482,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         result = AnimalDocumentModel(
             animal_id=animal_id,
             document_id=data.document_id,
-            document_kind_code=data.document_kind_code.value,
+            document_kind_code=data.document_kind_code,
             created_at=animal_document.created_at,
         )
 
