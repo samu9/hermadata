@@ -186,8 +186,6 @@ def test_adoption_report(report_generator: ReportGenerator):
 
     pdf = report_generator.build_adoption_report(variables)
 
-    with open("adoption.pdf", "wb") as fp:
-        fp.write(pdf)
     assert pdf
 
 
