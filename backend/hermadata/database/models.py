@@ -336,7 +336,7 @@ class Document(Base):
 class DocumentKind(Base):
     __tablename__ = "document_kind"
     id: Mapped[int] = mapped_column(primary_key=True)
-    code: Mapped[str] = mapped_column(String(2), unique=True)
+    code: Mapped[str] = mapped_column(String(3), unique=True)
     name: Mapped[str] = mapped_column(String(50), unique=True)
 
     uploadable: Mapped[bool] = mapped_column(
