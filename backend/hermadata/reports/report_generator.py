@@ -88,6 +88,7 @@ class AdopterVariables(BaseModel):
     residence_address: str | None = ""
     birth_city: str
     birth_date: ReportDate
+    phone: str | None = ""
 
 
 class AnimalVariables(BaseVariables):
