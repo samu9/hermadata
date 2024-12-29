@@ -78,12 +78,7 @@ const AnimalExitForm = () => {
     useEffect(() => {
         const values = getValues()
 
-        setShowAdopterForm(
-            [
-                "A",
-                //, "R"
-            ].includes(values.exit_type)
-        )
+        setShowAdopterForm(["A", , "R"].includes(values.exit_type))
     }, [watch()])
     return (
         <div>
