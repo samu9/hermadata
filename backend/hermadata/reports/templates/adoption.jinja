@@ -1,17 +1,39 @@
 {% extends "base.jinja" %} {% block content%}
 
 <div>
-    <div>
+    {% include 'animal_data.jinja'%}
+    <div class="section">
+        <p class="w-full text-center my-4">
+            <span class="font-bold">DICHIARAZIONE</span>
+        </p>
         <div>
-            Nome animale: <span class="font-bold">{{ animal_name }}</span>
+            <p>
+                Il sottoscritto {{ adopter.surname }} {{ adopter.name }} nato il
+                {{ adopter.birtdate }} a {{ adopter.birthcity }}, residente in
+                {{ adopter.residence_city }} tel. {{ adopter.phone }}
+                in qualità di affidatario dell'animale di cui sopra, si impegna
+                a mantenere lo stesso in buone condizioni presso la propria
+                residenza o al seguente domicilio, e a non cederlo se non previa
+                segnalazione al servizio dell'Azienda USL 3 Zona Valdinievole.
+            </p>
+            <p>
+                Si impegna altresì a dichiarare allo stesso servizio lo
+                smarrimento o il decesso dell'animale e a mostrare l'animale
+                affidato al personale all'uopo incaricato nel corso dei
+                controlli domicialiari predisposti dal servizio veterinario
+                dell'Azienda USL 3. L'eventuale riconsegna al canile potrà
+                avvenire entro 10 giorni dal ritiro dell'animale.
+            </p>
         </div>
-        <div>
-            Numero chip: <span class="font-bold">{{ chip_code }}</span>
-        </div>
-        <div>
-            Data adozione:
-            <span class="font-bold">{{ assignment_date }}</span>
+
+        <div class="mt-2">Note: {{ notes }}</div>
+    </div>
+
+    <div class="w-full">
+        <div class="ml-auto flex flex-col items-center">
+            <div>Firma dell'affidatario dell'animale</div>
+            <div class="mt-8">__________________________</div>
         </div>
     </div>
-    {% endblock %}
 </div>
+{% endblock %}
