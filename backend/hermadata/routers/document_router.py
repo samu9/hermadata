@@ -22,6 +22,7 @@ def new_document(
             data=doc.file.read(),
             filename=doc.filename,
             mimetype=doc.content_type,
+            is_uploaded=True,
         )
     )
 
