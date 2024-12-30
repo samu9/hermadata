@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from hermadata.constants import DocKindCode, EntryType
+from hermadata.constants import DocKindCode, EntryType, ExitType
 from hermadata.database.models import (
     Animal,
     AnimalDocument,
@@ -13,10 +13,12 @@ from hermadata.database.models import (
     DocumentKind,
 )
 from hermadata.repositories.animal.models import (
+    AnimalExit,
     CompleteEntryModel,
     NewAnimalModel,
     UpdateAnimalModel,
 )
+from hermadata.services.animal_service import AnimalService
 from tests.utils import random_chip_code
 
 
@@ -96,3 +98,52 @@ def test_complete_entry(app: TestClient, make_animal, db_session: Session):
     ).scalar()
 
     assert doc_kind == DocKindCode.comunicazione_ingresso.value
+
+
+def test_exit(
+    app: TestClient,
+    make_animal,
+    animal_service: AnimalService,
+    make_adopter,
+    db_session: Session,
+):
+    animal_id = make_animal()
+    adopter_id = make_adopter()
+
+    animal_service.complete_entry(
+        animal_id,
+        data=CompleteEntryModel(
+            entry_date=datetime.now().date() - timedelta(days=3)
+        ),
+    )
+    animal_service.update(
+        animal_id,
+        data=UpdateAnimalModel(
+            chip_code=random_chip_code(), name="Gino", notes="Test"
+        ),
+    )
+    update_data = jsonable_encoder(
+        AnimalExit(
+            adopter_id=adopter_id,
+            exit_date=datetime.now().date(),
+            exit_type=ExitType.adoption,
+            notes="Test",
+        ).model_dump()
+    )
+
+    result = app.post(f"/animal/{animal_id}/exit", json=update_data)
+
+    assert result.status_code == 200
+
+    documents = db_session.execute(
+        select(AnimalDocument, DocumentKind)
+        .join(
+            DocumentKind,
+            DocumentKind.id == AnimalDocument.document_kind_id,
+        )
+        .where(AnimalDocument.animal_id == animal_id)
+    ).all()
+
+    assert set([DocKindCode.adozione, DocKindCode.variazione]).issubset(
+        set([DocKindCode(k.code) for d, k in documents])
+    )
