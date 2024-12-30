@@ -13,16 +13,10 @@ from typing import (
 )
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
-
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
-from hermadata.constants import (
-    DocKindCode,
-    EntryType,
-    ExitType,
-    RecurrenceType,
-)
+from hermadata.constants import EntryType, ExitType, RecurrenceType
 from hermadata.database.models import Animal, AnimalEntry
 from hermadata.models import PaginationQuery, Sex
 
