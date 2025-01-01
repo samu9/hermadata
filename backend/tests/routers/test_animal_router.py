@@ -4,7 +4,10 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
+from hermadata.repositories.document_repository import (
+    NewDocument,
+    SQLDocumentRepository,
+)
 from hermadata.constants import DocKindCode, EntryType, ExitType
 from hermadata.database.models import (
     Animal,
@@ -15,6 +18,7 @@ from hermadata.database.models import (
 from hermadata.repositories.animal.models import (
     AnimalExit,
     CompleteEntryModel,
+    NewAnimalDocument,
     NewAnimalModel,
     UpdateAnimalModel,
 )
@@ -147,3 +151,44 @@ def test_exit(
     assert set([DocKindCode.adozione, DocKindCode.variazione]).issubset(
         set([DocKindCode(k.code) for d, k in documents])
     )
+
+
+def test_new_animal_document(
+    app: TestClient,
+    make_animal,
+    document_repository: SQLDocumentRepository,
+    db_session: Session,
+):
+    animal_id = make_animal()
+
+    document_id = document_repository.new_document(
+        data=NewDocument(
+            filename="test",
+            data=bytes(),
+            mimetype="application/pdf",
+            is_uploaded=True,
+        )
+    )
+    data = jsonable_encoder(
+        NewAnimalDocument(
+            document_kind_code=DocKindCode.documento_identita,
+            document_id=document_id,
+            title="Test",
+        ).model_dump()
+    )
+
+    result = app.post(f"/animal/{animal_id}/document", json=data)
+
+    assert result.status_code == 200
+
+    animal_document, document_kind = db_session.execute(
+        select(AnimalDocument, DocumentKind)
+        .where(
+            AnimalDocument.animal_id == animal_id,
+            AnimalDocument.document_id == document_id,
+        )
+        .join(DocumentKind, AnimalDocument.document_kind_id == DocumentKind.id)
+    ).one()
+
+    assert animal_document.title == "Test"
+    assert document_kind.code == DocKindCode.documento_identita.value
