@@ -29,7 +29,7 @@ def new_document(
     return result
 
 
-@router.get("/kind")
+@router.get("/kind", response_model=list[DocKindModel])
 def get_document_kinds(
     doc_repo: SQLDocumentRepository = Depends(document_repository),
 ):
