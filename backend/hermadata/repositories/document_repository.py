@@ -58,10 +58,17 @@ class SQLDocumentRepository(SQLBaseRepository):
 
     def new_document_kind(self, data: NewDocKindModel):
         result = self.session.execute(
-            insert(DocumentKind).values(name=data.name)
+            insert(DocumentKind).values(
+                name=data.name, code=data.code, uploadable=True, rendered=False
+            )
         )
         self.session.flush()
-        new_kind = DocKindModel(id=result.lastrowid, name=data.name)
+        new_kind = DocKindModel(
+            id=result.lastrowid,
+            name=data.name,
+            uploadable=True,
+            code=data.code,
+        )
         return new_kind
 
     def get_document_kinds(self, uploadable: bool = None):
