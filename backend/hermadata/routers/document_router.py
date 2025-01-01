@@ -60,6 +60,8 @@ def serve_document(
     document_id: int,
     doc_repo: SQLDocumentRepository = Depends(document_repository),
 ):
-    data, content_type = doc_repo.get_data(document_id)
+    data, content_type, filename = doc_repo.get_data(document_id)
 
-    return Response(content=data, media_type=content_type)
+    return Response(
+        content=data, media_type=content_type, headers={"filename": filename}
+    )

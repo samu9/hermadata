@@ -104,9 +104,12 @@ class SQLDocumentRepository(SQLBaseRepository):
         return doc_id
 
     def get_data(self, document_id: int):
-        key, storage_service, content_type = self.session.execute(
+        key, storage_service, content_type, filename = self.session.execute(
             select(
-                Document.key, Document.storage_service, Document.mimetype
+                Document.key,
+                Document.storage_service,
+                Document.mimetype,
+                Document.filename,
             ).where(Document.id == document_id)
         ).one()
         storage_service = StorageType(storage_service)
@@ -116,4 +119,4 @@ class SQLDocumentRepository(SQLBaseRepository):
 
         data = self.storage[storage_service].retrieve_file(key)
 
-        return data, content_type
+        return data, content_type, filename
