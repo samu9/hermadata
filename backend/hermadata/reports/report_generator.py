@@ -98,7 +98,7 @@ class AnimalVariables(BaseVariables):
     sex: str | None = ""
     age: int | None = ""
     fur_type: str | None = ""
-    fur_color: str | int | None = ""
+    fur_color: str | None = ""
     origin_city: str
     entry_date: ReportDate
 
