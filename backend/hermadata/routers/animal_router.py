@@ -14,6 +14,7 @@ from hermadata.repositories.animal.models import (
     AnimalEntriesQuery,
     AnimalExit,
     AnimalExitsQuery,
+    AnimalModel,
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
@@ -60,7 +61,7 @@ def search_animals(
     return result
 
 
-@router.get("/{animal_id}")
+@router.get("/{animal_id}", response_model=AnimalModel)
 def get_animal(
     animal_id: int,
     repo: SQLAnimalRepository = Depends(animal_repository),
