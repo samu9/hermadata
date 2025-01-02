@@ -107,6 +107,20 @@ class AnimalEntry(Base):
     current: Mapped[bool] = mapped_column(server_default=expression.true())
 
 
+class FurColor(Base):
+    __tablename__ = "fur_color"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+
 class AnimalLog(Base):
     __tablename__ = "animal_log"
 
