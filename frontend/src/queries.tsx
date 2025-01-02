@@ -63,6 +63,11 @@ export const useAnimalFurTypesQuery = () =>
         staleTime: Infinity,
     })
 
+export const useAnimalFurColorsQuery = () =>
+    useQuery("fur-color", () => apiService.getAnimalFurColors(), {
+        staleTime: Infinity,
+    })
+
 export const useAnimalDocumentsQuery = (animal_id: number) =>
     useQuery(["animal-documents", animal_id], {
         queryFn: () => apiService.getAnimalDocuments(animal_id),

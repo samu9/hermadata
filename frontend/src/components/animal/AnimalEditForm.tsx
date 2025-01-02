@@ -18,6 +18,7 @@ import {
 import ControlledBreedsDropdown from "../forms/ControlledBreedsDropdown"
 import ControlledCheckbox from "../forms/ControlledCheckbox"
 import ControlledDropdown from "../forms/ControlledDropdown"
+import ControlledFurColorsDropdown from "../forms/ControlledFurColorDropdown"
 import ControlledInputDate from "../forms/ControlledInputDate"
 import ControlledInputMask from "../forms/ControlledInputMask"
 import ControlledInputText from "../forms/ControlledInputText"
@@ -55,7 +56,6 @@ const AnimalEditForm = () => {
             context
         ) => {
             const isApiError = apiErrorSchema.safeParse(result)
-            console.log(isApiError)
             if (isApiError.success) {
                 if (isApiError.data.code == ApiErrorCode.existingChipCode) {
                     const otherAnimalId = isApiError.data.content!.animal_id
@@ -176,6 +176,13 @@ const AnimalEditForm = () => {
                                     optionValue="id"
                                     optionLabel="label"
                                     options={animalFurTypesQuery.data}
+                                />
+                                <ControlledFurColorsDropdown
+                                    onAdd={(color) =>
+                                        setValue("color", color.id, {
+                                            shouldDirty: true,
+                                        })
+                                    }
                                 />
                             </div>
                         </div>

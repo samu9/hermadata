@@ -244,6 +244,21 @@ class ApiService {
         return data
     }
 
+    async getAnimalFurColors() {
+        const data = await this.get<IntUtilItem[]>(ApiEndpoints.util.furColor)
+
+        return data
+    }
+
+    async addAnimalFurColor(data: { name: string }): Promise<IntUtilItem> {
+        const result = await this.post<IntUtilItem>(
+            ApiEndpoints.util.furColor,
+            data
+        )
+
+        return result
+    }
+
     async newAdopter(data: NewAdopter): Promise<Adopter> {
         const result = await this.post<Adopter>(
             ApiEndpoints.adopter.create,
