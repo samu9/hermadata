@@ -470,6 +470,7 @@ def test_get_variation_report_variables(
         data=NewBreedModel(race_id="C", name="Test")
     )
 
+    fur_color = animal_repository.add_fur_color(name=uuid4().hex)
     animal_repository.update(
         animal_id,
         updates=UpdateAnimalModel(
@@ -479,6 +480,7 @@ def test_get_variation_report_variables(
             fur=AnimalFur.cordato,
             sex=0,
             breed_id=breed.id,
+            color=fur_color.id,
         ),
     )
     animal_repository.complete_entry(
@@ -497,6 +499,7 @@ def test_get_variation_report_variables(
     )
 
     assert variables.animal.age == 3
+    assert variables.animal.fur_color == fur_color.label
 
 
 @pytest.mark.skip(reason="Not implemented yet")
