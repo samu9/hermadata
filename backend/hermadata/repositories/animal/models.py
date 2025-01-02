@@ -25,6 +25,14 @@ rescue_city_code_PATTERN = r"[A-Z]\d{3}"
 T = TypeVar("T")
 
 
+FurColorName = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True, to_upper=True, min_length=2, max_length=100
+    ),
+]
+
+
 class WhereClauseMapItem(NamedTuple):
     """
     * attribute_builder: callable which returns the attribute
@@ -181,6 +189,7 @@ class AnimalModel(BaseModel):
     notes: str | None = None
     img_path: str | None = None
     fur: int | None = None
+    color: int | None = None
     size: int | None = None
     exit_date: date | None = None
     exit_type: ExitType | None = None
@@ -201,6 +210,7 @@ class UpdateAnimalModel(BaseModel):
     notes: str | None = None
     birth_date: date | None = None
     fur: int | None = None
+    color: int | None = None
     size: int | None = None
 
 
