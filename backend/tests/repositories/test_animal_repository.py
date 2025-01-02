@@ -9,12 +9,15 @@ from hermadata.constants import AnimalFur, EntryType, ExitType, RecurrenceType
 from hermadata.database.models import (
     Animal,
     AnimalEntry,
+    FurColor,
     MedicalActivityRecord,
 )
+from hermadata.models import UtilElement
 from hermadata.repositories.animal.animal_repository import (
     AnimalModel,
     AnimalSearchModel,
     SQLAnimalRepository,
+    FurColorName,
 )
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
@@ -532,3 +535,34 @@ def test_get_pending_therapies(
     )
 
     assert result
+
+
+def test_get_fur_colors(
+    animal_repository: SQLAnimalRepository, db_session: Session
+):
+    color_name = uuid4().hex
+    c = FurColor(name=color_name)
+    db_session.add(c)
+    db_session.flush()
+    result = animal_repository.get_fur_colors()
+
+    assert len(result) > 0
+
+    assert isinstance(result[0], UtilElement)
+
+    assert color_name in [r.label for r in result]
+
+
+def test_new_fur_color(
+    animal_repository: SQLAnimalRepository, db_session: Session
+):
+    name = uuid4().hex
+    result = animal_repository.add_fur_color(name)
+
+    assert isinstance(result, UtilElement)
+
+    db_session.execute(
+        select(FurColor).where(
+            FurColor.id == result.id, FurColor.name == result.label
+        )
+    ).scalar_one()
