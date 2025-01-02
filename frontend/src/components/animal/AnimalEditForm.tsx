@@ -125,15 +125,13 @@ const AnimalEditForm = () => {
                                 label="Nome"
                                 className="w-52"
                             />
-                            <div className="flex gap-4">
-                                <ControlledInputMask<AnimalEdit>
-                                    fieldName="chip_code"
-                                    label="Chip"
-                                    mask="999.999.999.999.999"
-                                    disabled={animalQuery.data?.chip_code_set}
-                                    className="w-52"
-                                />
-                            </div>
+                            <ControlledInputMask<AnimalEdit>
+                                fieldName="chip_code"
+                                label="Chip"
+                                mask="999.999.999.999.999"
+                                disabled={animalQuery.data?.chip_code_set}
+                                className="w-52"
+                            />
                             <div className="flex flex-row gap-4 py-2">
                                 <ControlledCheckbox<AnimalEdit>
                                     fieldName="sterilized"
