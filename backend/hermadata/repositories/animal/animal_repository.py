@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import date, datetime, timedelta, timezone
 
+from pydantic import validate_call
 from sqlalchemy import (
     Interval,
     and_,
@@ -27,12 +28,13 @@ from hermadata.database.models import (
     Breed,
     Comune,
     DocumentKind,
+    FurColor,
     MedicalActivity,
     MedicalActivityRecord,
     Race,
     VetServiceRecord,
 )
-from hermadata.models import PaginationResult
+from hermadata.models import PaginationResult, UtilElement
 from hermadata.reports.report_generator import (
     AdopterVariables,
     AnimalVariables,
@@ -67,6 +69,7 @@ from hermadata.repositories.animal.models import (
     NewAnimalModel,
     NewEntryModel,
     UpdateAnimalModel,
+    FurColorName,
 )
 from hermadata.utils import recurrence_to_sql_interval
 
@@ -224,7 +227,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             select(
                 Animal.code,
                 Animal.race_id,
-                AnimalEntry.origin_city_code,
+                AnimalEntry.origin_city_code.label("rescue_city_code"),
                 Animal.breed_id,
                 Animal.chip_code,
                 Animal.chip_code_set,
@@ -237,6 +240,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Animal.notes,
                 Animal.img_path,
                 Animal.fur,
+                Animal.color,
                 Animal.size,
                 AnimalEntry.exit_date,
                 AnimalEntry.exit_type,
@@ -251,9 +255,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
         ).one()
 
-        data = AnimalModel.model_validate(
-            AnimalGetQuery(*result), from_attributes=True
-        )
+        data = AnimalModel.model_validate(dict(zip(result._fields, result)))
         return data
 
     def get_adoption(self, animal_id: int):
@@ -1001,3 +1003,30 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
 
         return variables
+
+    def get_fur_colors(self) -> list[UtilElement]:
+        data = self.session.execute(
+            select(FurColor.id, FurColor.name.label("label"))
+        ).all()
+
+        result = [
+            UtilElement.model_validate(dict(zip(d._fields, d))) for d in data
+        ]
+
+        return result
+
+    @validate_call
+    def add_fur_color(self, name: FurColorName) -> UtilElement:
+        try:
+            result = self.session.execute(
+                insert(FurColor).values({FurColor.name: name})
+            )
+            color_id = result.lastrowid
+        except IntegrityError:
+            result = self.session.execute(
+                select(FurColor).where(FurColor.name == name)
+            ).scalar_one()
+            color_id = result.id
+
+        new_color = UtilElement(id=color_id, label=name)
+        return new_color
