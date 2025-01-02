@@ -40,6 +40,10 @@ NullableString = Annotated[
     str | None, Field(default=""), AfterValidator(lambda x: x or "")
 ]
 
+NullableInt = Annotated[
+    int | None, Field(default=""), AfterValidator(lambda x: x or "")
+]
+
 
 def transform_date_to_string(raw: date) -> str:
     return raw.strftime("%d/%m/%Y")
@@ -85,20 +89,20 @@ class AdopterVariables(BaseModel):
     name: str
     surname: str
     residence_city: str
-    residence_address: str | None = ""
+    residence_address: NullableString
     birth_city: str
     birth_date: ReportDate
-    phone: str | None = ""
+    phone: NullableString
 
 
 class AnimalVariables(BaseVariables):
-    name: str | None = ""
+    name: NullableString
     chip_code: str
-    breed: str | None = ""
-    sex: str | None = ""
-    age: int | None = ""
-    fur_type: str | None = ""
-    fur_color: str | None = ""
+    breed: NullableString
+    sex: NullableString
+    age: NullableInt
+    fur_type: NullableString
+    fur_color: NullableString
     origin_city: str
     entry_date: ReportDate
 
