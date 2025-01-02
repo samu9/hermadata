@@ -873,7 +873,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Animal.sex,
                 self.animal_birth_date_to_age.label("age"),
                 Animal.fur.label("fur_type"),
-                Animal.color.label("fur_color"),
+                FurColor.name.label("fur_color"),
                 Comune.name.label("origin_city"),
                 AnimalEntry.entry_date,
             )
@@ -887,6 +887,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             .join(Comune, AnimalEntry.origin_city_code == Comune.id)
             .join(Breed, Breed.id == Animal.breed_id, isouter=True)
             .join(Race, Race.id == Animal.race_id)
+            .join(FurColor, FurColor.id == Animal.color, isouter=True)
             .where(Animal.id == animal_id)
         ).one()
 
