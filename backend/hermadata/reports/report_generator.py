@@ -151,9 +151,6 @@ class ReportGenerator:
 
         rendered_html = template.render(**variables.model_dump())
 
-        with open("output.html", "w") as fp:
-            fp.write(rendered_html)
-
         target = BytesIO()
 
         HTML(string=rendered_html).write_pdf(
