@@ -16,9 +16,10 @@ flit install -s
 
 # Dependancies
 
-### wkhtmltopdf
+### pango-view
 
-`apt install wkhtmltopdf`
+For using weasyprint
+`sudo apt install pango1.0-tools`
 
 # Build
 
