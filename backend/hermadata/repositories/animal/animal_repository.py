@@ -877,6 +877,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Comune.name.label("origin_city"),
                 AnimalEntry.entry_date,
             )
+            .select_from(Animal)
             .join(
                 AnimalEntry,
                 and_(
