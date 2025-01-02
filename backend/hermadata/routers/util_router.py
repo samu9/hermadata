@@ -1,5 +1,6 @@
 from functools import cache
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from hermadata.constants import (
     ANIMAL_STAGE_LABELS,
     ENTRY_TYPE_LABELS,
@@ -8,12 +9,17 @@ from hermadata.constants import (
     SIZE_LABELS,
 )
 from hermadata.models import UtilElement
+from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.city_repository import (
     ComuneModel,
     ProvinciaModel,
     SQLCityRepository,
 )
 from hermadata.initializations import city_repository
+
+from hermadata.initializations import animal_repository
+
+from hermadata.repositories.animal.models import FurColorName
 
 router = APIRouter(prefix="/util")
 
@@ -67,6 +73,30 @@ def get_animal_fur_types():
 @cache
 def get_animal_stages():
     result = [
-        UtilElement(id=k.value, label=v) for k, v in ANIMAL_STAGE_LABELS.items()
+        UtilElement(id=k.value, label=v)
+        for k, v in ANIMAL_STAGE_LABELS.items()
     ]
     return result
+
+
+@router.get("/fur-color", response_model=list[UtilElement])
+def get_animal_fur_colors(
+    repo: SQLAnimalRepository = Depends(animal_repository),
+):
+    colors = repo.get_fur_colors()
+
+    return colors
+
+
+class NewFurColor(BaseModel):
+    name: FurColorName
+
+
+@router.post("/fur-color", response_model=UtilElement)
+def add_fur_color(
+    data: NewFurColor,
+    repo: SQLAnimalRepository = Depends(animal_repository),
+):
+    color = repo.add_fur_color(data.name)
+
+    return color
