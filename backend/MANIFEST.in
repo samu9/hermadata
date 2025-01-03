@@ -1,1 +1,2 @@
 include hermadata/reports/templates/*
+include hermadata/reports/static/*
