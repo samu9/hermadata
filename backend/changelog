@@ -1,3 +1,15 @@
+# 0.8.2
+
+# FIXES:
+
+-   fixed report templates generation css path
+
+# 0.8.1
+
+# FIXES:
+
+-   added missing report templates css files in MANIFEST.in
+
 # 0.8
 
 # IMPROVEMENTS:
