@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from enum import Enum
 from io import BytesIO
+import os
 from typing import Annotated
 
 import openpyxl
@@ -160,7 +161,11 @@ class ReportGenerator:
         HTML(string=rendered_html).write_pdf(
             target=target,
             stylesheets=[
-                CSS(filename="hermadata/reports/static/tailwind.css")
+                CSS(
+                    filename=os.path.join(
+                        os.path.dirname(__file__), "static", "tailwind.css"
+                    )
+                )
             ],
         )
 
