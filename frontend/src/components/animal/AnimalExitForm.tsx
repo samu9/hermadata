@@ -21,6 +21,7 @@ import { SubTitle } from "../typography"
 import NewAdopterForm from "../adopter/NewAdopterForm"
 import { Dialog } from "primereact/dialog"
 import ControlledTextarea from "../forms/ControlledTextarea"
+import { useLoader } from "../../contexts/Loader"
 
 const AnimalExitForm = () => {
     const { id } = useParams()
@@ -35,6 +36,7 @@ const AnimalExitForm = () => {
     const [adopterAction, setAdopterAction] = useState<"add" | "search">(
         "search"
     )
+    const { startLoading, stopLoading } = useLoader()
 
     const exitTypesQuery = useExitTypesQuery()
     const form = useForm<AnimalExit>({
@@ -48,6 +50,8 @@ const AnimalExitForm = () => {
 
     const animalExitMutation = useMutation({
         mutationFn: (data: AnimalExit) => apiService.animalExit(data),
+        onMutate: () => startLoading(),
+        onSettled: () => stopLoading(),
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({
                 queryKey: ["animal-search"],
@@ -64,6 +68,7 @@ const AnimalExitForm = () => {
             })
         },
     })
+
     const {
         handleSubmit,
         watch,
