@@ -5,6 +5,7 @@ import {
     faHospital,
     faList,
     faPencil,
+    faPlus,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { MenuItem } from "primereact/menuitem"
@@ -14,6 +15,8 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { Animal } from "../../models/animal.schema"
 import AnimalRecordHeader from "./AnimalRecordHeader"
 import { classNames } from "primereact/utils"
+import { useToolbar } from "../../contexts/Toolbar"
+import NewAnimalForm from "../new-entry/NewAnimalEntryForm"
 
 type Props = {
     data: Animal
@@ -74,6 +77,22 @@ const AnimalRecord = (props: Props) => {
     const location = useLocation()
     const items: Item[] = generateItems(props.data)
     const [activeIndex, setActiveIndex] = useState(1)
+
+    const { addButton } = useToolbar()
+
+    useEffect(() => {
+        if (props.data?.exit_date) {
+            addButton({
+                id: "new-entry",
+                buttonText: "Nuovo ingresso",
+                buttonIcon: faPlus,
+                FormComponent: NewAnimalForm,
+                onSuccessAction: (data) => {
+                    console.log("Animal document added:", data)
+                },
+            })
+        }
+    }, [])
     useEffect(() => {
         const pathElements = location.pathname.split("/").filter((e) => e)
 
