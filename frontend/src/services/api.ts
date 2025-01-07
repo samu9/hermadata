@@ -221,7 +221,6 @@ class ApiService {
         )
 
         const parsed = result.map((r) => animalDocumentSchema.parse(r))
-        console.log(parsed)
         return parsed
     }
 
