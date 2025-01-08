@@ -1,15 +1,15 @@
-import { faFilePdf, faPlus } from "@fortawesome/free-solid-svg-icons"
+import { faFile, faFilePdf } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
 import { Column } from "primereact/column"
 import { DataTable } from "primereact/datatable"
-import { useParams } from "react-router-dom"
-import { useAnimalDocumentsQuery, useDocKindsQuery } from "../../queries"
-import { DocKind } from "../../models/docs.schema"
-import { apiService } from "../../main"
-import { useToolbar } from "../../contexts/Toolbar"
-import AnimalDocUploadForm from "./AnimalDocUploadForm"
 import { useEffect } from "react"
+import { useParams } from "react-router-dom"
+import { useToolbar } from "../../contexts/Toolbar"
+import { apiService } from "../../main"
+import { DocKind } from "../../models/docs.schema"
+import { useAnimalDocumentsQuery, useDocKindsQuery } from "../../queries"
+import AnimalDocUploadForm from "./AnimalDocUploadForm"
 
 const AnimalDocs = () => {
     const { id } = useParams()
@@ -35,7 +35,7 @@ const AnimalDocs = () => {
         addButton({
             id: buttonId,
             buttonText: "Inserisci documento",
-            buttonIcon: faPlus,
+            buttonIcon: faFile,
             FormComponent: AnimalDocUploadForm,
             onSuccessAction: (data) => {
                 console.log("Animal document added:", data)
