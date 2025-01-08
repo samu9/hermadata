@@ -13,6 +13,7 @@ const Toolbar = () => {
                     buttonIcon={button.buttonIcon}
                     FormComponent={button.FormComponent}
                     onSuccessAction={button.onSuccessAction}
+                    formProps={button.formProps}
                 />
             ))}
         </div>

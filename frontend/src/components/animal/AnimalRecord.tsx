@@ -74,6 +74,8 @@ const generateItems = (data: Animal): Item[] => [
 
 const AnimalRecord = (props: Props) => {
     const navigate = useNavigate()
+    const { id } = useParams()
+
     const location = useLocation()
     const items: Item[] = generateItems(props.data)
     const [activeIndex, setActiveIndex] = useState(1)
@@ -87,8 +89,10 @@ const AnimalRecord = (props: Props) => {
                 buttonText: "Nuovo ingresso",
                 buttonIcon: faPlus,
                 FormComponent: NewAnimalForm,
+                formProps: { animalId: id },
                 onSuccessAction: (data) => {
                     console.log("Animal document added:", data)
+                    removeButton("new-entry")
                 },
             })
         }
