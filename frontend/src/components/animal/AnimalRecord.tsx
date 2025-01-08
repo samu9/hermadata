@@ -1,22 +1,28 @@
 import {
+    faArrowUpFromBracket,
     faCircleXmark,
     faFile,
     faHome,
     faHospital,
     faList,
     faPencil,
-    faPlus,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { MenuItem } from "primereact/menuitem"
 import { TabMenu } from "primereact/tabmenu"
-import { useEffect, useState } from "react"
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
-import { Animal } from "../../models/animal.schema"
-import AnimalRecordHeader from "./AnimalRecordHeader"
 import { classNames } from "primereact/utils"
+import { useEffect, useState } from "react"
+import {
+    NavLink,
+    Outlet,
+    useLocation,
+    useNavigate,
+    useParams,
+} from "react-router-dom"
 import { useToolbar } from "../../contexts/Toolbar"
+import { Animal } from "../../models/animal.schema"
 import NewAnimalForm from "../new-entry/NewAnimalEntryForm"
+import AnimalRecordHeader from "./AnimalRecordHeader"
 
 type Props = {
     data: Animal
@@ -80,14 +86,15 @@ const AnimalRecord = (props: Props) => {
     const items: Item[] = generateItems(props.data)
     const [activeIndex, setActiveIndex] = useState(1)
 
-    const { addButton } = useToolbar()
+    const { addButton, removeButton } = useToolbar()
 
     useEffect(() => {
         if (props.data?.exit_date) {
             addButton({
                 id: "new-entry",
                 buttonText: "Nuovo ingresso",
-                buttonIcon: faPlus,
+                buttonIcon: faArrowUpFromBracket,
+                severity: "success",
                 FormComponent: NewAnimalForm,
                 formProps: { animalId: id },
                 onSuccessAction: (data) => {
