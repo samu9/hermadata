@@ -10,6 +10,7 @@ const Toolbar = () => {
                 <OverlayFormButton
                     key={button.id}
                     buttonText={button.buttonText}
+                    severity={button.severity}
                     buttonIcon={button.buttonIcon}
                     FormComponent={button.FormComponent}
                     onSuccessAction={button.onSuccessAction}
