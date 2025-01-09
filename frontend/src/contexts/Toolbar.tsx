@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, ReactNode } from "react"
+import { SeverityType } from "../constants"
 
 type ToolbarButton = {
     id: string
     buttonText: string
     buttonIcon: any // Use the appropriate FontAwesomeIcon type
+    severity?: SeverityType
     FormComponent: React.ComponentType<{ onSuccess: (data: any) => void }>
     onSuccessAction: (data: any) => void
     formProps?: Record<string, any>
