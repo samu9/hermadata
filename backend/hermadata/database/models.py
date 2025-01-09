@@ -1,5 +1,8 @@
 from datetime import date, datetime
+
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
 from sqlalchemy import (
+    DECIMAL,
     JSON,
     Boolean,
     Date,
@@ -9,11 +12,10 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
-    DECIMAL,
     true,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy.sql import func, expression
+from sqlalchemy.sql import expression, func
 
 from hermadata.constants import (
     AnimalFur,
@@ -276,24 +278,25 @@ class Breed(Base):
     )
 
 
-# class User(Base):
-#     __tablename__ = "users"
-#     id: Mapped[int] = mapped_column(primary_key=True)
+class User(SQLAlchemyBaseUserTable[int], Base):
+    __tablename__ = "users"
 
-#     name: Mapped[str] = mapped_column(String(100), nullable=True)
-#     surname: Mapped[str] = mapped_column(String(100), nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-#     email: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str] = mapped_column(String(100), nullable=True)
+    surname: Mapped[str] = mapped_column(String(100), nullable=True)
 
-#     password: Mapped[str] = mapped_column(String(15))
+    email: Mapped[str] = mapped_column(String(100))
 
-#     created_at: Mapped[datetime] = mapped_column(
-#         DateTime(), server_default=func.now()
-#     )
-#     updated_at: Mapped[datetime] = mapped_column(
-#         DateTime(), server_onupdate=func.now(), nullable=True
-#     )
-#     deleted_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
+    password: Mapped[str] = mapped_column(String(15))
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+    deleted_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
 
 
 # class Procedure(Base):
