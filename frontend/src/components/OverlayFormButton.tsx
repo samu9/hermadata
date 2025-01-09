@@ -1,24 +1,28 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { OverlayPanel } from "primereact/overlaypanel"
 import { Button } from "primereact/button"
-import { Toast } from "primereact/toast"
+import { OverlayPanel } from "primereact/overlaypanel"
 import { useRef } from "react"
+import { SeverityType } from "../constants"
 
 interface OverlayFormButtonProps<T> {
     buttonText: string
-    buttonIcon: any // Use the appropriate FontAwesomeIcon type
-    FormComponent: React.ComponentType<{ onSuccess: (data: T) => void }>
+    buttonIcon: any
+    severity?: SeverityType
+
+    FormComponent: React.ComponentType<{ onSuccess: (data: T) => void } & any>
+    formProps?: Record<string, any>
     onSuccessAction: (data: T) => void
 }
 
 const OverlayFormButton = <T,>({
     buttonText,
     buttonIcon,
+    severity,
     FormComponent,
+    formProps = {},
     onSuccessAction,
 }: OverlayFormButtonProps<T>) => {
     const op = useRef<OverlayPanel>(null)
-    const toast = useRef<Toast>(null)
 
     const handleSuccess = (data: T) => {
         onSuccessAction(data)
@@ -26,19 +30,19 @@ const OverlayFormButton = <T,>({
     }
 
     return (
-        <div>
+        <div className="bottom-4 right-4">
             <Button
-                className="shadow-lg"
+                className="shadow-lg flex gap-2"
+                severity={severity}
                 onClick={(e) => op.current && op.current.toggle(e)}
             >
                 <FontAwesomeIcon icon={buttonIcon} fixedWidth /> {buttonText}
             </Button>
             <OverlayPanel showCloseIcon ref={op}>
                 <div className="w-[20rem]">
-                    <FormComponent onSuccess={handleSuccess} />
+                    <FormComponent onSuccess={handleSuccess} {...formProps} />
                 </div>
             </OverlayPanel>
-            <Toast ref={toast} position="bottom-right" />
         </div>
     )
 }
