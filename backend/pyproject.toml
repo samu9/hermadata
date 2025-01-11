@@ -24,7 +24,6 @@ dependencies = [
     "pydantic >= 2.9, <3",
     "pydantic-settings >= 2.6, <3",
     "weasyprint>=63.1",
-    "fastapi-users[sqlalchemy]>=14.0.1",
 ]
 [project.scripts]
 import-doc-kinds="hermadata.database.alembic.import_initial_data:import_doc_kinds"
