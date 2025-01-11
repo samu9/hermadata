@@ -1,6 +1,5 @@
 from datetime import date, datetime
 
-from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
 from sqlalchemy import (
     DECIMAL,
     JSON,
@@ -278,7 +277,7 @@ class Breed(Base):
     )
 
 
-class User(SQLAlchemyBaseUserTable[int], Base):
+class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -289,6 +288,9 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     email: Mapped[str] = mapped_column(String(100))
 
     password: Mapped[str] = mapped_column(String(15))
+
+    is_active: Mapped[bool] = mapped_column(Boolean(), default=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean(), default=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
