@@ -14,10 +14,14 @@ from hermadata.routers import (
     race_router,
     util_router,
     vet_router,
+    user_router,
 )
 
 
 logging.config.dictConfig(json.load(open("hermadata/log-configs.json")))
+
+# https://github.com/pyca/bcrypt/issues/684
+logging.getLogger("passlib").setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +45,7 @@ def build_app():
     app.include_router(document_router.router)
     app.include_router(adopter_router.router)
     app.include_router(vet_router.router)
+    app.include_router(user_router.router)
 
     logger.info("hermadata set up")
 
