@@ -29,7 +29,7 @@ def register(
     return True
 
 
-@router.post("/token")
+@router.post("/login")
 def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     service: Annotated[UserService, Depends(user_service)],

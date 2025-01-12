@@ -58,7 +58,7 @@ user_service = UserService(
     access_token_expire_minutes=settings.auth.access_token_expire_minutes,
     algorithm=settings.auth.algorithm,
 )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login")
 
 
 async def get_current_user(

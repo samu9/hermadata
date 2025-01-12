@@ -10,7 +10,7 @@ def test_user_token_route(app: TestClient, make_user, db_session: Session):
         "username": "testuser",
         "password": "testpassword",
     }
-    result = app.post("/user/token", data=form_data)
+    result = app.post("/user/login", data=form_data)
 
     assert result.status_code == 400
 
@@ -23,6 +23,6 @@ def test_user_token_route(app: TestClient, make_user, db_session: Session):
         "username": user_data.email,
         "password": user_data.password,
     }
-    result = app.post("/user/token", data=form_data)
+    result = app.post("/user/login", data=form_data)
 
     assert result.status_code == 200
