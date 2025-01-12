@@ -1,6 +1,7 @@
-from datetime import date
 import os
+from datetime import date
 from typing import Callable, Generator
+from uuid import uuid4
 
 import pytest
 from alembic import command
@@ -40,8 +41,13 @@ from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
 from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.repositories.race_repository import SQLRaceRepository
+from hermadata.repositories.user_repository import (
+    CreateUserModel,
+    SQLUserRepository,
+)
 from hermadata.repositories.vet_repository import SQLVetRepository, VetModel
 from hermadata.services.animal_service import AnimalService
+from hermadata.services.user_service import RegisterUserModel, UserService
 from hermadata.storage.disk_storage import DiskStorage
 
 TRUNCATE_QUERY = "TRUNCATE TABLE {}"
@@ -208,6 +214,15 @@ def breed_repository(
 
 
 @pytest.fixture(scope="function")
+def user_repository(
+    db_session: Session,
+) -> Generator[SQLUserRepository, SQLUserRepository, None]:
+
+    repo = SQLUserRepository()
+    return repo(db_session)
+
+
+@pytest.fixture(scope="function")
 def animal_service(
     animal_repository, document_repository, report_generator, disk_storage
 ) -> AnimalService:
@@ -216,6 +231,18 @@ def animal_service(
         document_repository=document_repository,
         report_generator=report_generator,
         storage=disk_storage,
+    )
+
+
+@pytest.fixture(scope="function")
+def user_service(
+    user_repository,
+) -> UserService:
+    return UserService(
+        user_repository=user_repository,
+        secret="SECRET",
+        access_token_expire_minutes=30,
+        algorithm="HS256",
     )
 
 
@@ -284,6 +311,22 @@ def make_vet(
         vet = vet_repository.create(data=data)
 
         return vet.id
+
+    return make
+
+
+@pytest.fixture(scope="function")
+def make_user(
+    user_service: UserService,
+) -> Callable[[CreateUserModel], int]:
+    def make(data: CreateUserModel = None) -> int:
+        if data is None:
+            data = RegisterUserModel(
+                email=f"{uuid4().hex}@test.it", password=uuid4().hex
+            )
+        user_id = user_service.register(data=data)
+
+        return user_id
 
     return make
 
