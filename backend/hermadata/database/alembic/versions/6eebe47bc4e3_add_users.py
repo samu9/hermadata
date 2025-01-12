@@ -27,7 +27,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=100), nullable=True),
         sa.Column("surname", sa.String(length=100), nullable=True),
         sa.Column("email", sa.String(length=100), nullable=False),
-        sa.Column("password", sa.String(length=15), nullable=False),
+        sa.Column("hashed_password", sa.String(length=1024), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(),
@@ -36,11 +36,10 @@ def upgrade() -> None:
         ),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
-        sa.Column("hashed_password", sa.String(length=1024), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("is_superuser", sa.Boolean(), nullable=False),
-        sa.Column("is_verified", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("email"),
     )
     # ### end Alembic commands ###
 

@@ -285,9 +285,9 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=True)
     surname: Mapped[str] = mapped_column(String(100), nullable=True)
 
-    email: Mapped[str] = mapped_column(String(100))
+    email: Mapped[str] = mapped_column(String(100), unique=True)
 
-    password: Mapped[str] = mapped_column(String(15))
+    hashed_password: Mapped[str] = mapped_column(String(1024))
 
     is_active: Mapped[bool] = mapped_column(Boolean(), default=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean(), default=False)
