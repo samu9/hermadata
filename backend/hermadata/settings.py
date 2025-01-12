@@ -22,10 +22,17 @@ class StorageSettings(BaseSettings):
     selected: StorageType
 
 
+class AuthSettings(BaseSettings):
+    secret: str
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+
+
 class Settings(BaseSettings):
     stage: str
     db: DBSettings
     storage: StorageSettings
+    auth: AuthSettings
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", env_nested_delimiter="__"
     )
