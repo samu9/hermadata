@@ -14,7 +14,8 @@ from hermadata.repositories.user_repository import (
 
 
 class UserModel(BaseModel):
-    user_id: int
+    name: str | None = None
+    suername: str | None = None
     email: EmailStr
     is_superuser: bool
     is_active: bool
@@ -28,6 +29,8 @@ class RegisterUserModel(BaseModel):
 class TokenData(BaseModel):
     user_id: int
     email: EmailStr
+    is_active: bool = False
+    is_superuser: bool = False
 
 
 class UserService:
@@ -96,7 +99,7 @@ class UserService:
         if not password_verified:
             return
 
-        user = UserModel(
+        user = TokenData(
             user_id=user_data.id,
             email=user_data.email,
             is_superuser=user_data.is_superuser,
