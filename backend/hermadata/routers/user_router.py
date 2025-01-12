@@ -12,11 +12,13 @@ from hermadata.initializations import get_current_user, user_service
 router = APIRouter(prefix="/user", tags=["user"])
 
 
-@router.post("/test")
+@router.post("/", response_model=UserModel)
 def test(
     current_user: Annotated[TokenData, Depends(get_current_user)],
+    service: Annotated[UserService, Depends(user_service)],
 ):
-    return current_user
+    user = service.get_by_id(current_user.user_id)
+    return user
 
 
 @router.post("/register")
