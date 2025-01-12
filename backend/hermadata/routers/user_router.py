@@ -2,9 +2,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
+from hermadata.repositories.user_repository import UpdateUserModel
 from hermadata.services.user_service import (
     RegisterUserModel,
     TokenData,
+    UserModel,
     UserService,
 )
 from hermadata.initializations import get_current_user, user_service
@@ -45,3 +47,11 @@ def login(
         )
 
     return {"access_token": jwt, "token_type": "bearer"}
+
+
+@router.post("/update")
+def update(
+    data: UpdateUserModel,
+    service: Annotated[UserService, Depends(user_service)],
+):
+    pass
