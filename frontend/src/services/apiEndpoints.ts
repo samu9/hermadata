@@ -36,6 +36,10 @@ const ApiEndpoints = {
     adoption: {
         create: "/adoption",
     },
+    user: {
+        login: "/user/login",
+        register: "/user/register",
+    },
     util: {
         getProvince: "/util/province",
         getComuni: "/util/comuni",
