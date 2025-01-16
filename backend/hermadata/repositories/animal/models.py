@@ -13,17 +13,24 @@ from typing import (
 )
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
-
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
-from hermadata.constants import DocKindCode, EntryType, ExitType
+from hermadata.constants import EntryType, ExitType, RecurrenceType
 from hermadata.database.models import Animal, AnimalEntry
 from hermadata.models import PaginationQuery, Sex
 
 rescue_city_code_PATTERN = r"[A-Z]\d{3}"
 
 T = TypeVar("T")
+
+
+FurColorName = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True, to_upper=True, min_length=2, max_length=100
+    ),
+]
 
 
 class WhereClauseMapItem(NamedTuple):
@@ -94,7 +101,9 @@ class AnimalSearchModel(PaginationQuery):
         "rescue_city_code": WhereClauseMapItem(
             lambda v: AnimalEntry.origin_city_code == v
         ),
-        "entry_type": WhereClauseMapItem(lambda v: AnimalEntry.entry_type == v),
+        "entry_type": WhereClauseMapItem(
+            lambda v: AnimalEntry.entry_type == v
+        ),
         "exit_type": WhereClauseMapItem(lambda v: AnimalEntry.exit_type == v),
         "race_id": WhereClauseMapItem(lambda v: Animal.race_id == v),
         "from_entry_date": WhereClauseMapItem(
@@ -103,7 +112,9 @@ class AnimalSearchModel(PaginationQuery):
         "to_entry_date": WhereClauseMapItem(
             lambda v: AnimalEntry.entry_date <= v
         ),
-        "from_created_at": WhereClauseMapItem(lambda v: Animal.created_at >= v),
+        "from_created_at": WhereClauseMapItem(
+            lambda v: Animal.created_at >= v
+        ),
         "to_created_at": WhereClauseMapItem(lambda v: Animal.created_at <= v),
         "present": WhereClauseMapItem(
             lambda v: (
@@ -178,6 +189,7 @@ class AnimalModel(BaseModel):
     notes: str | None = None
     img_path: str | None = None
     fur: int | None = None
+    color: int | None = None
     size: int | None = None
     exit_date: date | None = None
     exit_type: ExitType | None = None
@@ -198,6 +210,7 @@ class UpdateAnimalModel(BaseModel):
     notes: str | None = None
     birth_date: date | None = None
     fur: int | None = None
+    color: int | None = None
     size: int | None = None
 
 
@@ -235,7 +248,7 @@ AnimalGetQuery = namedtuple("AnimalGetQuery", AnimalModel.model_fields.keys())
 
 class NewAnimalDocument(BaseModel):
     document_id: int
-    document_kind_code: DocKindCode
+    document_kind_code: str
     title: Annotated[str, StringConstraints(max_length=100)]
 
 
@@ -251,6 +264,7 @@ class AnimalExit(BaseModel):
     exit_type: ExitType
     exit_data: dict | None = None
     adopter_id: int | None = None  # TODO: add validation based on exit_type
+    notes: str | None = None
 
 
 class ExtractionQuery(BaseModel):
@@ -336,3 +350,13 @@ class AdoptionModel(BaseModel):
     id: int
     adopter_id: int
     animal_id: int
+
+
+class MedicalActivityModel(BaseModel):
+    recurrence_type: RecurrenceType | None
+    recurrence_value: int | None
+    name: str
+    vet_id: int | None = None
+    from_date: date | None = None
+    to_date: date | None = None
+    notes: str | None = None

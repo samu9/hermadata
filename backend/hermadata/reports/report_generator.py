@@ -1,13 +1,28 @@
 from datetime import date, datetime
 from enum import Enum
 from io import BytesIO
+import os
+from typing import Annotated
 
 import openpyxl
-import pdfkit
 from jinja2 import Environment
-from pydantic import BaseModel, Field, field_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    Field,
+    PlainSerializer,
+    field_serializer,
+    field_validator,
+)
+from weasyprint import CSS, HTML
 
-from hermadata.constants import ENTRY_TYPE_LABELS, EXIT_TYPE_LABELS
+from hermadata.constants import (
+    ENTRY_TYPE_LABELS,
+    EXIT_TYPE_LABELS,
+    FUR_LABELS,
+    AnimalFur,
+    ExitType,
+)
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalDaysResult,
@@ -17,6 +32,18 @@ from hermadata.repositories.animal.models import (
     AnimalExitsQuery,
     AnimalReportResult,
 )
+
+ReportDate = Annotated[
+    date, PlainSerializer(lambda x: x.strftime("%d/%m/%Y"), return_type=str)
+]
+
+NullableString = Annotated[
+    str | None, Field(default=""), AfterValidator(lambda x: x or "")
+]
+
+NullableInt = Annotated[
+    int | None, Field(default=""), AfterValidator(lambda x: x or "")
+]
 
 
 def transform_date_to_string(raw: date) -> str:
@@ -31,11 +58,17 @@ class ReportFormat(Enum):
 DEFAULT_EXTENSIONS: dict[ReportFormat, str] = {ReportFormat.excel: "xlsx"}
 
 
-class ReportDefaultVariables(BaseModel):
-    day: str = Field(
-        default_factory=lambda: datetime.now().date().strftime("%Y-%m-%d")
-    )
+class BaseVariables(BaseModel):
+    pass
+
+
+class ReportDefaultVariables(BaseVariables):
+    day: ReportDate = Field(default_factory=lambda: datetime.now().date())
     title: str
+
+    @field_serializer("day")
+    def serialize_day(self, day: date):
+        return day.strftime("%Y-%m-%d")
 
 
 class ReportAnimalEntryVariables(ReportDefaultVariables):
@@ -43,44 +76,73 @@ class ReportAnimalEntryVariables(ReportDefaultVariables):
     city: str
     animal_type: str
     animal_name: str | None = None
-    entry_date: str
-
-    transform_entry_date = field_validator("entry_date", mode="before")(
-        transform_date_to_string
-    )
+    entry_date: ReportDate
 
 
 class ReportChipAssignmentVariables(ReportDefaultVariables):
     title: str = "ASSEGNAMENTO CHIP"
     animal_name: str | None = None
     chip_code: str
-    assignment_date: str
+    assignment_date: ReportDate
 
-    transform_assignment_date = field_validator(
-        "assignment_date", mode="before"
-    )(transform_date_to_string)
+
+class AdopterVariables(BaseModel):
+    name: str
+    surname: str
+    residence_city: str
+    residence_address: NullableString
+    birth_city: str
+    birth_date: ReportDate
+    phone: NullableString
+
+
+class AnimalVariables(BaseVariables):
+    name: NullableString
+    chip_code: str
+    breed: NullableString
+    sex: NullableString
+    age: NullableInt
+    fur_type: NullableString
+    fur_color: NullableString
+    origin_city: str
+    entry_date: ReportDate
+
+    @field_validator("sex", mode="before")
+    def validate_sex(value: int | str):
+        if isinstance(value, int):
+            value = "M" if value == 0 else "F"
+        return value
+
+    @field_validator("fur_type", mode="before")
+    def validate_fur(value: int | str):
+        if isinstance(value, int):
+            value = FUR_LABELS[AnimalFur(value)]
+        return value
+
+
+class ReportVariationVariables(ReportDefaultVariables):
+    title: str = "COMUNICAZIONE DI VARIAZIONE"
+    animal: AnimalVariables
+    adopter: AdopterVariables | None = None
+
+    variation_type: ExitType  # scomparso, deceduto, stato ceduto
+    variation_date: ReportDate
+    notes: NullableString
 
 
 class ReportAdoptionVariables(ReportDefaultVariables):
     title: str = "DOCUMENTO DI ADOZIONE"
-    animal_name: str
-    chip_code: str
-    exit_date: str
-
-    transform_exit_date = field_validator("exit_date", mode="before")(
-        transform_date_to_string
-    )
+    animal: AnimalVariables
+    adopter: AdopterVariables
+    exit_date: ReportDate
+    notes: NullableString
 
 
 class ReportCustodyVariables(ReportDefaultVariables):
     title: str = "DOCUMENTO DI AFFIDO"
     animal_name: str
     chip_code: str
-    exit_date: str
-
-    transform_exit_date = field_validator("exit_date", mode="before")(
-        transform_date_to_string
-    )
+    exit_date: ReportDate
 
 
 class ReportGenerator:
@@ -94,9 +156,20 @@ class ReportGenerator:
 
         rendered_html = template.render(**variables.model_dump())
 
-        pdf = pdfkit.from_string(input=rendered_html)
+        target = BytesIO()
 
-        return pdf
+        HTML(string=rendered_html).write_pdf(
+            target=target,
+            stylesheets=[
+                CSS(
+                    filename=os.path.join(
+                        os.path.dirname(__file__), "static", "tailwind.css"
+                    )
+                )
+            ],
+        )
+
+        return target.getvalue()
 
     def build_animal_entry_report(
         self, variables: ReportAnimalEntryVariables
@@ -115,6 +188,11 @@ class ReportGenerator:
 
     def build_custody_report(self, variables: ReportCustodyVariables) -> bytes:
         return self._build_template("custody.jinja", variables)
+
+    def build_variation_report(
+        self, variables: ReportVariationVariables
+    ) -> bytes:
+        return self._build_template("variation.jinja", variables)
 
     def generate_animal_days_count_report(
         self,
@@ -136,7 +214,8 @@ class ReportGenerator:
         ws.append(["Totale", "", data.total_days])
 
         filename = (
-            f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}"
+            f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}"
+            f"_{query.to_date.strftime('%Y-%m-%d')}"
             f".{DEFAULT_EXTENSIONS[format]}"
         )
 
@@ -186,7 +265,8 @@ class ReportGenerator:
             )
 
         filename = (
-            f"ingressi_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}"
+            f"ingressi_{query.from_date.strftime('%Y-%m-%d')}"
+            f"_{query.to_date.strftime('%Y-%m-%d')}"
             f".{DEFAULT_EXTENSIONS[format]}"
         )
 
@@ -234,7 +314,8 @@ class ReportGenerator:
             )
 
         filename = (
-            f"uscite_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}"
+            f"uscite_{query.from_date.strftime('%Y-%m-%d')}"
+            f"_{query.to_date.strftime('%Y-%m-%d')}"
             f".{DEFAULT_EXTENSIONS[format]}"
         )
 

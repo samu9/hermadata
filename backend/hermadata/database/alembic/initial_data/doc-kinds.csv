@@ -3,12 +3,18 @@ IN,Documento di ingresso,1,0
 IA,Iscrizione anagrafe canina,1,0
 SS,Spostamento sanitario/rifugio,1,0
 U,Uscita,0,1
+UF,Uscita firmata,1,0
 ID,Documento identità,1,0
 V,Varie,1,1
 C,Attribuzione chip,0,1
 CM,Certificato morte,1,0
 DS,Denuncia Smarrimento,1,0
 AF,Affido,1,1
+AFF,Affido firmato,1,0
 AD,Adozione,1,1
+ADF,Adozione firmato,1,0
 RP,Restituzione proprietario,1,1
 RR,Documento richiesta di recupero,0,1
+VA,Variazione,0,1
+VAF,Variazione Firmata,1,0
+RI,Rapporto di intervento,1,0

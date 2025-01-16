@@ -14,6 +14,7 @@ class NewDocument(BaseModel):
     filename: str
     data: bytes
     mimetype: str
+    is_uploaded: bool
 
 
 class DocKindModel(BaseModel):
@@ -57,10 +58,17 @@ class SQLDocumentRepository(SQLBaseRepository):
 
     def new_document_kind(self, data: NewDocKindModel):
         result = self.session.execute(
-            insert(DocumentKind).values(name=data.name)
+            insert(DocumentKind).values(
+                name=data.name, code=data.code, uploadable=True, rendered=False
+            )
         )
         self.session.flush()
-        new_kind = DocKindModel(id=result.lastrowid, name=data.name)
+        new_kind = DocKindModel(
+            id=result.lastrowid,
+            name=data.name,
+            uploadable=True,
+            code=data.code,
+        )
         return new_kind
 
     def get_document_kinds(self, uploadable: bool = None):
@@ -80,9 +88,9 @@ class SQLDocumentRepository(SQLBaseRepository):
 
         return result
 
-    def get_document_kind_by_code(self, code: DocKindCode) -> DocKindModel:
+    def get_document_kind_by_code(self, code: str) -> DocKindModel:
         kind = self.session.execute(
-            select(DocumentKind).where(DocumentKind.code == code.value)
+            select(DocumentKind).where(DocumentKind.code == code)
         ).scalar_one()
         return DocKindModel.model_validate(kind, from_attributes=True)
 
@@ -93,6 +101,7 @@ class SQLDocumentRepository(SQLBaseRepository):
             key=key,
             filename=data.filename,
             mimetype=data.mimetype,
+            is_uploaded=data.is_uploaded,
         )
         self.session.add(doc)
         self.session.flush()
@@ -102,9 +111,12 @@ class SQLDocumentRepository(SQLBaseRepository):
         return doc_id
 
     def get_data(self, document_id: int):
-        key, storage_service, content_type = self.session.execute(
+        key, storage_service, content_type, filename = self.session.execute(
             select(
-                Document.key, Document.storage_service, Document.mimetype
+                Document.key,
+                Document.storage_service,
+                Document.mimetype,
+                Document.filename,
             ).where(Document.id == document_id)
         ).one()
         storage_service = StorageType(storage_service)
@@ -114,4 +126,4 @@ class SQLDocumentRepository(SQLBaseRepository):
 
         data = self.storage[storage_service].retrieve_file(key)
 
-        return data, content_type
+        return data, content_type, filename

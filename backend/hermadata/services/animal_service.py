@@ -73,13 +73,15 @@ class AnimalService:
             )
         )
 
-        filename = f"ingresso_{entry.animal_name}_{entry.entry_date.strftime('%Y-%m-%d')}"
+        filename = f"ingresso_{entry.animal_name}_"
+        f"{entry.entry_date.strftime('%Y-%m-%d')}"
 
         document_id = self.document_repository.new_document(
             NewDocument(
                 filename=filename,
                 data=report,
                 mimetype="application/pdf",
+                is_uploaded=False,
             )
         )
 
@@ -95,42 +97,10 @@ class AnimalService:
     def exit(self, animal_id: int, data: AnimalExit):
         self.animal_repository.exit(animal_id, data)
 
-        report = None
-        if data.exit_type == ExitType.adoption:
-            # generate adoption document
-            # report = self.report_generator.build_adoption_report(
-            #     ReportAdoptionVariables()
-            # )
-            filename = "adozione_"
-            doc_kind_code = DocKindCode.adozione
+        if data.exit_type in (ExitType.adoption, ExitType.custody):
+            self.generate_adoption_report(animal_id)
 
-        if data.exit_type == ExitType.custody:
-            # generate custody document
-            # report = self.report_generator.build_adoption_report(
-            #     ReportAdoptionVariables()
-            # )
-            filename = "affido_"
-            doc_kind_code = DocKindCode.affido
-
-        if report:
-            filename += animal_id
-
-            document_id = self.document_repository.new_document(
-                NewDocument(
-                    filename=filename,
-                    data=report,
-                    mimetype="application/pdf",
-                )
-            )
-
-            self.animal_repository.new_document(
-                animal_id,
-                NewAnimalDocument(
-                    document_id=document_id,
-                    document_kind_code=doc_kind_code,
-                    title=filename,
-                ),
-            )
+        self.generate_variation_report(animal_id)
 
     def days_report(self, query: AnimalDaysQuery):
         animal_days = self.animal_repository.count_animal_days(query)
@@ -144,8 +114,10 @@ class AnimalService:
     def entries_report(self, query: AnimalEntriesQuery):
         entries = self.animal_repository.count_animal_entries(query)
 
-        filename, report = self.report_generator.generate_animal_entries_report(
-            query, entries
+        filename, report = (
+            self.report_generator.generate_animal_entries_report(
+                query, entries
+            )
         )
 
         return filename, report
@@ -158,3 +130,55 @@ class AnimalService:
         )
 
         return filename, report
+
+    def generate_adoption_report(self, animal_id: int):
+        variables = self.animal_repository.get_adoption_report_variables(
+            animal_id
+        )
+
+        pdf = self.report_generator.build_adoption_report(variables)
+
+        new_document_id = self.document_repository.new_document(
+            data=NewDocument(
+                storage_service=self.document_repository.selected_storage,
+                filename=f"adozione_{variables.animal.chip_code}.pdf",
+                data=pdf,
+                mimetype="application/pdf",
+                is_uploaded=False,
+            )
+        )
+
+        self.animal_repository.new_document(
+            animal_id=animal_id,
+            data=NewAnimalDocument(
+                document_id=new_document_id,
+                document_kind_code=DocKindCode.adozione,
+                title=f"Adozione {variables.animal.chip_code}",
+            ),
+        )
+
+    def generate_variation_report(self, animal_id: int):
+        variables = self.animal_repository.get_variation_report_variables(
+            animal_id=animal_id
+        )
+
+        pdf = self.report_generator.build_variation_report(variables)
+
+        new_document_id = self.document_repository.new_document(
+            data=NewDocument(
+                storage_service=self.document_repository.selected_storage,
+                filename=f"variazione_{variables.animal.chip_code}.pdf",
+                data=pdf,
+                mimetype="application/pdf",
+                is_uploaded=False,
+            )
+        )
+
+        self.animal_repository.new_document(
+            animal_id=animal_id,
+            data=NewAnimalDocument(
+                document_id=new_document_id,
+                document_kind_code=DocKindCode.variazione,
+                title="Variazione",
+            ),
+        )

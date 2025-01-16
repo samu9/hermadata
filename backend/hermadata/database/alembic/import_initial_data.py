@@ -63,8 +63,13 @@ def import_races(engine: Engine):
                 )
 
 
-def import_doc_kinds(engine: Engine):
-    Session = sessionmaker(engine)
+def import_doc_kinds(engine: Engine | None = None):
+    if not engine:
+        from hermadata.dependancies import get_session_maker
+
+        Session = get_session_maker()
+    else:
+        Session = sessionmaker(engine)
     with Session.begin() as s:
         with open(os.path.join(INITIAL_DATA_DIR, "doc-kinds.csv"), "r") as fp:
             rows = csv.reader(fp)

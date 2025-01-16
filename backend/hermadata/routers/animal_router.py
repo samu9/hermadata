@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.exc import NoResultFound
 
-from hermadata.constants import ApiErrorCode
+from hermadata.constants import EXCEL_MEDIA_TYPE, ApiErrorCode
 from hermadata.models import ApiError, PaginationResult
 from hermadata.repositories.animal.animal_repository import (
     ExistingChipCodeException,
@@ -14,6 +14,7 @@ from hermadata.repositories.animal.models import (
     AnimalEntriesQuery,
     AnimalExit,
     AnimalExitsQuery,
+    AnimalModel,
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
@@ -60,7 +61,7 @@ def search_animals(
     return result
 
 
-@router.get("/{animal_id}")
+@router.get("/{animal_id}", response_model=AnimalModel)
 def get_animal(
     animal_id: int,
     repo: SQLAnimalRepository = Depends(animal_repository),
@@ -121,9 +122,9 @@ def upload_animal_document(
 def animal_exit(
     animal_id: int,
     data: AnimalExit,
-    repo: SQLAnimalRepository = Depends(animal_repository),
+    service: AnimalService = Depends(animal_service),
 ):
-    repo.exit(animal_id, data)
+    service.exit(animal_id, data)
 
     return True
 
@@ -167,7 +168,7 @@ def serve_animal_days_report(
 
     return Response(
         content=report,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
+        media_type=EXCEL_MEDIA_TYPE,
         headers={"X-filename": filename},
     )
 
@@ -181,7 +182,7 @@ def serve_animal_entries_report(
 
     return Response(
         content=report,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
+        media_type=EXCEL_MEDIA_TYPE,
         headers={"X-filename": filename},
     )
 
@@ -195,6 +196,6 @@ def serve_animal_exits_report(
 
     return Response(
         content=report,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel",
+        media_type=EXCEL_MEDIA_TYPE,
         headers={"X-filename": filename},
     )

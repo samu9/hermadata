@@ -129,3 +129,23 @@ class DocKindCode(Enum):
     attribuzione_chip = "C"
     affido = "AF"
     adozione = "AD"
+    variazione = "VA"
+
+
+class RecurrenceType(str, Enum):
+    DAILY = "day"
+    WEEKLY = "week"
+    MONTHLY = "month"
+    YEARLY = "year"
+
+
+RECURRENCE_LABELS: dict[RecurrenceType, str] = {
+    RecurrenceType.DAILY: "giornaliera",
+    RecurrenceType.WEEKLY: "settimanale",
+    RecurrenceType.MONTHLY: "mensile",
+    RecurrenceType.YEARLY: "annuale",
+}
+
+
+EXCEL_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument."
+"spreadsheetml.sheet,application/vnd.ms-excel"

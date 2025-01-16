@@ -2,6 +2,7 @@ import { useQuery } from "react-query"
 import { apiService } from "./main"
 import { AdopterSearch } from "./models/adopter.schema"
 import { AnimalSearchQuery } from "./models/animal.schema"
+import { VetSearch } from "./models/vet.schema"
 
 export const useAnimalSearchQuery = (queryData: AnimalSearchQuery) =>
     useQuery(["animal-search", queryData], {
@@ -62,6 +63,11 @@ export const useAnimalFurTypesQuery = () =>
         staleTime: Infinity,
     })
 
+export const useAnimalFurColorsQuery = () =>
+    useQuery("fur-color", () => apiService.getAnimalFurColors(), {
+        staleTime: Infinity,
+    })
+
 export const useAnimalDocumentsQuery = (animal_id: number) =>
     useQuery(["animal-documents", animal_id], {
         queryFn: () => apiService.getAnimalDocuments(animal_id),
@@ -106,5 +112,11 @@ export const useExitTypesQuery = () =>
 export const useAdopterSearchQuery = (queryData: AdopterSearch) =>
     useQuery(["adopter-search", queryData], {
         queryFn: () => apiService.searchAdopter(queryData),
+        staleTime: Infinity,
+    })
+
+export const useVetSearchQuery = (queryData: VetSearch) =>
+    useQuery(["vet-search", queryData], {
+        queryFn: () => apiService.searchVet(queryData),
         staleTime: Infinity,
     })

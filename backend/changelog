@@ -1,3 +1,29 @@
+# 0.8.2
+
+# FIXES:
+
+-   fixed report templates generation css path
+
+# 0.8.1
+
+# FIXES:
+
+-   added missing report templates css files in MANIFEST.in
+
+# 0.8
+
+# IMPROVEMENTS:
+
+-   Added fur animal color
+    -   Added fur_color table
+    -   Added fur color input in edit animal
+-   Vets and Therapies
+    -   renamed tables and columns
+    -   added recurring medical acts
+-   Documents rendering
+    -   changed pdf renderer library to `weasyprint`
+        -   needs pango-view installed on the machine
+
 # 0.7
 
 # IMPROVEMENTS:

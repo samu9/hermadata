@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
 
+from hermadata.models import PaginationResult
 from hermadata.repositories.vet_repository import (
     SQLVetRepository,
     VetModel,
-    VetQuery,
+    SearchVetQuery,
 )
 from hermadata.initializations import vet_repository
 
@@ -15,13 +16,13 @@ def create_vet(
     data: VetModel,
     repo: SQLVetRepository = Depends(vet_repository),
 ):
-    adopter = repo.create(data)
-    return adopter
+    vet = repo.create(data)
+    return vet
 
 
-@router.get("/", response_model=list[VetModel])
-def search_adopter(
-    query: VetQuery = Depends(),
+@router.get("/search", response_model=PaginationResult[VetModel])
+def search_vet(
+    query: SearchVetQuery = Depends(),
     repo: SQLVetRepository = Depends(vet_repository),
 ):
     result = repo.search(query)

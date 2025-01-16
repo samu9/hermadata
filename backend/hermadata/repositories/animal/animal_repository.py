@@ -2,8 +2,21 @@ import json
 import logging
 from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import and_, func, insert, or_, select, update
+from pydantic import validate_call
+from sqlalchemy import (
+    Interval,
+    and_,
+    extract,
+    func,
+    insert,
+    or_,
+    select,
+    text,
+    update,
+)
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import aliased
+
 from hermadata.constants import AnimalEvent, ExitType
 from hermadata.database.models import (
     Adopter,
@@ -12,14 +25,23 @@ from hermadata.database.models import (
     AnimalDocument,
     AnimalEntry,
     AnimalLog,
+    Breed,
     Comune,
     DocumentKind,
-    MedicalRecord,
+    FurColor,
+    MedicalActivity,
+    MedicalActivityRecord,
     Race,
+    VetServiceRecord,
 )
-from hermadata.models import PaginationResult
+from hermadata.models import PaginationResult, UtilElement
+from hermadata.reports.report_generator import (
+    AdopterVariables,
+    AnimalVariables,
+    ReportAdoptionVariables,
+    ReportVariationVariables,
+)
 from hermadata.repositories import SQLBaseRepository
-
 from hermadata.repositories.animal.models import (
     AddMedicalRecordModel,
     AdoptionModel,
@@ -41,14 +63,19 @@ from hermadata.repositories.animal.models import (
     AnimalSearchResult,
     AnimalSearchResultQuery,
     CompleteEntryModel,
+    MedicalActivityModel,
     NewAdoption,
     NewAnimalDocument,
     NewAnimalModel,
     NewEntryModel,
     UpdateAnimalModel,
+    FurColorName,
 )
+from hermadata.utils import recurrence_to_sql_interval
 
 logger = logging.getLogger(__name__)
+
+ADOPTER_EXIT_TYPES: list[ExitType] = [ExitType.adoption, ExitType.custody]
 
 
 class EntryNotCompleteException(Exception):
@@ -74,6 +101,9 @@ class ExistingAdoptionException(Exception):
 
 
 class SQLAnimalRepository(SQLBaseRepository):
+    animal_birth_date_to_age = func.TIMESTAMPDIFF(
+        text("year"), Animal.birth_date, func.current_date()
+    )
 
     def save(self, model: AnimalModel):
         result = self.session.execute(
@@ -140,7 +170,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             .values(returned_at=datetime.now().date())
         )
         if adoptions_update.rowcount == 1:
-            logger.info("adoption closed by new entry for animal %s", animal_id)
+            logger.info(
+                "adoption closed by new entry for animal %s", animal_id
+            )
         self.session.execute(
             update(AnimalEntry)
             .where(
@@ -195,7 +227,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             select(
                 Animal.code,
                 Animal.race_id,
-                AnimalEntry.origin_city_code,
+                AnimalEntry.origin_city_code.label("rescue_city_code"),
                 Animal.breed_id,
                 Animal.chip_code,
                 Animal.chip_code_set,
@@ -208,6 +240,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Animal.notes,
                 Animal.img_path,
                 Animal.fur,
+                Animal.color,
                 Animal.size,
                 AnimalEntry.exit_date,
                 AnimalEntry.exit_type,
@@ -222,9 +255,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
         ).one()
 
-        data = AnimalModel.model_validate(
-            AnimalGetQuery(*result), from_attributes=True
-        )
+        data = AnimalModel.model_validate(dict(zip(result._fields, result)))
         return data
 
     def get_adoption(self, animal_id: int):
@@ -242,7 +273,8 @@ class SQLAnimalRepository(SQLBaseRepository):
         self, query: AnimalSearchModel
     ) -> PaginationResult[AnimalSearchResult]:
         """
-        Return the minimum data set of a list of animals which match the search query.
+        Return the minimum data set of a list of
+        animals which match the search query.
         """
 
         where = query.as_where_clause()
@@ -343,7 +375,8 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         if entry_id is None:
             raise Exception(
-                f"complete entry: no entries to complete for animal {animal_id}"
+                "complete entry: no entries to complete "
+                f"for animal {animal_id}"
             )
         self.session.execute(
             update(AnimalEntry)
@@ -369,7 +402,11 @@ class SQLAnimalRepository(SQLBaseRepository):
             origin_city_name,
         ) = self.session.execute(
             select(
-                AnimalEntry, Animal.name, Animal.race_id, Race.name, Comune.name
+                AnimalEntry,
+                Animal.name,
+                Animal.race_id,
+                Race.name,
+                Comune.name,
             )
             .select_from(AnimalEntry)
             .join(Animal, AnimalEntry.animal_id == Animal.id)
@@ -432,7 +469,7 @@ class SQLAnimalRepository(SQLBaseRepository):
     def new_document(self, animal_id: int, data: NewAnimalDocument):
         document_kind_id = self.session.execute(
             select(DocumentKind.id).where(
-                DocumentKind.code == data.document_kind_code.value
+                DocumentKind.code == data.document_kind_code
             )
         ).scalar_one()
         animal_document = AnimalDocument(
@@ -447,11 +484,9 @@ class SQLAnimalRepository(SQLBaseRepository):
         result = AnimalDocumentModel(
             animal_id=animal_id,
             document_id=data.document_id,
-            document_kind_code=data.document_kind_code.value,
+            document_kind_code=data.document_kind_code,
             created_at=animal_document.created_at,
         )
-
-        self.session.flush()
 
         return result
 
@@ -463,7 +498,8 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalDocument.created_at,
             )
             .join(
-                DocumentKind, DocumentKind.id == AnimalDocument.document_kind_id
+                DocumentKind,
+                DocumentKind.id == AnimalDocument.document_kind_id,
             )
             .where(AnimalDocument.animal_id == animal_id)
         ).all()
@@ -521,6 +557,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             .values(
                 exit_date=data.exit_date,
                 exit_type=data.exit_type,
+                exit_notes=data.notes,
             )
         )
         self.session.flush()
@@ -547,7 +584,8 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         if not current_entry_id:
             raise Exception(
-                f"animal {data.animal_id} has no current entry with null exit date"
+                f"animal {data.animal_id} has no current "
+                "entry with null exit date"
             )
 
         adoption = Adoption(
@@ -739,10 +777,258 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
         return result
 
-    def add_medical_record(self, animal_id, data: AddMedicalRecordModel):
-        medical_record = MedicalRecord(animal_id=animal_id, **data.model_dump())
+    def add_vet_service_record(self, animal_id, data: AddMedicalRecordModel):
+        medical_record = VetServiceRecord(
+            animal_id=animal_id, **data.model_dump()
+        )
         result = self.session.add(medical_record)
 
         self.session.flush()
 
         return result
+
+    def new_medical_activity(self, animal_id, data: MedicalActivityModel):
+
+        return self.add_entity(
+            MedicalActivity,
+            animal_id=animal_id,
+            **data.model_dump(),
+        )
+
+    def add_medical_activity_record(self, medical_activity_id: int):
+        return self.add_entity(
+            MedicalActivityRecord, medical_activity_id=medical_activity_id
+        )
+
+    def get_pending_medical_activities(self, animal_id: int | None = None):
+        last_record = (
+            select(
+                MedicalActivityRecord.medical_activity_id,
+                func.max(MedicalActivityRecord.created_at).label(
+                    "last_record"
+                ),
+            )
+            .join(
+                MedicalActivity,
+                MedicalActivity.id
+                == MedicalActivityRecord.medical_activity_id,
+            )
+            .group_by(
+                MedicalActivity.animal_id,
+                MedicalActivityRecord.medical_activity_id,
+            )
+        ).subquery()
+
+        stmt = (
+            select(
+                MedicalActivity.id,
+                MedicalActivity.animal_id,
+                last_record.c.last_record,
+            )
+            .join(
+                last_record,
+                last_record.c.medical_activity_id == MedicalActivity.id,
+                isouter=True,
+            )
+            .join(Animal, Animal.id == MedicalActivity.animal_id)
+            .where(
+                or_(
+                    and_(
+                        MedicalActivity.to_date.is_not(None),
+                        MedicalActivity.to_date >= datetime.now().date(),
+                    ),
+                    MedicalActivity.to_date.is_(None),
+                ),
+                or_(
+                    and_(
+                        MedicalActivity.from_date.is_not(None),
+                        MedicalActivity.from_date < datetime.now().date(),
+                    ),
+                    MedicalActivity.from_date.is_(None),
+                ),
+                or_(
+                    last_record.c.medical_activity_id.is_(None),
+                    last_record.c.last_record
+                    >= func.now()
+                    - func.Interval(
+                        MedicalActivity.recurrence_type,
+                        MedicalActivity.recurrence_value,
+                    ),
+                ),
+            )
+        )
+
+        result = self.session.execute(stmt).all()
+
+        return result
+
+    def _get_animal_data_report_variables(
+        self, animal_id: int
+    ) -> AnimalVariables:
+        data = self.session.execute(
+            select(
+                Animal.name,
+                Animal.chip_code,
+                Breed.name.label("breed"),
+                Animal.sex,
+                self.animal_birth_date_to_age.label("age"),
+                Animal.fur.label("fur_type"),
+                FurColor.name.label("fur_color"),
+                Comune.name.label("origin_city"),
+                AnimalEntry.entry_date,
+            )
+            .select_from(Animal)
+            .join(
+                AnimalEntry,
+                and_(
+                    AnimalEntry.animal_id == Animal.id,
+                    AnimalEntry.current.is_(True),
+                ),
+            )
+            .join(Comune, AnimalEntry.origin_city_code == Comune.id)
+            .join(Breed, Breed.id == Animal.breed_id, isouter=True)
+            .join(Race, Race.id == Animal.race_id)
+            .join(FurColor, FurColor.id == Animal.color, isouter=True)
+            .where(Animal.id == animal_id)
+        ).one()
+
+        animal_variables = AnimalVariables.model_validate(
+            dict(zip(data._fields, data))
+        )
+        return animal_variables
+
+    def _get_adopter_data_report_variables(
+        self, adopter_id: int
+    ) -> AdopterVariables:
+        comune_residence = aliased(Comune)
+        comune_birth = aliased(Comune)
+
+        data = self.session.execute(
+            select(
+                Adopter.name,
+                Adopter.surname,
+                Adopter.fiscal_code,
+                Adopter.birth_date,
+                comune_residence.name.label("residence_city"),
+                comune_birth.name.label("birth_city"),
+                Adopter.phone,
+            )
+            .join(
+                comune_residence,
+                Adopter.residence_city_code == comune_residence.id,
+                isouter=True,
+            )
+            .join(
+                comune_birth,
+                Adopter.birth_city_code == comune_birth.id,
+                isouter=True,
+            )
+            .where(Adopter.id == adopter_id)
+        ).one()
+        adopter_variables = AdopterVariables.model_validate(
+            dict(zip(data._fields, data))
+        )
+
+        return adopter_variables
+
+    def get_adoption_report_variables(self, animal_id: int):
+        adoption_date, exit_type, notes, adopter_id = self.session.execute(
+            select(
+                AnimalEntry.exit_date,
+                AnimalEntry.exit_type,
+                AnimalEntry.exit_notes,
+                Adoption.adopter_id,
+            )
+            .select_from(AnimalEntry)
+            .join(
+                Adoption,
+                Adoption.animal_entry_id == AnimalEntry.id,
+            )
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
+        ).one()
+
+        if exit_type not in ADOPTER_EXIT_TYPES:
+            raise Exception("last exit is not an adoption")
+
+        adopter = self._get_adopter_data_report_variables(adopter_id)
+        animal_variables = self._get_animal_data_report_variables(animal_id)
+
+        variables = ReportAdoptionVariables(
+            animal=animal_variables,
+            exit_date=adoption_date,
+            adopter=adopter,
+            notes=notes,
+        )
+
+        return variables
+
+    def get_variation_report_variables(self, animal_id: int):
+
+        variation_date, variation_type, notes, adopter_id = (
+            self.session.execute(
+                select(
+                    AnimalEntry.exit_date,
+                    AnimalEntry.exit_type,
+                    AnimalEntry.exit_notes,
+                    Adoption.adopter_id,
+                )
+                .select_from(AnimalEntry)
+                .join(
+                    Adoption,
+                    Adoption.animal_entry_id == AnimalEntry.id,
+                    isouter=True,
+                )
+                .where(
+                    AnimalEntry.animal_id == animal_id,
+                    AnimalEntry.current.is_(True),
+                )
+            ).one()
+        )
+
+        adopter = (
+            variation_type in ADOPTER_EXIT_TYPES
+            and self._get_adopter_data_report_variables(adopter_id)
+            or None
+        )
+
+        animal_variables = self._get_animal_data_report_variables(animal_id)
+
+        variables = ReportVariationVariables(
+            variation_type=variation_type,
+            animal=animal_variables,
+            variation_date=variation_date,
+            adopter=adopter,
+            notes=notes,
+        )
+
+        return variables
+
+    def get_fur_colors(self) -> list[UtilElement]:
+        data = self.session.execute(
+            select(FurColor.id, FurColor.name.label("label"))
+        ).all()
+
+        result = [
+            UtilElement.model_validate(dict(zip(d._fields, d))) for d in data
+        ]
+
+        return result
+
+    @validate_call
+    def add_fur_color(self, name: FurColorName) -> UtilElement:
+        try:
+            result = self.session.execute(
+                insert(FurColor).values({FurColor.name: name})
+            )
+            color_id = result.lastrowid
+        except IntegrityError:
+            result = self.session.execute(
+                select(FurColor).where(FurColor.name == name)
+            ).scalar_one()
+            color_id = result.id
+
+        new_color = UtilElement(id=color_id, label=name)
+        return new_color

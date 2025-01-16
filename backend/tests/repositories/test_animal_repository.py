@@ -1,24 +1,37 @@
 from datetime import date, datetime, timedelta, timezone
+from uuid import uuid4
+
 import pytest
-from sqlalchemy import select
-
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
-from hermadata.constants import EntryType, ExitType
-from hermadata.database.models import Animal, AnimalEntry
 
+from hermadata.constants import AnimalFur, EntryType, ExitType, RecurrenceType
+from hermadata.database.models import (
+    Animal,
+    AnimalEntry,
+    FurColor,
+    MedicalActivityRecord,
+)
+from hermadata.models import UtilElement
 from hermadata.repositories.animal.animal_repository import (
     AnimalModel,
     AnimalSearchModel,
     SQLAnimalRepository,
+    FurColorName,
 )
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalExit,
     AnimalExitsQuery,
     CompleteEntryModel,
+    MedicalActivityModel,
     NewAnimalModel,
     NewEntryModel,
     UpdateAnimalModel,
+)
+from hermadata.repositories.breed_repository import (
+    NewBreedModel,
+    SQLBreedRepository,
 )
 
 
@@ -59,9 +72,12 @@ def test_exit(db_session: Session, animal_repository: SQLAnimalRepository):
     animal_repository.complete_entry(
         animal_id, CompleteEntryModel(entry_date=datetime.now().date())
     )
+    exit_notes = uuid4().hex
 
     exit_data = AnimalExit(
-        exit_date=datetime.now().date(), exit_type=ExitType.death
+        exit_date=datetime.now().date(),
+        exit_type=ExitType.death,
+        notes=exit_notes,
     )
     animal_repository.exit(animal_id=animal_id, data=exit_data)
 
@@ -73,6 +89,14 @@ def test_exit(db_session: Session, animal_repository: SQLAnimalRepository):
     ).scalar()
 
     assert check is None
+
+    notes_check = db_session.execute(
+        select(AnimalEntry)
+        .where(AnimalEntry.animal_id == animal_id)
+        .order_by(AnimalEntry.created_at.desc())
+    ).scalar()
+
+    assert notes_check.exit_notes == exit_notes
 
 
 @pytest.mark.skip(reason="Not used")
@@ -165,7 +189,9 @@ def test_update(db_session: Session, animal_repository: SQLAnimalRepository):
     assert sterilized is False
 
 
-def test_add_entry(db_session: Session, animal_repository: SQLAnimalRepository):
+def test_add_entry(
+    db_session: Session, animal_repository: SQLAnimalRepository
+):
     data = NewAnimalModel(
         race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
     )
@@ -231,7 +257,9 @@ def test_count_days(
 
     animal_repository.exit(
         animal_id,
-        AnimalExit(exit_date=date(2020, 1, 10), exit_type=ExitType.disappeared),
+        AnimalExit(
+            exit_date=date(2020, 1, 10), exit_type=ExitType.disappeared
+        ),
     )
 
     animal_repository.add_entry(
@@ -399,3 +427,145 @@ def test_count_exits(
 
     assert result.total == 2
     assert result.items[1].exit_date == date(2024, 3, 1)
+
+
+def test_add_medical_activity_and_records(
+    make_animal, make_vet, animal_repository: SQLAnimalRepository
+):
+    animal_id = make_animal()
+    vet_id = make_vet()
+
+    data = MedicalActivityModel(
+        recurrence_type=RecurrenceType.WEEKLY,
+        recurrence_value=1,
+        vet_id=vet_id,
+        name="Medicinale",
+        from_date=date(2020, 1, 1),
+    )
+
+    medical_activity = animal_repository.new_medical_activity(
+        animal_id=animal_id, data=data
+    )
+
+    assert medical_activity.from_date == date(2020, 1, 1)
+
+    assert medical_activity.animal_id == animal_id
+
+    medical_activity_record = animal_repository.add_medical_activity_record(
+        medical_activity_id=medical_activity.id
+    )
+
+    assert medical_activity_record.created_at.date() == datetime.now().date()
+
+
+def test_get_variation_report_variables(
+    empty_db,
+    make_animal,
+    animal_repository: SQLAnimalRepository,
+    breed_repository: SQLBreedRepository,
+):
+    animal_id = make_animal()
+
+    breed = breed_repository.create(
+        data=NewBreedModel(race_id="C", name="Test")
+    )
+
+    fur_color = animal_repository.add_fur_color(name=uuid4().hex)
+    animal_repository.update(
+        animal_id,
+        updates=UpdateAnimalModel(
+            name="Gino",
+            birth_date=datetime.now().date() - timedelta(days=365 * 4 - 1),
+            chip_code="123.123.123.123.123",
+            fur=AnimalFur.cordato,
+            sex=0,
+            breed_id=breed.id,
+            color=fur_color.id,
+        ),
+    )
+    animal_repository.complete_entry(
+        animal_id, data=CompleteEntryModel(entry_date=datetime.now().date())
+    )
+
+    animal_repository.exit(
+        animal_id,
+        data=AnimalExit(
+            exit_date=datetime.now().date(), exit_type=ExitType.disappeared
+        ),
+    )
+
+    variables = animal_repository.get_variation_report_variables(
+        animal_id=animal_id
+    )
+
+    assert variables.animal.age == 3
+    assert variables.animal.fur_color == fur_color.label
+
+
+@pytest.mark.skip(reason="Not implemented yet")
+def test_get_pending_therapies(
+    empty_db, make_animal, animal_repository: SQLAnimalRepository
+):
+    animal1_id = make_animal()
+    animal2_id = make_animal()
+
+    medical_activity = animal_repository.new_medical_activity(
+        animal_id=animal1_id,
+        data=MedicalActivityModel(
+            recurrence_type=RecurrenceType.WEEKLY,
+            recurrence_value=1,
+            name="Test",
+            from_date=(datetime.now() - timedelta(days=10)).date(),
+        ),
+    )
+
+    animal_repository.add_medical_activity_record(medical_activity.id)
+
+    animal_repository.session.execute(
+        update(MedicalActivityRecord)
+        .where(
+            MedicalActivityRecord.medical_activity_id == medical_activity.id
+        )
+        .values(
+            {
+                MedicalActivityRecord.created_at: datetime.now()
+                - timedelta(days=8)
+            }
+        )
+    )
+    result = animal_repository.get_pending_medical_activities(
+        animal_id=animal1_id
+    )
+
+    assert result
+
+
+def test_get_fur_colors(
+    animal_repository: SQLAnimalRepository, db_session: Session
+):
+    color_name = uuid4().hex
+    c = FurColor(name=color_name)
+    db_session.add(c)
+    db_session.flush()
+    result = animal_repository.get_fur_colors()
+
+    assert len(result) > 0
+
+    assert isinstance(result[0], UtilElement)
+
+    assert color_name in [r.label for r in result]
+
+
+def test_new_fur_color(
+    animal_repository: SQLAnimalRepository, db_session: Session
+):
+    name = uuid4().hex
+    result = animal_repository.add_fur_color(name)
+
+    assert isinstance(result, UtilElement)
+
+    db_session.execute(
+        select(FurColor).where(
+            FurColor.id == result.id, FurColor.name == result.label
+        )
+    ).scalar_one()

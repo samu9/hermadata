@@ -18,6 +18,7 @@ import {
 import ControlledBreedsDropdown from "../forms/ControlledBreedsDropdown"
 import ControlledCheckbox from "../forms/ControlledCheckbox"
 import ControlledDropdown from "../forms/ControlledDropdown"
+import ControlledFurColorsDropdown from "../forms/ControlledFurColorDropdown"
 import ControlledInputDate from "../forms/ControlledInputDate"
 import ControlledInputMask from "../forms/ControlledInputMask"
 import ControlledInputText from "../forms/ControlledInputText"
@@ -55,7 +56,6 @@ const AnimalEditForm = () => {
             context
         ) => {
             const isApiError = apiErrorSchema.safeParse(result)
-            console.log(isApiError)
             if (isApiError.success) {
                 if (isApiError.data.code == ApiErrorCode.existingChipCode) {
                     const otherAnimalId = isApiError.data.content!.animal_id
@@ -125,15 +125,13 @@ const AnimalEditForm = () => {
                                 label="Nome"
                                 className="w-52"
                             />
-                            <div className="flex gap-4">
-                                <ControlledInputMask<AnimalEdit>
-                                    fieldName="chip_code"
-                                    label="Chip"
-                                    mask="999.999.999.999.999"
-                                    disabled={animalQuery.data?.chip_code_set}
-                                    className="w-52"
-                                />
-                            </div>
+                            <ControlledInputMask<AnimalEdit>
+                                fieldName="chip_code"
+                                label="Chip"
+                                mask="999.999.999.999.999"
+                                disabled={animalQuery.data?.chip_code_set}
+                                className="w-52"
+                            />
                             <div className="flex flex-row gap-4 py-2">
                                 <ControlledCheckbox<AnimalEdit>
                                     fieldName="sterilized"
@@ -176,6 +174,13 @@ const AnimalEditForm = () => {
                                     optionValue="id"
                                     optionLabel="label"
                                     options={animalFurTypesQuery.data}
+                                />
+                                <ControlledFurColorsDropdown
+                                    onAdd={(color) =>
+                                        setValue("color", color.id, {
+                                            shouldDirty: true,
+                                        })
+                                    }
                                 />
                             </div>
                         </div>

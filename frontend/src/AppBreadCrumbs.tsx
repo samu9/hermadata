@@ -23,7 +23,7 @@ const AppBreadCrumbs = () => {
         <BreadCrumb
             className="border-0 mb-2"
             model={crumbs}
-            home={{ label: "Home", command: () => navigate("/") }}
+            home={{ label: "Bacheca", command: () => navigate("/") }}
         />
         // <div>{crumbs.map((crumb) => crumb)}</div>
     )

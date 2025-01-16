@@ -1,4 +1,5 @@
 import {
+    faArrowUpFromBracket,
     faCircleXmark,
     faFile,
     faHome,
@@ -9,11 +10,19 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { MenuItem } from "primereact/menuitem"
 import { TabMenu } from "primereact/tabmenu"
-import { useEffect, useState } from "react"
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
-import { Animal } from "../../models/animal.schema"
-import AnimalRecordHeader from "./AnimalRecordHeader"
 import { classNames } from "primereact/utils"
+import { useEffect, useState } from "react"
+import {
+    NavLink,
+    Outlet,
+    useLocation,
+    useNavigate,
+    useParams,
+} from "react-router-dom"
+import { useToolbar } from "../../contexts/Toolbar"
+import { Animal } from "../../models/animal.schema"
+import NewAnimalForm from "../new-entry/NewAnimalEntryForm"
+import AnimalRecordHeader from "./AnimalRecordHeader"
 
 type Props = {
     data: Animal
@@ -71,9 +80,30 @@ const generateItems = (data: Animal): Item[] => [
 
 const AnimalRecord = (props: Props) => {
     const navigate = useNavigate()
+    const { id } = useParams()
+
     const location = useLocation()
     const items: Item[] = generateItems(props.data)
     const [activeIndex, setActiveIndex] = useState(1)
+
+    const { addButton, removeButton } = useToolbar()
+
+    useEffect(() => {
+        if (props.data?.exit_date) {
+            addButton({
+                id: "new-entry",
+                buttonText: "Nuovo ingresso",
+                buttonIcon: faArrowUpFromBracket,
+                severity: "success",
+                FormComponent: NewAnimalForm,
+                formProps: { animalId: id },
+                onSuccessAction: (data) => {
+                    console.log("Animal document added:", data)
+                    removeButton("new-entry")
+                },
+            })
+        }
+    }, [])
     useEffect(() => {
         const pathElements = location.pathname.split("/").filter((e) => e)
 

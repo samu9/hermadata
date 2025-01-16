@@ -1,3 +1,4 @@
+from datetime import date
 import os
 from typing import Callable, Generator
 
@@ -11,6 +12,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
 from hermadata.constants import EntryType, StorageType
+from hermadata.database.alembic.import_initial_data import import_doc_kinds
 from hermadata.database.models import (
     Adopter,
     Adoption,
@@ -18,18 +20,27 @@ from hermadata.database.models import (
     AnimalDocument,
     AnimalEntry,
     AnimalLog,
+    Breed,
     Document,
+    MedicalActivity,
+    MedicalActivityRecord,
+    Vet,
 )
 from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import ReportGenerator
-from hermadata.repositories.adopter_repository import SQLAdopterRepository
+from hermadata.repositories.adopter_repository import (
+    AdopterModel,
+    NewAdopter,
+    SQLAdopterRepository,
+)
 from hermadata.repositories.adoption_repository import SQLAdopionRepository
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import NewAnimalModel
+from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
 from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.repositories.race_repository import SQLRaceRepository
-from hermadata.repositories.vet_repository import SQLVetRepository
+from hermadata.repositories.vet_repository import SQLVetRepository, VetModel
 from hermadata.services.animal_service import AnimalService
 from hermadata.storage.disk_storage import DiskStorage
 
@@ -60,6 +71,8 @@ def pytest_sessionstart():
     e = create_engine("mysql+pymysql://root:dev@localhost/hermadata_test")
 
     session = sessionmaker(bind=e)
+
+    import_doc_kinds(e)
 
     with session() as db_session:
         db_session.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
@@ -186,6 +199,15 @@ def city_repository(
 
 
 @pytest.fixture(scope="function")
+def breed_repository(
+    db_session: Session,
+) -> Generator[SQLBreedRepository, SQLBreedRepository, None]:
+
+    repo = SQLBreedRepository()
+    return repo(db_session)
+
+
+@pytest.fixture(scope="function")
 def animal_service(
     animal_repository, document_repository, report_generator, disk_storage
 ) -> AnimalService:
@@ -199,7 +221,6 @@ def animal_service(
 
 @pytest.fixture(scope="function")
 def make_animal(
-    DBSessionMaker: sessionmaker,
     db_session: Session,
     animal_repository: SQLAnimalRepository,
 ) -> Callable[[NewAnimalModel], int]:
@@ -222,6 +243,47 @@ def make_animal(
             select(Animal.id).where(Animal.code == code)
         ).scalar()
         return animal_id
+
+    return make
+
+
+@pytest.fixture(scope="function")
+def make_adopter(
+    adopter_repository: SQLAdopterRepository,
+) -> Callable[[NewAdopter], int]:
+    def make(data: AdopterModel = None) -> int:
+        if data is None:
+            data = NewAdopter(
+                fiscal_code="RSSMRO11A22B123A",
+                name="Mario",
+                surname="Rossi",
+                birth_city_code="H501",
+                birth_date=date(1970, 2, 3),
+                phone="1234567890",
+                residence_city_code="H501",
+            )
+        adopter = adopter_repository.create(data=data)
+
+        return adopter.id
+
+    return make
+
+
+@pytest.fixture(scope="function")
+def make_vet(
+    vet_repository: SQLVetRepository,
+) -> Callable[[VetModel], int]:
+    def make(data: VetModel = None) -> int:
+        if data is None:
+            data = VetModel(
+                business_name="Veterinario",
+                fiscal_code="12345678912",
+                name="Mario",
+                surname="Rossi",
+            )
+        vet = vet_repository.create(data=data)
+
+        return vet.id
 
     return make
 
@@ -250,10 +312,13 @@ def app(db_session):
 
 @pytest.fixture(scope="function")
 def empty_db(db_session: Session):
+    db_session.execute(delete(MedicalActivityRecord))
+    db_session.execute(delete(MedicalActivity))
+    db_session.execute(delete(Adoption))
     db_session.execute(delete(AnimalEntry))
     db_session.execute(delete(AnimalLog))
     db_session.execute(delete(AnimalDocument))
     db_session.execute(delete(Document))
     db_session.execute(delete(Animal))
-    db_session.execute(delete(Adoption))
     db_session.execute(delete(Adopter))
+    db_session.execute(delete(Breed))

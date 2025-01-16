@@ -6,6 +6,7 @@ import {
 import {
     animalCodeValidator,
     animalRaceValidator,
+    breedNameValidator,
     chipCodeValidator,
     cityCodeValidator,
     dateFromString,
@@ -45,6 +46,7 @@ export const animalSchema = z.object({
     notes: z.string().nullish(),
     fur: z.number().nullish(),
     size: z.number().nullish(),
+    color: z.number().nullish(),
 })
 
 export type Animal = z.infer<typeof animalSchema>
@@ -59,6 +61,7 @@ export const animalEditSchema = z.object({
 
     birth_date: dateOnly.nullish(),
     fur: z.number().nullish(),
+    color: z.number().nullish(),
     size: z.number().nullish(),
     sterilized: z.boolean().nullish(),
     sex: z.number().nullable(),
@@ -150,6 +153,7 @@ export const animalExitSchema = z.object({
     exit_date: dateOnly,
     exit_data: z.record(z.string(), z.any()).nullish(),
     adopter_id: z.number().nullish(),
+    notes: z.string().nullish(),
 })
 
 export type AnimalExit = z.infer<typeof animalExitSchema>
@@ -175,3 +179,8 @@ export const animalExitsReportSchema = animalDaysRequestSchema.extend({
 })
 
 export type AnimalExitsReportSchema = z.infer<typeof animalExitsReportSchema>
+
+export const addFurColorSchema = z.object({
+    name: breedNameValidator,
+})
+export type NewFurColor = z.infer<typeof addFurColorSchema>

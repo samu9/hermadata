@@ -22,13 +22,14 @@ def new_document(
             data=doc.file.read(),
             filename=doc.filename,
             mimetype=doc.content_type,
+            is_uploaded=True,
         )
     )
 
     return result
 
 
-@router.get("/kind")
+@router.get("/kind", response_model=list[DocKindModel])
 def get_document_kinds(
     doc_repo: SQLDocumentRepository = Depends(document_repository),
 ):
@@ -59,6 +60,8 @@ def serve_document(
     document_id: int,
     doc_repo: SQLDocumentRepository = Depends(document_repository),
 ):
-    data, content_type = doc_repo.get_data(document_id)
+    data, content_type, filename = doc_repo.get_data(document_id)
 
-    return Response(content=data, media_type=content_type)
+    return Response(
+        content=data, media_type=content_type, headers={"filename": filename}
+    )

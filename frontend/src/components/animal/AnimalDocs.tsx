@@ -1,13 +1,15 @@
-import { faFilePdf } from "@fortawesome/free-solid-svg-icons"
+import { faFile, faFilePdf } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
 import { Column } from "primereact/column"
 import { DataTable } from "primereact/datatable"
+import { useEffect } from "react"
 import { useParams } from "react-router-dom"
-import { useAnimalDocumentsQuery, useDocKindsQuery } from "../../queries"
-import { DocKind } from "../../models/docs.schema"
+import { useToolbar } from "../../contexts/Toolbar"
 import { apiService } from "../../main"
-import NewAnimalDocument from "../new-animal-document/NewDocument"
+import { DocKind } from "../../models/docs.schema"
+import { useAnimalDocumentsQuery, useDocKindsQuery } from "../../queries"
+import AnimalDocUploadForm from "./AnimalDocUploadForm"
 
 const AnimalDocs = () => {
     const { id } = useParams()
@@ -24,7 +26,27 @@ const AnimalDocs = () => {
         ) || {}
 
     const animalDocumentsQuery = useAnimalDocumentsQuery(parseInt(id!))
+    const { addButton, removeButton } = useToolbar()
 
+    useEffect(() => {
+        const buttonId = "new-animal-doc"
+
+        // Add the button on mount
+        addButton({
+            id: buttonId,
+            buttonText: "Inserisci documento",
+            buttonIcon: faFile,
+            FormComponent: AnimalDocUploadForm,
+            onSuccessAction: (data) => {
+                console.log("Animal document added:", data)
+            },
+        })
+
+        // Remove the button on unmount
+        return () => {
+            removeButton(buttonId)
+        }
+    }, [])
     return (
         <div>
             <DataTable
@@ -45,8 +67,6 @@ const AnimalDocs = () => {
                 <Column body={(data) => format(data.created_at, "dd/MM/y")} />
                 <Column body={() => <FontAwesomeIcon icon={faFilePdf} />} />
             </DataTable>
-
-            <NewAnimalDocument />
         </div>
     )
 }

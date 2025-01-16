@@ -35,6 +35,12 @@ import { DocKind, NewDocKind } from "../models/docs.schema"
 import { Race, raceSchema } from "../models/race.schema"
 import { IntUtilItem } from "../models/util.schema"
 import ApiEndpoints from "./apiEndpoints"
+import {
+    NewVet,
+    PaginatedVetSearchResult,
+    Vet,
+    VetSearch,
+} from "../models/vet.schema"
 
 class ApiService {
     inst: AxiosInstance
@@ -215,7 +221,6 @@ class ApiService {
         )
 
         const parsed = result.map((r) => animalDocumentSchema.parse(r))
-        console.log(parsed)
         return parsed
     }
 
@@ -236,6 +241,21 @@ class ApiService {
         )
 
         return data
+    }
+
+    async getAnimalFurColors() {
+        const data = await this.get<IntUtilItem[]>(ApiEndpoints.util.furColor)
+
+        return data
+    }
+
+    async addAnimalFurColor(data: { name: string }): Promise<IntUtilItem> {
+        const result = await this.post<IntUtilItem>(
+            ApiEndpoints.util.furColor,
+            data
+        )
+
+        return result
     }
 
     async newAdopter(data: NewAdopter): Promise<Adopter> {
@@ -315,6 +335,21 @@ class ApiService {
             new Blob([result.data], { type: filetype })
         )
         return { url, filename }
+    }
+
+    async searchVet(query: VetSearch): Promise<PaginatedVetSearchResult> {
+        const result = await this.get<PaginatedVetSearchResult>(
+            ApiEndpoints.vet.search,
+            query
+        )
+
+        return result
+    }
+
+    async newVet(data: NewVet): Promise<Vet> {
+        const result = await this.post<Vet>(ApiEndpoints.vet.create, data)
+
+        return result
     }
 }
 

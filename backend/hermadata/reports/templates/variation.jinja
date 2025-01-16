@@ -1,0 +1,66 @@
+{% extends "base.jinja" %} {% block content%}
+
+<div>
+    <p>
+        Il/la sottoscritto/a <strong>Luigi Vescovini</strong> per
+        <strong>ASSOCIAZIONE AMICI DEGLI ANIMALI - ODV</strong>, residente in
+        <strong>51016 Montecatini Terme in Via delle Padulette</strong>, tel.
+        <strong>3503060217</strong>, in qualità di proprietario del cane
+        iscritto all'Anagrafe Canina Regionale rispondente al seguente stato
+        segnaletico:
+    </p>
+
+    {% include 'animal_data.jinja'%}
+    <div class="section">
+        <p class="w-full text-center my-4">
+            <span class="font-bold">DICHIARA</span><br />(ART. 1 D.P.R. 20
+            ottobre 1998 n.403)
+        </p>
+        <ul>
+            <li>
+                che il suddetto cane è {% if variation_type.value == "I" %}
+                scomparso {% elif variation_type.value == "D" %} deceduto {%
+                elif variation_type.value == "C" %} stato ceduto al Sig.
+                {{ adopter.surname }} {{ adopter.name }} nato il
+                {{ adopter.birth_date }} a {{ adopter.birth_city }}, residente in
+                {{ adopter.residence_city }} tel. {{ adopter.phone }}
+                {%elif variation_type.value == 'A'%} stato adottato dal Sig.
+                {{ adopter.surname }} {{ adopter.name }} nato il
+                {{ adopter.birth_date }} a {{ adopter.birth_city }}, residente
+                in {{ adopter.residence_city }} tel. {{ adopter.phone }}
+                {%elif variation_type.value == 'R'%} stato restituito dal Sig.
+                {{ adopter.surname }} {{ adopter.name }} nato il
+                {{ adopter.birth_date }} a {{ adopter.birth_city }}, residente
+                in {{ adopter.residence_city }} tel. {{ adopter.phone }}
+                {%endif%} il
+                {{ variation_date }}.
+            </li>
+        </ul>
+
+        <div class="mt-2">Note: {{notes}}</div>
+    </div>
+
+    <div class="mt-12">
+        <p>
+            La presente viene redatta ai sensi dell'articolo 19 della L.R.
+            08/04/1995 n°43
+        </p>
+    </div>
+
+    <div class="flex mt-8">
+        <p class="flex-grow w-full">
+            51016 Montecatini Terme, lì __________________
+        </p>
+        <div>
+            <div class="mb-12 flex flex-col">
+                <div>Firma del proprietario</div>
+                <div class="mt-8">__________________________</div>
+            </div>
+            <div class="flex flex-col">
+                <div>Firma per accettazione</div>
+                <div class="mt-8">__________________________</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
