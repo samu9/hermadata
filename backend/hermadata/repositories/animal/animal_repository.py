@@ -306,7 +306,14 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.exit_type,
             )
             .select_from(Animal)
-            .join(Adoption, Adoption.animal_id == Animal.id, isouter=True)
+            .join(
+                Adoption,
+                and_(
+                    Adoption.animal_id == Animal.id,
+                    Adoption.returned_at.is_(None),
+                ),
+                isouter=True,
+            )
             .join(
                 AnimalEntry,
                 and_(
