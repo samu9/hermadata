@@ -41,6 +41,41 @@ const RifugioBadge = () => (
         <FontAwesomeIcon icon={faTents} /> Rifugio
     </span>
 )
+
+const NotPresentInfo = (props: Props) => {
+    const exitTypesMap = useExitTypesMap()
+    const exitDate = new Date(props.data.exit_date!)
+    const notPresent = exitDate < new Date()
+    const title = notPresent ? "Non presente" : "In uscita"
+    return (
+        <div
+            className={classNames("px-3 py-1 rounded", {
+                "bg-red-200": notPresent,
+                "bg-yellow-200": !notPresent,
+            })}
+        >
+            <div className="flex flex-col">
+                <div className="flex gap-1 items-center text-red-600">
+                    <FontAwesomeIcon icon={faXmarkCircle} />
+                    <span className="font-bold">{title}</span>
+                </div>
+                <div className="grid grid-cols-2 text-sm gap-x-1">
+                    <span className="font-light">Data uscita</span>
+                    <span className="font-bold">
+                        {format(exitDate, "dd/MM/y")}
+                    </span>
+                    <span className="font-light">Motivo</span>
+                    <span className="font-bold">
+                        {exitTypesMap?.[props.data.exit_type!]}
+                    </span>
+                </div>
+                <div className="flex gap-1 text-sm"></div>
+
+                <div className="flex gap-1  text-sm"></div>
+            </div>
+        </div>
+    )
+}
 const AnimalRecordHeader = (props: Props) => {
     const menuRef = useRef<Menu>(null)
 
@@ -66,7 +101,6 @@ const AnimalRecordHeader = (props: Props) => {
         props.data.img_path || "",
         import.meta.env.VITE_ASSETS_BASE_URL
     )
-    const exitTypesMap = useExitTypesMap()
     return (
         <div className="flex gap-4 items-start relative">
             <div
@@ -82,90 +116,37 @@ const AnimalRecordHeader = (props: Props) => {
                 />
             </div>
             <div className="grow">
-                <div className="absolute right-4 top-4">
-                    <Button
-                        severity="secondary"
-                        outlined
-                        onClick={(e) => menuRef.current?.toggle(e)}
-                    >
-                        <FontAwesomeIcon icon={faBars} />
-                    </Button>
-                    <Menu
-                        model={menuItems}
-                        popup
-                        ref={menuRef}
-                        id="popup_menu"
-                        popupAlignment="right"
-                    />
-                </div>
-                <div className="flex items-center gap-1">
-                    {props.data.adoptability_index && (
-                        <div
-                            className="inline-block rounded-full w-4 h-4"
-                            style={{
-                                backgroundColor:
-                                    ADOPTABILITY_FLAG_COLOR[
-                                        props.data.adoptability_index
-                                    ],
-                            }}
+                <div className="flex justify-between w-3/4 min-w-[480px]">
+                    <div className="">
+                        {props.data.adoptability_index && (
+                            <div
+                                className="inline-block rounded-full w-4 h-4"
+                                style={{
+                                    backgroundColor:
+                                        ADOPTABILITY_FLAG_COLOR[
+                                            props.data.adoptability_index
+                                        ],
+                                }}
+                            />
+                        )}
+                        <h1
+                            className={classNames("font-bold text-[2rem]", {
+                                "text-gray-300": !props.data.name,
+                            })}
+                        >
+                            {props.data.name || "Nome non assegnato"}
+                        </h1>
+                        <ChipCodeBadge
+                            code={props.data.chip_code || undefined}
                         />
-                    )}
-                    <h1
-                        className={classNames("font-bold text-[2rem]", {
-                            "text-gray-300": !props.data.name,
-                        })}
-                    >
-                        {props.data.name || "Nome non assegnato"}
-                    </h1>
+                    </div>
+                    {props.data.exit_type &&
+                        props.data.exit_date &&
+                        new Date(props.data.exit_date) < new Date() && (
+                            <NotPresentInfo data={props.data} />
+                        )}
                 </div>
-                <ChipCodeBadge code={props.data.chip_code || undefined} />
                 {/* <RifugioBadge /> */}
-                {props.data.exit_type &&
-                    props.data.exit_date &&
-                    props.data.exit_date < new Date() && (
-                        <Message
-                            severity="error"
-                            className="text-red-600"
-                            content={
-                                <div>
-                                    <div className="flex flex-col">
-                                        <div className="flex gap-1 items-center text-red-600">
-                                            <FontAwesomeIcon
-                                                icon={faXmarkCircle}
-                                            />
-                                            <span className="font-bold text-xl">
-                                                Non presente
-                                            </span>
-                                        </div>
-                                        <div className="flex gap-1">
-                                            <span className="font-light">
-                                                Data
-                                            </span>
-                                            <span className="font-bold">
-                                                {format(
-                                                    props.data.exit_date,
-                                                    "dd/MM/y"
-                                                )}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex gap-1">
-                                            <span className="font-light">
-                                                Motivo
-                                            </span>
-                                            <span className="font-bold">
-                                                {
-                                                    exitTypesMap?.[
-                                                        props.data.exit_type
-                                                    ]
-                                                }
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                        />
-                    )}
             </div>
         </div>
     )
