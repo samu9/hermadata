@@ -1,25 +1,22 @@
 import {
-    faBars,
     faHeart,
     faKitMedical,
     faTents,
+    faTriangleExclamation,
     faXmarkCircle,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
-import { Button } from "primereact/button"
 import { Menu } from "primereact/menu"
 import { MenuItem } from "primereact/menuitem"
-import { Message } from "primereact/message"
 import { classNames } from "primereact/utils"
 import { useRef } from "react"
 import { Link } from "react-router-dom"
+import cat from "../../assets/cat.svg"
+import dog from "../../assets/dog.svg"
+import { useExitTypesMap } from "../../hooks/useMaps"
 import { Animal } from "../../models/animal.schema"
 import { ChipCodeBadge } from "./misc"
-import { useExitTypesQuery } from "../../queries"
-import { useExitTypesMap } from "../../hooks/useMaps"
-import dog from "../../assets/dog.svg"
-import cat from "../../assets/cat.svg"
 type Props = {
     data: Animal
 }
@@ -55,8 +52,17 @@ const NotPresentInfo = (props: Props) => {
             })}
         >
             <div className="flex flex-col">
-                <div className="flex gap-1 items-center text-red-600">
-                    <FontAwesomeIcon icon={faXmarkCircle} />
+                <div
+                    className={classNames("flex gap-1 items-center", {
+                        "text-red-600": notPresent,
+                        "text-yellow-700": !notPresent,
+                    })}
+                >
+                    <FontAwesomeIcon
+                        icon={
+                            notPresent ? faXmarkCircle : faTriangleExclamation
+                        }
+                    />
                     <span className="font-bold">{title}</span>
                 </div>
                 <div className="grid grid-cols-2 text-sm gap-x-1">
@@ -140,11 +146,9 @@ const AnimalRecordHeader = (props: Props) => {
                             code={props.data.chip_code || undefined}
                         />
                     </div>
-                    {props.data.exit_type &&
-                        props.data.exit_date &&
-                        new Date(props.data.exit_date) < new Date() && (
-                            <NotPresentInfo data={props.data} />
-                        )}
+                    {props.data.exit_type && props.data.exit_date && (
+                        <NotPresentInfo data={props.data} />
+                    )}
                 </div>
                 {/* <RifugioBadge /> */}
             </div>
