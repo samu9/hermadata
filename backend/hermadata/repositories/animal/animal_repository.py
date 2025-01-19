@@ -116,7 +116,6 @@ class SQLAnimalRepository(SQLBaseRepository):
         return result
 
     def new_animal(self, data: NewAnimalModel) -> str:
-
         code = self.generate_code(
             race_id=data.race_id,
             rescue_city_code=data.rescue_city_code,
@@ -375,8 +374,7 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         if entry_id is None:
             raise Exception(
-                "complete entry: no entries to complete "
-                f"for animal {animal_id}"
+                f"complete entry: no entries to complete for animal {animal_id}"
             )
         self.session.execute(
             update(AnimalEntry)
@@ -524,11 +522,11 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
         ).first()
         if not check:
-            raise AnimalNotPresentException()
+            raise AnimalNotPresentException
 
         entry_date, exit_date = check
         if not entry_date:
-            raise EntryNotCompleteException()
+            raise EntryNotCompleteException
         if exit_date:
             raise Exception(f"animal {animal_id} already is exit!")
 
@@ -563,7 +561,6 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.flush()
 
     def new_adoption(self, data: NewAdoption) -> AdoptionModel:
-
         existing_adoption = self.session.execute(
             select(Adoption.id).where(
                 Adoption.animal_id == data.animal_id,
@@ -584,8 +581,7 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         if not current_entry_id:
             raise Exception(
-                f"animal {data.animal_id} has no current "
-                "entry with null exit date"
+                f"animal {data.animal_id} has no current entry with null exit date"
             )
 
         adoption = Adoption(
@@ -788,7 +784,6 @@ class SQLAnimalRepository(SQLBaseRepository):
         return result
 
     def new_medical_activity(self, animal_id, data: MedicalActivityModel):
-
         return self.add_entity(
             MedicalActivity,
             animal_id=animal_id,
@@ -966,7 +961,6 @@ class SQLAnimalRepository(SQLBaseRepository):
         return variables
 
     def get_variation_report_variables(self, animal_id: int):
-
         variation_date, variation_type, notes, adopter_id = (
             self.session.execute(
                 select(
