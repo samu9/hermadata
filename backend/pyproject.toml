@@ -4,9 +4,9 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "hermadata"
-authors = [{name = "Samuele Fusaro", email = "samuelevf@gmail.com"}]
+authors = [{ name = "Samuele Fusaro", email = "samuelevf@gmail.com" }]
 requires-python = ">=3.12"
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 classifiers = ["License :: OSI Approved :: MIT License"]
 dynamic = ["version", "description"]
 dependencies = [
@@ -26,7 +26,7 @@ dependencies = [
     "weasyprint>=63.1",
 ]
 [project.scripts]
-import-doc-kinds="hermadata.database.alembic.import_initial_data:import_doc_kinds"
+import-doc-kinds = "hermadata.database.alembic.import_initial_data:import_doc_kinds"
 
 [tool.flake8]
 max-line-length = 120
@@ -35,7 +35,4 @@ max-line-length = 120
 line-length = 79
 
 [dependency-groups]
-dev = [
-    "httpx>=0.27.2",
-    "pytest>=8.3.3",
-]
+dev = ["httpx>=0.27.2", "pytest>=8.3.3"]
