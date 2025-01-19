@@ -22,6 +22,8 @@ import NewAdopterForm from "../adopter/NewAdopterForm"
 import { Dialog } from "primereact/dialog"
 import ControlledTextarea from "../forms/ControlledTextarea"
 import { useLoader } from "../../contexts/Loader"
+import AdopterCard from "../adoption/AdopterCard"
+import { Adopter } from "../../models/adopter.schema"
 
 const AnimalExitForm = () => {
     const { id } = useParams()
@@ -32,6 +34,7 @@ const AnimalExitForm = () => {
     const toast = useRef<Toast>(null)
 
     const [showAdopterForm, setShowAdopterForm] = useState(false)
+    const [selectedAdopter, setSelectedAdopter] = useState<Adopter | null>(null)
     const [dialogVisibile, setDialogVisible] = useState(false)
     const [adopterAction, setAdopterAction] = useState<"add" | "search">(
         "search"
@@ -83,7 +86,7 @@ const AnimalExitForm = () => {
     useEffect(() => {
         const values = getValues()
 
-        setShowAdopterForm(["A", , "R"].includes(values.exit_type))
+        setShowAdopterForm(["A", "R"].includes(values.exit_type))
     }, [watch()])
     return (
         <div>
@@ -111,38 +114,46 @@ const AnimalExitForm = () => {
                         </Button>
                     </form>
                 </FormProvider>
-                {showAdopterForm && (
-                    <div className="border rounded p-4 shadow w-full">
-                        <SubTitle>Adottante</SubTitle>
-
-                        <div className="flex gap-2 mb-2 items-center w-full justify-center">
-                            <Button
-                                onClick={() => {
-                                    setAdopterAction("search")
-                                }}
-                                disabled={adopterAction == "search"}
-                            >
-                                <FontAwesomeIcon icon={faMagnifyingGlass} />
-                            </Button>
-                            <Button
-                                onClick={() => setDialogVisible(true)}
-                                disabled={adopterAction == "add"}
-                            >
-                                <FontAwesomeIcon icon={faAdd} />
-                            </Button>
+                <div className="flex flex-col w-full gap-2">
+                    {selectedAdopter && showAdopterForm && (
+                        <div>
+                            <AdopterCard data={selectedAdopter} />
                         </div>
-                        {adopterAction == "search" && (
-                            <SearchAdopter
-                                onSelected={(a) =>
-                                    setValue("adopter_id", a.id, {
-                                        shouldDirty: true,
-                                    })
-                                }
-                                onNoResultsCallback={() => null}
-                            />
-                        )}
-                    </div>
-                )}
+                    )}
+                    {showAdopterForm && (
+                        <div className="border rounded p-4 shadow w-full">
+                            <SubTitle>Cerca o aggiungi adottante</SubTitle>
+
+                            <div className="flex gap-2 mb-2 items-center w-full justify-center">
+                                <Button
+                                    onClick={() => {
+                                        setAdopterAction("search")
+                                    }}
+                                    disabled={adopterAction == "search"}
+                                >
+                                    <FontAwesomeIcon icon={faMagnifyingGlass} />
+                                </Button>
+                                <Button
+                                    onClick={() => setDialogVisible(true)}
+                                    disabled={adopterAction == "add"}
+                                >
+                                    <FontAwesomeIcon icon={faAdd} />
+                                </Button>
+                            </div>
+                            {adopterAction == "search" && (
+                                <SearchAdopter
+                                    onSelected={(a) => {
+                                        setValue("adopter_id", a.id, {
+                                            shouldDirty: true,
+                                        })
+                                        setSelectedAdopter(a)
+                                    }}
+                                    onNoResultsCallback={() => null}
+                                />
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
             <Dialog
                 visible={dialogVisibile}
