@@ -4,12 +4,11 @@ import logging.config
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 
-from hermadata.repositories.animal.animal_repository import (
-    EntryNotCompleteException,
-)
+from hermadata.error_handlers import api_error_exception_handler
+from hermadata.errors import APIException
+
 from hermadata.routers import (
     adopter_router,
     animal_router,
@@ -45,17 +44,7 @@ def build_app():
     app.include_router(adopter_router.router)
     app.include_router(vet_router.router)
 
-    @app.exception_handler(EntryNotCompleteException)
-    async def entry_not_complete_exception_handler(request, exc):
-        logger.error(f"Unhandled exception: {exc}")
-        return JSONResponse(
-            status_code=400,
-            content={
-                "error": "Internal Server Error",
-                "detail": "Data di ingresso non inserita. "
-                "Non è possibile completare l'operazione",
-            },
-        )
+    app.add_exception_handler(APIException, api_error_exception_handler)
 
     logger.info("hermadata set up")
 
