@@ -6,6 +6,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 
+from hermadata.error_handlers import api_error_exception_handler
+from hermadata.errors import APIException
+
 from hermadata.routers import (
     adopter_router,
     animal_router,
@@ -27,7 +30,6 @@ logger = logging.getLogger(__name__)
 
 
 def build_app():
-
     app = FastAPI(lifespan=lifespan)
 
     app.add_middleware(
@@ -47,13 +49,14 @@ def build_app():
     app.include_router(vet_router.router)
     app.include_router(user_router.router)
 
+    app.add_exception_handler(APIException, api_error_exception_handler)
+
     logger.info("hermadata set up")
 
     return app
 
 
 def lifespan(app: FastAPI):
-
     yield
 
 

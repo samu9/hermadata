@@ -16,6 +16,7 @@ from hermadata.models import UtilElement
 from hermadata.repositories.animal.animal_repository import (
     AnimalModel,
     AnimalSearchModel,
+    AnimalWithoutChipCodeException,
     SQLAnimalRepository,
     FurColorName,
 )
@@ -33,6 +34,7 @@ from hermadata.repositories.breed_repository import (
     NewBreedModel,
     SQLBreedRepository,
 )
+from tests.utils import random_chip_code
 
 
 def get_animal_id_by_code(db_session: Session, code: str) -> int:
@@ -79,6 +81,13 @@ def test_exit(db_session: Session, animal_repository: SQLAnimalRepository):
         exit_type=ExitType.death,
         notes=exit_notes,
     )
+    with pytest.raises(AnimalWithoutChipCodeException):
+        animal_repository.exit(animal_id=animal_id, data=exit_data)
+
+    animal_repository.update(
+        animal_id, UpdateAnimalModel(chip_code=random_chip_code())
+    )
+
     animal_repository.exit(animal_id=animal_id, data=exit_data)
 
     check = db_session.execute(
@@ -201,6 +210,16 @@ def test_add_entry(
 
     animal_repository.complete_entry(
         animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
+
+    with pytest.raises(AnimalWithoutChipCodeException):
+        animal_repository.exit(
+            animal_id,
+            AnimalExit(exit_date=date(2024, 1, 2), exit_type=ExitType.return_),
+        )
+
+    animal_repository.update(
+        animal_id, UpdateAnimalModel(chip_code=random_chip_code())
     )
 
     animal_repository.exit(
@@ -362,6 +381,10 @@ def test_count_days_same_day(
         animal_id, CompleteEntryModel(entry_date=date(2024, 4, 1))
     )
 
+    animal_repository.update(
+        animal_id, UpdateAnimalModel(chip_code=random_chip_code())
+    )
+
     animal_repository.exit(
         animal_id,
         AnimalExit(exit_date=date(2024, 4, 2), exit_type=ExitType.disappeared),
@@ -387,6 +410,10 @@ def test_count_exits(
         animal_id1, CompleteEntryModel(entry_date=date(2024, 1, 1))
     )
 
+    animal_repository.update(
+        animal_id1, UpdateAnimalModel(chip_code=random_chip_code())
+    )
+
     animal_repository.exit(
         animal_id1,
         AnimalExit(exit_date=date(2024, 1, 3), exit_type=ExitType.death),
@@ -398,6 +425,9 @@ def test_count_exits(
         animal_id2, CompleteEntryModel(entry_date=date(2024, 1, 1))
     )
 
+    animal_repository.update(
+        animal_id2, UpdateAnimalModel(chip_code=random_chip_code())
+    )
     animal_repository.exit(
         animal_id2,
         AnimalExit(exit_date=date(2024, 3, 1), exit_type=ExitType.death),

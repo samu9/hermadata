@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from "axios"
+import axios, { AxiosError, AxiosInstance } from "axios"
 import {
     Adopter,
     AdopterSearch,
@@ -43,9 +43,13 @@ import {
 } from "../models/vet.schema"
 import { Login, LoginResponse } from "../models/user.schema"
 
+const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
+
 class ApiService {
     inst: AxiosInstance
     baseURL: string
+    private toastRef: React.RefObject<any> | null = null // Reference to Toast
+
     constructor(baseURL: string) {
         this.baseURL = baseURL
         this.inst = axios.create({
@@ -54,6 +58,38 @@ class ApiService {
                 "Content-Type": "application/json",
             },
         })
+
+        this.inst.interceptors.response.use(
+            (response) => response,
+            (error: AxiosError) => {
+                this.handleError(error)
+                return Promise.reject(error)
+            }
+        )
+    }
+
+    setToastRef(toastRef: React.RefObject<any>) {
+        this.toastRef = toastRef
+    }
+
+    private handleError(error: AxiosError): void {
+        let message = DEFAULT_ERROR_MESSAGE
+
+        if (error.response) {
+            const { status, data } = error.response
+            const errorMessage = data as { detail: string }
+            if (errorMessage.detail) {
+                message = errorMessage.detail
+            }
+        }
+        if (this.toastRef?.current) {
+            this.toastRef.current.show({
+                severity: "error", // Customize based on your Toast component
+                summary: "Errore",
+                detail: message,
+                life: 5000, // Duration of the toast
+            })
+        }
     }
 
     private async get<T>(

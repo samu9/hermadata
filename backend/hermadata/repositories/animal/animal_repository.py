@@ -34,6 +34,7 @@ from hermadata.database.models import (
     Race,
     VetServiceRecord,
 )
+from hermadata.errors import APIException
 from hermadata.models import PaginationResult, UtilElement
 from hermadata.reports.report_generator import (
     AdopterVariables,
@@ -78,11 +79,15 @@ logger = logging.getLogger(__name__)
 ADOPTER_EXIT_TYPES: list[ExitType] = [ExitType.adoption, ExitType.custody]
 
 
-class EntryNotCompleteException(Exception):
+class EntryNotCompleteException(APIException):
     pass
 
 
-class AnimalNotPresentException(Exception):
+class AnimalNotPresentException(APIException):
+    pass
+
+
+class AnimalWithoutChipCodeException(APIException):
     pass
 
 
@@ -116,7 +121,6 @@ class SQLAnimalRepository(SQLBaseRepository):
         return result
 
     def new_animal(self, data: NewAnimalModel) -> str:
-
         code = self.generate_code(
             race_id=data.race_id,
             rescue_city_code=data.rescue_city_code,
@@ -307,7 +311,14 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.exit_type,
             )
             .select_from(Animal)
-            .join(Adoption, Adoption.animal_id == Animal.id, isouter=True)
+            .join(
+                Adoption,
+                and_(
+                    Adoption.animal_id == Animal.id,
+                    Adoption.returned_at.is_(None),
+                ),
+                isouter=True,
+            )
             .join(
                 AnimalEntry,
                 and_(
@@ -375,8 +386,7 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         if entry_id is None:
             raise Exception(
-                "complete entry: no entries to complete "
-                f"for animal {animal_id}"
+                f"complete entry: no entries to complete for animal {animal_id}"
             )
         self.session.execute(
             update(AnimalEntry)
@@ -518,17 +528,27 @@ class SQLAnimalRepository(SQLBaseRepository):
 
     def exit(self, animal_id: int, data: AnimalExit):
         check = self.session.execute(
-            select(AnimalEntry.entry_date, AnimalEntry.exit_date).where(
+            select(
+                Animal.chip_code,
+                Race.id,
+                AnimalEntry.entry_date,
+                AnimalEntry.exit_date,
+            )
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+            .join(Race, Race.id == Animal.race_id)
+            .where(
                 AnimalEntry.animal_id == animal_id,
                 AnimalEntry.current.is_(True),
             )
         ).first()
         if not check:
-            raise AnimalNotPresentException()
+            raise AnimalNotPresentException
 
-        entry_date, exit_date = check
+        chip_code, race_code, entry_date, exit_date = check
         if not entry_date:
-            raise EntryNotCompleteException()
+            raise EntryNotCompleteException
+        if not chip_code:
+            raise AnimalWithoutChipCodeException
         if exit_date:
             raise Exception(f"animal {animal_id} already is exit!")
 
@@ -563,7 +583,6 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.flush()
 
     def new_adoption(self, data: NewAdoption) -> AdoptionModel:
-
         existing_adoption = self.session.execute(
             select(Adoption.id).where(
                 Adoption.animal_id == data.animal_id,
@@ -584,8 +603,7 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         if not current_entry_id:
             raise Exception(
-                f"animal {data.animal_id} has no current "
-                "entry with null exit date"
+                f"animal {data.animal_id} has no current entry with null exit date"
             )
 
         adoption = Adoption(
@@ -788,7 +806,6 @@ class SQLAnimalRepository(SQLBaseRepository):
         return result
 
     def new_medical_activity(self, animal_id, data: MedicalActivityModel):
-
         return self.add_entity(
             MedicalActivity,
             animal_id=animal_id,
@@ -966,7 +983,6 @@ class SQLAnimalRepository(SQLBaseRepository):
         return variables
 
     def get_variation_report_variables(self, animal_id: int):
-
         variation_date, variation_type, notes, adopter_id = (
             self.session.execute(
                 select(

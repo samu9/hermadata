@@ -328,9 +328,11 @@ const AnimalList = () => {
                     }
                     filterField="entry_type"
                     body={(animal: AnimalSearchResult) => (
-                        <span className="rounded-full text-xs py-1 bg-slate-600 text-white px-2">
-                            {entryTypesMap?.[animal.entry_type]}
-                        </span>
+                        <div className="flex items-start">
+                            <span className="rounded-full text-xs py-1 bg-slate-600 text-white px-2">
+                                {entryTypesMap?.[animal.entry_type]}
+                            </span>
+                        </div>
                     )}
                     header="Tipo ingresso"
                     className="text-center"
@@ -358,9 +360,11 @@ const AnimalList = () => {
                         filterField="exit_type"
                         body={(animal: AnimalSearchResult) =>
                             animal.exit_type && (
-                                <span className="rounded-full text-xs py-1 bg-slate-600 text-white px-2">
-                                    {exitTypesMap?.[animal.exit_type]}
-                                </span>
+                                <div className="flex items-start">
+                                    <span className="rounded-full text-xs py-1 bg-slate-600 text-white px-2">
+                                        {exitTypesMap?.[animal.exit_type]}
+                                    </span>
+                                </div>
                             )
                         }
                         header="Tipo uscita"
