@@ -4,9 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from pydantic import validate_call
 from sqlalchemy import (
-    Interval,
     and_,
-    extract,
     func,
     insert,
     or_,
@@ -56,7 +54,6 @@ from hermadata.repositories.animal.models import (
     AnimalExit,
     AnimalExitsItem,
     AnimalExitsQuery,
-    AnimalGetQuery,
     AnimalModel,
     AnimalQueryModel,
     AnimalReportResult,
@@ -72,7 +69,6 @@ from hermadata.repositories.animal.models import (
     UpdateAnimalModel,
     FurColorName,
 )
-from hermadata.utils import recurrence_to_sql_interval
 
 logger = logging.getLogger(__name__)
 

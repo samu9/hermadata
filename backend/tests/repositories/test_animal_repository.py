@@ -18,7 +18,6 @@ from hermadata.repositories.animal.animal_repository import (
     AnimalSearchModel,
     AnimalWithoutChipCodeException,
     SQLAnimalRepository,
-    FurColorName,
 )
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
@@ -537,7 +536,7 @@ def test_get_pending_therapies(
     empty_db, make_animal, animal_repository: SQLAnimalRepository
 ):
     animal1_id = make_animal()
-    animal2_id = make_animal()
+    _ = make_animal()
 
     medical_activity = animal_repository.new_medical_activity(
         animal_id=animal1_id,

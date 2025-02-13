@@ -1,6 +1,6 @@
 from typing import Annotated, Generic, Iterable, TypeVar
 
-from pydantic import BaseModel, BeforeValidator, StringConstraints, constr
+from pydantic import BaseModel, BeforeValidator, StringConstraints
 from sqlalchemy import or_
 from sqlalchemy.orm import MappedColumn
 

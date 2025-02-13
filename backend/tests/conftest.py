@@ -24,7 +24,6 @@ from hermadata.database.models import (
     Document,
     MedicalActivity,
     MedicalActivityRecord,
-    Vet,
 )
 from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import ReportGenerator

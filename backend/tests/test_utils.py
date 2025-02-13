@@ -9,5 +9,5 @@ from hermadata.utils import recurrence_to_sql_interval
 def test_recurrence_to_sql_interval():
     i = recurrence_to_sql_interval(RecurrenceType.DAILY, 2)
 
-    stmt = str(select(datetime.now() + i))
+    _ = str(select(datetime.now() + i))
     assert i
