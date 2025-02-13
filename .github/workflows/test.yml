@@ -33,3 +33,5 @@ jobs:
               run: |
                   cd backend
                   alembic -c tests/alembic.ini upgrade head
+            - name: Run tests
+              run: pytest
