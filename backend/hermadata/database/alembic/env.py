@@ -5,6 +5,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
+from hermadata.database.alembic.import_initial_data import import_doc_kinds
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -69,6 +71,7 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
+    import_doc_kinds(connectable)
 
 
 if context.is_offline_mode():
