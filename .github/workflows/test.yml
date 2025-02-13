@@ -27,8 +27,8 @@ jobs:
               run: |
                   cd backend
                   python -m pip install --upgrade pip
-                  pip install .
-                  pip install .[dev]
+                  pip install uv
+                  uv sync --dev
             - name: Database migrations
               run: |
                   cd backend
