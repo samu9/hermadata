@@ -1,3 +1,5 @@
+https://github.com/samu9/hermadata/actions/workflows/test.yml/badge.svg
+
 # Hermadata
 A management application for animal shelters.
 
