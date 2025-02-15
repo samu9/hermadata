@@ -71,7 +71,6 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
-    import_doc_kinds(connectable)
 
 
 if context.is_offline_mode():
