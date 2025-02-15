@@ -28,7 +28,7 @@ jobs:
                   cd backend
                   python -m pip install --upgrade pip
                   pip install .
-                  pip install pytest httpx
+                  pip install pytest httpx pytest-env
             - name: Database migrations
               run: |
                   cd backend
