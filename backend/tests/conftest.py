@@ -12,7 +12,9 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
 from hermadata.constants import EntryType, StorageType
-from hermadata.database.alembic.import_initial_data import import_doc_kinds
+from hermadata.database.alembic.import_initial_data import (
+    import_doc_kinds,
+)
 from hermadata.database.models import (
     Adopter,
     Adoption,
@@ -32,14 +34,23 @@ from hermadata.repositories.adopter_repository import (
     NewAdopter,
     SQLAdopterRepository,
 )
-from hermadata.repositories.adoption_repository import SQLAdopionRepository
-from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
+from hermadata.repositories.adoption_repository import (
+    SQLAdopionRepository,
+)
+from hermadata.repositories.animal.animal_repository import (
+    SQLAnimalRepository,
+)
 from hermadata.repositories.animal.models import NewAnimalModel
 from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
-from hermadata.repositories.document_repository import SQLDocumentRepository
+from hermadata.repositories.document_repository import (
+    SQLDocumentRepository,
+)
 from hermadata.repositories.race_repository import SQLRaceRepository
-from hermadata.repositories.vet_repository import SQLVetRepository, VetModel
+from hermadata.repositories.vet_repository import (
+    SQLVetRepository,
+    VetModel,
+)
 from hermadata.services.animal_service import AnimalService
 from hermadata.storage.disk_storage import DiskStorage
 
@@ -59,7 +70,6 @@ TABLES = [
 
 
 def pytest_sessionstart():
-
     alembic_config = Config("tests/alembic.ini")
 
     command.upgrade(alembic_config, "head")
@@ -86,7 +96,6 @@ def pytest_sessionfinish():
 
 @pytest.fixture(scope="function")
 def engine():
-
     e = create_engine("mysql+pymysql://root:dev@localhost/hermadata_test")
 
     return e
@@ -110,7 +119,6 @@ def DBSessionMaker(engine: Engine) -> Session:
 def db_session(
     DBSessionMaker: sessionmaker,
 ) -> Generator[Session, Session, None]:
-
     with DBSessionMaker.begin() as db_session:
         yield db_session
 
@@ -131,7 +139,6 @@ def jinja_env():
 
 @pytest.fixture(scope="function")
 def report_generator(jinja_env) -> ReportGenerator:
-
     return ReportGenerator(jinja_env=jinja_env)
 
 
@@ -139,7 +146,6 @@ def report_generator(jinja_env) -> ReportGenerator:
 def document_repository(
     db_session: Session, disk_storage
 ) -> Generator[SQLDocumentRepository, SQLDocumentRepository, None]:
-
     repo = SQLDocumentRepository(
         db_session,
         storage={StorageType.disk: disk_storage},
@@ -192,7 +198,6 @@ def race_repository(
 def city_repository(
     db_session: Session,
 ) -> Generator[SQLCityRepository, SQLCityRepository, None]:
-
     repo = SQLCityRepository()
     return repo(db_session)
 
@@ -201,14 +206,16 @@ def city_repository(
 def breed_repository(
     db_session: Session,
 ) -> Generator[SQLBreedRepository, SQLBreedRepository, None]:
-
     repo = SQLBreedRepository()
     return repo(db_session)
 
 
 @pytest.fixture(scope="function")
 def animal_service(
-    animal_repository, document_repository, report_generator, disk_storage
+    animal_repository,
+    document_repository,
+    report_generator,
+    disk_storage,
 ) -> AnimalService:
     return AnimalService(
         animal_repository=animal_repository,
