@@ -1,6 +1,9 @@
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from hermadata.constants import StorageType
+
+ENV_PATH = os.getenv("ENV_PATH")
 
 
 class DBSettings(BaseSettings):
@@ -27,7 +30,7 @@ class Settings(BaseSettings):
     db: DBSettings
     storage: StorageSettings
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=ENV_PATH,
         env_file_encoding="utf-8",
         env_nested_delimiter="__",
         extra="ignore",
@@ -35,6 +38,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-
-print(settings)
