@@ -3,7 +3,7 @@ __pycache__
 backend/.env
 frontend/.env
 backend/attic
-
+backend/tests/storage
 uv.lock
 
 # Logs
