@@ -1,5 +1,6 @@
 from datetime import date
 import os
+from pathlib import Path
 from typing import Callable, Generator
 
 import pytest
@@ -27,7 +28,6 @@ from hermadata.database.models import (
     MedicalActivity,
     MedicalActivityRecord,
 )
-from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.adopter_repository import (
     AdopterModel,
@@ -69,15 +69,22 @@ TABLES = [
 ]
 
 
+@pytest.fixture(scope="session", autouse=True)
+def set_env():
+    os.environ["ENV_PATH"] = "tests/.env"
+
+
 def pytest_sessionstart():
+    from hermadata.settings import settings
+
     alembic_config = Config("tests/alembic.ini")
 
     command.upgrade(alembic_config, "head")
 
-    for f in os.listdir("attic/storage"):
-        os.remove(os.path.join("attic", "storage", f))
+    for f in os.listdir(settings.storage.disk.base_path):
+        os.remove(Path(settings.storage.disk.base_path) / f)
 
-    e = create_engine("mysql+pymysql://root:dev@localhost/hermadata_test")
+    e = create_engine(settings.db.url)
 
     session = sessionmaker(bind=e)
 
@@ -103,7 +110,9 @@ def engine():
 
 @pytest.fixture(scope="function")
 def disk_storage():
-    storage = DiskStorage("attic/storage")
+    from hermadata.settings import settings
+
+    storage = DiskStorage(settings.storage.disk.base_path)
 
     return storage
 
@@ -294,16 +303,11 @@ def make_vet(
 
 @pytest.fixture(scope="function")
 def app(db_session):
-    from hermadata.settings import settings
-
-    settings.db.url = "mysql+pymysql://root:dev@localhost/hermadata_test"
-    settings.storage.disk.base_path = "attic/storage"
-    settings.storage.selected = StorageType.disk
-
     def get_db_session_override():
         yield db_session
 
     from hermadata.main import build_app
+    from hermadata.dependancies import get_db_session
 
     app = build_app()
 
