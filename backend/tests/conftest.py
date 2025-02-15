@@ -108,11 +108,16 @@ def engine():
     return e
 
 
-@pytest.fixture(scope="function")
-def disk_storage():
+@pytest.fixture(scope="session")
+def test_settings():
     from hermadata.settings import settings
 
-    storage = DiskStorage(settings.storage.disk.base_path)
+    return settings
+
+
+@pytest.fixture(scope="function")
+def disk_storage(test_settings):
+    storage = DiskStorage(test_settings.storage.disk.base_path)
 
     return storage
 
