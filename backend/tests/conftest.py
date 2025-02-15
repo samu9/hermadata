@@ -238,9 +238,7 @@ def make_animal(
             )
         code = animal_repository.new_animal(data=data)
 
-        animal_id = db_session.execute(
-            select(Animal.id).where(Animal.code == code)
-        ).scalar()
+        animal_id = db_session.execute(select(Animal.id).where(Animal.code == code)).scalar()
         return animal_id
 
     return make
