@@ -27,7 +27,8 @@
             "jinja": true,
             "justMyCode": false,
             "env": {
-                "AWS_PROFILE": "hermadata"
+                "AWS_PROFILE": "hermadata",
+                "ENV_PATH": ".dev.env"
             }
         }
     ]
