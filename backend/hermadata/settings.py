@@ -1,5 +1,6 @@
 import os
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from hermadata.constants import StorageType
@@ -35,7 +36,7 @@ class Settings(BaseSettings):
     stage: str
     db: DBSettings
     storage: StorageSettings
-    app: AppSettings | None = None
+    app: AppSettings = Field(default_factory=AppSettings)
     model_config = SettingsConfigDict(
         env_file=ENV_PATH,
         env_file_encoding="utf-8",
