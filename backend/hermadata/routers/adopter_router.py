@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 
+from hermadata.initializations import adopter_repository
 from hermadata.models import PaginationResult
 from hermadata.repositories.adopter_repository import (
     AdopterModel,
@@ -7,7 +8,6 @@ from hermadata.repositories.adopter_repository import (
     NewAdopter,
     SQLAdopterRepository,
 )
-from hermadata.initializations import adopter_repository
 
 router = APIRouter(prefix="/adopter")
 

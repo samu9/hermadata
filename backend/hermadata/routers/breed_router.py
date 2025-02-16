@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Query
 from pymysql import IntegrityError
 
+from hermadata.initializations import breed_repository
 from hermadata.repositories.breed_repository import (
-    NewBreedModel,
     BreedModel,
+    NewBreedModel,
     SQLBreedRepository,
 )
-from hermadata.initializations import breed_repository
 
 router = APIRouter(prefix="/breed")
 

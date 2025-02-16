@@ -2,6 +2,7 @@ from hermadata.constants import StorageType
 from hermadata.dependancies import get_jinja_env, get_session_maker
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.adopter_repository import SQLAdopterRepository
+from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
 from hermadata.repositories.document_repository import SQLDocumentRepository
@@ -9,7 +10,6 @@ from hermadata.repositories.race_repository import SQLRaceRepository
 from hermadata.repositories.vet_repository import SQLVetRepository
 from hermadata.services.animal_service import AnimalService
 from hermadata.settings import settings
-from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.storage.disk_storage import DiskStorage
 from hermadata.storage.s3_storage import S3Storage
 

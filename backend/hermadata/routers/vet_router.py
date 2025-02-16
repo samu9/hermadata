@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
 
+from hermadata.initializations import vet_repository
 from hermadata.models import PaginationResult
 from hermadata.repositories.vet_repository import (
+    SearchVetQuery,
     SQLVetRepository,
     VetModel,
-    SearchVetQuery,
 )
-from hermadata.initializations import vet_repository
 
 router = APIRouter(prefix="/vet")
 

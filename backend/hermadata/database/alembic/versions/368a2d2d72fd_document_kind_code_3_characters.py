@@ -8,8 +8,8 @@ Create Date: 2024-12-29 11:47:20.818429
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import mysql
 
 from hermadata.database.models import DocumentKind

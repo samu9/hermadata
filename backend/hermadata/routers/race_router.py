@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
 
-
-from hermadata.repositories.race_repository import RaceModel, SQLRaceRepository
 from hermadata.initializations import race_repository
+from hermadata.repositories.race_repository import RaceModel, SQLRaceRepository
 
 router = APIRouter(prefix="/race")
 

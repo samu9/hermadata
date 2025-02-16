@@ -1,8 +1,14 @@
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.exc import NoResultFound
 
 from hermadata.constants import EXCEL_MEDIA_TYPE, ApiErrorCode
+from hermadata.initializations import (
+    animal_repository,
+    animal_service,
+    document_repository,
+)
 from hermadata.models import ApiError, PaginationResult
 from hermadata.repositories.animal.animal_repository import (
     ExistingChipCodeException,
@@ -26,11 +32,6 @@ from hermadata.repositories.animal.models import (
 )
 from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.services.animal_service import AnimalService
-from hermadata.initializations import (
-    animal_repository,
-    animal_service,
-    document_repository,
-)
 
 router = APIRouter(prefix="/animal")
 

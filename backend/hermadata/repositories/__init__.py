@@ -1,5 +1,6 @@
 import logging
 from typing import Type, TypeVar
+
 from fastapi import Depends
 from sqlalchemy.orm import Session
 

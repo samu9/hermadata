@@ -1,5 +1,5 @@
-from datetime import date
 import os
+from datetime import date
 from pathlib import Path
 from typing import Callable, Generator
 
@@ -311,8 +311,8 @@ def app(db_session):
     def get_db_session_override():
         yield db_session
 
-    from hermadata.main import build_app
     from hermadata.dependancies import get_db_session
+    from hermadata.main import build_app
 
     app = build_app()
 

@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
+
 from hermadata.repositories.adoption_repository import (
     AdoptionModel,
     ExistingAdoptionException,
     NewAdoption,
     SQLAdopionRepository,
 )
-
 
 router = APIRouter(prefix="/adoption")
 
