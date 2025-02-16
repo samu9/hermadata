@@ -33,7 +33,7 @@ import-doc-kinds = "hermadata.database.alembic.import_initial_data:import_doc_ki
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "C"]
+select = ["E", "C", "I", "B"]
 ignore = ["E402"]
 
 [tool.ruff.format]
