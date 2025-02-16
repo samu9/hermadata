@@ -247,7 +247,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
         ).one()
 
-        data = AnimalModel.model_validate(dict(zip(result._fields, result)))
+        data = AnimalModel.model_validate(dict(zip(result._fields, result, strict=False)))
         return data
 
     def get_adoption(self, animal_id: int):
@@ -846,7 +846,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             .where(Animal.id == animal_id)
         ).one()
 
-        animal_variables = AnimalVariables.model_validate(dict(zip(data._fields, data)))
+        animal_variables = AnimalVariables.model_validate(dict(zip(data._fields, data, strict=False)))
         return animal_variables
 
     def _get_adopter_data_report_variables(self, adopter_id: int) -> AdopterVariables:
@@ -875,7 +875,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
             .where(Adopter.id == adopter_id)
         ).one()
-        adopter_variables = AdopterVariables.model_validate(dict(zip(data._fields, data)))
+        adopter_variables = AdopterVariables.model_validate(dict(zip(data._fields, data, strict=False)))
 
         return adopter_variables
 
@@ -950,7 +950,7 @@ class SQLAnimalRepository(SQLBaseRepository):
     def get_fur_colors(self) -> list[UtilElement]:
         data = self.session.execute(select(FurColor.id, FurColor.name.label("label"))).all()
 
-        result = [UtilElement.model_validate(dict(zip(d._fields, d))) for d in data]
+        result = [UtilElement.model_validate(dict(zip(d._fields, d, strict=False))) for d in data]
 
         return result
 

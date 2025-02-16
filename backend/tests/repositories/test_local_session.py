@@ -20,7 +20,7 @@ def test_local_session(db_session: Session):
     # Set different values for each thread
     values = ["thread1_value", "thread2_value"]
 
-    for i, value in enumerate(values):
+    for _, value in enumerate(values):
         thread = Thread(target=enter_repo, args=(value,))
         threads.append(thread)
         thread.start()

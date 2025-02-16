@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
@@ -39,7 +41,7 @@ class AnimalService:
 
         self.document_kind_ids: dict[DocKindCode, int] = {}
 
-    def __call__(self, session: Session = Depends(get_db_session)):
+    def __call__(self, session: Annotated[Session, Depends(get_db_session)]):
         self.animal_repository(session)
         self.document_repository(session)
         return self
