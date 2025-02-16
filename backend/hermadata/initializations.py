@@ -29,7 +29,10 @@ with sessionmaker() as s:
         storage=storage_map,
     )
 breed_repository = SQLBreedRepository()
-city_repository = SQLCityRepository()
+city_repository = SQLCityRepository(
+    preferred_provinces=settings.app.preferred_provinces,
+    preferred_cities=settings.app.preferred_cities,
+)
 race_repository = SQLRaceRepository()
 vet_repository = SQLVetRepository()
 adopter_repository = SQLAdopterRepository()
