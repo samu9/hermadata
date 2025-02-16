@@ -45,7 +45,7 @@ def import_races(engine: Engine):
     with Session.begin() as s:
         with open(os.path.join(INITIAL_DATA_DIR, "races.csv"), "r") as fp:
             reader = csv.DictReader(fp)
-            for i, r in enumerate(reader):
+            for _, r in enumerate(reader):
                 check = s.execute(select(Race.id).where(Race.id == r["id"])).first()
                 if check:
                     continue
