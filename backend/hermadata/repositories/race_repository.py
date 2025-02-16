@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import delete, insert, select
+
 from hermadata.database.models import Race
 from hermadata.repositories import SQLBaseRepository
 
@@ -16,7 +17,6 @@ class RaceQuery(BaseModel):
 
 
 class SQLRaceRepository(SQLBaseRepository):
-
     def save(self, model: RaceModel):
         result = self.session.execute(insert(Race).values(**model.model_dump()))
         self.session.flush()

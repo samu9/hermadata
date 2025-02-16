@@ -32,9 +32,7 @@ class AdopterSearchQuery(SearchQuery):
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Adopter.name.like(f"{v}%")),
         "surname": WhereClauseMapItem(lambda v: Adopter.surname.like(f"{v}%")),
-        "fiscal_code": WhereClauseMapItem(
-            lambda v: Adopter.fiscal_code.like(f"{v}%")
-        ),
+        "fiscal_code": WhereClauseMapItem(lambda v: Adopter.fiscal_code.like(f"{v}%")),
     }
 
     def as_order_by_clause(self) -> MappedColumn:
@@ -42,7 +40,6 @@ class AdopterSearchQuery(SearchQuery):
 
 
 class SQLAdopterRepository(SQLBaseRepository):
-
     def create(self, data: NewAdopter) -> AdopterModel:
         dump = data.model_dump()
         result = self.session.execute(insert(Adopter).values(**dump))
@@ -56,12 +53,8 @@ class SQLAdopterRepository(SQLBaseRepository):
     def search(self, query: AdopterSearchQuery) -> PaginationResult:
         where = query.as_where_clause()
 
-        total = self.session.execute(
-            select(func.count("*")).select_from(Adopter).where(*where)
-        ).scalar_one()
-        stmt = (
-            select(Adopter).where(*where).order_by(query.as_order_by_clause())
-        )
+        total = self.session.execute(select(func.count("*")).select_from(Adopter).where(*where)).scalar_one()
+        stmt = select(Adopter).where(*where).order_by(query.as_order_by_clause())
         if query.from_index is not None:
             stmt = stmt.offset(query.from_index)
         if query.to_index is not None:
@@ -69,8 +62,6 @@ class SQLAdopterRepository(SQLBaseRepository):
 
         result = self.session.execute(stmt).scalars()
 
-        response = [
-            AdopterModel.model_validate(r, from_attributes=True) for r in result
-        ]
+        response = [AdopterModel.model_validate(r, from_attributes=True) for r in result]
 
         return PaginationResult(items=response, total=total)

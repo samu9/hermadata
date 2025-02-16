@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
+from sqlalchemy.exc import IntegrityError
 
+from hermadata.initializations import document_repository
 from hermadata.repositories.document_repository import (
     DocKindModel,
     NewDocKindModel,
     NewDocument,
     SQLDocumentRepository,
 )
-from sqlalchemy.exc import IntegrityError
-from hermadata.initializations import document_repository
 
 router = APIRouter(prefix="/document")
 
@@ -62,6 +62,4 @@ def serve_document(
 ):
     data, content_type, filename = doc_repo.get_data(document_id)
 
-    return Response(
-        content=data, media_type=content_type, headers={"filename": filename}
-    )
+    return Response(content=data, media_type=content_type, headers={"filename": filename})

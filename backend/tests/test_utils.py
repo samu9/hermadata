@@ -1,6 +1,8 @@
 from datetime import datetime
+
 import pytest
 from sqlalchemy import select
+
 from hermadata.constants import RecurrenceType
 from hermadata.utils import recurrence_to_sql_interval
 

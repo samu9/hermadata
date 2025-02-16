@@ -1,8 +1,9 @@
 from threading import Thread
 
 import pytest
-from hermadata.repositories import SQLBaseRepository
 from sqlalchemy.orm import Session
+
+from hermadata.repositories import SQLBaseRepository
 
 
 @pytest.mark.skip()

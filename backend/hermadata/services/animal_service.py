@@ -51,7 +51,6 @@ class AnimalService:
                 self.document_kind_ids[DocKindCode(d.code)] = d.id
 
     def update(self, animal_id: int, data: UpdateAnimalModel):
-
         affected = self.animal_repository.update(animal_id, data)
 
         if not affected:
@@ -104,37 +103,25 @@ class AnimalService:
 
     def days_report(self, query: AnimalDaysQuery):
         animal_days = self.animal_repository.count_animal_days(query)
-        filename, report = (
-            self.report_generator.generate_animal_days_count_report(
-                query, animal_days
-            )
-        )
+        filename, report = self.report_generator.generate_animal_days_count_report(query, animal_days)
         return filename, report
 
     def entries_report(self, query: AnimalEntriesQuery):
         entries = self.animal_repository.count_animal_entries(query)
 
-        filename, report = (
-            self.report_generator.generate_animal_entries_report(
-                query, entries
-            )
-        )
+        filename, report = self.report_generator.generate_animal_entries_report(query, entries)
 
         return filename, report
 
     def exits_report(self, query: AnimalExitsQuery):
         entries = self.animal_repository.count_animal_exits(query)
 
-        filename, report = self.report_generator.generate_animal_exits_report(
-            query, entries
-        )
+        filename, report = self.report_generator.generate_animal_exits_report(query, entries)
 
         return filename, report
 
     def generate_adoption_report(self, animal_id: int):
-        variables = self.animal_repository.get_adoption_report_variables(
-            animal_id
-        )
+        variables = self.animal_repository.get_adoption_report_variables(animal_id)
 
         pdf = self.report_generator.build_adoption_report(variables)
 
@@ -158,9 +145,7 @@ class AnimalService:
         )
 
     def generate_variation_report(self, animal_id: int):
-        variables = self.animal_repository.get_variation_report_variables(
-            animal_id=animal_id
-        )
+        variables = self.animal_repository.get_variation_report_variables(animal_id=animal_id)
 
         pdf = self.report_generator.build_variation_report(variables)
 

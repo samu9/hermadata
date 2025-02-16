@@ -1,4 +1,5 @@
 from datetime import date
+
 from hermadata.repositories.adopter_repository import (
     AdopterSearchQuery,
     NewAdopter,
@@ -7,7 +8,6 @@ from hermadata.repositories.adopter_repository import (
 
 
 def test_save_and_search(adopter_repository: SQLAdopterRepository):
-
     adopter_repository.create(
         NewAdopter(
             name="Mario",
@@ -20,8 +20,6 @@ def test_save_and_search(adopter_repository: SQLAdopterRepository):
         )
     )
 
-    result = adopter_repository.search(
-        AdopterSearchQuery(fiscal_code="AAAAAA12Z12Z123A")
-    )
+    result = adopter_repository.search(AdopterSearchQuery(fiscal_code="AAAAAA12Z12Z123A"))
 
     assert result.total == 1

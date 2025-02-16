@@ -1,6 +1,8 @@
 from functools import cache
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+
 from hermadata.constants import (
     ANIMAL_STAGE_LABELS,
     ENTRY_TYPE_LABELS,
@@ -8,18 +10,15 @@ from hermadata.constants import (
     FUR_LABELS,
     SIZE_LABELS,
 )
+from hermadata.initializations import animal_repository, city_repository
 from hermadata.models import UtilElement
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
+from hermadata.repositories.animal.models import FurColorName
 from hermadata.repositories.city_repository import (
     ComuneModel,
     ProvinciaModel,
     SQLCityRepository,
 )
-from hermadata.initializations import city_repository
-
-from hermadata.initializations import animal_repository
-
-from hermadata.repositories.animal.models import FurColorName
 
 router = APIRouter(prefix="/util")
 
@@ -43,17 +42,13 @@ def get_comuni(
 
 @router.get("/entry-types", response_model=list[UtilElement])
 def get_entry_types():
-    result = [
-        UtilElement(id=k.value, label=v) for k, v in ENTRY_TYPE_LABELS.items()
-    ]
+    result = [UtilElement(id=k.value, label=v) for k, v in ENTRY_TYPE_LABELS.items()]
     return result
 
 
 @router.get("/exit-types", response_model=list[UtilElement])
 def get_exit_types():
-    result = [
-        UtilElement(id=k.value, label=v) for k, v in EXIT_TYPE_LABELS.items()
-    ]
+    result = [UtilElement(id=k.value, label=v) for k, v in EXIT_TYPE_LABELS.items()]
     return result
 
 
@@ -72,10 +67,7 @@ def get_animal_fur_types():
 @router.get("/animal-stages", response_model=list[UtilElement])
 @cache
 def get_animal_stages():
-    result = [
-        UtilElement(id=k.value, label=v)
-        for k, v in ANIMAL_STAGE_LABELS.items()
-    ]
+    result = [UtilElement(id=k.value, label=v) for k, v in ANIMAL_STAGE_LABELS.items()]
     return result
 
 
