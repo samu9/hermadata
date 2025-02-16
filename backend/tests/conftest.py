@@ -212,7 +212,7 @@ def race_repository(
 def city_repository(
     db_session: Session,
 ) -> Generator[SQLCityRepository, SQLCityRepository, None]:
-    repo = SQLCityRepository()
+    repo = SQLCityRepository(preferred_provinces=["LU", "PT"], preferred_cities=["H501", "A561", "B251"])
     return repo(db_session)
 
 
