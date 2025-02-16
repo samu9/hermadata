@@ -1,6 +1,6 @@
 .venv
 __pycache__
-backend/.env
+backend/.*.env
 frontend/.env
 backend/attic
 backend/tests/storage
