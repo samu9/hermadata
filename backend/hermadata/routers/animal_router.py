@@ -37,10 +37,7 @@ router = APIRouter(prefix="/animal")
 
 
 @router.post("")
-def new_animal_entry(
-    data: NewAnimalModel,
-    repo: SQLAnimalRepository = Depends(animal_repository),
-) -> str:
+def new_animal_entry(data: NewAnimalModel, repo: Annotated[SQLAnimalRepository, Depends(animal_repository)]) -> str:
     animal_code = repo.new_animal(data)
 
     return animal_code
@@ -63,14 +60,11 @@ def search_animals(
 
 
 @router.get("/{animal_id}", response_model=AnimalModel)
-def get_animal(
-    animal_id: int,
-    repo: SQLAnimalRepository = Depends(animal_repository),
-):
+def get_animal(animal_id: int, repo: Annotated[SQLAnimalRepository, Depends(animal_repository)]):
     try:
         animal_data = repo.get(AnimalQueryModel(id=animal_id))
-    except NoResultFound:
-        raise HTTPException(status_code=404, detail="No animal found")
+    except NoResultFound as e:
+        raise HTTPException(status_code=404, detail="No animal found") from e
 
     return animal_data
 
@@ -92,10 +86,7 @@ def update_animal(
 
 
 @router.get("/{animal_id}/document", response_model=list[AnimalDocumentModel])
-def get_animal_documents(
-    animal_id: int,
-    repo: SQLAnimalRepository = Depends(animal_repository),
-):
+def get_animal_documents(animal_id: int, repo: Annotated[SQLAnimalRepository, Depends(animal_repository)]):
     docs = repo.get_documents(animal_id)
 
     return docs
@@ -105,8 +96,8 @@ def get_animal_documents(
 def upload_animal_document(
     animal_id: int,
     data: NewAnimalDocument,
-    animal_repo: SQLAnimalRepository = Depends(animal_repository),
-    doc_repo: SQLDocumentRepository = Depends(document_repository),
+    animal_repo: Annotated[SQLAnimalRepository, Depends(animal_repository)],
+    doc_repo: Annotated[SQLDocumentRepository, Depends(document_repository)],
 ):
     doc_kind = doc_repo.get_document_kind_by_code(data.document_kind_code)
 
@@ -120,11 +111,7 @@ def upload_animal_document(
 
 
 @router.post("/{animal_id}/exit")
-def animal_exit(
-    animal_id: int,
-    data: AnimalExit,
-    service: AnimalService = Depends(animal_service),
-):
+def animal_exit(animal_id: int, data: AnimalExit, service: Annotated[AnimalService, Depends(animal_service)]):
     service.exit(animal_id, data)
 
     return True
@@ -132,9 +119,7 @@ def animal_exit(
 
 @router.post("/{animal_id}/entry/complete")
 def complete_entry(
-    animal_id: int,
-    data: CompleteEntryModel,
-    service: AnimalService = Depends(animal_service),
+    animal_id: int, data: CompleteEntryModel, service: Annotated[AnimalService, Depends(animal_service)]
 ):
     service.complete_entry(animal_id, data)
 
@@ -142,28 +127,20 @@ def complete_entry(
 
 
 @router.post("/{animal_id}/entry")
-def add_entry(
-    animal_id: int,
-    data: NewEntryModel,
-    repo: SQLAnimalRepository = Depends(animal_repository),
-):
+def add_entry(animal_id: int, data: NewEntryModel, repo: Annotated[SQLAnimalRepository, Depends(animal_repository)]):
     result = repo.add_entry(animal_id, data)
 
     return result
 
 
 @router.get("/{animal_id}/warning")
-def get_warnings(
-    animal_id: int,
-    repo: SQLAnimalRepository = Depends(animal_repository),
-):
+def get_warnings(animal_id: int, repo: Annotated[SQLAnimalRepository, Depends(animal_repository)]):
     return
 
 
 @router.get("/days/report")
 def serve_animal_days_report(
-    query: AnimalDaysQuery = Depends(),
-    service: AnimalService = Depends(animal_service),
+    query: Annotated[AnimalDaysQuery, Depends()], service: Annotated[AnimalService, Depends(animal_service)]
 ):
     filename, report = service.days_report(query)
 
@@ -176,8 +153,7 @@ def serve_animal_days_report(
 
 @router.get("/entries/report")
 def serve_animal_entries_report(
-    query: AnimalEntriesQuery = Depends(),
-    service: AnimalService = Depends(animal_service),
+    query: Annotated[AnimalEntriesQuery, Depends()], service: Annotated[AnimalService, Depends(animal_service)]
 ):
     filename, report = service.entries_report(query)
 
@@ -190,8 +166,7 @@ def serve_animal_entries_report(
 
 @router.get("/exits/report")
 def serve_animal_exits_report(
-    query: AnimalExitsQuery = Depends(),
-    service: AnimalService = Depends(animal_service),
+    query: Annotated[AnimalExitsQuery, Depends()], service: Annotated[AnimalService, Depends(animal_service)]
 ):
     filename, report = service.exits_report(query)
 

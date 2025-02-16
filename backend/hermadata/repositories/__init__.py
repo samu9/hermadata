@@ -1,5 +1,5 @@
 import logging
-from typing import Type, TypeVar
+from typing import Annotated, Type, TypeVar
 
 from fastapi import Depends
 from sqlalchemy.orm import Session
@@ -18,7 +18,7 @@ class BaseRepository:
 
 class SQLBaseRepository(BaseRepository):
     # https://fastapi.tiangolo.com/advanced/advanced-dependencies/#a-callable-instance
-    def __call__(self, session: Session = Depends(get_db_session)):
+    def __call__(self, session: Annotated[Session, Depends(get_db_session)]):
         self.session = session
         return self
 

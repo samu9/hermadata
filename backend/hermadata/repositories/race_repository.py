@@ -22,7 +22,7 @@ class SQLRaceRepository(SQLBaseRepository):
         self.session.flush()
         return result
 
-    def get_all(self, columns=[]) -> list[RaceModel]:
+    def get_all(self) -> list[RaceModel]:
         select_result = self.session.execute(select(Race)).scalars().all()
 
         result = [RaceModel.model_validate(r) for r in select_result]

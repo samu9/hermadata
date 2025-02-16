@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 
 from hermadata.initializations import adopter_repository
@@ -13,18 +15,14 @@ router = APIRouter(prefix="/adopter")
 
 
 @router.post("/", response_model=AdopterModel)
-def create_adopter(
-    data: NewAdopter,
-    repo: SQLAdopterRepository = Depends(adopter_repository),
-):
+def create_adopter(data: NewAdopter, repo: Annotated[SQLAdopterRepository, Depends(adopter_repository)]):
     adopter = repo.create(data)
     return adopter
 
 
 @router.get("/", response_model=AdopterModel)
 def get_adopter(
-    query: AdopterSearchQuery = Depends(),
-    repo: SQLAdopterRepository = Depends(adopter_repository),
+    query: Annotated[AdopterSearchQuery, Depends()], repo: Annotated[SQLAdopterRepository, Depends(adopter_repository)]
 ):
     result = repo.search(query)
 
@@ -33,8 +31,7 @@ def get_adopter(
 
 @router.get("/search", response_model=PaginationResult[AdopterModel])
 def search_adopter(
-    query: AdopterSearchQuery = Depends(),
-    repo: SQLAdopterRepository = Depends(adopter_repository),
+    query: Annotated[AdopterSearchQuery, Depends()], repo: Annotated[SQLAdopterRepository, Depends(adopter_repository)]
 ):
     result = repo.search(query)
 

@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 
 from hermadata.initializations import vet_repository
@@ -14,7 +16,7 @@ router = APIRouter(prefix="/vet")
 @router.post("/", response_model=VetModel)
 def create_vet(
     data: VetModel,
-    repo: SQLVetRepository = Depends(vet_repository),
+    repo: Annotated[SQLVetRepository, Depends(vet_repository)],
 ):
     vet = repo.create(data)
     return vet
@@ -22,8 +24,8 @@ def create_vet(
 
 @router.get("/search", response_model=PaginationResult[VetModel])
 def search_vet(
-    query: SearchVetQuery = Depends(),
-    repo: SQLVetRepository = Depends(vet_repository),
+    query: Annotated[SearchVetQuery, Depends()],
+    repo: Annotated[SQLVetRepository, Depends(vet_repository)],
 ):
     result = repo.search(query)
 

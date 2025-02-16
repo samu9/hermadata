@@ -1,4 +1,5 @@
 from functools import cache
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -24,18 +25,13 @@ router = APIRouter(prefix="/util")
 
 
 @router.get("/province", response_model=list[ProvinciaModel])
-def get_province(
-    repo: SQLCityRepository = Depends(city_repository),
-):
+def get_province(repo: Annotated[SQLCityRepository, Depends(city_repository)]):
     province = repo.get_province()
     return province
 
 
 @router.get("/comuni", response_model=list[ComuneModel])
-def get_comuni(
-    provincia: str,
-    repo: SQLCityRepository = Depends(city_repository),
-):
+def get_comuni(provincia: str, repo: Annotated[SQLCityRepository, Depends(city_repository)]):
     comuni = repo.get_comuni(provincia=provincia)
     return comuni
 
@@ -72,9 +68,7 @@ def get_animal_stages():
 
 
 @router.get("/fur-color", response_model=list[UtilElement])
-def get_animal_fur_colors(
-    repo: SQLAnimalRepository = Depends(animal_repository),
-):
+def get_animal_fur_colors(repo: Annotated[SQLAnimalRepository, Depends(animal_repository)]):
     colors = repo.get_fur_colors()
 
     return colors
@@ -85,10 +79,7 @@ class NewFurColor(BaseModel):
 
 
 @router.post("/fur-color", response_model=UtilElement)
-def add_fur_color(
-    data: NewFurColor,
-    repo: SQLAnimalRepository = Depends(animal_repository),
-):
+def add_fur_color(data: NewFurColor, repo: Annotated[SQLAnimalRepository, Depends(animal_repository)]):
     color = repo.add_fur_color(data.name)
 
     return color

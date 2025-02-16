@@ -203,7 +203,7 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return check is not None
 
-    def get(self, query: AnimalQueryModel, columns=[]) -> AnimalModel:
+    def get(self, query: AnimalQueryModel) -> AnimalModel:
         where = []
         if query.id is not None:
             where.append(Animal.id == query.id)
@@ -426,7 +426,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 other_animal_id = self.session.execute(
                     select(Animal.id).where(Animal.chip_code == updates.chip_code)
                 ).scalar_one()
-                raise ExistingChipCodeException(animal_id=other_animal_id)
+                raise ExistingChipCodeException(animal_id=other_animal_id) from e
             self.session.rollback()
             raise e
         event_log = AnimalLog(
