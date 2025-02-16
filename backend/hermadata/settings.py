@@ -26,10 +26,16 @@ class StorageSettings(BaseSettings):
     selected: StorageType
 
 
+class AppSettings(BaseSettings):
+    preferred_provinces: list[str] | None = None
+    preferred_cities: list[str] | None = None
+
+
 class Settings(BaseSettings):
     stage: str
     db: DBSettings
     storage: StorageSettings
+    app: AppSettings | None = None
     model_config = SettingsConfigDict(
         env_file=ENV_PATH,
         env_file_encoding="utf-8",
