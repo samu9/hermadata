@@ -68,6 +68,7 @@ const NewAdopterForm = (props: Props) => {
                         <ControlledInputText
                             fieldName="fiscal_code"
                             label="Codice fiscale"
+                            uppercase
                             className="w-64"
                         />
                         <ControlledInputDate
