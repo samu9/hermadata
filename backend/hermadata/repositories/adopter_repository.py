@@ -1,6 +1,7 @@
 from datetime import date
+from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import BaseModel, StringConstraints
 from sqlalchemy import func, insert, select
 from sqlalchemy.orm import MappedColumn
 
@@ -11,13 +12,13 @@ from hermadata.repositories.animal.models import WhereClauseMapItem
 
 
 class NewAdopter(BaseModel):
-    name: str
-    surname: str
+    name: Annotated[str, StringConstraints(to_upper=True)]
+    surname: Annotated[str, StringConstraints(to_upper=True)]
     birth_date: date
     birth_city_code: str
     residence_city_code: str
-    fiscal_code: str
-    phone: str
+    fiscal_code: Annotated[str, StringConstraints(to_upper=True)]
+    phone: Annotated[str, StringConstraints(pattern=r"[\d\+\. ]+")]
 
 
 class AdopterModel(NewAdopter):
