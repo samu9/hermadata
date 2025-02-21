@@ -65,21 +65,24 @@ const NewAdopterForm = (props: Props) => {
                                 className="w-64"
                             />
                         </div>
-                        <ControlledInputText
-                            fieldName="fiscal_code"
-                            label="Codice fiscale"
-                            uppercase
-                            className="w-64"
-                        />
-                        <ControlledInputDate
-                            fieldName="birth_date"
-                            label="Data di nascita"
-                            className="w-64"
-                        />
+                        <div className="flex gap-2">
+                            <ControlledInputText
+                                fieldName="fiscal_code"
+                                label="Codice fiscale"
+                                uppercase
+                                className="w-64"
+                            />
+                            <ControlledInputDate
+                                fieldName="birth_date"
+                                label="Data di nascita"
+                                className="w-64"
+                            />
+                        </div>
                         <div className="flex gap-2">
                             <UncontrolledProvinceDropdown
                                 onChange={(value) => setProvinciaNascita(value)}
                                 className="w-64"
+                                label="Provincia di nascita"
                             />
                             <ControlledDropdown
                                 label="Comune di nascita"
@@ -106,6 +109,25 @@ const NewAdopterForm = (props: Props) => {
                                 optionValue="id"
                                 options={comuneResidenzaQuery.data}
                                 fieldName="residence_city_code"
+                                className="w-64"
+                            />
+                        </div>
+
+                        <div className="flex gap-2">
+                            <ControlledDropdown
+                                label="Tipo documento"
+                                optionLabel="name"
+                                optionValue="id"
+                                options={[
+                                    { name: "Carta di identità", id: "id" },
+                                    { name: "Patente di guida", id: "dl" },
+                                ]}
+                                fieldName="document_type"
+                                className="w-64"
+                            />
+                            <ControlledInputText
+                                fieldName="document_number"
+                                label="Numero documento"
                                 className="w-64"
                             />
                         </div>
