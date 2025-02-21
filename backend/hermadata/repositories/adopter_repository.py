@@ -61,9 +61,9 @@ class SQLAdopterRepository(SQLBaseRepository):
 
         adopter_id = result.lastrowid
 
-        return AdopterModel(**dump, id=adopter_id)
+        return AdopterModel.model_validate({**dump, "id": adopter_id})
 
-    def search(self, query: AdopterSearchQuery) -> PaginationResult:
+    def search(self, query: AdopterSearchQuery) -> PaginationResult[AdopterModel]:
         where = query.as_where_clause()
 
         total = self.session.execute(select(func.count("*")).select_from(Adopter).where(*where)).scalar_one()
