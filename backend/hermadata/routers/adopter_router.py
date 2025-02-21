@@ -20,7 +20,7 @@ def create_adopter(data: NewAdopter, repo: Annotated[SQLAdopterRepository, Depen
     return adopter
 
 
-@router.get("/", response_model=AdopterModel)
+@router.get("/", response_model=PaginationResult[AdopterModel])
 def get_adopter(
     query: Annotated[AdopterSearchQuery, Depends()], repo: Annotated[SQLAdopterRepository, Depends(adopter_repository)]
 ):
