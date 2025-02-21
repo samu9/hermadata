@@ -1,7 +1,8 @@
 from datetime import date
+from enum import Enum
 from typing import Annotated
 
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, ConfigDict, StringConstraints
 from sqlalchemy import func, insert, select
 from sqlalchemy.orm import MappedColumn
 
@@ -9,6 +10,11 @@ from hermadata.database.models import Adopter
 from hermadata.models import PaginationResult, SearchQuery
 from hermadata.repositories import SQLBaseRepository
 from hermadata.repositories.animal.models import WhereClauseMapItem
+
+
+class IDDocumentType(Enum):
+    identity_card = "id"
+    driving_licence = "dl"
 
 
 class NewAdopter(BaseModel):
@@ -19,10 +25,16 @@ class NewAdopter(BaseModel):
     residence_city_code: str
     fiscal_code: Annotated[str, StringConstraints(to_upper=True)]
     phone: Annotated[str, StringConstraints(pattern=r"[\d\+\. ]+")]
+    document_type: IDDocumentType
+    document_number: str
+
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class AdopterModel(NewAdopter):
     id: int
+    document_type: IDDocumentType | None = None
+    document_number: str | None = None
 
 
 class AdopterSearchQuery(SearchQuery):
