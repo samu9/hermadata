@@ -31,6 +31,7 @@ from hermadata.database.models import (
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.adopter_repository import (
     AdopterModel,
+    IDDocumentType,
     NewAdopter,
     SQLAdopterRepository,
 )
@@ -279,7 +280,10 @@ def make_adopter(
                 birth_date=date(1970, 2, 3),
                 phone="1234567890",
                 residence_city_code="H501",
+                document_number="AA12345BB",
+                document_type=IDDocumentType.identity_card,
             )
+
         adopter = adopter_repository.create(data=data)
 
         return adopter.id
