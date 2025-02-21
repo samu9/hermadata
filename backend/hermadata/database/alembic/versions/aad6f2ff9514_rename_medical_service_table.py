@@ -8,8 +8,8 @@ Create Date: 2024-11-21 16:15:59.214051
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
@@ -55,15 +55,9 @@ def downgrade() -> None:
         "medical_record",
         sa.Column("id", mysql.INTEGER(), autoincrement=True, nullable=False),
         sa.Column("causal", mysql.VARCHAR(length=100), nullable=False),
-        sa.Column(
-            "price", mysql.DECIMAL(precision=15, scale=2), nullable=False
-        ),
-        sa.Column(
-            "vet_id", mysql.INTEGER(), autoincrement=False, nullable=False
-        ),
-        sa.Column(
-            "animal_id", mysql.INTEGER(), autoincrement=False, nullable=False
-        ),
+        sa.Column("price", mysql.DECIMAL(precision=15, scale=2), nullable=False),
+        sa.Column("vet_id", mysql.INTEGER(), autoincrement=False, nullable=False),
+        sa.Column("animal_id", mysql.INTEGER(), autoincrement=False, nullable=False),
         sa.Column("performed_at", sa.DATE(), nullable=False),
         sa.Column(
             "created_at",
@@ -71,12 +65,8 @@ def downgrade() -> None:
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["animal_id"], ["animal.id"], name="medical_record_ibfk_1"
-        ),
-        sa.ForeignKeyConstraint(
-            ["vet_id"], ["vet.id"], name="medical_record_ibfk_2"
-        ),
+        sa.ForeignKeyConstraint(["animal_id"], ["animal.id"], name="medical_record_ibfk_1"),
+        sa.ForeignKeyConstraint(["vet_id"], ["vet.id"], name="medical_record_ibfk_2"),
         sa.PrimaryKeyConstraint("id"),
         mysql_collate="utf8mb4_0900_ai_ci",
         mysql_default_charset="utf8mb4",

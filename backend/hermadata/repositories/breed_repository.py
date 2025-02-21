@@ -19,7 +19,6 @@ class BreedModel(NewBreedModel):
 
 
 class SQLBreedRepository(SQLBaseRepository):
-
     def create(self, data: NewBreedModel):
         result = self.session.execute(insert(Breed).values(**data.model_dump()))
         self.session.flush()
@@ -27,17 +26,10 @@ class SQLBreedRepository(SQLBaseRepository):
         new_breed = BreedModel(**data.model_dump(), id=result.lastrowid)
         return new_breed
 
-    def get_all(self, race_id: str, columns=[]) -> list[BreedModel]:
-        select_result = (
-            self.session.execute(select(Breed).where(Breed.race_id == race_id))
-            .scalars()
-            .all()
-        )
+    def get_all(self, race_id: str) -> list[BreedModel]:
+        select_result = self.session.execute(select(Breed).where(Breed.race_id == race_id)).scalars().all()
 
-        result = [
-            BreedModel.model_validate(r, from_attributes=True)
-            for r in select_result
-        ]
+        result = [BreedModel.model_validate(r, from_attributes=True) for r in select_result]
 
         return result
 

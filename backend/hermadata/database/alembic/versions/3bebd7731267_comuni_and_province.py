@@ -5,15 +5,15 @@ Revises:
 Create Date: 2023-11-24 23:20:22.007586
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 from hermadata.database.alembic.import_initial_data import (
     import_comuni_and_province,
 )
-
 
 # revision identifiers, used by Alembic.
 revision: str = "3bebd7731267"

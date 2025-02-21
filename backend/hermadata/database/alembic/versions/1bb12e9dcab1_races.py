@@ -5,13 +5,13 @@ Revises: 3bebd7731267
 Create Date: 2023-11-24 23:23:14.368436
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 from hermadata.database.alembic.import_initial_data import import_races
-
 
 # revision identifiers, used by Alembic.
 revision: str = "1bb12e9dcab1"

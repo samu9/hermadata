@@ -5,10 +5,8 @@ import logging.config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-
 from hermadata.error_handlers import api_error_exception_handler
 from hermadata.errors import APIException
-
 from hermadata.routers import (
     adopter_router,
     animal_router,
@@ -19,7 +17,6 @@ from hermadata.routers import (
     vet_router,
     user_router,
 )
-
 
 logging.config.dictConfig(json.load(open("hermadata/log-configs.json")))
 

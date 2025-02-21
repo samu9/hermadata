@@ -22,10 +22,10 @@ from hermadata.repositories.animal.models import (
     AnimalEntriesQuery,
     AnimalReportResult,
 )
+from hermadata.settings import Settings
 
 
-def test_animal_entry_report(report_generator: ReportGenerator):
-
+def test_animal_entry_report(report_generator: ReportGenerator, test_settings: Settings):
     variables = ReportAnimalEntryVariables(
         city="Test",
         animal_name="Gino",
@@ -34,14 +34,13 @@ def test_animal_entry_report(report_generator: ReportGenerator):
     )
     pdf = report_generator.build_animal_entry_report(variables)
 
-    with open("attic/storage/generated.pdf", "wb") as fp:
+    with open(test_settings.storage.disk.base_path + "/generated.pdf", "wb") as fp:
         fp.write(pdf)
 
     assert pdf
 
 
-def test_chip_assignment_report(report_generator: ReportGenerator):
-
+def test_chip_assignment_report(report_generator: ReportGenerator, test_settings):
     variables = ReportChipAssignmentVariables(
         animal_name="Gino",
         chip_code="111.111.111.111.111",
@@ -49,13 +48,13 @@ def test_chip_assignment_report(report_generator: ReportGenerator):
     )
     pdf = report_generator.build_chip_assignment_report(variables)
 
-    with open("attic/storage/generated.pdf", "wb") as fp:
+    with open(test_settings.storage.disk.base_path + "/generated.pdf", "wb") as fp:
         fp.write(pdf)
 
     assert pdf
 
 
-def test_animal_days_report(report_generator: ReportGenerator):
+def test_animal_days_report(report_generator: ReportGenerator, test_settings):
     data = AnimalDaysResult(
         items=[
             AnimalDaysItem(
@@ -71,16 +70,11 @@ def test_animal_days_report(report_generator: ReportGenerator):
         to_date=date(2023, 2, 1),
         city_code="H501",
     )
-    filename, report = report_generator.generate_animal_days_count_report(
-        query, data
-    )
+    filename, report = report_generator.generate_animal_days_count_report(query, data)
 
     assert isinstance(filename, str)
-    assert (
-        filename == f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}"
-        f"_{query.to_date.strftime('%Y-%m-%d')}.xlsx"
-    )
-    with open("attic/storage/generated.xls", "wb") as fp:
+    assert filename == f"giorni_cane{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}.xlsx"
+    with open(test_settings.storage.disk.base_path + "/generated.xls", "wb") as fp:
         fp.write(report)
 
     assert isinstance(report, bytes)
@@ -108,14 +102,9 @@ def test_animal_entries_report(empty_db, report_generator: ReportGenerator):
         ],
         total=1,
     )
-    filename, report = report_generator.generate_animal_entries_report(
-        query, data, ReportFormat.excel
-    )
+    filename, report = report_generator.generate_animal_entries_report(query, data, ReportFormat.excel)
 
-    assert (
-        filename == f"ingressi_{query.from_date.strftime('%Y-%m-%d')}"
-        f"_{query.to_date.strftime('%Y-%m-%d')}.xlsx"
-    )
+    assert filename == f"ingressi_{query.from_date.strftime('%Y-%m-%d')}_{query.to_date.strftime('%Y-%m-%d')}.xlsx"
     file_ = BytesIO(report)
     wb = load_workbook(file_)
 
@@ -130,7 +119,6 @@ def test_animal_entries_report(empty_db, report_generator: ReportGenerator):
 
 
 def test_variation_report(report_generator: ReportGenerator):
-
     variables = ReportVariationVariables(
         animal=AnimalVariables(
             name="Gino",

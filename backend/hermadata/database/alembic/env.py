@@ -1,9 +1,9 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
+
+from hermadata.database.alembic.import_initial_data import import_doc_kinds
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

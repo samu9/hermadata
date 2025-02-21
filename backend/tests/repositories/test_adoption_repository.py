@@ -1,12 +1,12 @@
 from datetime import date
 
 import pytest
+from sqlalchemy.orm import Session
+
 from hermadata.database.models import Adopter, Animal
 from hermadata.repositories.adoption_repository import (
     SQLAdopionRepository,
 )
-from sqlalchemy.orm import Session
-
 from hermadata.repositories.animal.models import NewAdoption
 
 
@@ -29,8 +29,6 @@ def test_create(db_session: Session, adoption_repository: SQLAdopionRepository):
     db_session.add(adopter)
     db_session.flush()
 
-    result = adoption_repository.create(
-        NewAdoption(animal_id=animal.id, adopter_id=adopter.id)
-    )
+    result = adoption_repository.create(NewAdoption(animal_id=animal.id, adopter_id=adopter.id))
 
     assert result

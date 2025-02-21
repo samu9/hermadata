@@ -1,5 +1,6 @@
 import os
 from datetime import date
+from pathlib import Path
 from typing import Callable, Generator
 from uuid import uuid4
 
@@ -13,7 +14,9 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
 from hermadata.constants import EntryType, StorageType
-from hermadata.database.alembic.import_initial_data import import_doc_kinds
+from hermadata.database.alembic.import_initial_data import (
+    import_doc_kinds,
+)
 from hermadata.database.models import (
     Adopter,
     Adoption,
@@ -25,27 +28,35 @@ from hermadata.database.models import (
     Document,
     MedicalActivity,
     MedicalActivityRecord,
-    Vet,
 )
-from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.adopter_repository import (
     AdopterModel,
+    IDDocumentType,
     NewAdopter,
     SQLAdopterRepository,
 )
-from hermadata.repositories.adoption_repository import SQLAdopionRepository
-from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
+from hermadata.repositories.adoption_repository import (
+    SQLAdopionRepository,
+)
+from hermadata.repositories.animal.animal_repository import (
+    SQLAnimalRepository,
+)
 from hermadata.repositories.animal.models import NewAnimalModel
 from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
-from hermadata.repositories.document_repository import SQLDocumentRepository
+from hermadata.repositories.document_repository import (
+    SQLDocumentRepository,
+)
 from hermadata.repositories.race_repository import SQLRaceRepository
 from hermadata.repositories.user_repository import (
     CreateUserModel,
     SQLUserRepository,
 )
-from hermadata.repositories.vet_repository import SQLVetRepository, VetModel
+from hermadata.repositories.vet_repository import (
+    SQLVetRepository,
+    VetModel,
+)
 from hermadata.services.animal_service import AnimalService
 from hermadata.services.user_service import RegisterUserModel, UserService
 from hermadata.storage.disk_storage import DiskStorage
@@ -65,16 +76,22 @@ TABLES = [
 ]
 
 
+@pytest.fixture(scope="session", autouse=True)
+def set_env():
+    os.environ["ENV_PATH"] = "tests/.env"
+
+
 def pytest_sessionstart():
+    from hermadata.settings import settings
 
     alembic_config = Config("tests/alembic.ini")
 
     command.upgrade(alembic_config, "head")
 
-    for f in os.listdir("attic/storage"):
-        os.remove(os.path.join("attic", "storage", f))
+    for f in os.listdir(settings.storage.disk.base_path):
+        os.remove(Path(settings.storage.disk.base_path) / f)
 
-    e = create_engine("mysql+pymysql://root:dev@localhost/hermadata_test")
+    e = create_engine(settings.db.url)
 
     session = sessionmaker(bind=e)
 
@@ -93,15 +110,21 @@ def pytest_sessionfinish():
 
 @pytest.fixture(scope="function")
 def engine():
-
     e = create_engine("mysql+pymysql://root:dev@localhost/hermadata_test")
 
     return e
 
 
+@pytest.fixture(scope="session")
+def test_settings():
+    from hermadata.settings import settings
+
+    return settings
+
+
 @pytest.fixture(scope="function")
-def disk_storage():
-    storage = DiskStorage("attic/storage")
+def disk_storage(test_settings):
+    storage = DiskStorage(test_settings.storage.disk.base_path)
 
     return storage
 
@@ -117,7 +140,6 @@ def DBSessionMaker(engine: Engine) -> Session:
 def db_session(
     DBSessionMaker: sessionmaker,
 ) -> Generator[Session, Session, None]:
-
     with DBSessionMaker.begin() as db_session:
         yield db_session
 
@@ -138,7 +160,6 @@ def jinja_env():
 
 @pytest.fixture(scope="function")
 def report_generator(jinja_env) -> ReportGenerator:
-
     return ReportGenerator(jinja_env=jinja_env)
 
 
@@ -146,7 +167,6 @@ def report_generator(jinja_env) -> ReportGenerator:
 def document_repository(
     db_session: Session, disk_storage
 ) -> Generator[SQLDocumentRepository, SQLDocumentRepository, None]:
-
     repo = SQLDocumentRepository(
         db_session,
         storage={StorageType.disk: disk_storage},
@@ -199,8 +219,7 @@ def race_repository(
 def city_repository(
     db_session: Session,
 ) -> Generator[SQLCityRepository, SQLCityRepository, None]:
-
-    repo = SQLCityRepository()
+    repo = SQLCityRepository(preferred_provinces=["LU", "PT"], preferred_cities=["H501", "A561", "B251"])
     return repo(db_session)
 
 
@@ -208,7 +227,6 @@ def city_repository(
 def breed_repository(
     db_session: Session,
 ) -> Generator[SQLBreedRepository, SQLBreedRepository, None]:
-
     repo = SQLBreedRepository()
     return repo(db_session)
 
@@ -217,14 +235,16 @@ def breed_repository(
 def user_repository(
     db_session: Session,
 ) -> Generator[SQLUserRepository, SQLUserRepository, None]:
-
     repo = SQLUserRepository()
     return repo(db_session)
 
 
 @pytest.fixture(scope="function")
 def animal_service(
-    animal_repository, document_repository, report_generator, disk_storage
+    animal_repository,
+    document_repository,
+    report_generator,
+    disk_storage,
 ) -> AnimalService:
     return AnimalService(
         animal_repository=animal_repository,
@@ -266,9 +286,7 @@ def make_animal(
             )
         code = animal_repository.new_animal(data=data)
 
-        animal_id = db_session.execute(
-            select(Animal.id).where(Animal.code == code)
-        ).scalar()
+        animal_id = db_session.execute(select(Animal.id).where(Animal.code == code)).scalar()
         return animal_id
 
     return make
@@ -288,7 +306,10 @@ def make_adopter(
                 birth_date=date(1970, 2, 3),
                 phone="1234567890",
                 residence_city_code="H501",
+                document_number="AA12345BB",
+                document_type=IDDocumentType.identity_card,
             )
+
         adopter = adopter_repository.create(data=data)
 
         return adopter.id
@@ -321,9 +342,7 @@ def make_user(
 ) -> Callable[[CreateUserModel], int]:
     def make(data: CreateUserModel = None) -> int:
         if data is None:
-            data = RegisterUserModel(
-                email=f"{uuid4().hex}@test.it", password=uuid4().hex
-            )
+            data = RegisterUserModel(email=f"{uuid4().hex}@test.it", password=uuid4().hex)
         user_id = user_service.register(data=data)
 
         return user_id
@@ -333,15 +352,10 @@ def make_user(
 
 @pytest.fixture(scope="function")
 def app(db_session):
-    from hermadata.settings import settings
-
-    settings.db.url = "mysql+pymysql://root:dev@localhost/hermadata_test"
-    settings.storage.disk.base_path = "attic/storage"
-    settings.storage.selected = StorageType.disk
-
     def get_db_session_override():
         yield db_session
 
+    from hermadata.dependancies import get_db_session
     from hermadata.main import build_app
 
     app = build_app()

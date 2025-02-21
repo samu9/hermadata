@@ -13,6 +13,8 @@ export const newAdopterSchema = z.object({
     fiscal_code: z.string().min(16).max(16),
     residence_city_code: z.string().min(4).max(4),
     phone: z.string().min(9),
+    document_type: z.string().length(2),
+    document_number: z.string(),
 })
 
 export type NewAdopter = z.infer<typeof newAdopterSchema>

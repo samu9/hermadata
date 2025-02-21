@@ -1,6 +1,11 @@
+import os
+
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from hermadata.constants import StorageType
+
+ENV_PATH = os.getenv("ENV_PATH")
 
 
 class DBSettings(BaseSettings):
@@ -28,13 +33,19 @@ class AuthSettings(BaseSettings):
     access_token_expire_minutes: int = 30
 
 
+class AppSettings(BaseSettings):
+    preferred_provinces: list[str] | None = None
+    preferred_cities: list[str] | None = None
+
+
 class Settings(BaseSettings):
     stage: str
     db: DBSettings
     storage: StorageSettings
     auth: AuthSettings
+    app: AppSettings = Field(default_factory=AppSettings)
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=ENV_PATH,
         env_file_encoding="utf-8",
         env_nested_delimiter="__",
         extra="ignore",
@@ -42,6 +53,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-
-print(settings)

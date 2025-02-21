@@ -5,8 +5,8 @@ from sqlalchemy.orm import sessionmaker
 
 from hermadata.constants import StorageType
 from hermadata.database.models import Document
-from hermadata.settings import settings
 from hermadata.dependancies import get_s3_storage
+from hermadata.settings import settings
 
 
 def upload_pdfs_to_s3():
@@ -17,9 +17,7 @@ def upload_pdfs_to_s3():
 
     with db_session() as session:
         keys = session.execute(
-            select(Document.key, Document.filename).where(
-                Document.storage_service == StorageType.disk.value
-            )
+            select(Document.key, Document.filename).where(Document.storage_service == StorageType.disk.value)
         ).all()
 
     # Check if the provided directory path is valid
@@ -46,9 +44,7 @@ def upload_pdfs_to_s3():
             continue
         with db_session.begin() as session:
             session.execute(
-                update(Document)
-                .where(Document.key == k)
-                .values({Document.storage_service: StorageType.aws_s3.value})
+                update(Document).where(Document.key == k).values({Document.storage_service: StorageType.aws_s3.value})
             )
 
 

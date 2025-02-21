@@ -15,17 +15,17 @@ class DiskStorage(StorageInterface):
         file_path = os.path.join(self.base_path, file_name)
         with open(file_path, "wb") as file:
             file.write(content)
-        print(f"File '{file_name}' stored at '{file_path}'.")
+        logger.debug(f"File '{file_name}' stored at '{file_path}'.")
 
     def retrieve_file(self, key):
         file_path = os.path.join(self.base_path, key)
         if os.path.exists(file_path):
             with open(file_path, "rb") as file:
                 content = file.read()
-            print(f"File '{key}' retrieved from '{file_path}'.")
+            logger.debug(f"File '{key}' retrieved from '{file_path}'.")
             return content
         else:
-            print(f"File '{key}' not found.")
+            logger.warning(f"File '{key}' not found.")
             return None
 
     def delete_file(self, file_name):

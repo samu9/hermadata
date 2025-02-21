@@ -12,13 +12,13 @@ from hermadata.database.models import (
     Document,
     DocumentKind,
 )
+from hermadata.repositories.adopter_repository import AdopterModel
 from hermadata.repositories.animal.models import (
     AnimalExit,
     CompleteEntryModel,
     NewAnimalModel,
     UpdateAnimalModel,
 )
-from hermadata.repositories.adopter_repository import AdopterModel
 from hermadata.services.animal_service import AnimalService
 from hermadata.storage.disk_storage import DiskStorage
 from tests.utils import random_chip_code
@@ -38,9 +38,7 @@ def test_new_entry(
         )
     )
 
-    animal_service.complete_entry(
-        animal_id, CompleteEntryModel(entry_date=datetime.now().date())
-    )
+    animal_service.complete_entry(animal_id, CompleteEntryModel(entry_date=datetime.now().date()))
 
     doc_code, doc_key = db_session.execute(
         select(DocumentKind.code, Document.key)
@@ -78,9 +76,7 @@ def test_variation_report_adoption(
 
     animal_service.complete_entry(
         animal_id,
-        data=CompleteEntryModel(
-            entry_date=datetime.now().date() - timedelta(days=10)
-        ),
+        data=CompleteEntryModel(entry_date=datetime.now().date() - timedelta(days=10)),
     )
 
     adopter_id = make_adopter()
@@ -131,9 +127,7 @@ def test_variation_report_death(
 
     animal_service.complete_entry(
         animal_id,
-        data=CompleteEntryModel(
-            entry_date=datetime.now().date() - timedelta(days=10)
-        ),
+        data=CompleteEntryModel(entry_date=datetime.now().date() - timedelta(days=10)),
     )
 
     animal_service.update(
@@ -148,9 +142,7 @@ def test_variation_report_death(
     )
     animal_service.animal_repository.exit(
         animal_id,
-        data=AnimalExit(
-            exit_date=datetime.now().date(), exit_type=ExitType.death
-        ),
+        data=AnimalExit(exit_date=datetime.now().date(), exit_type=ExitType.death),
     )
 
     animal_service.generate_variation_report(animal_id)
