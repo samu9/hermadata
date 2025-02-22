@@ -1,7 +1,14 @@
 name: Test
 
-on: [push]
-
+on: 
+  push:
+      paths:
+          - 'backend/*'
+          - '.github/workflows/test.yml'
+      branches:
+          - '**'
+      tags-ignore:
+          - '**'
 jobs:
     build:
         runs-on: ubuntu-latest
