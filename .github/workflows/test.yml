@@ -6,7 +6,7 @@ on:
           - 'backend/*'
           - '.github/workflows/test.yml'
       branches:
-          - '**'
+          - 'main'
       tags-ignore:
           - '**'
 jobs:
