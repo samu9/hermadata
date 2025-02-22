@@ -10,7 +10,7 @@ on:
       tags-ignore:
           - '**'
 jobs:
-    build-and-test-test:
+    build-and-test:
         runs-on: ubuntu-latest
 
         steps:
@@ -45,6 +45,7 @@ jobs:
                 cd backend
                 mkdir tests/storage
                 pytest --cov=hermadata --cov-report json
+                mv coverage.json ../
             - name: Update Coverage Badge
               # GitHub actions: default branch variable
               # https://stackoverflow.com/questions/64781462/github-actions-default-branch-variable
