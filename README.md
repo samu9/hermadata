@@ -1,5 +1,5 @@
 ![Test badge](https://github.com/samu9/hermadata/actions/workflows/test.yml/badge.svg)
-[![cov](https://we-cli.github.io/jayin/badges/coverage.svg)](https://github.com/samu9/hermadata/actions)
+[![cov](https://samu9.github.io/hermadata/badges/coverage.svg)](https://github.com/samu9/hermadata/actions)
 
 # Hermadata
 
