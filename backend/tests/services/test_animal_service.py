@@ -71,6 +71,7 @@ def test_variation_report_adoption(
     make_animal: Callable[[NewAnimalModel], int],
     make_adopter: Callable[[AdopterModel], AdopterModel],
     animal_service: AnimalService,
+    complete_animal_data,
 ):
     animal_id = make_animal()
 
@@ -81,16 +82,7 @@ def test_variation_report_adoption(
 
     adopter_id = make_adopter()
 
-    animal_service.update(
-        animal_id,
-        data=UpdateAnimalModel(
-            birth_date=datetime.now().date() - timedelta(days=366),
-            chip_code=random_chip_code(),
-            fur=AnimalFur.cordato,
-            name="Test",
-            sex=0,
-        ),
-    )
+    complete_animal_data(animal_id)
 
     animal_service.animal_repository.exit(
         animal_id,
@@ -120,8 +112,7 @@ def test_variation_report_adoption(
 
 
 def test_variation_report_death(
-    make_animal: Callable[[NewAnimalModel], int],
-    animal_service: AnimalService,
+    make_animal: Callable[[NewAnimalModel], int], animal_service: AnimalService, complete_animal_data
 ):
     animal_id = make_animal()
 
@@ -130,16 +121,8 @@ def test_variation_report_death(
         data=CompleteEntryModel(entry_date=datetime.now().date() - timedelta(days=10)),
     )
 
-    animal_service.update(
-        animal_id,
-        data=UpdateAnimalModel(
-            birth_date=datetime.now().date() - timedelta(days=365),
-            chip_code=random_chip_code(),
-            fur=AnimalFur.cordato,
-            name="Test",
-            sex=0,
-        ),
-    )
+    complete_animal_data(animal_id)
+
     animal_service.animal_repository.exit(
         animal_id,
         data=AnimalExit(exit_date=datetime.now().date(), exit_type=ExitType.death),
