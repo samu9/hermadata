@@ -1,9 +1,16 @@
 name: Test
 
-on: [push]
-
+on: 
+  push:
+      paths:
+          - 'backend/*'
+          - '.github/workflows/test.yml'
+      branches:
+          - 'main'
+      tags-ignore:
+          - '**'
 jobs:
-    build:
+    build-and-test:
         runs-on: ubuntu-latest
 
         steps:
@@ -28,7 +35,7 @@ jobs:
                   cd backend
                   python -m pip install --upgrade pip
                   pip install .
-                  pip install pytest httpx pytest-env pytest-dotenv
+                  pip install pytest httpx pytest-env pytest-dotenv pytest-cov
             - name: Database migrations
               run: |
                   cd backend
@@ -37,4 +44,10 @@ jobs:
               run: |
                 cd backend
                 mkdir tests/storage
-                pytest
+                pytest --cov=hermadata --cov-report json
+                mv coverage.json ../
+            - name: Update Coverage Badge
+              # GitHub actions: default branch variable
+              # https://stackoverflow.com/questions/64781462/github-actions-default-branch-variable
+              if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+              uses: we-cli/coverage-badge-action@main

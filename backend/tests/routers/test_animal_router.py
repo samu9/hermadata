@@ -98,6 +98,7 @@ def test_complete_entry(app: TestClient, make_animal, db_session: Session):
 def test_exit(
     app: TestClient,
     make_animal,
+    complete_animal_data,
     animal_service: AnimalService,
     make_adopter,
     db_session: Session,
@@ -109,10 +110,9 @@ def test_exit(
         animal_id,
         data=CompleteEntryModel(entry_date=datetime.now().date() - timedelta(days=3)),
     )
-    animal_service.update(
-        animal_id,
-        data=UpdateAnimalModel(chip_code=random_chip_code(), name="Gino", notes="Test"),
-    )
+
+    complete_animal_data(animal_id)
+
     update_data = jsonable_encoder(
         AnimalExit(
             adopter_id=adopter_id,

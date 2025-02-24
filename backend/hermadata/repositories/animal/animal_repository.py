@@ -74,12 +74,30 @@ logger = logging.getLogger(__name__)
 
 ADOPTER_EXIT_TYPES: list[ExitType] = [ExitType.adoption, ExitType.custody]
 
+EXIT_REQUIRED_DATA: dict[str, tuple] = {
+    "C": [
+        Animal.chip_code,
+        Animal.fur,
+        Animal.color,
+        Animal.breed_id,
+        Animal.sex,
+        Animal.birth_date,
+        Animal.sterilized,
+        Animal.size,
+    ],
+    "G": [Animal.fur, Animal.color, Animal.breed_id, Animal.sex, Animal.birth_date, Animal.sterilized, Animal.size],
+}
+
 
 class EntryNotCompleteException(APIException):
     pass
 
 
 class AnimalNotPresentException(APIException):
+    pass
+
+
+class NoRequiredExitDataException(APIException):
     pass
 
 
@@ -489,8 +507,7 @@ class SQLAnimalRepository(SQLBaseRepository):
     def exit(self, animal_id: int, data: AnimalExit):
         check = self.session.execute(
             select(
-                Animal.chip_code,
-                Race.id,
+                Animal.race_id,
                 AnimalEntry.entry_date,
                 AnimalEntry.exit_date,
             )
@@ -504,13 +521,19 @@ class SQLAnimalRepository(SQLBaseRepository):
         if not check:
             raise AnimalNotPresentException
 
-        chip_code, race_code, entry_date, exit_date = check
+        race_code, entry_date, exit_date = check
         if not entry_date:
             raise EntryNotCompleteException
-        if not chip_code:
-            raise AnimalWithoutChipCodeException
         if exit_date:
             raise Exception(f"animal {animal_id} already is exit!")
+
+        required_data = self.session.execute(
+            select(*EXIT_REQUIRED_DATA[race_code]).where(
+                Animal.id == animal_id,
+            )
+        ).one()
+        if not all(r is not None for r in required_data):
+            raise NoRequiredExitDataException
 
         if data.exit_date < entry_date:
             raise ExitNotValidException()
