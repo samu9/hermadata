@@ -1,6 +1,7 @@
 import os
-from datetime import date
+from datetime import date, datetime, timedelta
 from pathlib import Path
+import random
 from typing import Callable, Generator
 
 import pytest
@@ -8,11 +9,11 @@ from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from sqlalchemy import Engine, create_engine, delete, select, text
+from sqlalchemy import Engine, create_engine, delete, insert, select, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
-from hermadata.constants import EntryType, StorageType
+from hermadata.constants import AnimalFur, EntryType, StorageType
 from hermadata.database.alembic.import_initial_data import (
     import_doc_kinds,
 )
@@ -25,6 +26,7 @@ from hermadata.database.models import (
     AnimalLog,
     Breed,
     Document,
+    FurColor,
     MedicalActivity,
     MedicalActivityRecord,
 )
@@ -41,7 +43,7 @@ from hermadata.repositories.adoption_repository import (
 from hermadata.repositories.animal.animal_repository import (
     SQLAnimalRepository,
 )
-from hermadata.repositories.animal.models import NewAnimalModel
+from hermadata.repositories.animal.models import NewAnimalModel, UpdateAnimalModel
 from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
 from hermadata.repositories.document_repository import (
@@ -54,6 +56,7 @@ from hermadata.repositories.vet_repository import (
 )
 from hermadata.services.animal_service import AnimalService
 from hermadata.storage.disk_storage import DiskStorage
+from tests.utils import random_chip_code
 
 TRUNCATE_QUERY = "TRUNCATE TABLE {}"
 
@@ -66,6 +69,8 @@ TABLES = [
     "adopter",
     "vet_service_record",
     "vet",
+    "breed",
+    "fur_color",
     "animal",
 ]
 
@@ -73,6 +78,12 @@ TABLES = [
 @pytest.fixture(scope="session", autouse=True)
 def set_env():
     os.environ["ENV_PATH"] = "tests/.env"
+
+
+def insert_initial_data(session: Session):
+    session.execute(insert(Breed).values({Breed.name: "cane_1", Breed.race_id: "C"}))
+    session.execute(insert(Breed).values({Breed.name: "gatto_1", Breed.race_id: "G"}))
+    session.execute(insert(FurColor).values({FurColor.name: "fur_color_1"}))
 
 
 def pytest_sessionstart():
@@ -90,12 +101,12 @@ def pytest_sessionstart():
     session = sessionmaker(bind=e)
 
     import_doc_kinds(e)
-
-    with session() as db_session:
+    with session.begin() as db_session:
         db_session.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
         for t in TABLES:
             db_session.execute(text(TRUNCATE_QUERY.format(t)))
         db_session.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
+        insert_initial_data(db_session)
 
 
 def pytest_sessionfinish():
@@ -267,6 +278,30 @@ def make_animal(
 
 
 @pytest.fixture(scope="function")
+def complete_animal_data(
+    db_session: Session, animal_repository: SQLAnimalRepository
+) -> Callable[[NewAnimalModel], int]:
+    def complete(animal_id: int):
+        breed_id = db_session.execute(select(Breed.id).where(Breed.race_id == "C")).scalar()
+        color_id = db_session.execute(select(FurColor.id)).scalar()
+        animal_repository.update(
+            animal_id,
+            UpdateAnimalModel(
+                chip_code=random_chip_code(),
+                fur=random.choice([f.value for f in AnimalFur]),
+                color=color_id,
+                birth_date=(datetime.now() - timedelta(days=100)).date(),
+                breed_id=breed_id,
+                sex=0,
+                sterilized=True,
+                size=0,
+            ),
+        )
+
+    return complete
+
+
+@pytest.fixture(scope="function")
 def make_adopter(
     adopter_repository: SQLAdopterRepository,
 ) -> Callable[[NewAdopter], int]:
@@ -338,4 +373,4 @@ def empty_db(db_session: Session):
     db_session.execute(delete(Document))
     db_session.execute(delete(Animal))
     db_session.execute(delete(Adopter))
-    db_session.execute(delete(Breed))
+    # db_session.execute(delete(Breed))

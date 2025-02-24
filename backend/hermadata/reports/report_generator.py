@@ -92,7 +92,7 @@ class AdopterVariables(BaseModel):
 
 class AnimalVariables(BaseVariables):
     name: NullableString
-    chip_code: str
+    chip_code: NullableString
     breed: NullableString
     sex: NullableString
     age: NullableInt

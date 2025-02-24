@@ -9,6 +9,7 @@ from hermadata.constants import AnimalFur, EntryType, ExitType, RecurrenceType
 from hermadata.database.models import (
     Animal,
     AnimalEntry,
+    Breed,
     FurColor,
     MedicalActivityRecord,
 )
@@ -17,6 +18,7 @@ from hermadata.repositories.animal.animal_repository import (
     AnimalModel,
     AnimalSearchModel,
     AnimalWithoutChipCodeException,
+    NoRequiredExitDataException,
     SQLAnimalRepository,
 )
 from hermadata.repositories.animal.models import (
@@ -73,10 +75,23 @@ def test_exit(db_session: Session, animal_repository: SQLAnimalRepository):
         exit_type=ExitType.death,
         notes=exit_notes,
     )
-    with pytest.raises(AnimalWithoutChipCodeException):
+    with pytest.raises(NoRequiredExitDataException):
         animal_repository.exit(animal_id=animal_id, data=exit_data)
 
-    animal_repository.update(animal_id, UpdateAnimalModel(chip_code=random_chip_code()))
+    breed_id = db_session.execute(select(Breed.id).where(Breed.race_id == "C")).scalar_one()
+    animal_repository.update(
+        animal_id,
+        UpdateAnimalModel(
+            chip_code=random_chip_code(),
+            fur=0,
+            color=0,
+            birth_date=(datetime.now() - timedelta(days=100)).date(),
+            breed_id=breed_id,
+            sex=0,
+            sterilized=True,
+            size=0,
+        ),
+    )
 
     animal_repository.exit(animal_id=animal_id, data=exit_data)
 
@@ -179,7 +194,7 @@ def test_update(db_session: Session, animal_repository: SQLAnimalRepository):
     assert sterilized is False
 
 
-def test_add_entry(db_session: Session, animal_repository: SQLAnimalRepository):
+def test_add_entry(db_session: Session, animal_repository: SQLAnimalRepository, complete_animal_data):
     data = NewAnimalModel(race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue)
     code = animal_repository.new_animal(data)
 
@@ -187,13 +202,13 @@ def test_add_entry(db_session: Session, animal_repository: SQLAnimalRepository):
 
     animal_repository.complete_entry(animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1)))
 
-    with pytest.raises(AnimalWithoutChipCodeException):
+    with pytest.raises(NoRequiredExitDataException):
         animal_repository.exit(
             animal_id,
             AnimalExit(exit_date=date(2024, 1, 2), exit_type=ExitType.return_),
         )
 
-    animal_repository.update(animal_id, UpdateAnimalModel(chip_code=random_chip_code()))
+    complete_animal_data(animal_id)
 
     animal_repository.exit(
         animal_id,
@@ -219,17 +234,14 @@ def test_add_entry(db_session: Session, animal_repository: SQLAnimalRepository):
     assert entries[0].current is False
 
 
-def test_count_days(db_session: Session, animal_repository: SQLAnimalRepository):
+def test_count_days(db_session: Session, animal_repository: SQLAnimalRepository, complete_animal_data):
     new_animal = NewAnimalModel(race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value)
 
     code = animal_repository.new_animal(new_animal)
 
     animal_id = db_session.execute(select(Animal.id).where(Animal.code == code)).scalar_one()
 
-    animal_repository.update(
-        animal_id,
-        UpdateAnimalModel(name="Test", chip_code="123.456.789.123.456"),
-    )
+    complete_animal_data(animal_id)
 
     animal_repository.complete_entry(animal_id, CompleteEntryModel(entry_date=date(2020, 1, 1)))
 
@@ -319,12 +331,12 @@ def test_count_days(db_session: Session, animal_repository: SQLAnimalRepository)
     assert result.total_days == 10 + 5
 
 
-def test_count_days_same_day(db_session: Session, animal_repository: SQLAnimalRepository, make_animal):
+def test_count_days_same_day(animal_repository: SQLAnimalRepository, make_animal, complete_animal_data):
     animal_id = make_animal()
 
     animal_repository.complete_entry(animal_id, CompleteEntryModel(entry_date=date(2024, 4, 1)))
 
-    animal_repository.update(animal_id, UpdateAnimalModel(chip_code=random_chip_code()))
+    complete_animal_data(animal_id)
 
     animal_repository.exit(
         animal_id,
@@ -342,12 +354,12 @@ def test_count_days_same_day(db_session: Session, animal_repository: SQLAnimalRe
     assert days
 
 
-def test_count_exits(empty_db, make_animal, animal_repository: SQLAnimalRepository):
+def test_count_exits(empty_db, make_animal, animal_repository: SQLAnimalRepository, complete_animal_data):
     animal_id1 = make_animal()
 
     animal_repository.complete_entry(animal_id1, CompleteEntryModel(entry_date=date(2024, 1, 1)))
 
-    animal_repository.update(animal_id1, UpdateAnimalModel(chip_code=random_chip_code()))
+    complete_animal_data(animal_id1)
 
     animal_repository.exit(
         animal_id1,
@@ -358,7 +370,8 @@ def test_count_exits(empty_db, make_animal, animal_repository: SQLAnimalReposito
 
     animal_repository.complete_entry(animal_id2, CompleteEntryModel(entry_date=date(2024, 1, 1)))
 
-    animal_repository.update(animal_id2, UpdateAnimalModel(chip_code=random_chip_code()))
+    complete_animal_data(animal_id2)
+
     animal_repository.exit(
         animal_id2,
         AnimalExit(exit_date=date(2024, 3, 1), exit_type=ExitType.death),
@@ -434,6 +447,8 @@ def test_get_variation_report_variables(
             sex=0,
             breed_id=breed.id,
             color=fur_color.id,
+            size=0,
+            sterilized=False,
         ),
     )
     animal_repository.complete_entry(animal_id, data=CompleteEntryModel(entry_date=datetime.now().date()))
