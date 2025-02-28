@@ -119,6 +119,8 @@ def test_exit(
             exit_date=datetime.now().date(),
             exit_type=ExitType.adoption,
             notes="Test",
+            location_address="Via prova",
+            location_city_code="H501",
         ).model_dump()
     )
 

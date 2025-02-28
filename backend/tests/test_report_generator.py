@@ -170,6 +170,9 @@ def test_adoption_report(report_generator: ReportGenerator):
         ),
         exit_date=datetime.now().date(),
         notes="Test",
+        location_address="Via Prova",
+        location_city="LUCCA",
+        location_province="LU",
     )
 
     pdf = report_generator.build_adoption_report(variables)
