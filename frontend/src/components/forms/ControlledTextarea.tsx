@@ -38,7 +38,7 @@ const ControlledTextarea = <T extends FieldValues>(props: Props<T>) => {
                         <InputTextarea
                             id={field.name}
                             cols={30}
-                            rows={10}
+                            rows={6}
                             className={classNames("w-full", {
                                 "p-invalid": fieldState.error,
                             })}
