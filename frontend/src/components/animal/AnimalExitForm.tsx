@@ -181,6 +181,7 @@ const AnimalExitForm = () => {
                                     onSelected={(a) => {
                                         setValue("adopter_id", a.id, {
                                             shouldDirty: true,
+                                            shouldValidate: true,
                                         })
                                         setSelectedAdopter(a)
                                     }}
