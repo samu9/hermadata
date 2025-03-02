@@ -27,7 +27,7 @@
                 {%elif variation_type.value == 'A'%} stato adottato dal Sig.
                 {{ adopter.surname }} {{ adopter.name }} nato il
                 {{ adopter.birth_date }} a {{ adopter.birth_city }}, residente
-                in {{ adopter.residence_city }} tel. {{ adopter.phone }}
+                in {{ adopter.residence_city }} tel. {{ adopter.phone }} 
                 {%elif variation_type.value == 'R'%} stato restituito dal Sig.
                 {{ adopter.surname }} {{ adopter.name }} nato il
                 {{ adopter.birth_date }} a {{ adopter.birth_city }}, residente
@@ -35,6 +35,9 @@
                 {%endif%} il
                 {{ variation_date }}.
             </li>
+            {% if location_address %}
+            <li>luogo di detenzione: {{location_address}} {{location_city}} ({{location_province}})</li>
+            {% endif %}
         </ul>
 
         <div class="mt-2">Note: {{notes}}</div>
