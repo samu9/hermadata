@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from hermadata.constants import DocKindCode, EntryType, ExitType
 from hermadata.database.models import (
+    Adoption,
     Animal,
     AnimalDocument,
     AnimalEntry,
@@ -138,6 +139,11 @@ def test_exit(
     ).all()
 
     assert {DocKindCode.adozione, DocKindCode.variazione}.issubset({DocKindCode(k.code) for d, k in documents})
+
+    adoption = db_session.execute(select(Adoption).where(Adoption.animal_id == animal_id)).scalar_one()
+
+    assert adoption.location_address == "VIA PROVA"
+    assert adoption.location_city_code == "H501"
 
 
 def test_new_animal_document(
