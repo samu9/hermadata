@@ -1,20 +1,19 @@
 """add users
 
 Revision ID: 6eebe47bc4e3
-Revises: 73044398fda6
+Revises: 76eed782393e
 Create Date: 2025-01-09 14:01:39.060397
 
 """
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "6eebe47bc4e3"
-down_revision: Union[str, None] = "73044398fda6"
+down_revision: Union[str, None] = "76eed782393e"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
