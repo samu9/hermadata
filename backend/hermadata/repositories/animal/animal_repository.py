@@ -539,7 +539,12 @@ class SQLAnimalRepository(SQLBaseRepository):
             raise ExitNotValidException()
 
         if data.exit_type == ExitType.adoption:
-            adoption_data = NewAdoption(animal_id=animal_id, adopter_id=data.adopter_id)
+            adoption_data = NewAdoption(
+                animal_id=animal_id,
+                adopter_id=data.adopter_id,
+                location_address=data.location_address,
+                location_city_code=data.location_city_code,
+            )
             self.new_adoption(adoption_data)
 
         animal_log = AnimalLog(
@@ -589,7 +594,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_id=data.animal_id,
             adopter_id=data.adopter_id,
             animal_entry_id=current_entry_id,
-            completed_at=(datetime.now(tz=timezone.utc) if data.completed else None),
+            completed_at=datetime.now(tz=timezone.utc),
+            location_address=data.location_address,
+            location_city_code=data.location_city_code,
         )
         self.session.add(adoption)
         self.session.flush()
@@ -903,23 +910,29 @@ class SQLAnimalRepository(SQLBaseRepository):
         return adopter_variables
 
     def get_adoption_report_variables(self, animal_id: int):
-        adoption_date, exit_type, notes, adopter_id = self.session.execute(
-            select(
-                AnimalEntry.exit_date,
-                AnimalEntry.exit_type,
-                AnimalEntry.exit_notes,
-                Adoption.adopter_id,
-            )
-            .select_from(AnimalEntry)
-            .join(
-                Adoption,
-                Adoption.animal_entry_id == AnimalEntry.id,
-            )
-            .where(
-                AnimalEntry.animal_id == animal_id,
-                AnimalEntry.current.is_(True),
-            )
-        ).one()
+        adoption_date, exit_type, notes, adopter_id, location_address, location_city, location_province = (
+            self.session.execute(
+                select(
+                    AnimalEntry.exit_date,
+                    AnimalEntry.exit_type,
+                    AnimalEntry.exit_notes,
+                    Adoption.adopter_id,
+                    Adoption.location_address,
+                    Comune.name,
+                    Comune.provincia,
+                )
+                .select_from(AnimalEntry)
+                .join(
+                    Adoption,
+                    Adoption.animal_entry_id == AnimalEntry.id,
+                )
+                .join(Comune, Adoption.location_city_code == Comune.id)
+                .where(
+                    AnimalEntry.animal_id == animal_id,
+                    AnimalEntry.current.is_(True),
+                )
+            ).one()
+        )
 
         if exit_type not in ADOPTER_EXIT_TYPES:
             raise Exception("last exit is not an adoption")
@@ -932,6 +945,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             exit_date=adoption_date,
             adopter=adopter,
             notes=notes,
+            location_address=location_address,
+            location_city=location_city,
+            location_province=location_province,
         )
 
         return variables

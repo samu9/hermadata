@@ -128,6 +128,9 @@ class Adoption(Base):
 
     adopter_id: Mapped[int] = mapped_column(ForeignKey("adopter.id"))
 
+    location_address: Mapped[str] = mapped_column(String(100))
+    location_city_code: Mapped[str] = mapped_column(String(4))
+
     created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(), nullable=True)

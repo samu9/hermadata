@@ -238,6 +238,8 @@ class AnimalExit(BaseModel):
     exit_type: ExitType
     exit_data: dict | None = None
     adopter_id: int | None = None  # TODO: add validation based on exit_type
+    location_address: str | None = None
+    location_city_code: str | None = None
     notes: str | None = None
 
 
@@ -317,7 +319,8 @@ class AnimalEntryModel(BaseModel):
 class NewAdoption(BaseModel):
     animal_id: int
     adopter_id: int
-    completed: bool | None = None
+    location_address: Annotated[str, StringConstraints(to_upper=True)] | None = None
+    location_city_code: str | None = None
 
 
 class AdoptionModel(BaseModel):

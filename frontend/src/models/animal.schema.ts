@@ -147,14 +147,27 @@ export const newAnimalAdoptionSchema = z.object({
 
 export type NewAnimalAdoption = z.infer<typeof newAnimalAdoptionSchema>
 
-export const animalExitSchema = z.object({
-    animal_id: z.number(),
-    exit_type: z.string(),
-    exit_date: dateOnly,
-    exit_data: z.record(z.string(), z.any()).nullish(),
-    adopter_id: z.number().nullish(),
-    notes: z.string().nullish(),
-})
+export const animalExitSchema = z
+    .object({
+        animal_id: z.number(),
+        exit_type: z.string(),
+        exit_date: dateOnly,
+        exit_data: z.record(z.string(), z.any()).nullish(),
+        adopter_id: z.number().nullish(),
+        location_address: z.string().nullish(),
+        location_city_code: z.string().nullish(),
+        notes: z.string().nullish(),
+    })
+    .refine((data) => {
+        if (["A", "R"].includes(data.exit_type)) {
+            return (
+                data.adopter_id &&
+                data.location_address &&
+                data.location_city_code
+            )
+        }
+        return true
+    })
 
 export type AnimalExit = z.infer<typeof animalExitSchema>
 

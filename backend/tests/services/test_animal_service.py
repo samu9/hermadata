@@ -91,6 +91,8 @@ def test_variation_report_adoption(
             exit_type=ExitType.adoption,
             adopter_id=adopter_id,
             notes="Test",
+            location_address="Via test",
+            location_city_code="H501",
         ),
     )
 
