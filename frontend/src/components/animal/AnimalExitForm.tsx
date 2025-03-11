@@ -8,7 +8,11 @@ import ControlledDropdown from "../forms/ControlledDropdown"
 import ControlledInputDate from "../forms/ControlledInputDate"
 import { Button } from "primereact/button"
 import { useEffect, useRef, useState } from "react"
-import { useAnimalQuery, useExitTypesQuery } from "../../queries"
+import {
+    useAnimalQuery,
+    useComuniQuery,
+    useExitTypesQuery,
+} from "../../queries"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "react-query"
 import { apiService } from "../../main"
@@ -24,6 +28,8 @@ import ControlledTextarea from "../forms/ControlledTextarea"
 import { useLoader } from "../../contexts/Loader"
 import AdopterCard from "../adoption/AdopterCard"
 import { Adopter } from "../../models/adopter.schema"
+import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
+import ControlledInputText from "../forms/ControlledInputText"
 
 const AnimalExitForm = () => {
     const { id } = useParams()
@@ -31,9 +37,11 @@ const AnimalExitForm = () => {
 
     const queryClient = useQueryClient()
 
+    const [provinciaDetenzione, setProvinciaDetenzione] = useState<string>()
+    const comuneDetenzioneQuery = useComuniQuery(provinciaDetenzione)
+
     const toast = useRef<Toast>(null)
 
-    const [showAdopterForm, setShowAdopterForm] = useState(false)
     const [selectedAdopter, setSelectedAdopter] = useState<Adopter | null>(null)
     const [dialogVisibile, setDialogVisible] = useState(false)
     const [adopterAction, setAdopterAction] = useState<"add" | "search">(
@@ -83,10 +91,12 @@ const AnimalExitForm = () => {
     const onSubmit = (data: AnimalExit) => {
         animalExitMutation.mutate(data, { onSuccess: () => reset() })
     }
+
+    const [isDetention, setIsDetention] = useState(false)
     useEffect(() => {
         const values = getValues()
-
-        setShowAdopterForm(["A", "R"].includes(values.exit_type))
+        console.log(values, isValid, errors)
+        setIsDetention(["A", "R"].includes(values.exit_type))
     }, [watch()])
     return (
         <div>
@@ -108,6 +118,32 @@ const AnimalExitForm = () => {
                                 options={exitTypesQuery.data}
                             />
                         </div>
+                        <ControlledInputText
+                            label="Indirizzo di detenzione"
+                            fieldName="location_address"
+                            disabled={!isDetention}
+                        />
+                        <div className="flex gap-2">
+                            <UncontrolledProvinceDropdown
+                                label="Provincia di detenzione"
+                                onChange={(value) =>
+                                    setProvinciaDetenzione(value)
+                                }
+                                disabled={!isDetention}
+                                className="w-64"
+                            />
+                            <ControlledDropdown
+                                label="Comune di detenzione"
+                                disabled={
+                                    !comuneDetenzioneQuery.data || !isDetention
+                                }
+                                optionLabel="name"
+                                optionValue="id"
+                                options={comuneDetenzioneQuery.data}
+                                fieldName="location_city_code"
+                                className="w-64"
+                            />
+                        </div>
                         <ControlledTextarea fieldName="notes" label="Note" />
                         <Button disabled={!isValid} type="submit">
                             Salva
@@ -115,12 +151,12 @@ const AnimalExitForm = () => {
                     </form>
                 </FormProvider>
                 <div className="flex flex-col w-full gap-2">
-                    {selectedAdopter && showAdopterForm && (
+                    {selectedAdopter && isDetention && (
                         <div>
                             <AdopterCard data={selectedAdopter} />
                         </div>
                     )}
-                    {showAdopterForm && (
+                    {isDetention && (
                         <div className="border rounded p-4 shadow w-full">
                             <SubTitle>Cerca o aggiungi adottante</SubTitle>
 
@@ -145,6 +181,7 @@ const AnimalExitForm = () => {
                                     onSelected={(a) => {
                                         setValue("adopter_id", a.id, {
                                             shouldDirty: true,
+                                            shouldValidate: true,
                                         })
                                         setSelectedAdopter(a)
                                     }}

@@ -11,6 +11,7 @@ from pydantic import (
     BaseModel,
     Field,
     PlainSerializer,
+    StringConstraints,
     field_serializer,
     field_validator,
 )
@@ -130,6 +131,9 @@ class ReportAdoptionVariables(ReportDefaultVariables):
     adopter: AdopterVariables
     exit_date: ReportDate
     notes: NullableString
+    location_address: Annotated[str, StringConstraints(to_upper=True)]
+    location_city: Annotated[str, StringConstraints(to_upper=True)]
+    location_province: Annotated[str, StringConstraints(to_upper=True)]
 
 
 class ReportCustodyVariables(ReportDefaultVariables):
