@@ -21,16 +21,13 @@ jobs:
         node-version: '23'
         cache: 'npm'
         
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Build Angular project
-      run: npx ng build
-    
-    - name: Create tarball of the build
+    - name: Install dependencies, build and tar
       run: |
-        cd dist/trovaprezzo-frontend
-        tar -czf ../../trovaprezzo-frontend.tar.gz .
+        cd frontend
+        npm ci
+        npm run build
+        cd dist
+        tar -czf ../../hermadata-frontend.tar.gz .
 
     - name: Set up SSH key
       uses: webfactory/ssh-agent@v0.7.0
@@ -44,10 +41,10 @@ jobs:
 
     - name: Transfer build to remote server
       run: |
-        scp trovaprezzo-frontend.tar.gz ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/${{ secrets.REMOTE_USER }}
+        scp hermadata-frontend.tar.gz ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/${{ secrets.REMOTE_USER }}
         
     - name: Untar files
       run: |
         ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} '
-          tar -xzf trovaprezzo-frontend.tar.gz -C /var/www/hermadata
+          tar -xzf hermadata-frontend.tar.gz -C /var/www/hermadata
         '
