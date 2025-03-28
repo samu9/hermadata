@@ -1,51 +1,52 @@
-name: Frontend deployment
+name: Deploy
+
 on:
-  push:
-    branches-ignore:
-      - '*'
-    tags:
-      - deploy_fe_test*
-      - deploy_fe_prod*
+    push:
+        tags:
+            - "v*" # This will trigger on any tag that starts with 'v', e.g., v1.0.0, v2.3.1
+    workflow_dispatch: # Keeps manual triggering option
+
 jobs:
-  deploy-test:
-    if: github.ref_type == 'tag' && contains(github.ref_name, 'deploy_fe_test')
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: '16.x'
-      - run: npm install
-      - run: npm run build:test --if-present 
-        env:
-          CI: false
-      - uses: garygrossgarten/github-action-scp@release
-      # - name: Copy folder content recursively to vps
-        with:
-          local: build
-          remote: ${{ vars.REMOTE_PATH_TEST }}
-          host: ${{ vars.HOST_TEST }}
-          username: ${{ vars.USERNAME_TEST }}
-          privateKey: ${{ secrets.PRIVATE_KEY }}
-  deploy-prod:
-    if: github.ref_type == 'tag' && contains(github.ref_name, 'deploy_fe_prod')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: '16.x'
-      - run: npm install --force
-      - run: npm run build --if-present 
-        env:
-          CI: false
-      - uses: garygrossgarten/github-action-scp@release
-      # - name: Copy folder content recursively to vps
-        with:
-          local: build
-          remote: ${{ vars.REMOTE_PATH_PROD }}
-          host: ${{ vars.HOST_PROD }}
-          username: ${{ vars.USERNAME_PROD }}
-          privateKey: ${{ secrets.PRIVATE_KEY }}
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '12'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build Angular project
+      run: npx ng build
+    
+    - name: Create tarball of the build
+      run: |
+        cd dist/trovaprezzo-frontend
+        tar -czf ../../trovaprezzo-frontend.tar.gz .
+
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Add remote host to known hosts
+      run: |
+            mkdir -p ~/.ssh
+            ssh-keyscan -t rsa ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Transfer build to remote server
+      run: |
+        scp trovaprezzo-frontend.tar.gz ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/${{ secrets.REMOTE_USER }}
+        
+    - name: Untar files
+      run: |
+        ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} '
+          tar -xzf trovaprezzo-frontend.tar.gz -C /var/www/hermadata
+        '
