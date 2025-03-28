@@ -74,10 +74,9 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-
         token_data = service.decode_jwt(token)
 
-    except jwt.InvalidTokenError:
-        raise credentials_exception
+    except jwt.InvalidTokenError as e:
+        raise credentials_exception from e
 
     return token_data
