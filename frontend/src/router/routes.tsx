@@ -11,6 +11,7 @@ import AnimalProfilePage from "../pages/AnimalProfilePage"
 import AnimalsPage from "../pages/AnimalsPage"
 import DataExtractionsPage from "../pages/DataExtractionsPage"
 import HomePage from "../pages/HomePage"
+import LoginPage from "../pages/LoginPage"
 import VetsPage from "../pages/VetsPage"
 
 const routes: RouteObject[] = [
@@ -19,6 +20,7 @@ const routes: RouteObject[] = [
         element: <App />,
         children: [
             { path: "", element: <HomePage /> },
+            { path: "login", element: <LoginPage /> },
             {
                 path: "animal",
                 element: <Outlet />,
