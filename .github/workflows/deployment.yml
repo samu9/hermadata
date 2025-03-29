@@ -6,6 +6,8 @@ on:
     tags:
      - deploy_test*
      - deploy_prod*
+  workflow_dispatch: # Keeps manual triggering option
+
 jobs:
   build:
     runs-on: ubuntu-latest
