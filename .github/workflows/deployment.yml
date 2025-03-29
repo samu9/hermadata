@@ -27,6 +27,7 @@ jobs:
 
     - name: Install dependencies and Build package with uv
       run: |
+          cd backend
           uv sync
           uv build
 
