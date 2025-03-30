@@ -13,16 +13,20 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-      env:
-          VITE_API_BASE_URL: ${{secrets.BACKEND_URL}}
-          VITE_ASSETS_BASE_URL: ${{secrets.BACKEND_URL}}
+
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         cache-dependency-path: frontend/package-lock.json
         node-version: '23'
         cache: 'npm'
-        
+
+    - name: Create .env file
+      run: |
+        cd frontend
+        echo "VITE_API_BASE_URL=${{secrets.BACKEND_URL}}" >> .env
+        echo "VITE_ASSETS_BASE_URL=${{secrets.BACKEND_URL}}" >> .env 
+
     - name: Install dependencies, build and tar
       run: |
         cd frontend
