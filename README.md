@@ -1,7 +1,6 @@
-![Test badge](https://github.com/samu9/hermadata/actions/workflows/test.yml/badge.svg)  
-[![Coverage](https://samu9.github.io/hermadata/badges/coverage.svg)](https://github.com/samu9/hermadata/actions)
-
 # Hermadata
+
+![Test badge](https://github.com/samu9/hermadata/actions/workflows/test.yml/badge.svg) [![Coverage](https://samu9.github.io/hermadata/badges/coverage.svg)](https://github.com/samu9/hermadata/actions)
 
 A management application for animal shelters.  
 Built for [Rifugio Hermada](https://www.rifugiohermada.it/).
