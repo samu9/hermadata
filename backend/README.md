@@ -1,29 +1,35 @@
-# System dependancies
+# Get Started
 
--   wkhtmltopdf
-
-# Install
-
-## Using Flit
-
-https://flit.pypa.io/
+## 1. Install system dependancies
 
 ```
-flit install -s
+apt install pango1.0-tools
 ```
 
-`-s`is used to install as symlink for development mode
+## 2. Install the project (using uv)
 
-# Dependancies
+1. [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
 
-### pango-view
+2. Install all dependancies
+    ```
+    uv sync
+    ```
 
-For using weasyprint
-`sudo apt install pango1.0-tools`
+## 3. Create the database
 
-# Build
+1. Create a MySQL database called `hermadata`
+2. Create all tables
+    ```
+    alembic alembic.ini upgrade head
+    ```
 
-## Using UV
+## 4. Setup AWS profile (optional)
+
+If you want to use AWS S3 storage for generated documents storage, you need to setup your aws profile
+
+## 3. Start the project
+
+# Build (using uv)
 
 ```
 uv build
@@ -32,7 +38,18 @@ uv build
 # Testing
 
 1. Create a database `hermadata-test`
-2. Create all tables: `alembic -c tests/alembic.ini upgrade head`
+2. Create all tables
+    ```
+    alembic -c tests/alembic.ini upgrade head
+    ```
+3. Install `pytest`
+    ```
+    uv add --dev pytest
+    ```
+4. Run:
+    ```
+    pytest
+    ```
 
 # Report Templates
 
