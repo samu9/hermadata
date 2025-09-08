@@ -16,6 +16,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
 from hermadata.constants import AnimalEvent, ExitType
+from hermadata.utils import recurrence_to_sql_interval
 from hermadata.database.models import (
     Adopter,
     Adoption,
@@ -835,8 +836,8 @@ class SQLAnimalRepository(SQLBaseRepository):
                 or_(
                     last_record.c.medical_activity_id.is_(None),
                     last_record.c.last_record
-                    >= func.now()
-                    - func.Interval(
+                    <= func.now()
+                    - recurrence_to_sql_interval(
                         MedicalActivity.recurrence_type,
                         MedicalActivity.recurrence_value,
                     ),
