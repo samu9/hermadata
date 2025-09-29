@@ -82,10 +82,18 @@ EXIT_REQUIRED_DATA: dict[str, tuple] = {
         Animal.breed_id,
         Animal.sex,
         Animal.birth_date,
-        Animal.sterilized,
+        # Animal.sterilized,
         Animal.size,
     ],
-    "G": [Animal.fur, Animal.color, Animal.breed_id, Animal.sex, Animal.birth_date, Animal.sterilized, Animal.size],
+    "G": [
+        Animal.fur,
+        Animal.color,
+        Animal.breed_id,
+        Animal.sex,
+        Animal.birth_date,
+        # Animal.sterilized,
+        Animal.size,
+    ],
 }
 
 
