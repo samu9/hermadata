@@ -38,6 +38,7 @@ EXIT_TYPE_LABELS = {
     ExitType.death: "Morte",
     ExitType.return_: "Restituzione",
     ExitType.disappeared: "Scomparsa",
+    ExitType.custody: "Custodia",
 }
 
 

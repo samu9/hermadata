@@ -464,7 +464,6 @@ def test_get_variation_report_variables(
     assert variables.animal.fur_color == fur_color.label
 
 
-@pytest.mark.skip(reason="Not implemented yet")
 def test_get_pending_therapies(empty_db, make_animal, animal_repository: SQLAnimalRepository):
     animal1_id = make_animal()
     _ = make_animal()
