@@ -14,13 +14,13 @@ from hermadata.repositories.adopter_repository import (
 router = APIRouter(prefix="/adopter")
 
 
-@router.post("/", response_model=AdopterModel)
+@router.post("", response_model=AdopterModel)
 def create_adopter(data: NewAdopter, repo: Annotated[SQLAdopterRepository, Depends(adopter_repository)]):
     adopter = repo.create(data)
     return adopter
 
 
-@router.get("/", response_model=PaginationResult[AdopterModel])
+@router.get("", response_model=PaginationResult[AdopterModel])
 def get_adopter(
     query: Annotated[AdopterSearchQuery, Depends()], repo: Annotated[SQLAdopterRepository, Depends(adopter_repository)]
 ):
