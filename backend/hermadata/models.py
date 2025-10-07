@@ -59,7 +59,7 @@ class ApiError(BaseModel):
 
 def int_to_sex(v: int | str) -> str:
     if isinstance(v, int):
-        if v > 1:
+        if v > 1 or v < 0:
             raise ValueError("int value representing sex must be 0 or 1")
         if v == 0:
             return "M"

@@ -13,7 +13,7 @@ from hermadata.repositories.vet_repository import (
 router = APIRouter(prefix="/vet")
 
 
-@router.post("/", response_model=VetModel)
+@router.post("", response_model=VetModel)
 def create_vet(
     data: VetModel,
     repo: Annotated[SQLVetRepository, Depends(vet_repository)],

@@ -3,11 +3,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 
 from hermadata.repositories.adoption_repository import (
-    AdoptionModel,
-    ExistingAdoptionException,
-    NewAdoption,
     SQLAdopionRepository,
 )
+from hermadata.repositories.animal.animal_repository import ExistingAdoptionException
+from hermadata.repositories.animal.models import AdoptionModel, NewAdoption
 
 router = APIRouter(prefix="/adoption")
 
