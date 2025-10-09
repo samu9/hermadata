@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select, update
+
 from hermadata.database.models import User
 from hermadata.repositories import SQLBaseRepository
 

@@ -1,7 +1,9 @@
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
+from hermadata.initializations import get_current_user, user_service
 from hermadata.repositories.user_repository import UpdateUserModel
 from hermadata.services.user_service import (
     RegisterUserModel,
@@ -9,7 +11,6 @@ from hermadata.services.user_service import (
     UserModel,
     UserService,
 )
-from hermadata.initializations import get_current_user, user_service
 
 router = APIRouter(prefix="/user", tags=["user"])
 

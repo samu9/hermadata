@@ -1,13 +1,14 @@
 from uuid import uuid4
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
+
 from hermadata.database.models import User
 from hermadata.repositories.user_repository import (
     CreateUserModel,
     SQLUserRepository,
     UpdateUserModel,
 )
-from sqlalchemy.orm import Session
 
 
 def test_add_user(user_repository: SQLUserRepository, db_session: Session):

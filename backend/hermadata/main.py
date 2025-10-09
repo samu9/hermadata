@@ -13,9 +13,9 @@ from hermadata.routers import (
     breed_router,
     document_router,
     race_router,
+    user_router,
     util_router,
     vet_router,
-    user_router,
 )
 
 logging.config.dictConfig(json.load(open("hermadata/log-configs.json")))

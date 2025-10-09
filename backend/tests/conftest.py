@@ -1,7 +1,7 @@
 import os
+import random
 from datetime import date, datetime, timedelta
 from pathlib import Path
-import random
 from typing import Callable, Generator
 from uuid import uuid4
 

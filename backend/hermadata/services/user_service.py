@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
-from fastapi import Depends
+
 import jwt
+from fastapi import Depends
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.exc import NoResultFound

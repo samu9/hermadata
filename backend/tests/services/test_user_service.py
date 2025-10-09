@@ -1,9 +1,10 @@
 from uuid import uuid4
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
+
 from hermadata.database.models import User
 from hermadata.services.user_service import RegisterUserModel, UserService
-from sqlalchemy.orm import Session
 
 
 def test_register_and_login_user(
