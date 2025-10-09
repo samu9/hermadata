@@ -59,9 +59,27 @@ class ApiService {
             },
         })
 
+        // Request interceptor to add auth token
+        this.inst.interceptors.request.use(
+            (config) => {
+                const token = localStorage.getItem("accessToken")
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`
+                }
+                return config
+            },
+            (error) => Promise.reject(error)
+        )
+
         this.inst.interceptors.response.use(
             (response) => response,
             (error: AxiosError) => {
+                // Handle token expiration
+                if (error.response?.status === 401) {
+                    this.logout()
+                    // Optionally redirect to login page
+                    window.location.href = '/login'
+                }
                 this.handleError(error)
                 return Promise.reject(error)
             }
@@ -76,7 +94,7 @@ class ApiService {
         let message = DEFAULT_ERROR_MESSAGE
 
         if (error.response) {
-            const { status, data } = error.response
+            const { data } = error.response
             const errorMessage = data as { detail: string }
             if (errorMessage.detail) {
                 message = errorMessage.detail
@@ -389,7 +407,8 @@ class ApiService {
         return result
     }
 
-    async login(data: Login): Promise<boolean> {
+    // Authentication methods
+    async login(data: Login): Promise<LoginResponse> {
         const result = await this.post<LoginResponse>(
             ApiEndpoints.user.login,
             data,
@@ -399,8 +418,39 @@ class ApiService {
         )
 
         localStorage.setItem("accessToken", result.access_token)
+        // Store token timestamp for expiration checking
+        localStorage.setItem("tokenTimestamp", Date.now().toString())
+
+        return result
+    }
+
+    logout(): void {
+        localStorage.removeItem("accessToken")
+        localStorage.removeItem("tokenTimestamp")
+    }
+
+    isAuthenticated(): boolean {
+        const token = localStorage.getItem("accessToken")
+        const timestamp = localStorage.getItem("tokenTimestamp")
+        
+        if (!token || !timestamp) {
+            return false
+        }
+
+        // Check if token is older than 24 hours (adjust as needed)
+        const tokenAge = Date.now() - parseInt(timestamp)
+        const maxAge = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+        
+        if (tokenAge > maxAge) {
+            this.logout()
+            return false
+        }
 
         return true
+    }
+
+    getAccessToken(): string | null {
+        return this.isAuthenticated() ? localStorage.getItem("accessToken") : null
     }
 }
 
