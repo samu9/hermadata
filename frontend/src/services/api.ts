@@ -41,6 +41,7 @@ import {
     Vet,
     VetSearch,
 } from "../models/vet.schema"
+import { Login, LoginResponse } from "../models/user.schema"
 
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 
@@ -386,6 +387,20 @@ class ApiService {
         const result = await this.post<Vet>(ApiEndpoints.vet.create, data)
 
         return result
+    }
+
+    async login(data: Login): Promise<boolean> {
+        const result = await this.post<LoginResponse>(
+            ApiEndpoints.user.login,
+            data,
+            {
+                "Content-Type": "application/x-www-form-urlencoded",
+            }
+        )
+
+        localStorage.setItem("accessToken", result.access_token)
+
+        return true
     }
 }
 
