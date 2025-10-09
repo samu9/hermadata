@@ -1,6 +1,4 @@
 import {
-    faArrowTurnDown,
-    faDownload,
     faRightToBracket,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -9,32 +7,42 @@ import { Button } from "primereact/button"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation } from "react-query"
 import { Login, loginSchema } from "../../models/user.schema"
-import { apiService } from "../../main"
 import { SubTitle } from "../typography"
 import ControlledInputText from "../forms/ControlledInputText"
 import ControlledInputPassword from "../forms/ControlledInputPassword"
 import { useEffect } from "react"
+import { useAuth } from "../../contexts/AuthContext"
+import { useNavigate } from "react-router-dom"
 
 const LoginForm = () => {
     const form = useForm<Login>({
         resolver: zodResolver(loginSchema),
     })
+    const { login } = useAuth()
+    const navigate = useNavigate()
 
     const {
         handleSubmit,
         formState: { isValid, errors },
         watch,
-        getValues,
     } = form
+    
     useEffect(() => {
         console.log(errors, isValid)
     }, [watch()])
 
     // React Query Mutation for API call
-    const login = useMutation({
-        mutationFn: (request: Login) => apiService.login(request),
-        onSuccess: (result: boolean, variables: Login, context) => {
+    const loginMutation = useMutation({
+        mutationFn: async (request: Login) => {
+            const success = await login(request.username, request.password)
+            if (!success) {
+                throw new Error("Login failed")
+            }
+            return success
+        },
+        onSuccess: () => {
             console.log("logged")
+            navigate("/")
         },
         mutationKey: "login",
     })
@@ -42,7 +50,7 @@ const LoginForm = () => {
     // Handle form submission
     const onSubmit = async (data: Login) => {
         const validated = loginSchema.parse(data)
-        login.mutateAsync(validated)
+        loginMutation.mutateAsync(validated)
     }
 
     return (
@@ -61,10 +69,17 @@ const LoginForm = () => {
                         label="Password"
                     />
 
+                    {loginMutation.isError && (
+                        <div className="text-red-500 text-sm">
+                            Credenziali non valide o errore del server
+                        </div>
+                    )}
+
                     <Button
                         type="button"
                         onClick={handleSubmit(onSubmit)}
-                        disabled={!isValid}
+                        disabled={!isValid || loginMutation.isLoading}
+                        loading={loginMutation.isLoading}
                     >
                         <FontAwesomeIcon
                             icon={faRightToBracket}
