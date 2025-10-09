@@ -5,7 +5,10 @@ import AnimalEditForm from "../components/animal/AnimalEditForm"
 import AnimalEvents from "../components/animal/AnimalEvents"
 import AnimalExitForm from "../components/animal/AnimalExitForm"
 import AnimalOverview from "../components/animal/AnimalOverview"
+import ProtectedRoute from "../components/ProtectedRoute"
+import RoleProtectedRoute from "../components/RoleProtectedRoute"
 import AdoptersPage from "../pages/AdoptersPage"
+import AdminPage from "../pages/AdminPage"
 import AnimalAdoptionPage from "../pages/AnimalAdoptionPage"
 import AnimalProfilePage from "../pages/AnimalProfilePage"
 import AnimalsPage from "../pages/AnimalsPage"
@@ -15,12 +18,21 @@ import LoginPage from "../pages/LoginPage"
 import VetsPage from "../pages/VetsPage"
 
 const routes: RouteObject[] = [
+    // Public routes
+    {
+        path: "/login",
+        element: <LoginPage />,
+    },
+    // Protected routes
     {
         path: "/",
-        element: <App />,
+        element: (
+            <ProtectedRoute>
+                <App />
+            </ProtectedRoute>
+        ),
         children: [
             { path: "", element: <HomePage /> },
-            { path: "login", element: <LoginPage /> },
             {
                 path: "animal",
                 element: <Outlet />,
@@ -74,6 +86,15 @@ const routes: RouteObject[] = [
             {
                 path: "exports",
                 element: <DataExtractionsPage />,
+            },
+            // Super user only routes
+            {
+                path: "admin",
+                element: (
+                    <RoleProtectedRoute requiredRole="superuser">
+                        <AdminPage />
+                    </RoleProtectedRoute>
+                ),
             },
         ],
     },
