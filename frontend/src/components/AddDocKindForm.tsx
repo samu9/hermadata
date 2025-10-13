@@ -24,8 +24,6 @@ const AddDocKindForm = (props: Props) => {
 
     const {
         handleSubmit,
-        setError,
-        formState: { errors },
         reset,
     } = form
     const queryClient = useQueryClient()
@@ -34,11 +32,10 @@ const AddDocKindForm = (props: Props) => {
     const createBreed = useMutation({
         mutationFn: (newDocKind: NewDocKind) =>
             apiService.addNewDocKind(newDocKind),
-        onSuccess: (result: DocKind, variables: NewDocKind, context) => {
+        onSuccess: (result: DocKind) => {
             queryClient.setQueryData(
                 "doc-kinds",
-                //@ts-ignore
-                (old: Updater<DocKind[], DocKind[]>) => [...(old || []), result]
+                (old: DocKind[] | undefined) => [...(old || []), result]
             )
             toast.current?.show({
                 severity: "success",

@@ -1,5 +1,5 @@
 import { useForm, FormProvider } from "react-hook-form"
-import { useMutation, useQuery, useQueryClient } from "react-query"
+import { useMutation, useQueryClient } from "react-query"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
 import { apiService } from "../main"
@@ -11,7 +11,6 @@ import {
     Breed,
     addBreedSchema,
 } from "../models/breed.schema"
-import { Updater } from "react-query/types/core/utils"
 import ControlledRacesDropdown from "./forms/ControlledRacesDropdown"
 import { SubTitle } from "./typography"
 
@@ -30,18 +29,16 @@ const AddBreedForm = (props: Props) => {
     const {
         handleSubmit,
         setError,
-        formState: { errors },
     } = form
     const queryClient = useQueryClient()
 
     // React Query Mutation for API call
     const createBreed = useMutation({
         mutationFn: (newBreed: NewBreed) => apiService.addBreed(newBreed),
-        onSuccess: (result: Breed, variables: NewBreed, context) => {
+        onSuccess: (result: Breed, variables: NewBreed) => {
             queryClient.setQueryData(
                 ["breeds", variables.race_id],
-                //@ts-ignore
-                (old: Updater<Breed[], Breed[]>) => [...old, result]
+                (old: Breed[] | undefined) => old ? [...old, result] : [result]
             )
             props.onSuccess && props.onSuccess(result)
         },
