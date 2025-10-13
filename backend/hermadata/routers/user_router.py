@@ -39,15 +39,20 @@ def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     service: Annotated[UserService, Depends(user_service)],
 ):
+    login_result = service.login(form_data.username, form_data.password)
 
-    jwt = service.login(form_data.username, form_data.password)
+    if not login_result:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
 
-    if not jwt:
-        raise HTTPException(
-            status_code=400, detail="Incorrect username or password"
-        )
+    # Get user details for the response
+    user_details = service.get_user_details(form_data.username)
 
-    return {"access_token": jwt, "token_type": "bearer"}
+    return {
+        "access_token": login_result,
+        "token_type": "bearer",
+        "username": user_details.email,
+        "is_superuser": user_details.is_superuser,
+    }
 
 
 @router.post("/update")
