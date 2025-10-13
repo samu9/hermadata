@@ -1,7 +1,7 @@
 import { Outlet, RouteObject, UIMatch } from "react-router-dom"
 import App from "../App"
 import AnimalDocs from "../components/animal/AnimalDocs"
-import AnimalEditForm from "../components/animal/AnimalEditForm"
+import AnimalEditFormWrapper from "../components/animal/AnimalEditFormWrapper"
 import AnimalEvents from "../components/animal/AnimalEvents"
 import AnimalExitForm from "../components/animal/AnimalExitForm"
 import AnimalOverview from "../components/animal/AnimalOverview"
@@ -55,7 +55,10 @@ const routes: RouteObject[] = [
                             },
                             { path: "docs", element: <AnimalDocs /> },
                             { path: "events", element: <AnimalEvents /> },
-                            { path: "edit", element: <AnimalEditForm /> },
+                            {
+                                path: "edit",
+                                element: <AnimalEditFormWrapper />,
+                            },
                             {
                                 path: "health",
                                 element: <div>IN COSTRUZIONE</div>,
