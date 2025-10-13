@@ -27,7 +27,6 @@ const AnimalDaysForm = () => {
 
     const {
         handleSubmit,
-        setError,
         formState: { isValid },
         watch,
         getValues,
@@ -38,9 +37,7 @@ const AnimalDaysForm = () => {
         mutationFn: (request: AnimalDaysRequestSchema) =>
             apiService.animalDaysReport(request),
         onSuccess: (
-            result: { url: string; filename: string },
-            variables: AnimalDaysRequestSchema,
-            context
+            result: { url: string; filename: string }
         ) => {
             const link = document.createElement("a")
             link.href = result.url

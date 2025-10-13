@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
-import { Updater } from "react-query/types/core/utils"
 import { apiService } from "../main"
 import ControlledInputText from "./forms/ControlledInputText"
 import { SubTitle } from "./typography"
@@ -22,7 +21,6 @@ const AddFurColorForm = (props: Props) => {
     const {
         handleSubmit,
         setError,
-        formState: { errors },
     } = form
     const queryClient = useQueryClient()
 
@@ -30,11 +28,10 @@ const AddFurColorForm = (props: Props) => {
     const createFurColor = useMutation({
         mutationFn: (newFurColor: NewFurColor) =>
             apiService.addAnimalFurColor(newFurColor),
-        onSuccess: (result: IntUtilItem, variables: NewFurColor, context) => {
+        onSuccess: (result: IntUtilItem) => {
             queryClient.setQueryData(
                 ["fur-color"],
-                //@ts-ignore
-                (old: Updater<IntUtilItem[], IntUtilItem[]>) => [...old, result]
+                (old: IntUtilItem[] | undefined) => old ? [...old, result] : [result]
             )
             props.onSuccess && props.onSuccess(result)
         },
