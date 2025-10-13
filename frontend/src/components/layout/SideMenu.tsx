@@ -1,31 +1,17 @@
 import { Divider } from "primereact/divider"
-import { MenuItem } from "primereact/menuitem"
-import { NavLink, Navigate } from "react-router-dom"
+import { NavLink } from "react-router-dom"
 import LoggedUserCard from "../LoggedUserCard"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { IconProp } from "@fortawesome/fontawesome-svg-core"
 import {
     faDatabase,
     faDog,
-    faHome,
     faListDots,
     faPerson,
     faUserDoctor,
+    faUserShield,
 } from "@fortawesome/free-solid-svg-icons"
-
-type CustomMenuItem = MenuItem & { route?: string }
-
-const menuItems: CustomMenuItem[] = [
-    { label: "Bacheca", route: "/" },
-    {
-        label: "Animali",
-        route: "/animals",
-    },
-    {
-        label: "Adottanti",
-        route: "/adopters",
-    },
-]
+import { usePermissions } from "../../hooks/usePermissions"
 type MenuElementProps = {
     to: string
     label: string | React.ReactNode
@@ -46,14 +32,8 @@ const MenuElement = (props: MenuElementProps) => (
     </NavLink>
 )
 const SideMenu = () => {
-    const items = menuItems.map((i) => {
-        if (i.route) {
-            i.command = (e) => <Navigate to={i.route!} />
+    const { canAccessSuperUserFeatures } = usePermissions()
 
-            delete i.route
-        }
-        return i
-    })
     return (
         <div className="h-screen w-64 bg-slate-300 pt-4 border-r border-slate-400">
             <div className="w-full font-bold text-[1.5rem] text-slate-700 px-4">
@@ -86,6 +66,21 @@ const SideMenu = () => {
                             to="/exports"
                             label="Estrazioni"
                         />
+
+                        {/* Super user only menu items */}
+                        {canAccessSuperUserFeatures() && (
+                            <>
+                                <Divider />
+                                <div className="mb-2 font-bold text-slate-700 text-sm">
+                                    Amministrazione
+                                </div>
+                                <MenuElement
+                                    icon={faUserShield}
+                                    to="/admin"
+                                    label="Pannello Admin"
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
