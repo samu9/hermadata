@@ -281,47 +281,6 @@ const SuperUserAnimalEditForm = () => {
                                 </div>
                             </div>
                         </Card>
-
-                        {/* Entry/Exit Information Card (Read-only) */}
-                        <Card
-                            title="Informazioni Ingresso/Uscita"
-                            className="h-fit"
-                        >
-                            <div className="flex flex-col gap-4">
-                                <div className="text-sm text-gray-600 mb-2">
-                                    <i className="pi pi-info-circle mr-1"></i>
-                                    Questi campi sono di sola visualizzazione
-                                </div>
-                                <ControlledInputDate<AnimalEditSuperUser>
-                                    fieldName="entry_date"
-                                    label="Data Ingresso"
-                                    disabled={true}
-                                    className="w-full"
-                                />
-                                <ControlledDropdown
-                                    fieldName="entry_type"
-                                    label="Tipo Ingresso"
-                                    optionValue="id"
-                                    optionLabel="label"
-                                    options={entryTypesQuery.data}
-                                    disabled={true}
-                                />
-                                <ControlledInputDate<AnimalEditSuperUser>
-                                    fieldName="exit_date"
-                                    label="Data Uscita"
-                                    disabled={true}
-                                    className="w-full"
-                                />
-                                <ControlledDropdown
-                                    fieldName="exit_type"
-                                    label="Tipo Uscita"
-                                    optionValue="id"
-                                    optionLabel="label"
-                                    options={exitTypesQuery.data}
-                                    disabled={true}
-                                />
-                            </div>
-                        </Card>
                     </div>
 
                     {/* Notes Section */}

@@ -89,11 +89,6 @@ export const animalEditSuperUserSchema = animalEditSchema.extend({
     adoptable: z.boolean().nullish(),
     adoptability_index: z.number().min(0).max(3).optional().nullable(),
     img_path: z.string().nullish(),
-    // Entry/Exit data (read-only in form, but visible to super users)
-    entry_date: dateOnly.nullish(),
-    entry_type: z.string().nullish(),
-    exit_date: dateOnly.nullish(),
-    exit_type: z.string().nullish(),
     rescue_city_code: cityCodeValidator.nullish(),
     // Animal entries history
     entries: z.array(animalEntrySchema).optional(),
