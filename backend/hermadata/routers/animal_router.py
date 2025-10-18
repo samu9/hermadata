@@ -29,6 +29,7 @@ from hermadata.repositories.animal.models import (
     NewAnimalDocument,
     NewAnimalModel,
     NewEntryModel,
+    UpdateAnimalEntryModel,
     UpdateAnimalModel,
 )
 from hermadata.repositories.document_repository import SQLDocumentRepository
@@ -139,6 +140,29 @@ def get_animal_entries(animal_id: int, repo: Annotated[SQLAnimalRepository, Depe
     result = repo.get_animal_entries(animal_id)
 
     return result
+
+
+@router.put("/{animal_id}/entries/{entry_id}")
+def update_animal_entry(
+    animal_id: int,
+    entry_id: int,
+    data: UpdateAnimalEntryModel,
+    repo: Annotated[SQLAnimalRepository, Depends(animal_repository)],
+):
+    """Update an animal entry"""
+    try:
+        # Verify the entry belongs to the animal
+        entries = repo.get_animal_entries(animal_id)
+        if not any(entry.id == entry_id for entry in entries):
+            raise HTTPException(status_code=404, detail=f"Entry {entry_id} not found for animal {animal_id}")
+
+        updated_rows = repo.update_animal_entry(entry_id, data)
+        if updated_rows == 0:
+            raise HTTPException(status_code=404, detail=f"Entry {entry_id} not found")
+
+        return {"message": "Entry updated successfully", "updated_rows": updated_rows}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/{animal_id}/warning")

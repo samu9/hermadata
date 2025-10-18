@@ -319,6 +319,15 @@ class AnimalEntryModel(BaseModel):
     exit_notes: str | None = None
 
 
+class UpdateAnimalEntryModel(BaseModel):
+    entry_date: date | None = None
+    entry_type: EntryType | None = None
+    exit_date: date | None = None
+    exit_type: ExitType | None = None
+    entry_notes: str | None = None
+    exit_notes: str | None = None
+
+
 class NewAdoption(BaseModel):
     animal_id: int
     adopter_id: int

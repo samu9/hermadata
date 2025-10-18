@@ -67,6 +67,7 @@ from hermadata.repositories.animal.models import (
     NewAnimalDocument,
     NewAnimalModel,
     NewEntryModel,
+    UpdateAnimalEntryModel,
     UpdateAnimalModel,
 )
 
@@ -481,6 +482,34 @@ class SQLAnimalRepository(SQLBaseRepository):
             results.append(result)
 
         return results
+
+    def update_animal_entry(
+        self, entry_id: int, updates: UpdateAnimalEntryModel
+    ) -> int:
+        """Update an animal entry and return the number of updated rows"""
+        values = updates.model_dump(exclude_none=True)
+        
+        if not values:
+            return 0
+            
+        result = self.session.execute(
+            update(AnimalEntry)
+            .where(AnimalEntry.id == entry_id)
+            .values(**values)
+        )
+        
+        # Add event log for tracking changes
+        event_log = AnimalLog(
+            animal_id=self.session.execute(
+                select(AnimalEntry.animal_id).where(AnimalEntry.id == entry_id)
+            ).scalar_one(),
+            event=AnimalEvent.data_update.value,
+            data=json.loads(updates.model_dump_json()),
+        )
+        self.session.add(event_log)
+        self.session.flush()
+        
+        return result.rowcount
 
     def update(self, id: str, updates: UpdateAnimalModel) -> int:
         """Return updated rowcound"""

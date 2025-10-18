@@ -103,6 +103,16 @@ export const animalCompleteEntrySchema = z.object({
 })
 export type AnimalCompleteEntry = z.infer<typeof animalCompleteEntrySchema>
 
+export const updateAnimalEntrySchema = z.object({
+    entry_date: dateOnly.optional(),
+    entry_type: z.string().optional(),
+    exit_date: dateOnly.nullish(),
+    exit_type: z.string().nullish(), 
+    entry_notes: z.string().nullish(),
+    exit_notes: z.string().nullish(),
+})
+export type UpdateAnimalEntry = z.infer<typeof updateAnimalEntrySchema>
+
 export const animalSearchResultSchema = z.object({
     id: z.number(),
     code: z.string(), //animalCodeValidator,

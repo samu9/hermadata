@@ -19,6 +19,7 @@ import {
     NewAnimalAdoption,
     NewAnimalEntry,
     PaginatedAnimalSearchResult,
+    UpdateAnimalEntry,
     animalDocumentSchema,
     animalSchema,
     paginatedAnimalSearchResultSchema,
@@ -233,6 +234,20 @@ class ApiService {
 
         return result
     }
+
+    async updateAnimalEntry(
+        animalId: string,
+        entryId: number,
+        data: UpdateAnimalEntry
+    ): Promise<{ message: string; updated_rows: number }> {
+        const result = await this.put<{ message: string; updated_rows: number }>(
+            ApiEndpoints.animal.updateEntry(animalId, entryId),
+            data
+        )
+
+        return result
+    }
+
     async addBreed(data: NewBreed): Promise<Breed> {
         const result = await this.post<Breed>(ApiEndpoints.breed.create, data)
 
