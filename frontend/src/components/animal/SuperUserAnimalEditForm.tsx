@@ -6,7 +6,7 @@ import { Card } from "primereact/card"
 import { DataTable } from "primereact/datatable"
 import { Column } from "primereact/column"
 import { Dialog } from "primereact/dialog"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 import { Link, useParams } from "react-router-dom"
@@ -23,8 +23,6 @@ import {
     useAnimalFurTypesQuery,
     useAnimalQuery,
     useAnimalSizesQuery,
-    useEntryTypesQuery,
-    useExitTypesQuery,
 } from "../../queries"
 import ControlledBreedsDropdown from "../forms/ControlledBreedsDropdown"
 import ControlledCheckbox from "../forms/ControlledCheckbox"
@@ -41,8 +39,6 @@ const SuperUserAnimalEditForm = () => {
     const animalQuery = useAnimalQuery(id!)
     const animalSizesQuery = useAnimalSizesQuery()
     const animalFurTypesQuery = useAnimalFurTypesQuery()
-    const entryTypesQuery = useEntryTypesQuery()
-    const exitTypesQuery = useExitTypesQuery()
 
     // State for entry editing
     const [showEntryDialog, setShowEntryDialog] = useState(false)
@@ -147,6 +143,17 @@ const SuperUserAnimalEditForm = () => {
         console.log("Delete entry:", entry)
     }
 
+    // Reset form when animal data loads
+    useEffect(() => {
+        if (animalQuery.data) {
+            const formData = animalEditSuperUserSchema.parse(animalQuery.data)
+            reset(formData)
+        }
+    }, [animalQuery.data, reset])
+
+    useEffect(() => {
+        console.log(isDirty)
+    }, [isDirty])
     // Animal stage options
     const animalStages = [
         { id: "A", label: "Adulto" },

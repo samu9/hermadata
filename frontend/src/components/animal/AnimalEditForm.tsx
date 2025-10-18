@@ -3,7 +3,7 @@ import { Button } from "primereact/button"
 import { Divider } from "primereact/divider"
 import { Toast } from "primereact/toast"
 import { Card } from "primereact/card"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 import { Link, useParams } from "react-router-dom"
@@ -113,6 +113,14 @@ const AnimalEditForm = () => {
         }
         await updateAnimalMutation.mutateAsync({ id, data })
     }
+
+    // Reset form when animal data loads
+    useEffect(() => {
+        if (animalQuery.data) {
+            const formData = animalEditSchema.parse(animalQuery.data)
+            reset(formData)
+        }
+    }, [animalQuery.data, reset])
 
     return (
         <div className="max-w-6xl">
