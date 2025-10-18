@@ -15,6 +15,7 @@ import AnimalsPage from "../pages/AnimalsPage"
 import DataExtractionsPage from "../pages/DataExtractionsPage"
 import HomePage from "../pages/HomePage"
 import LoginPage from "../pages/LoginPage"
+import UserManagementPage from "../pages/UserManagementPage"
 import VetsPage from "../pages/VetsPage"
 
 const routes: RouteObject[] = [
@@ -95,9 +96,25 @@ const routes: RouteObject[] = [
                 path: "admin",
                 element: (
                     <RoleProtectedRoute requiredRole="superuser">
-                        <AdminPage />
+                        <Outlet />
                     </RoleProtectedRoute>
                 ),
+                children: [
+                    {
+                        index: true,
+                        element: <AdminPage />,
+                    },
+                    {
+                        path: "users",
+                        element: <UserManagementPage />,
+                        handle: {
+                            crumb: () => "Gestione Utenti",
+                        },
+                    },
+                ],
+                handle: {
+                    crumb: () => "Amministrazione",
+                },
             },
         ],
     },

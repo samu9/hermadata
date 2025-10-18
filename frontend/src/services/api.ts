@@ -78,7 +78,7 @@ class ApiService {
                 if (error.response?.status === 401) {
                     this.logout()
                     // Optionally redirect to login page
-                    window.location.href = '/login'
+                    window.location.href = "/login"
                 }
                 this.handleError(error)
                 return Promise.reject(error)
@@ -124,6 +124,20 @@ class ApiService {
         headers = {}
     ): Promise<T> {
         const res = await this.inst.post<T>(endpoint, data, { headers })
+        return res.data
+    }
+
+    private async put<T>(
+        endpoint: string,
+        data: object,
+        headers = {}
+    ): Promise<T> {
+        const res = await this.inst.put<T>(endpoint, data, { headers })
+        return res.data
+    }
+
+    private async delete<T = void>(endpoint: string): Promise<T> {
+        const res = await this.inst.delete<T>(endpoint)
         return res.data
     }
 
@@ -429,10 +443,47 @@ class ApiService {
         localStorage.removeItem("tokenTimestamp")
     }
 
+    // User Management methods
+    async getAllUsers(): Promise<any[]> {
+        const result = await this.get<any[]>(ApiEndpoints.user.getAll)
+        return result
+    }
+
+    async createUser(data: any): Promise<any> {
+        const result = await this.post<any>(ApiEndpoints.user.create, data)
+        return result
+    }
+
+    async updateUser(userId: number, data: any): Promise<any> {
+        const result = await this.put<any>(
+            ApiEndpoints.user.update(userId),
+            data
+        )
+        return result
+    }
+
+    async deleteUser(userId: number): Promise<void> {
+        await this.delete(ApiEndpoints.user.delete(userId))
+    }
+
+    async changeUserPassword(
+        userId: number,
+        newPassword: string
+    ): Promise<void> {
+        await this.post(ApiEndpoints.user.changePassword(userId), {
+            password: newPassword,
+        })
+    }
+
+    async getUserActivities(): Promise<any[]> {
+        const result = await this.get<any[]>(ApiEndpoints.user.activities)
+        return result
+    }
+
     isAuthenticated(): boolean {
         const token = localStorage.getItem("accessToken")
         const timestamp = localStorage.getItem("tokenTimestamp")
-        
+
         if (!token || !timestamp) {
             return false
         }
@@ -440,7 +491,7 @@ class ApiService {
         // Check if token is older than 24 hours (adjust as needed)
         const tokenAge = Date.now() - parseInt(timestamp)
         const maxAge = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
-        
+
         if (tokenAge > maxAge) {
             this.logout()
             return false
@@ -450,7 +501,9 @@ class ApiService {
     }
 
     getAccessToken(): string | null {
-        return this.isAuthenticated() ? localStorage.getItem("accessToken") : null
+        return this.isAuthenticated()
+            ? localStorage.getItem("accessToken")
+            : null
     }
 }
 
