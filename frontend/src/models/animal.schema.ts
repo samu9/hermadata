@@ -28,6 +28,8 @@ export const animalEntrySchema = z.object({
     exit_date: dateOnly.nullish(),
     entry_type: z.string(),
     exit_type: z.string().nullish(),
+    entry_notes: z.string().nullish(),
+    exit_notes: z.string().nullish(),
 })
 
 export type AnimalEntry = z.infer<typeof animalEntrySchema>
