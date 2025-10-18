@@ -22,6 +22,16 @@ export const newAnimalEntrySchema = z.object({
 
 export type NewAnimalEntry = z.infer<typeof newAnimalEntrySchema>
 
+export const animalEntrySchema = z.object({
+    entry_id: z.number(),
+    entry_date: dateOnly,
+    exit_date: dateOnly.nullish(),
+    entry_type: z.string(),
+    exit_type: z.string().nullish(),
+})
+
+export type AnimalEntry = z.infer<typeof animalEntrySchema>
+
 export const animalSchema = z.object({
     code: animalCodeValidator,
     name: z.string().nullable().optional(),
@@ -47,6 +57,7 @@ export const animalSchema = z.object({
     fur: z.number().nullish(),
     size: z.number().nullish(),
     color: z.number().nullish(),
+    entries: z.array(animalEntrySchema).optional(),
 })
 
 export type Animal = z.infer<typeof animalSchema>
@@ -70,6 +81,25 @@ export const animalEditSchema = z.object({
 })
 
 export type AnimalEdit = z.infer<typeof animalEditSchema>
+
+// Extended schema for super users with additional administrative fields
+export const animalEditSuperUserSchema = animalEditSchema.extend({
+    // Administrative fields only accessible to super users
+    stage: z.string().nullish(),
+    adoptable: z.boolean().nullish(),
+    adoptability_index: z.number().min(0).max(3).optional().nullable(),
+    img_path: z.string().nullish(),
+    // Entry/Exit data (read-only in form, but visible to super users)
+    entry_date: dateOnly.nullish(),
+    entry_type: z.string().nullish(),
+    exit_date: dateOnly.nullish(),
+    exit_type: z.string().nullish(),
+    rescue_city_code: cityCodeValidator.nullish(),
+    // Animal entries history
+    entries: z.array(animalEntrySchema).optional(),
+})
+
+export type AnimalEditSuperUser = z.infer<typeof animalEditSuperUserSchema>
 
 export const animalCompleteEntrySchema = z.object({
     entry_date: dateOnly,
