@@ -228,24 +228,24 @@ class Breed(Base):
     __table_args__ = (UniqueConstraint("name", "race_id", name="unique_breed"),)
 
 
-# class User(Base):
-#     __tablename__ = "users"
-#     id: Mapped[int] = mapped_column(primary_key=True)
+class User(Base):
+    __tablename__ = "users"
 
-#     name: Mapped[str] = mapped_column(String(100), nullable=True)
-#     surname: Mapped[str] = mapped_column(String(100), nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-#     email: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str] = mapped_column(String(100), nullable=True)
+    surname: Mapped[str] = mapped_column(String(100), nullable=True)
 
-#     password: Mapped[str] = mapped_column(String(15))
+    email: Mapped[str] = mapped_column(String(100), unique=True)
 
-#     created_at: Mapped[datetime] = mapped_column(
-#         DateTime(), server_default=func.now()
-#     )
-#     updated_at: Mapped[datetime] = mapped_column(
-#         DateTime(), server_onupdate=func.now(), nullable=True
-#     )
-#     deleted_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
+    hashed_password: Mapped[str] = mapped_column(String(1024))
+
+    is_active: Mapped[bool] = mapped_column(Boolean(), default=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean(), default=False)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
 
 
 # class Procedure(Base):

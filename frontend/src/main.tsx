@@ -12,6 +12,7 @@ import { PrimeReactProvider } from "primereact/api"
 import { RouterProvider, createBrowserRouter } from "react-router-dom"
 import Loader from "./components/Loader.tsx"
 import { LoaderProvider } from "./contexts/Loader.tsx"
+import { AuthProvider } from "./contexts/AuthContext.tsx"
 import routes from "./router/routes.tsx"
 
 // locale("it")
@@ -31,10 +32,12 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <QueryClientProvider client={queryClient}>
             <PrimeReactProvider value={{}}>
-                <LoaderProvider>
-                    <RouterProvider router={router} />
-                    <Loader />
-                </LoaderProvider>
+                <AuthProvider>
+                    <LoaderProvider>
+                        <RouterProvider router={router} />
+                        <Loader />
+                    </LoaderProvider>
+                </AuthProvider>
             </PrimeReactProvider>
         </QueryClientProvider>
     </React.StrictMode>

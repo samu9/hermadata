@@ -1,0 +1,63 @@
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+
+from hermadata.initializations import get_current_user, user_service
+from hermadata.repositories.user_repository import UpdateUserModel
+from hermadata.services.user_service import (
+    RegisterUserModel,
+    TokenData,
+    UserModel,
+    UserService,
+)
+
+router = APIRouter(prefix="/user", tags=["user"])
+
+
+@router.post("/", response_model=UserModel)
+def test(
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    service: Annotated[UserService, Depends(user_service)],
+):
+    user = service.get_by_id(current_user.user_id)
+    return user
+
+
+@router.post("/register")
+def register(
+    data: RegisterUserModel,
+    service: Annotated[UserService, Depends(user_service)],
+):
+    service.register(data)
+
+    return True
+
+
+@router.post("/login")
+def login(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    service: Annotated[UserService, Depends(user_service)],
+):
+    login_result = service.login(form_data.username, form_data.password)
+
+    if not login_result:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+    # Get user details for the response
+    user_details = service.get_user_details(form_data.username)
+
+    return {
+        "access_token": login_result,
+        "token_type": "bearer",
+        "username": user_details.email,
+        "is_superuser": user_details.is_superuser,
+    }
+
+
+@router.post("/update")
+def update(
+    data: UpdateUserModel,
+    service: Annotated[UserService, Depends(user_service)],
+):
+    pass

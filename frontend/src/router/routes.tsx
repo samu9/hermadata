@@ -1,22 +1,37 @@
 import { Outlet, RouteObject, UIMatch } from "react-router-dom"
 import App from "../App"
 import AnimalDocs from "../components/animal/AnimalDocs"
-import AnimalEditForm from "../components/animal/AnimalEditForm"
+import AnimalEditFormWrapper from "../components/animal/AnimalEditFormWrapper"
 import AnimalEvents from "../components/animal/AnimalEvents"
 import AnimalExitForm from "../components/animal/AnimalExitForm"
 import AnimalOverview from "../components/animal/AnimalOverview"
+import ProtectedRoute from "../components/ProtectedRoute"
+import RoleProtectedRoute from "../components/RoleProtectedRoute"
 import AdoptersPage from "../pages/AdoptersPage"
+import AdminPage from "../pages/AdminPage"
 import AnimalAdoptionPage from "../pages/AnimalAdoptionPage"
 import AnimalProfilePage from "../pages/AnimalProfilePage"
 import AnimalsPage from "../pages/AnimalsPage"
 import DataExtractionsPage from "../pages/DataExtractionsPage"
 import HomePage from "../pages/HomePage"
+import LoginPage from "../pages/LoginPage"
+import UserManagementPage from "../pages/UserManagementPage"
 import VetsPage from "../pages/VetsPage"
 
 const routes: RouteObject[] = [
+    // Public routes
+    {
+        path: "/login",
+        element: <LoginPage />,
+    },
+    // Protected routes
     {
         path: "/",
-        element: <App />,
+        element: (
+            <ProtectedRoute>
+                <App />
+            </ProtectedRoute>
+        ),
         children: [
             { path: "", element: <HomePage /> },
             {
@@ -41,7 +56,10 @@ const routes: RouteObject[] = [
                             },
                             { path: "docs", element: <AnimalDocs /> },
                             { path: "events", element: <AnimalEvents /> },
-                            { path: "edit", element: <AnimalEditForm /> },
+                            {
+                                path: "edit",
+                                element: <AnimalEditFormWrapper />,
+                            },
                             {
                                 path: "health",
                                 element: <div>IN COSTRUZIONE</div>,
@@ -72,6 +90,31 @@ const routes: RouteObject[] = [
             {
                 path: "exports",
                 element: <DataExtractionsPage />,
+            },
+            // Super user only routes
+            {
+                path: "admin",
+                element: (
+                    <RoleProtectedRoute requiredRole="superuser">
+                        <Outlet />
+                    </RoleProtectedRoute>
+                ),
+                children: [
+                    {
+                        index: true,
+                        element: <AdminPage />,
+                    },
+                    {
+                        path: "users",
+                        element: <UserManagementPage />,
+                        handle: {
+                            crumb: () => "Gestione Utenti",
+                        },
+                    },
+                ],
+                handle: {
+                    crumb: () => "Amministrazione",
+                },
             },
         ],
     },

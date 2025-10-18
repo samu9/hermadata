@@ -304,6 +304,7 @@ class AddMedicalRecordModel(BaseModel):
 
 
 class AnimalEntryModel(BaseModel):
+    id: int
     animal_id: int
     animal_name: str | None = None
     entry_date: date
@@ -314,6 +315,8 @@ class AnimalEntryModel(BaseModel):
     origin_city_name: str
     animal_race: str
     animal_race_id: str
+    entry_notes: str | None = None
+    exit_notes: str | None = None
 
 
 class NewAdoption(BaseModel):

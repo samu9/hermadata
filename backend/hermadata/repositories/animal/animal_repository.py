@@ -241,6 +241,8 @@ class SQLAnimalRepository(SQLBaseRepository):
         if query.rescue_city_code is not None:
             where.append(Animal.rescue_city_code == query.rescue_city_code)
 
+        animal_entries = self.session.execute(select(AnimalEntry).where(AnimalEntry.animal_id == Animal.id))
+
         result = self.session.execute(
             select(
                 Animal.code,
@@ -420,6 +422,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         ).one()
         animal_entry: AnimalEntry
         result = AnimalEntryModel(
+            id=animal_entry.id,
             animal_id=animal_entry.animal_id,
             animal_name=animal_name,
             entry_date=animal_entry.entry_date,
@@ -430,9 +433,56 @@ class SQLAnimalRepository(SQLBaseRepository):
             origin_city_name=origin_city_name,
             animal_race=animal_race,
             animal_race_id=animal_race_id,
+            entry_notes=animal_entry.entry_notes,
+            exit_notes=animal_entry.exit_notes,
         )
 
         return result
+
+    def get_animal_entries(self, animal_id: int) -> list[AnimalEntryModel]:
+        entries_data = self.session.execute(
+            select(
+                AnimalEntry,
+                Animal.name,
+                Animal.race_id,
+                Race.name,
+                Comune.name,
+            )
+            .select_from(AnimalEntry)
+            .join(Animal, AnimalEntry.animal_id == Animal.id)
+            .join(Race, Animal.race_id == Race.id)
+            .join(Comune, Comune.id == AnimalEntry.origin_city_code)
+            .where(AnimalEntry.animal_id == animal_id)
+            .order_by(AnimalEntry.entry_date.desc())
+        ).all()
+
+        results = []
+        for (
+            animal_entry,
+            animal_name,
+            animal_race_id,
+            animal_race,
+            origin_city_name,
+        ) in entries_data:
+            animal_entry: AnimalEntry
+            result = AnimalEntryModel(
+                id=animal_entry.id,
+                animal_id=animal_entry.animal_id,
+                animal_name=animal_name,
+                entry_date=animal_entry.entry_date,
+                exit_date=animal_entry.exit_date,
+                entry_type=animal_entry.entry_type,
+                exit_type=animal_entry.exit_type,
+                origin_city_code=animal_entry.origin_city_code,
+                origin_city_name=origin_city_name,
+                animal_race=animal_race,
+                animal_race_id=animal_race_id,
+                entry_notes=animal_entry.entry_notes,
+                exit_notes=animal_entry.exit_notes,
+            )
+            results.append(result)
+
+        return results
 
     def update(self, id: str, updates: UpdateAnimalModel) -> int:
         """Return updated rowcound"""

@@ -2,7 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
 import { Divider } from "primereact/divider"
 import { Toast } from "primereact/toast"
-import { useRef } from "react"
+import { Card } from "primereact/card"
+import { useEffect, useRef } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 import { Link, useParams } from "react-router-dom"
@@ -39,7 +40,7 @@ const AnimalEditForm = () => {
     const toast = useRef<Toast>(null)
 
     const {
-        formState: { errors, isDirty },
+        formState: { isDirty },
         handleSubmit,
         reset,
         setValue,
@@ -52,8 +53,7 @@ const AnimalEditForm = () => {
             apiService.updateAnimal(args.id, args.data),
         onSuccess: (
             result: boolean | ApiError,
-            variables: { id: string; data: AnimalEdit },
-            context
+            variables: { id: string; data: AnimalEdit }
         ) => {
             const isApiError = apiErrorSchema.safeParse(result)
             if (isApiError.success) {
@@ -100,7 +100,7 @@ const AnimalEditForm = () => {
             })
             reset(variables.data)
         },
-        onError: (error) =>
+        onError: () =>
             toast.current?.show({
                 severity: "error",
                 summary: "Qualcosa è andato storto",
@@ -114,29 +114,40 @@ const AnimalEditForm = () => {
         await updateAnimalMutation.mutateAsync({ id, data })
     }
 
+    // Reset form when animal data loads
+    useEffect(() => {
+        if (animalQuery.data) {
+            const formData = animalEditSchema.parse(animalQuery.data)
+            reset(formData)
+        }
+    }, [animalQuery.data, reset])
+
     return (
-        <div>
+        <div className="max-w-6xl">
             <FormProvider {...form}>
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <div>
-                        <div className="pb-4 flex flex-col gap-2">
-                            <ControlledInputText<AnimalEdit>
-                                fieldName="name"
-                                label="Nome"
-                                className="w-52"
-                            />
-                            <ControlledInputMask<AnimalEdit>
-                                fieldName="chip_code"
-                                label="Chip"
-                                mask="999.999.999.999.999"
-                                disabled={animalQuery.data?.chip_code_set}
-                                className="w-52"
-                            />
-                            <div className="flex flex-row gap-4 py-2">
-                                <ControlledCheckbox<AnimalEdit>
-                                    fieldName="sterilized"
-                                    label="Sterilizzato"
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Basic Information Card */}
+                        <Card title="Informazioni di Base" className="h-fit">
+                            <div className="flex flex-col gap-4">
+                                <ControlledInputText<AnimalEdit>
+                                    fieldName="name"
+                                    label="Nome"
+                                    className="w-full"
                                 />
+                                <ControlledInputMask<AnimalEdit>
+                                    fieldName="chip_code"
+                                    label="Chip"
+                                    mask="999.999.999.999.999"
+                                    disabled={animalQuery.data?.chip_code_set}
+                                    className="w-full"
+                                />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <ControlledCheckbox<AnimalEdit>
+                                        fieldName="sterilized"
+                                        label="Sterilizzato"
+                                    />
+                                </div>
                                 <ControlledRadio<AnimalEdit, number>
                                     fieldName="sex"
                                     values={[
@@ -147,53 +158,79 @@ const AnimalEditForm = () => {
                                 <ControlledInputDate<AnimalEdit>
                                     fieldName="birth_date"
                                     label="Data di nascita"
-                                    className="w-32"
+                                    className="w-full"
                                 />
                             </div>
-                            <ControlledBreedsDropdown
-                                raceId={animalQuery.data?.race_id}
-                                onAddBreed={(breed) =>
-                                    setValue("breed_id", breed.id, {
-                                        shouldDirty: true,
-                                    })
-                                }
-                            />
+                        </Card>
 
-                            <div className="flex flex-row gap-4 py-2">
-                                <ControlledDropdown
-                                    fieldName="size"
-                                    label="Taglia"
-                                    optionValue="id"
-                                    optionLabel="label"
-                                    options={animalSizesQuery.data}
-                                />
-
-                                <ControlledDropdown
-                                    fieldName="fur"
-                                    label="Pelo"
-                                    optionValue="id"
-                                    optionLabel="label"
-                                    options={animalFurTypesQuery.data}
-                                />
-                                <ControlledFurColorsDropdown
-                                    onAdd={(color) =>
-                                        setValue("color", color.id, {
+                        {/* Physical Characteristics Card */}
+                        <Card title="Caratteristiche Fisiche" className="h-fit">
+                            <div className="flex flex-col gap-4">
+                                <ControlledBreedsDropdown
+                                    raceId={animalQuery.data?.race_id}
+                                    onAddBreed={(breed) =>
+                                        setValue("breed_id", breed.id, {
                                             shouldDirty: true,
                                         })
                                     }
                                 />
+                                <div className="grid grid-cols-1 gap-4">
+                                    <ControlledDropdown
+                                        fieldName="size"
+                                        label="Taglia"
+                                        optionValue="id"
+                                        optionLabel="label"
+                                        options={animalSizesQuery.data}
+                                    />
+                                    <ControlledDropdown
+                                        fieldName="fur"
+                                        label="Pelo"
+                                        optionValue="id"
+                                        optionLabel="label"
+                                        options={animalFurTypesQuery.data}
+                                    />
+                                    <ControlledFurColorsDropdown
+                                        onAdd={(color) =>
+                                            setValue("color", color.id, {
+                                                shouldDirty: true,
+                                            })
+                                        }
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        </Card>
+                    </div>
+
+                    {/* Notes Section */}
+                    <Card title="Note" className="mt-6">
                         <ControlledTextarea<AnimalEdit>
                             fieldName="notes"
                             label="Note"
-                            className="max-w-md"
+                            className="w-full"
                         />
-                    </div>
+                    </Card>
+
                     <Divider />
-                    <Button disabled={!isDirty} type="submit">
-                        Salva
-                    </Button>
+
+                    {/* Action Buttons */}
+                    <div className="flex justify-between items-center pt-4">
+                        <div className="text-sm text-gray-600">
+                            {isDirty
+                                ? "Ci sono modifiche non salvate"
+                                : "Nessuna modifica"}
+                        </div>
+                        <Button
+                            disabled={
+                                !isDirty || updateAnimalMutation.isLoading
+                            }
+                            loading={updateAnimalMutation.isLoading}
+                            type="submit"
+                            size="large"
+                        >
+                            <i className="pi pi-save mr-2"></i>
+                            Salva
+                        </Button>
+                    </div>
                 </form>
             </FormProvider>
             <Toast ref={toast} position="bottom-right" />

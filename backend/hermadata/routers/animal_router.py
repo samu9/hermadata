@@ -18,6 +18,7 @@ from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalDocumentModel,
     AnimalEntriesQuery,
+    AnimalEntryModel,
     AnimalExit,
     AnimalExitsQuery,
     AnimalModel,
@@ -129,6 +130,13 @@ def complete_entry(
 @router.post("/{animal_id}/entry")
 def add_entry(animal_id: int, data: NewEntryModel, repo: Annotated[SQLAnimalRepository, Depends(animal_repository)]):
     result = repo.add_entry(animal_id, data)
+
+    return result
+
+
+@router.get("/{animal_id}/entries", response_model=list[AnimalEntryModel])
+def get_animal_entries(animal_id: int, repo: Annotated[SQLAnimalRepository, Depends(animal_repository)]):
+    result = repo.get_animal_entries(animal_id)
 
     return result
 
