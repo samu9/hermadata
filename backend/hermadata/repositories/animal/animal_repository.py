@@ -241,8 +241,6 @@ class SQLAnimalRepository(SQLBaseRepository):
         if query.rescue_city_code is not None:
             where.append(Animal.rescue_city_code == query.rescue_city_code)
 
-        animal_entries = self.session.execute(select(AnimalEntry).where(AnimalEntry.animal_id == Animal.id))
-
         result = self.session.execute(
             select(
                 Animal.code,
