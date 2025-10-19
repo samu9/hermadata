@@ -307,7 +307,7 @@ class AnimalEntryModel(BaseModel):
     id: int
     animal_id: int
     animal_name: str | None = None
-    entry_date: date
+    entry_date: date | None = None
     exit_date: date | None = None
     entry_type: EntryType
     exit_type: ExitType | None = None
