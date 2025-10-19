@@ -33,14 +33,14 @@ import-doc-kinds = "hermadata.database.alembic.import_initial_data:import_doc_ki
 
 
 [tool.ruff]
-line-length = 120
+line-length = 79
 
 [tool.ruff.lint]
 select = ["E", "C", "I", "B"]
 ignore = ["E402"]
 
 [tool.ruff.format]
-quote-style="double"
+quote-style = "double"
 
 [tool.pytest.ini_options]
 env =[
