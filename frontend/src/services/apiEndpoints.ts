@@ -22,7 +22,8 @@ const ApiEndpoints = {
         addEntry: (id: string) => `/animal/${id}/entry`,
         completeEntry: (id: string) => `/animal/${id}/entry/complete`,
         getEntries: (id: string) => `/animal/${id}/entries`,
-        updateEntry: (animalId: string, entryId: number) => `/animal/${animalId}/entries/${entryId}`,
+        updateEntry: (animalId: string, entryId: number) =>
+            `/animal/${animalId}/entries/${entryId}`,
         documents: (id: number) => `/animal/${id}/document`,
         newDocument: (id: number) => `/animal/${id}/document`,
         exit: (id: number) => `/animal/${id}/exit`,
@@ -41,7 +42,7 @@ const ApiEndpoints = {
     user: {
         login: "/user/login",
         register: "/user/register",
-        getAll: "/user/list",
+        getAll: "/user/",
         create: "/user/create",
         update: (id: number) => `/user/${id}`,
         delete: (id: number) => `/user/${id}`,

@@ -43,7 +43,8 @@ import {
     Vet,
     VetSearch,
 } from "../models/vet.schema"
-import { Login, LoginResponse } from "../models/user.schema"
+import { Login, LoginResponse, ManagementUser } from "../models/user.schema"
+import { PaginationQuery } from "../models/pagination.schema"
 
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 
@@ -468,8 +469,11 @@ class ApiService {
     }
 
     // User Management methods
-    async getAllUsers(): Promise<any[]> {
-        const result = await this.get<any[]>(ApiEndpoints.user.getAll)
+    async getAllUsers(query?: PaginationQuery): Promise<{total: number, items: ManagementUser[]}> {
+        const result = await this.get<{total: number, items: ManagementUser[]}>(
+            ApiEndpoints.user.getAll,
+            query
+        )
         return result
     }
 
