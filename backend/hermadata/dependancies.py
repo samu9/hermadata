@@ -24,7 +24,9 @@ def get_session_maker():
     return SessionMaker
 
 
-def get_db_session(SessionMaker: Annotated[sessionmaker, Depends(get_session_maker)]):
+def get_db_session(
+    SessionMaker: Annotated[sessionmaker, Depends(get_session_maker)],
+):
     session = SessionMaker()
     try:
         yield session
@@ -60,7 +62,9 @@ def get_storage_map(
 
 
 def get_jinja_env() -> Environment:
-    templates_dir = os.path.join(os.path.dirname(__file__), "reports", "templates")
+    templates_dir = os.path.join(
+        os.path.dirname(__file__), "reports", "templates"
+    )
     jinja_env = Environment(
         loader=FileSystemLoader(templates_dir),
         autoescape=select_autoescape(),

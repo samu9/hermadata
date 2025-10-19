@@ -15,7 +15,10 @@ router = APIRouter(prefix="/adopter")
 
 
 @router.post("", response_model=AdopterModel)
-def create_adopter(data: NewAdopter, repo: Annotated[SQLAdopterRepository, Depends(get_adopter_repository)]):
+def create_adopter(
+    data: NewAdopter,
+    repo: Annotated[SQLAdopterRepository, Depends(get_adopter_repository)],
+):
     adopter = repo.create(data)
     return adopter
 

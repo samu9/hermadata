@@ -36,7 +36,6 @@ class SQLUserRepository(SQLBaseRepository):
         return result
 
     def update(self, user_id: int, data: UpdateUserModel):
-
         self.session.execute(
             update(User)
             .values(data.model_dump(exclude_none=True))

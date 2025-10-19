@@ -39,7 +39,10 @@ router = APIRouter(prefix="/animal")
 
 
 @router.post("")
-def new_animal_entry(data: NewAnimalModel, repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)]) -> str:
+def new_animal_entry(
+    data: NewAnimalModel,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+) -> str:
     animal_code = repo.new_animal(data)
 
     return animal_code
@@ -62,7 +65,10 @@ def search_animals(
 
 
 @router.get("/{animal_id}", response_model=AnimalModel)
-def get_animal(animal_id: int, repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)]):
+def get_animal(
+    animal_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+):
     try:
         animal_data = repo.get(AnimalQueryModel(id=animal_id))
     except NoResultFound as e:
@@ -88,7 +94,10 @@ def update_animal(
 
 
 @router.get("/{animal_id}/document", response_model=list[AnimalDocumentModel])
-def get_animal_documents(animal_id: int, repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)]):
+def get_animal_documents(
+    animal_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+):
     docs = repo.get_documents(animal_id)
 
     return docs
@@ -98,8 +107,12 @@ def get_animal_documents(animal_id: int, repo: Annotated[SQLAnimalRepository, De
 def upload_animal_document(
     animal_id: int,
     data: NewAnimalDocument,
-    animal_repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
-    doc_repo: Annotated[SQLDocumentRepository, Depends(get_document_repository)],
+    animal_repo: Annotated[
+        SQLAnimalRepository, Depends(get_animal_repository)
+    ],
+    doc_repo: Annotated[
+        SQLDocumentRepository, Depends(get_document_repository)
+    ],
 ):
     doc_kind = doc_repo.get_document_kind_by_code(data.document_kind_code)
 
@@ -113,7 +126,11 @@ def upload_animal_document(
 
 
 @router.post("/{animal_id}/exit")
-def animal_exit(animal_id: int, data: AnimalExit, service: Annotated[AnimalService, Depends(get_animal_service)]):
+def animal_exit(
+    animal_id: int,
+    data: AnimalExit,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+):
     service.exit(animal_id, data)
 
     return True
@@ -121,7 +138,9 @@ def animal_exit(animal_id: int, data: AnimalExit, service: Annotated[AnimalServi
 
 @router.post("/{animal_id}/entry/complete")
 def complete_entry(
-    animal_id: int, data: CompleteEntryModel, service: Annotated[AnimalService, Depends(get_animal_service)]
+    animal_id: int,
+    data: CompleteEntryModel,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
 ):
     service.complete_entry(animal_id, data)
 
@@ -130,7 +149,9 @@ def complete_entry(
 
 @router.post("/{animal_id}/entry")
 def add_entry(
-    animal_id: int, data: NewEntryModel, repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)]
+    animal_id: int,
+    data: NewEntryModel,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
 ):
     result = repo.add_entry(animal_id, data)
 
@@ -138,7 +159,10 @@ def add_entry(
 
 
 @router.get("/{animal_id}/entries", response_model=list[AnimalEntryModel])
-def get_animal_entries(animal_id: int, repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)]):
+def get_animal_entries(
+    animal_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+):
     result = repo.get_animal_entries(animal_id)
 
     return result
@@ -156,25 +180,37 @@ def update_animal_entry(
         # Verify the entry belongs to the animal
         entries = repo.get_animal_entries(animal_id)
         if not any(entry.id == entry_id for entry in entries):
-            raise HTTPException(status_code=404, detail=f"Entry {entry_id} not found for animal {animal_id}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Entry {entry_id} not found for animal {animal_id}",
+            )
 
         updated_rows = repo.update_animal_entry(entry_id, data)
         if updated_rows == 0:
-            raise HTTPException(status_code=404, detail=f"Entry {entry_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Entry {entry_id} not found"
+            )
 
-        return {"message": "Entry updated successfully", "updated_rows": updated_rows}
+        return {
+            "message": "Entry updated successfully",
+            "updated_rows": updated_rows,
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/{animal_id}/warning")
-def get_warnings(animal_id: int, repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)]):
+def get_warnings(
+    animal_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+):
     return
 
 
 @router.get("/days/report")
 def serve_animal_days_report(
-    query: Annotated[AnimalDaysQuery, Depends()], service: Annotated[AnimalService, Depends(get_animal_service)]
+    query: Annotated[AnimalDaysQuery, Depends()],
+    service: Annotated[AnimalService, Depends(get_animal_service)],
 ):
     filename, report = service.days_report(query)
 
@@ -187,7 +223,8 @@ def serve_animal_days_report(
 
 @router.get("/entries/report")
 def serve_animal_entries_report(
-    query: Annotated[AnimalEntriesQuery, Depends()], service: Annotated[AnimalService, Depends(get_animal_service)]
+    query: Annotated[AnimalEntriesQuery, Depends()],
+    service: Annotated[AnimalService, Depends(get_animal_service)],
 ):
     filename, report = service.entries_report(query)
 
@@ -200,7 +237,8 @@ def serve_animal_entries_report(
 
 @router.get("/exits/report")
 def serve_animal_exits_report(
-    query: Annotated[AnimalExitsQuery, Depends()], service: Annotated[AnimalService, Depends(get_animal_service)]
+    query: Annotated[AnimalExitsQuery, Depends()],
+    service: Annotated[AnimalService, Depends(get_animal_service)],
 ):
     filename, report = service.exits_report(query)
 

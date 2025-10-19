@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 
 from hermadata.database.models import Adopter
 from hermadata.models import PaginationResult
-from hermadata.repositories.adopter_repository import AdopterModel, AdopterSearchQuery, IDDocumentType, NewAdopter
+from hermadata.repositories.adopter_repository import (
+    AdopterModel,
+    IDDocumentType,
+    NewAdopter,
+)
 
 
 def test_new_adopter(
@@ -38,7 +42,9 @@ def test_new_adopter(
 
     assert parsed.fiscal_code == data.fiscal_code.upper()
 
-    stored = db_session.execute(select(Adopter).where(Adopter.id == parsed.id)).scalar_one()
+    stored = db_session.execute(
+        select(Adopter).where(Adopter.id == parsed.id)
+    ).scalar_one()
 
     assert stored.name == data.name.upper()
     assert stored.surname == data.surname.upper()
@@ -58,7 +64,9 @@ def test_search_adopter(
 
     parsed = PaginationResult[AdopterModel].model_validate(content)
 
-    stored = db_session.execute(select(Adopter).where(Adopter.id == adopter_id)).scalar_one()
+    stored = db_session.execute(
+        select(Adopter).where(Adopter.id == adopter_id)
+    ).scalar_one()
 
     m = AdopterModel.model_validate(stored, from_attributes=True)
 

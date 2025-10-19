@@ -17,7 +17,6 @@ from hermadata.models import UtilElement
 from hermadata.repositories.animal.animal_repository import (
     AnimalModel,
     AnimalSearchModel,
-    AnimalWithoutChipCodeException,
     NoRequiredExitDataException,
     SQLAnimalRepository,
 )
@@ -39,7 +38,9 @@ from tests.utils import random_chip_code
 
 
 def get_animal_id_by_code(db_session: Session, code: str) -> int:
-    animal_id = db_session.execute(select(Animal.id).where(Animal.code == code)).scalar()
+    animal_id = db_session.execute(
+        select(Animal.id).where(Animal.code == code)
+    ).scalar()
 
     return animal_id
 
@@ -65,9 +66,13 @@ def test_exit(db_session: Session, animal_repository: SQLAnimalRepository):
 
     code = animal_repository.new_animal(new_entry)
 
-    animal_id = db_session.execute(select(Animal.id).where(Animal.code == code)).scalar()
+    animal_id = db_session.execute(
+        select(Animal.id).where(Animal.code == code)
+    ).scalar()
 
-    animal_repository.complete_entry(animal_id, CompleteEntryModel(entry_date=datetime.now().date()))
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=datetime.now().date())
+    )
     exit_notes = uuid4().hex
 
     exit_data = AnimalExit(
@@ -78,7 +83,9 @@ def test_exit(db_session: Session, animal_repository: SQLAnimalRepository):
     with pytest.raises(NoRequiredExitDataException):
         animal_repository.exit(animal_id=animal_id, data=exit_data)
 
-    breed_id = db_session.execute(select(Breed.id).where(Breed.race_id == "C")).scalar_one()
+    breed_id = db_session.execute(
+        select(Breed.id).where(Breed.race_id == "C")
+    ).scalar_one()
     animal_repository.update(
         animal_id,
         UpdateAnimalModel(
@@ -105,7 +112,9 @@ def test_exit(db_session: Session, animal_repository: SQLAnimalRepository):
     assert check is None
 
     notes_check = db_session.execute(
-        select(AnimalEntry).where(AnimalEntry.animal_id == animal_id).order_by(AnimalEntry.created_at.desc())
+        select(AnimalEntry)
+        .where(AnimalEntry.animal_id == animal_id)
+        .order_by(AnimalEntry.created_at.desc())
     ).scalar()
 
     assert notes_check.exit_notes == exit_notes
@@ -170,7 +179,9 @@ def test_update(db_session: Session, animal_repository: SQLAnimalRepository):
 
     code = animal_repository.new_animal(new_entry_data)
 
-    animal_id = db_session.execute(select(Animal.id).where(Animal.code == code)).scalar()
+    animal_id = db_session.execute(
+        select(Animal.id).where(Animal.code == code)
+    ).scalar()
     animal_repository.update(
         animal_id,
         UpdateAnimalModel(
@@ -179,7 +190,9 @@ def test_update(db_session: Session, animal_repository: SQLAnimalRepository):
         ),
     )
 
-    name, sterilized = db_session.execute(select(Animal.name, Animal.sterilized).where(Animal.code == code)).first()
+    name, sterilized = db_session.execute(
+        select(Animal.name, Animal.sterilized).where(Animal.code == code)
+    ).first()
 
     assert name == "Test Cat"
 
@@ -187,20 +200,30 @@ def test_update(db_session: Session, animal_repository: SQLAnimalRepository):
 
     animal_repository.update(animal_id, UpdateAnimalModel(sterilized=False))
 
-    name, sterilized = db_session.execute(select(Animal.name, Animal.sterilized).where(Animal.code == code)).first()
+    name, sterilized = db_session.execute(
+        select(Animal.name, Animal.sterilized).where(Animal.code == code)
+    ).first()
 
     assert name == "Test Cat"
 
     assert sterilized is False
 
 
-def test_add_entry(db_session: Session, animal_repository: SQLAnimalRepository, complete_animal_data):
-    data = NewAnimalModel(race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue)
+def test_add_entry(
+    db_session: Session,
+    animal_repository: SQLAnimalRepository,
+    complete_animal_data,
+):
+    data = NewAnimalModel(
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+    )
     code = animal_repository.new_animal(data)
 
     animal_id = get_animal_id_by_code(db_session, code)
 
-    animal_repository.complete_entry(animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1)))
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
 
     with pytest.raises(NoRequiredExitDataException):
         animal_repository.exit(
@@ -217,14 +240,20 @@ def test_add_entry(db_session: Session, animal_repository: SQLAnimalRepository, 
 
     animal_repository.add_entry(
         animal_id,
-        NewEntryModel(rescue_city_code="B180", entry_type=EntryType.confiscation),
+        NewEntryModel(
+            rescue_city_code="B180", entry_type=EntryType.confiscation
+        ),
     )
 
-    animal_repository.complete_entry(animal_id, CompleteEntryModel(entry_date=date(2024, 1, 3)))
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 1, 3))
+    )
 
     entries = (
         db_session.execute(
-            select(AnimalEntry).where(AnimalEntry.animal_id == animal_id).order_by(AnimalEntry.entry_date.asc())
+            select(AnimalEntry)
+            .where(AnimalEntry.animal_id == animal_id)
+            .order_by(AnimalEntry.entry_date.asc())
         )
         .scalars()
         .all()
@@ -234,25 +263,39 @@ def test_add_entry(db_session: Session, animal_repository: SQLAnimalRepository, 
     assert entries[0].current is False
 
 
-def test_count_days(db_session: Session, animal_repository: SQLAnimalRepository, complete_animal_data):
-    new_animal = NewAnimalModel(race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value)
+def test_count_days(
+    db_session: Session,
+    animal_repository: SQLAnimalRepository,
+    complete_animal_data,
+):
+    new_animal = NewAnimalModel(
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value
+    )
 
     code = animal_repository.new_animal(new_animal)
 
-    animal_id = db_session.execute(select(Animal.id).where(Animal.code == code)).scalar_one()
+    animal_id = db_session.execute(
+        select(Animal.id).where(Animal.code == code)
+    ).scalar_one()
 
     complete_animal_data(animal_id)
 
-    animal_repository.complete_entry(animal_id, CompleteEntryModel(entry_date=date(2020, 1, 1)))
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2020, 1, 1))
+    )
 
     animal_repository.exit(
         animal_id,
-        AnimalExit(exit_date=date(2020, 1, 10), exit_type=ExitType.disappeared),
+        AnimalExit(
+            exit_date=date(2020, 1, 10), exit_type=ExitType.disappeared
+        ),
     )
 
     animal_repository.add_entry(
         animal_id=animal_id,
-        data=NewEntryModel(rescue_city_code="H501", entry_type=EntryType.confiscation),
+        data=NewEntryModel(
+            rescue_city_code="H501", entry_type=EntryType.confiscation
+        ),
     )
 
     animal_repository.complete_entry(
@@ -262,7 +305,9 @@ def test_count_days(db_session: Session, animal_repository: SQLAnimalRepository,
 
     animal_repository.exit(
         animal_id,
-        AnimalExit(exit_date=date(2020, 2, 10), exit_type=ExitType.disappeared.value),
+        AnimalExit(
+            exit_date=date(2020, 2, 10), exit_type=ExitType.disappeared.value
+        ),
     )
 
     result = animal_repository.count_animal_days(
@@ -295,18 +340,24 @@ def test_count_days(db_session: Session, animal_repository: SQLAnimalRepository,
 
     assert result.total_days == 10
 
-    new_animal = NewAnimalModel(race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value)
+    new_animal = NewAnimalModel(
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value
+    )
 
     code = animal_repository.new_animal(new_animal)
 
-    animal_id = db_session.execute(select(Animal.id).where(Animal.code == code)).scalar_one()
+    animal_id = db_session.execute(
+        select(Animal.id).where(Animal.code == code)
+    ).scalar_one()
 
     animal_repository.update(
         animal_id,
         UpdateAnimalModel(name="Test1", chip_code="000.000.000.000.000"),
     )
 
-    animal_repository.complete_entry(animal_id, CompleteEntryModel(entry_date=date(2020, 1, 10)))
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2020, 1, 10))
+    )
 
     result = animal_repository.count_animal_days(
         AnimalDaysQuery(
@@ -331,10 +382,14 @@ def test_count_days(db_session: Session, animal_repository: SQLAnimalRepository,
     assert result.total_days == 10 + 5
 
 
-def test_count_days_same_day(animal_repository: SQLAnimalRepository, make_animal, complete_animal_data):
+def test_count_days_same_day(
+    animal_repository: SQLAnimalRepository, make_animal, complete_animal_data
+):
     animal_id = make_animal()
 
-    animal_repository.complete_entry(animal_id, CompleteEntryModel(entry_date=date(2024, 4, 1)))
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 4, 1))
+    )
 
     complete_animal_data(animal_id)
 
@@ -354,10 +409,17 @@ def test_count_days_same_day(animal_repository: SQLAnimalRepository, make_animal
     assert days
 
 
-def test_count_exits(empty_db, make_animal, animal_repository: SQLAnimalRepository, complete_animal_data):
+def test_count_exits(
+    empty_db,
+    make_animal,
+    animal_repository: SQLAnimalRepository,
+    complete_animal_data,
+):
     animal_id1 = make_animal()
 
-    animal_repository.complete_entry(animal_id1, CompleteEntryModel(entry_date=date(2024, 1, 1)))
+    animal_repository.complete_entry(
+        animal_id1, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
 
     complete_animal_data(animal_id1)
 
@@ -368,7 +430,9 @@ def test_count_exits(empty_db, make_animal, animal_repository: SQLAnimalReposito
 
     animal_id2 = make_animal()
 
-    animal_repository.complete_entry(animal_id2, CompleteEntryModel(entry_date=date(2024, 1, 1)))
+    animal_repository.complete_entry(
+        animal_id2, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
 
     complete_animal_data(animal_id2)
 
@@ -403,7 +467,9 @@ def test_count_exits(empty_db, make_animal, animal_repository: SQLAnimalReposito
     assert result.items[1].exit_date == date(2024, 3, 1)
 
 
-def test_add_medical_activity_and_records(make_animal, make_vet, animal_repository: SQLAnimalRepository):
+def test_add_medical_activity_and_records(
+    make_animal, make_vet, animal_repository: SQLAnimalRepository
+):
     animal_id = make_animal()
     vet_id = make_vet()
 
@@ -415,13 +481,17 @@ def test_add_medical_activity_and_records(make_animal, make_vet, animal_reposito
         from_date=date(2020, 1, 1),
     )
 
-    medical_activity = animal_repository.new_medical_activity(animal_id=animal_id, data=data)
+    medical_activity = animal_repository.new_medical_activity(
+        animal_id=animal_id, data=data
+    )
 
     assert medical_activity.from_date == date(2020, 1, 1)
 
     assert medical_activity.animal_id == animal_id
 
-    medical_activity_record = animal_repository.add_medical_activity_record(medical_activity_id=medical_activity.id)
+    medical_activity_record = animal_repository.add_medical_activity_record(
+        medical_activity_id=medical_activity.id
+    )
 
     assert medical_activity_record.created_at.date() == datetime.now().date()
 
@@ -434,7 +504,9 @@ def test_get_variation_report_variables(
 ):
     animal_id = make_animal()
 
-    breed = breed_repository.create(data=NewBreedModel(race_id="C", name="Test"))
+    breed = breed_repository.create(
+        data=NewBreedModel(race_id="C", name="Test")
+    )
 
     fur_color = animal_repository.add_fur_color(name=uuid4().hex)
     animal_repository.update(
@@ -451,21 +523,29 @@ def test_get_variation_report_variables(
             sterilized=False,
         ),
     )
-    animal_repository.complete_entry(animal_id, data=CompleteEntryModel(entry_date=datetime.now().date()))
+    animal_repository.complete_entry(
+        animal_id, data=CompleteEntryModel(entry_date=datetime.now().date())
+    )
 
     animal_repository.exit(
         animal_id,
-        data=AnimalExit(exit_date=datetime.now().date(), exit_type=ExitType.disappeared),
+        data=AnimalExit(
+            exit_date=datetime.now().date(), exit_type=ExitType.disappeared
+        ),
     )
 
-    variables = animal_repository.get_variation_report_variables(animal_id=animal_id)
+    variables = animal_repository.get_variation_report_variables(
+        animal_id=animal_id
+    )
 
     assert variables.animal.age == 3
     assert variables.animal.fur_color == fur_color.label
 
 
 @pytest.mark.skip(reason="Not implemented yet")
-def test_get_pending_therapies(empty_db, make_animal, animal_repository: SQLAnimalRepository):
+def test_get_pending_therapies(
+    empty_db, make_animal, animal_repository: SQLAnimalRepository
+):
     animal1_id = make_animal()
     _ = make_animal()
 
@@ -483,15 +563,26 @@ def test_get_pending_therapies(empty_db, make_animal, animal_repository: SQLAnim
 
     animal_repository.session.execute(
         update(MedicalActivityRecord)
-        .where(MedicalActivityRecord.medical_activity_id == medical_activity.id)
-        .values({MedicalActivityRecord.created_at: datetime.now() - timedelta(days=8)})
+        .where(
+            MedicalActivityRecord.medical_activity_id == medical_activity.id
+        )
+        .values(
+            {
+                MedicalActivityRecord.created_at: datetime.now()
+                - timedelta(days=8)
+            }
+        )
     )
-    result = animal_repository.get_pending_medical_activities(animal_id=animal1_id)
+    result = animal_repository.get_pending_medical_activities(
+        animal_id=animal1_id
+    )
 
     assert result
 
 
-def test_get_fur_colors(animal_repository: SQLAnimalRepository, db_session: Session):
+def test_get_fur_colors(
+    animal_repository: SQLAnimalRepository, db_session: Session
+):
     color_name = uuid4().hex
     c = FurColor(name=color_name)
     db_session.add(c)
@@ -505,10 +596,16 @@ def test_get_fur_colors(animal_repository: SQLAnimalRepository, db_session: Sess
     assert color_name in [r.label for r in result]
 
 
-def test_new_fur_color(animal_repository: SQLAnimalRepository, db_session: Session):
+def test_new_fur_color(
+    animal_repository: SQLAnimalRepository, db_session: Session
+):
     name = uuid4().hex
     result = animal_repository.add_fur_color(name)
 
     assert isinstance(result, UtilElement)
 
-    db_session.execute(select(FurColor).where(FurColor.id == result.id, FurColor.name == result.label)).scalar_one()
+    db_session.execute(
+        select(FurColor).where(
+            FurColor.id == result.id, FurColor.name == result.label
+        )
+    ).scalar_one()

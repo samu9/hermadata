@@ -68,4 +68,6 @@ def int_to_sex(v: int | str) -> str:
     return v
 
 
-Sex = Annotated[str, StringConstraints(pattern=r"[MF]"), BeforeValidator(int_to_sex)]
+Sex = Annotated[
+    str, StringConstraints(pattern=r"[MF]"), BeforeValidator(int_to_sex)
+]

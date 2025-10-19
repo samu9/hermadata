@@ -55,7 +55,9 @@ class UserService:
     def register(self, data: RegisterUserModel) -> int:
         hashed_password = self.pwd_context.hash(data.password)
 
-        user_id = self.user_repository.create(CreateUserModel(email=data.email, hashed_password=hashed_password))
+        user_id = self.user_repository.create(
+            CreateUserModel(email=data.email, hashed_password=hashed_password)
+        )
 
         return user_id
 
@@ -65,11 +67,15 @@ class UserService:
     def _encode_jwt(self, data: dict):
         to_encode = data.copy()
 
-        expire = datetime.now(timezone.utc) + timedelta(minutes=self.access_token_expire_minutes)
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=self.access_token_expire_minutes
+        )
 
         to_encode.update({"exp": expire})
 
-        encoded_jwt = jwt.encode(to_encode, self.secret, algorithm=self.algorithm)
+        encoded_jwt = jwt.encode(
+            to_encode, self.secret, algorithm=self.algorithm
+        )
         return encoded_jwt
 
     def decode_jwt(self, token: str) -> TokenData:
@@ -86,7 +92,9 @@ class UserService:
         except NoResultFound:
             return
 
-        password_verified = self._verify_password(password, user_data.hashed_password)
+        password_verified = self._verify_password(
+            password, user_data.hashed_password
+        )
 
         if not password_verified:
             return

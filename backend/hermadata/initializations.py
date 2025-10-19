@@ -28,12 +28,15 @@ from hermadata.storage.s3_storage import S3Storage
 
 
 # Dependency functions for repositories
-def get_animal_repository(session: Annotated[Session, Depends(get_db_session)]) -> SQLAnimalRepository:
+def get_animal_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> SQLAnimalRepository:
     return SQLAnimalRepository()(session)
 
 
 def get_document_repository(
-    session: Annotated[Session, Depends(get_db_session)], storage_map: Annotated[dict, Depends(get_storage_map)]
+    session: Annotated[Session, Depends(get_db_session)],
+    storage_map: Annotated[dict, Depends(get_storage_map)],
 ) -> SQLDocumentRepository:
     return SQLDocumentRepository(
         session=session,
@@ -42,30 +45,42 @@ def get_document_repository(
     )
 
 
-def get_breed_repository(session: Annotated[Session, Depends(get_db_session)]) -> SQLBreedRepository:
+def get_breed_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> SQLBreedRepository:
     return SQLBreedRepository()(session)
 
 
-def get_city_repository(session: Annotated[Session, Depends(get_db_session)]) -> SQLCityRepository:
+def get_city_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> SQLCityRepository:
     return SQLCityRepository(
         preferred_provinces=settings.app.preferred_provinces,
         preferred_cities=settings.app.preferred_cities,
     )(session)
 
 
-def get_race_repository(session: Annotated[Session, Depends(get_db_session)]) -> SQLRaceRepository:
+def get_race_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> SQLRaceRepository:
     return SQLRaceRepository()(session)
 
 
-def get_vet_repository(session: Annotated[Session, Depends(get_db_session)]) -> SQLVetRepository:
+def get_vet_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> SQLVetRepository:
     return SQLVetRepository()(session)
 
 
-def get_adopter_repository(session: Annotated[Session, Depends(get_db_session)]) -> SQLAdopterRepository:
+def get_adopter_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> SQLAdopterRepository:
     return SQLAdopterRepository()(session)
 
 
-def get_user_repository(session: Annotated[Session, Depends(get_db_session)]) -> SQLUserRepository:
+def get_user_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> SQLUserRepository:
     return SQLUserRepository()(session)
 
 
@@ -82,8 +97,12 @@ report_generator = ReportGenerator(get_jinja_env())
 
 
 def get_animal_service(
-    animal_repository: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
-    document_repository: Annotated[SQLDocumentRepository, Depends(get_document_repository)],
+    animal_repository: Annotated[
+        SQLAnimalRepository, Depends(get_animal_repository)
+    ],
+    document_repository: Annotated[
+        SQLDocumentRepository, Depends(get_document_repository)
+    ],
 ) -> AnimalService:
     return AnimalService(
         animal_repository=animal_repository,
@@ -93,7 +112,11 @@ def get_animal_service(
     )
 
 
-def get_user_service(user_repository: Annotated[SQLUserRepository, Depends(get_user_repository)]) -> UserService:
+def get_user_service(
+    user_repository: Annotated[
+        SQLUserRepository, Depends(get_user_repository)
+    ],
+) -> UserService:
     return UserService(
         user_repository=user_repository,
         secret=settings.auth.secret,

@@ -34,11 +34,17 @@ from hermadata.repositories.animal.models import (
     AnimalReportResult,
 )
 
-ReportDate = Annotated[date, PlainSerializer(lambda x: x.strftime("%d/%m/%Y"), return_type=str)]
+ReportDate = Annotated[
+    date, PlainSerializer(lambda x: x.strftime("%d/%m/%Y"), return_type=str)
+]
 
-NullableString = Annotated[str | None, Field(default=""), AfterValidator(lambda x: x or "")]
+NullableString = Annotated[
+    str | None, Field(default=""), AfterValidator(lambda x: x or "")
+]
 
-NullableInt = Annotated[int | None, Field(default=""), AfterValidator(lambda x: x or "")]
+NullableInt = Annotated[
+    int | None, Field(default=""), AfterValidator(lambda x: x or "")
+]
 
 
 def transform_date_to_string(raw: date) -> str:
@@ -147,7 +153,9 @@ class ReportGenerator:
     def __init__(self, jinja_env: Environment) -> None:
         self.jinja_env = jinja_env
 
-    def _build_template(self, filename: str, variables: ReportDefaultVariables) -> bytes:
+    def _build_template(
+        self, filename: str, variables: ReportDefaultVariables
+    ) -> bytes:
         template = self.jinja_env.get_template(filename)
 
         rendered_html = template.render(**variables.model_dump())
@@ -156,24 +164,38 @@ class ReportGenerator:
 
         HTML(string=rendered_html).write_pdf(
             target=target,
-            stylesheets=[CSS(filename=os.path.join(os.path.dirname(__file__), "static", "tailwind.css"))],
+            stylesheets=[
+                CSS(
+                    filename=os.path.join(
+                        os.path.dirname(__file__), "static", "tailwind.css"
+                    )
+                )
+            ],
         )
 
         return target.getvalue()
 
-    def build_animal_entry_report(self, variables: ReportAnimalEntryVariables) -> bytes:
+    def build_animal_entry_report(
+        self, variables: ReportAnimalEntryVariables
+    ) -> bytes:
         return self._build_template("animal_entry.jinja", variables)
 
-    def build_chip_assignment_report(self, variables: ReportChipAssignmentVariables) -> bytes:
+    def build_chip_assignment_report(
+        self, variables: ReportChipAssignmentVariables
+    ) -> bytes:
         return self._build_template("chip_assignment.jinja", variables)
 
-    def build_adoption_report(self, variables: ReportAdoptionVariables) -> bytes:
+    def build_adoption_report(
+        self, variables: ReportAdoptionVariables
+    ) -> bytes:
         return self._build_template("adoption.jinja", variables)
 
     def build_custody_report(self, variables: ReportCustodyVariables) -> bytes:
         return self._build_template("custody.jinja", variables)
 
-    def build_variation_report(self, variables: ReportVariationVariables) -> bytes:
+    def build_variation_report(
+        self, variables: ReportVariationVariables
+    ) -> bytes:
         return self._build_template("variation.jinja", variables)
 
     def generate_animal_days_count_report(

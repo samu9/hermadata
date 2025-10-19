@@ -38,9 +38,15 @@ class Animal(Base):
     stage: Mapped[AnimalStage] = mapped_column(String(1), nullable=True)
 
     name: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    chip_code: Mapped[str] = mapped_column(String(100), nullable=True, unique=True)
-    chip_code_set: Mapped[bool] = mapped_column(server_default=expression.false(), default=False)
-    breed_id: Mapped[str | None] = mapped_column(ForeignKey("breed.id"), nullable=True)
+    chip_code: Mapped[str] = mapped_column(
+        String(100), nullable=True, unique=True
+    )
+    chip_code_set: Mapped[bool] = mapped_column(
+        server_default=expression.false(), default=False
+    )
+    breed_id: Mapped[str | None] = mapped_column(
+        ForeignKey("breed.id"), nullable=True
+    )
     sex: Mapped[int | None] = mapped_column(nullable=True)
     birth_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
 
@@ -53,14 +59,22 @@ class Animal(Base):
     fur: Mapped[AnimalFur | None] = mapped_column(Integer(), nullable=True)
     # features: Mapped[str] = mapped_column(String(100), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
 
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
     img_path: Mapped[str] = mapped_column(String(100), nullable=True)
 
-    entries: Mapped[list["AnimalEntry"]] = relationship(back_populates="animal")
+    entries: Mapped[list["AnimalEntry"]] = relationship(
+        back_populates="animal"
+    )
     adoptions: Mapped[list["Adoption"]] = relationship(back_populates="animal")
     logs: Mapped[list["AnimalLog"]] = relationship(back_populates="animal")
 
@@ -84,8 +98,12 @@ class AnimalEntry(Base):
     entry_notes: Mapped[str] = mapped_column(Text, nullable=True)
     exit_notes: Mapped[str] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
     current: Mapped[bool] = mapped_column(server_default=expression.true())
 
@@ -96,8 +114,12 @@ class FurColor(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), unique=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
 
 class AnimalLog(Base):
@@ -115,7 +137,9 @@ class AnimalLog(Base):
     # user_id: Mapped[int] = mapped_column(ForeignKey("users.id"),
     #  nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
 
 
 class Adoption(Base):
@@ -131,11 +155,19 @@ class Adoption(Base):
     location_address: Mapped[str] = mapped_column(String(100))
     location_city_code: Mapped[str] = mapped_column(String(4))
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
     # adoptions can be returned, making the adoption null
-    returned_at: Mapped[datetime | None] = mapped_column(DateTime(), nullable=True)
+    returned_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
 
 
 # class Person(Base):
@@ -171,8 +203,12 @@ class Adopter(Base):
     document_number: Mapped[str] = mapped_column(String(20), nullable=True)
     document_release_date: Mapped[Date] = mapped_column(Date(), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
 
 class Vet(Base):
@@ -185,8 +221,12 @@ class Vet(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=True)
     surname: Mapped[str] = mapped_column(String(100), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
 
 class VetServiceRecord(Base):
@@ -203,7 +243,9 @@ class VetServiceRecord(Base):
 
     performed_at: Mapped[datetime] = mapped_column(Date())
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
 
 
 class Race(Base):
@@ -211,8 +253,12 @@ class Race(Base):
     id: Mapped[str] = mapped_column(String(1), primary_key=True)
     name: Mapped[str] = mapped_column(String(100), unique=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
 
 class Breed(Base):
@@ -222,10 +268,16 @@ class Breed(Base):
     name: Mapped[str] = mapped_column(String(100))
     race_id: Mapped[str] = mapped_column(ForeignKey("race.id"))
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
-    __table_args__ = (UniqueConstraint("name", "race_id", name="unique_breed"),)
+    __table_args__ = (
+        UniqueConstraint("name", "race_id", name="unique_breed"),
+    )
 
 
 class User(Base):
@@ -243,8 +295,12 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean(), default=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean(), default=False)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
     deleted_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
 
 
@@ -291,8 +347,12 @@ class Document(Base):
 
     is_uploaded: Mapped[str] = mapped_column(Boolean, nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
 
 class DocumentKind(Base):
@@ -301,11 +361,19 @@ class DocumentKind(Base):
     code: Mapped[str] = mapped_column(String(3), unique=True)
     name: Mapped[str] = mapped_column(String(50), unique=True)
 
-    uploadable: Mapped[bool] = mapped_column(Boolean(), server_default=true(), default=True)
-    rendered: Mapped[bool] = mapped_column(Boolean(), server_default=true(), default=True)
+    uploadable: Mapped[bool] = mapped_column(
+        Boolean(), server_default=true(), default=True
+    )
+    rendered: Mapped[bool] = mapped_column(
+        Boolean(), server_default=true(), default=True
+    )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
 
 class AnimalDocument(Base):
@@ -317,8 +385,12 @@ class AnimalDocument(Base):
     document_id: Mapped[int] = mapped_column(ForeignKey("document.id"))
     document_kind_id = mapped_column(ForeignKey("document_kind.id"))
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
     __table_args__ = (
         UniqueConstraint(
@@ -385,8 +457,12 @@ class MedicalActivity(Base):
     recurrence_value: Mapped[int] = mapped_column(nullable=True)
 
     scheduled_date: Mapped[date] = mapped_column(nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(), server_onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
 
 class MedicalActivityRecord(Base):
@@ -394,11 +470,15 @@ class MedicalActivityRecord(Base):
     __tablename__ = "medical_activity_record"
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    medical_activity_id: Mapped[int] = mapped_column(ForeignKey(MedicalActivity.id))
+    medical_activity_id: Mapped[int] = mapped_column(
+        ForeignKey(MedicalActivity.id)
+    )
 
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
 
 
 class Provincia(Base):

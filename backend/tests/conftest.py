@@ -15,9 +15,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from hermadata import __version__
 from hermadata.constants import AnimalFur, EntryType, StorageType
-from hermadata.database.alembic.import_initial_data import (
-    import_doc_kinds,
-)
+from hermadata.database.alembic.import_initial_data import import_doc_kinds
 from hermadata.database.models import (
     Adopter,
     Adoption,
@@ -38,27 +36,21 @@ from hermadata.repositories.adopter_repository import (
     NewAdopter,
     SQLAdopterRepository,
 )
-from hermadata.repositories.adoption_repository import (
-    SQLAdopionRepository,
+from hermadata.repositories.adoption_repository import SQLAdopionRepository
+from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
+from hermadata.repositories.animal.models import (
+    NewAnimalModel,
+    UpdateAnimalModel,
 )
-from hermadata.repositories.animal.animal_repository import (
-    SQLAnimalRepository,
-)
-from hermadata.repositories.animal.models import NewAnimalModel, UpdateAnimalModel
 from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
-from hermadata.repositories.document_repository import (
-    SQLDocumentRepository,
-)
+from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.repositories.race_repository import SQLRaceRepository
 from hermadata.repositories.user_repository import (
     CreateUserModel,
     SQLUserRepository,
 )
-from hermadata.repositories.vet_repository import (
-    SQLVetRepository,
-    VetModel,
-)
+from hermadata.repositories.vet_repository import SQLVetRepository, VetModel
 from hermadata.services.animal_service import AnimalService
 from hermadata.services.user_service import RegisterUserModel, UserService
 from hermadata.storage.disk_storage import DiskStorage
@@ -87,8 +79,12 @@ def set_env():
 
 
 def insert_initial_data(session: Session):
-    session.execute(insert(Breed).values({Breed.name: "cane_1", Breed.race_id: "C"}))
-    session.execute(insert(Breed).values({Breed.name: "gatto_1", Breed.race_id: "G"}))
+    session.execute(
+        insert(Breed).values({Breed.name: "cane_1", Breed.race_id: "C"})
+    )
+    session.execute(
+        insert(Breed).values({Breed.name: "gatto_1", Breed.race_id: "G"})
+    )
     session.execute(insert(FurColor).values({FurColor.name: "fur_color_1"}))
 
 
@@ -230,7 +226,10 @@ def race_repository(
 def city_repository(
     db_session: Session,
 ) -> Generator[SQLCityRepository, SQLCityRepository, None]:
-    repo = SQLCityRepository(preferred_provinces=["LU", "PT"], preferred_cities=["H501", "A561", "B251"])
+    repo = SQLCityRepository(
+        preferred_provinces=["LU", "PT"],
+        preferred_cities=["H501", "A561", "B251"],
+    )
     return repo(db_session)
 
 
@@ -297,7 +296,9 @@ def make_animal(
             )
         code = animal_repository.new_animal(data=data)
 
-        animal_id = db_session.execute(select(Animal.id).where(Animal.code == code)).scalar()
+        animal_id = db_session.execute(
+            select(Animal.id).where(Animal.code == code)
+        ).scalar()
         return animal_id
 
     return make
@@ -308,7 +309,9 @@ def complete_animal_data(
     db_session: Session, animal_repository: SQLAnimalRepository
 ) -> Callable[[NewAnimalModel], int]:
     def complete(animal_id: int):
-        breed_id = db_session.execute(select(Breed.id).where(Breed.race_id == "C")).scalar()
+        breed_id = db_session.execute(
+            select(Breed.id).where(Breed.race_id == "C")
+        ).scalar()
         color_id = db_session.execute(select(FurColor.id)).scalar()
         animal_repository.update(
             animal_id,
@@ -377,7 +380,9 @@ def make_user(
 ) -> Callable[[CreateUserModel], int]:
     def make(data: CreateUserModel = None) -> int:
         if data is None:
-            data = RegisterUserModel(email=f"{uuid4().hex}@test.it", password=uuid4().hex)
+            data = RegisterUserModel(
+                email=f"{uuid4().hex}@test.it", password=uuid4().hex
+            )
         user_id = user_service.register(data=data)
 
         return user_id

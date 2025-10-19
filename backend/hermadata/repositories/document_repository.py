@@ -59,7 +59,9 @@ class SQLDocumentRepository(SQLBaseRepository):
 
     def new_document_kind(self, data: NewDocKindModel):
         result = self.session.execute(
-            insert(DocumentKind).values(name=data.name, code=data.code, uploadable=True, rendered=False)
+            insert(DocumentKind).values(
+                name=data.name, code=data.code, uploadable=True, rendered=False
+            )
         )
         self.session.flush()
         new_kind = DocKindModel(
@@ -74,14 +76,23 @@ class SQLDocumentRepository(SQLBaseRepository):
         where = {}
         if uploadable is not None:
             where[DocumentKind.uploadable] = uploadable
-        select_result = self.session.execute(select(DocumentKind).where(*where)).scalars().all()
+        select_result = (
+            self.session.execute(select(DocumentKind).where(*where))
+            .scalars()
+            .all()
+        )
 
-        result = [DocKindModel.model_validate(r, from_attributes=True) for r in select_result]
+        result = [
+            DocKindModel.model_validate(r, from_attributes=True)
+            for r in select_result
+        ]
 
         return result
 
     def get_document_kind_by_code(self, code: str) -> DocKindModel:
-        kind = self.session.execute(select(DocumentKind).where(DocumentKind.code == code)).scalar_one()
+        kind = self.session.execute(
+            select(DocumentKind).where(DocumentKind.code == code)
+        ).scalar_one()
         return DocKindModel.model_validate(kind, from_attributes=True)
 
     def new_document(self, data: NewDocument) -> int:

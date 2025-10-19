@@ -21,12 +21,20 @@ class ComuneModel(BaseModel):
 
 
 class SQLCityRepository(SQLBaseRepository):
-    def __init__(self, preferred_provinces: list[str] = None, preferred_cities: list[str] = None):
+    def __init__(
+        self,
+        preferred_provinces: list[str] = None,
+        preferred_cities: list[str] = None,
+    ):
         self.preferred_provinces = preferred_provinces or []
         self.preferred_cities = preferred_cities or []
 
     def get_province(self) -> list[ProvinciaModel]:
-        query_result = self.session.execute(select(Provincia).order_by(Provincia.name)).scalars().all()
+        query_result = (
+            self.session.execute(select(Provincia).order_by(Provincia.name))
+            .scalars()
+            .all()
+        )
         result = sorted(
             [ProvinciaModel.model_validate(r) for r in query_result],
             key=lambda x: (x.id not in self.preferred_provinces, x.name),
@@ -36,7 +44,11 @@ class SQLCityRepository(SQLBaseRepository):
 
     def get_comuni(self, provincia: str) -> list[ComuneModel]:
         query_result = (
-            self.session.execute(select(Comune).where(Comune.provincia == provincia).order_by(Comune.name))
+            self.session.execute(
+                select(Comune)
+                .where(Comune.provincia == provincia)
+                .order_by(Comune.name)
+            )
             .scalars()
             .all()
         )

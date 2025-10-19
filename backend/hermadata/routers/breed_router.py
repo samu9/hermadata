@@ -14,14 +14,20 @@ router = APIRouter(prefix="/breed")
 
 
 @router.get("", response_model=list[BreedModel])
-def get_all(repo: Annotated[SQLBreedRepository, Depends(get_breed_repository)], race_id: str = Query()):
+def get_all(
+    repo: Annotated[SQLBreedRepository, Depends(get_breed_repository)],
+    race_id: str = Query(),
+):
     races = repo.get_all(race_id)
 
     return races
 
 
 @router.post("", response_model=BreedModel)
-def create_race(data: NewBreedModel, repo: Annotated[SQLBreedRepository, Depends(get_breed_repository)]):
+def create_race(
+    data: NewBreedModel,
+    repo: Annotated[SQLBreedRepository, Depends(get_breed_repository)],
+):
     try:
         breed_id = repo.create(data)
         repo.session.commit()

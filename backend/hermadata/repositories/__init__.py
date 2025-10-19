@@ -26,7 +26,8 @@ class SQLBaseRepository(BaseRepository):
         """
         General method to add a new entity to the database.
 
-        :param model_class: The SQLAlchemy model class to create an instance of.
+        :param model_class: The SQLAlchemy model class
+        to create an instance of.
         :param kwargs: The fields and values to pass to the model.
         :return: The created instance.
         """

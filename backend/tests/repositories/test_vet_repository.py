@@ -5,12 +5,16 @@ from hermadata.database.models import Vet
 from hermadata.repositories.vet_repository import SQLVetRepository, VetModel
 
 
-def test_vet_repository_create(db_session: Session, vet_repository: SQLVetRepository):
+def test_vet_repository_create(
+    db_session: Session, vet_repository: SQLVetRepository
+):
     data = VetModel(business_name="Veterinario 1", fiscal_code="1234567890a")
 
     result = vet_repository.create(data)
 
-    check = db_session.execute(select(Vet).where(Vet.id == result.id)).scalar_one()
+    check = db_session.execute(
+        select(Vet).where(Vet.id == result.id)
+    ).scalar_one()
 
     assert check.business_name == "Veterinario 1"
     assert check.fiscal_code == "1234567890a"
