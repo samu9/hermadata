@@ -4,7 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
 from hermadata.initializations import get_current_user, get_user_service
-from hermadata.repositories.user_repository import UpdateUserModel
+from hermadata.models import PaginationResult
+from hermadata.repositories.user_repository import (
+    UpdateUserModel,
+    UserListQuery,
+)
 from hermadata.services.user_service import (
     RegisterUserModel,
     TokenData,
@@ -22,6 +26,16 @@ def test(
 ):
     user = service.get_by_id(current_user.user_id)
     return user
+
+
+@router.get("/", response_model=PaginationResult[UserModel])
+def get_all_users(
+    query: Annotated[UserListQuery, Depends()],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    service: Annotated[UserService, Depends(get_user_service)],
+):
+    """Get all users with pagination. Requires authentication."""
+    return service.get_all_users(query)
 
 
 @router.post("/register")

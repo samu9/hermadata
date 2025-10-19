@@ -8,18 +8,13 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
 from hermadata.dependancies import get_db_session
+from hermadata.models import PaginationResult
 from hermadata.repositories.user_repository import (
     CreateUserModel,
     SQLUserRepository,
+    UserListQuery,
+    UserModel,
 )
-
-
-class UserModel(BaseModel):
-    name: str | None = None
-    suername: str | None = None
-    email: EmailStr
-    is_superuser: bool
-    is_active: bool
 
 
 class RegisterUserModel(BaseModel):
@@ -124,3 +119,10 @@ class UserService:
         user = UserModel.model_validate(user_data, from_attributes=True)
 
         return user
+
+    def get_all_users(
+        self, query: UserListQuery
+    ) -> PaginationResult[UserModel]:
+        """Get all users with pagination"""
+        result = self.user_repository.get_all(query)
+        return result
