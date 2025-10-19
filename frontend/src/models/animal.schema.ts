@@ -23,7 +23,7 @@ export const newAnimalEntrySchema = z.object({
 export type NewAnimalEntry = z.infer<typeof newAnimalEntrySchema>
 
 export const animalEntrySchema = z.object({
-    entry_id: z.number(),
+    id: z.number(),
     entry_date: dateOnly,
     exit_date: dateOnly.nullish(),
     entry_type: z.string(),
@@ -107,7 +107,7 @@ export const updateAnimalEntrySchema = z.object({
     entry_date: dateOnly.optional(),
     entry_type: z.string().optional(),
     exit_date: dateOnly.nullish(),
-    exit_type: z.string().nullish(), 
+    exit_type: z.string().nullish(),
     entry_notes: z.string().nullish(),
     exit_notes: z.string().nullish(),
 })

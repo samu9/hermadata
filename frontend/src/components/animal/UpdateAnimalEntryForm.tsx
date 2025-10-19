@@ -46,8 +46,8 @@ const UpdateAnimalEntryForm = (props: Props) => {
 
     const updateEntryMutation = useMutation({
         mutationFn: (data: UpdateAnimalEntry) =>
-            apiService.updateAnimalEntry(animalId, entry.entry_id, data),
-        mutationKey: ["update-animal-entry", animalId, entry.entry_id],
+            apiService.updateAnimalEntry(animalId, entry.id, data),
+        mutationKey: ["update-animal-entry", animalId, entry.id],
         onMutate: () => {
             startLoading()
         },
