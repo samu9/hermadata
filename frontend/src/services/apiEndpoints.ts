@@ -21,6 +21,7 @@ const ApiEndpoints = {
         update: (id: string) => `/animal/${id}`,
         addEntry: (id: string) => `/animal/${id}/entry`,
         completeEntry: (id: string) => `/animal/${id}/entry/complete`,
+        getEntries: (id: string) => `/animal/${id}/entries`,
         updateEntry: (animalId: string, entryId: number) => `/animal/${animalId}/entries/${entryId}`,
         documents: (id: number) => `/animal/${id}/document`,
         newDocument: (id: number) => `/animal/${id}/document`,

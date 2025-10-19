@@ -13,6 +13,7 @@ import {
     AnimalDocument,
     AnimalEdit,
     AnimalEntriesReportSchema,
+    AnimalEntry,
     AnimalExit,
     AnimalExitsReportSchema,
     AnimalSearchQuery,
@@ -243,6 +244,14 @@ class ApiService {
         const result = await this.put<{ message: string; updated_rows: number }>(
             ApiEndpoints.animal.updateEntry(animalId, entryId),
             data
+        )
+
+        return result
+    }
+
+    async getAnimalEntries(animalId: string): Promise<AnimalEntry[]> {
+        const result = await this.get<AnimalEntry[]>(
+            ApiEndpoints.animal.getEntries(animalId)
         )
 
         return result

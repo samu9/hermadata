@@ -3,10 +3,7 @@ import { Button } from "primereact/button"
 import { Divider } from "primereact/divider"
 import { Toast } from "primereact/toast"
 import { Card } from "primereact/card"
-import { DataTable } from "primereact/datatable"
-import { Column } from "primereact/column"
-import { Dialog } from "primereact/dialog"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 import { Link, useParams } from "react-router-dom"
@@ -16,7 +13,6 @@ import {
     AnimalEditSuperUser,
     animalEditSuperUserSchema,
     Animal,
-    AnimalEntry,
 } from "../../models/animal.schema"
 import { ApiError, apiErrorSchema } from "../../models/api.schema"
 import {
@@ -33,16 +29,13 @@ import ControlledInputMask from "../forms/ControlledInputMask"
 import ControlledInputText from "../forms/ControlledInputText"
 import ControlledRadio from "../forms/ControlledRadio"
 import ControlledTextarea from "../forms/ControlledTextarea"
+import AnimalEntriesList from "./AnimalEntriesList"
 
 const SuperUserAnimalEditForm = () => {
     const { id } = useParams()
     const animalQuery = useAnimalQuery(id!)
     const animalSizesQuery = useAnimalSizesQuery()
     const animalFurTypesQuery = useAnimalFurTypesQuery()
-
-    // State for entry editing
-    const [showEntryDialog, setShowEntryDialog] = useState(false)
-    const [editingEntry, setEditingEntry] = useState<AnimalEntry | null>(null)
 
     const form = useForm<AnimalEditSuperUser>({
         resolver: zodResolver(animalEditSuperUserSchema),
@@ -125,22 +118,6 @@ const SuperUserAnimalEditForm = () => {
             return false
         }
         await updateAnimalMutation.mutateAsync({ id, data })
-    }
-
-    // Handler functions for entry management
-    const handleAddEntry = () => {
-        setEditingEntry(null)
-        setShowEntryDialog(true)
-    }
-
-    const handleEditEntry = (entry: AnimalEntry) => {
-        setEditingEntry(entry)
-        setShowEntryDialog(true)
-    }
-
-    const handleDeleteEntry = (entry: AnimalEntry) => {
-        // TODO: Implement delete functionality
-        console.log("Delete entry:", entry)
     }
 
     // Reset form when animal data loads
@@ -301,118 +278,7 @@ const SuperUserAnimalEditForm = () => {
 
                     {/* Animal Entries History Section */}
                     <Card title="Storico Entrate/Uscite" className="mt-6">
-                        <div className="mb-4">
-                            <div className="flex items-center justify-between">
-                                <div className="text-sm text-gray-600">
-                                    <i className="pi pi-info-circle mr-1"></i>
-                                    Storico completo di tutte le entrate e
-                                    uscite dell'animale
-                                </div>
-                                <Button
-                                    type="button"
-                                    outlined
-                                    size="small"
-                                    className="p-button-sm"
-                                    onClick={handleAddEntry}
-                                >
-                                    <i className="pi pi-plus mr-2"></i>
-                                    Aggiungi Ingresso
-                                </Button>
-                            </div>
-                        </div>
-
-                        {animalQuery.data?.entries &&
-                        animalQuery.data.entries.length > 0 ? (
-                            <DataTable
-                                value={animalQuery.data.entries}
-                                size="small"
-                                stripedRows
-                                className="p-datatable-sm"
-                            >
-                                <Column
-                                    field="entry_id"
-                                    header="ID"
-                                    style={{ width: "80px" }}
-                                />
-                                <Column
-                                    field="entry_date"
-                                    header="Data Ingresso"
-                                    body={(rowData: AnimalEntry) =>
-                                        rowData.entry_date
-                                            ? new Date(
-                                                  rowData.entry_date
-                                              ).toLocaleDateString("it-IT")
-                                            : "-"
-                                    }
-                                />
-                                <Column
-                                    field="entry_type"
-                                    header="Tipo Ingresso"
-                                />
-                                <Column
-                                    field="exit_date"
-                                    header="Data Uscita"
-                                    body={(rowData: AnimalEntry) =>
-                                        rowData.exit_date
-                                            ? new Date(
-                                                  rowData.exit_date
-                                              ).toLocaleDateString("it-IT")
-                                            : "Presente"
-                                    }
-                                />
-                                <Column
-                                    field="exit_type"
-                                    header="Tipo Uscita"
-                                    body={(rowData: AnimalEntry) =>
-                                        rowData.exit_type || "-"
-                                    }
-                                />
-                                <Column
-                                    header="Azioni"
-                                    style={{ width: "120px" }}
-                                    body={(rowData: AnimalEntry) => (
-                                        <div className="flex gap-2">
-                                            <Button
-                                                icon="pi pi-pencil"
-                                                size="small"
-                                                outlined
-                                                tooltip="Modifica"
-                                                onClick={() =>
-                                                    handleEditEntry(rowData)
-                                                }
-                                            />
-                                            <Button
-                                                icon="pi pi-trash"
-                                                size="small"
-                                                outlined
-                                                severity="danger"
-                                                tooltip="Elimina"
-                                                onClick={() =>
-                                                    handleDeleteEntry(rowData)
-                                                }
-                                            />
-                                        </div>
-                                    )}
-                                />
-                            </DataTable>
-                        ) : (
-                            <div className="text-center py-8 text-gray-500">
-                                <i className="pi pi-inbox text-4xl block mb-4"></i>
-                                <p>
-                                    Nessun ingresso registrato per questo
-                                    animale.
-                                </p>
-                                <Button
-                                    type="button"
-                                    outlined
-                                    className="mt-3"
-                                    onClick={handleAddEntry}
-                                >
-                                    <i className="pi pi-plus mr-2"></i>
-                                    Aggiungi Primo Ingresso
-                                </Button>
-                            </div>
-                        )}
+                        <AnimalEntriesList animalId={id!} />
                     </Card>
 
                     <Divider />
@@ -439,33 +305,6 @@ const SuperUserAnimalEditForm = () => {
                     </div>
                 </form>
             </FormProvider>
-
-            {/* Entry Edit Dialog */}
-            <Dialog
-                header={editingEntry ? "Modifica Ingresso" : "Nuovo Ingresso"}
-                visible={showEntryDialog}
-                onHide={() => setShowEntryDialog(false)}
-                style={{ width: "500px" }}
-                modal
-            >
-                <div className="p-4">
-                    <div className="text-center text-gray-500">
-                        <i className="pi pi-wrench text-3xl block mb-3"></i>
-                        <p>
-                            Funzionalità di modifica delle entrate in sviluppo.
-                        </p>
-                        <p className="text-sm mt-2">
-                            Questa sezione permetterà di aggiungere, modificare
-                            ed eliminare gli ingressi e le uscite degli animali.
-                        </p>
-                        <Button
-                            label="Chiudi"
-                            className="mt-4"
-                            onClick={() => setShowEntryDialog(false)}
-                        />
-                    </div>
-                </div>
-            </Dialog>
 
             <Toast ref={toast} position="bottom-right" />
         </div>

@@ -16,6 +16,12 @@ export const useAnimalQuery = (id: string) =>
         staleTime: Infinity,
     })
 
+export const useAnimalEntriesQuery = (animalId: string) =>
+    useQuery(["animal-entries", animalId], {
+        queryFn: () => apiService.getAnimalEntries(animalId),
+        staleTime: 0, // Always fetch fresh data for entries
+    })
+
 export const useRacesQuery = () =>
     useQuery("races", () => apiService.getRaces(), {
         placeholderData: [],

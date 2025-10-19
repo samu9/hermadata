@@ -6,15 +6,19 @@ import { AnimalEntry } from "../../models/animal.schema"
 import UpdateAnimalEntryDialog from "./UpdateAnimalEntryDialog"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEdit } from "@fortawesome/free-solid-svg-icons"
+import { useAnimalEntriesQuery } from "../../queries"
 
 type Props = {
     animalId: string
-    entries: AnimalEntry[]
 }
 
-const AnimalEntriesList = ({ animalId, entries }: Props) => {
+const AnimalEntriesList = ({ animalId }: Props) => {
     const [selectedEntry, setSelectedEntry] = useState<AnimalEntry | null>(null)
     const [dialogVisible, setDialogVisible] = useState(false)
+    
+    // Use the dedicated query for animal entries
+    const entriesQuery = useAnimalEntriesQuery(animalId)
+    const entries = entriesQuery.data || []
 
     const handleEditEntry = (entry: AnimalEntry) => {
         setSelectedEntry(entry)
@@ -54,13 +58,24 @@ const AnimalEntriesList = ({ animalId, entries }: Props) => {
         <div className="space-y-4">
             <h3 className="text-lg font-semibold">Storico Ingressi/Uscite</h3>
 
-            <DataTable
-                value={entries}
-                paginator
-                rows={10}
-                className="p-datatable-sm"
-                emptyMessage="Nessun ingresso trovato"
-            >
+            {entriesQuery.isLoading ? (
+                <div className="text-center py-8">
+                    <i className="pi pi-spinner pi-spin text-2xl"></i>
+                    <p className="mt-2">Caricamento ingressi...</p>
+                </div>
+            ) : entriesQuery.error ? (
+                <div className="text-center py-8 text-red-500">
+                    <i className="pi pi-exclamation-triangle text-2xl"></i>
+                    <p className="mt-2">Errore nel caricamento degli ingressi</p>
+                </div>
+            ) : (
+                <DataTable
+                    value={entries}
+                    paginator
+                    rows={10}
+                    className="p-datatable-sm"
+                    emptyMessage="Nessun ingresso trovato"
+                >
                 <Column
                     field="entry_date"
                     header="Data Ingresso"
@@ -92,7 +107,8 @@ const AnimalEntriesList = ({ animalId, entries }: Props) => {
                     body={actionsTemplate}
                     style={{ width: "80px" }}
                 />
-            </DataTable>
+                </DataTable>
+            )}
 
             <UpdateAnimalEntryDialog
                 visible={dialogVisible}
