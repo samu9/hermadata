@@ -40,6 +40,7 @@ const AnimalEntriesList = ({ animalId }: Props) => {
     const actionsTemplate = (entry: AnimalEntry) => {
         return (
             <Button
+                type="button"
                 icon={<FontAwesomeIcon icon={faEdit} />}
                 size="small"
                 severity="secondary"
