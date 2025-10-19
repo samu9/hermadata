@@ -3,7 +3,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
-from hermadata.initializations import get_current_user, get_user_service
+from hermadata.initializations import (
+    get_current_user,
+    get_user_repository,
+    get_user_service,
+)
 from hermadata.models import PaginationResult
 from hermadata.repositories.user_repository import (
     UpdateUserModel,
@@ -20,11 +24,13 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 
 @router.post("/", response_model=UserModel)
-def test(
+def create_user(
     current_user: Annotated[TokenData, Depends(get_current_user)],
+    data: RegisterUserModel,
     service: Annotated[UserService, Depends(get_user_service)],
 ):
-    user = service.get_by_id(current_user.user_id)
+    user = service.register(data)
+
     return user
 
 
@@ -71,9 +77,15 @@ def login(
     }
 
 
-@router.post("/update")
+@router.put("/{user_id}/")
 def update(
+    user_id: int,
     data: UpdateUserModel,
-    service: Annotated[UserService, Depends(get_user_service)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    user_repository: Annotated[UserService, Depends(get_user_repository)],
 ):
-    pass
+    if not current_user.is_superuser and current_user.user_id != user_id:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to update this user"
+        )
+    user_repository.update(user_id, data)

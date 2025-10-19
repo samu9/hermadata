@@ -47,14 +47,23 @@ class UserService:
         self.user_repository(session)
         return self
 
-    def register(self, data: RegisterUserModel) -> int:
+    def register(self, data: RegisterUserModel) -> UserModel:
         hashed_password = self.pwd_context.hash(data.password)
 
         user_id = self.user_repository.create(
             CreateUserModel(email=data.email, hashed_password=hashed_password)
         )
 
-        return user_id
+        user = UserModel(
+            id=user_id,
+            email=data.email,
+            is_active=True,
+            is_superuser=False,
+            name=None,
+            surname=None,
+            created_at=datetime.now(timezone.utc),
+        )
+        return user
 
     def _verify_password(self, plain: str, hashed: str):
         return self.pwd_context.verify(plain, hashed)
