@@ -6,7 +6,11 @@ import { AnimalEntry } from "../../models/animal.schema"
 import UpdateAnimalEntryDialog from "./UpdateAnimalEntryDialog"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEdit } from "@fortawesome/free-solid-svg-icons"
-import { useAnimalEntriesQuery } from "../../queries"
+import {
+    useAnimalEntriesQuery,
+    useEntryTypesQuery,
+    useExitTypesQuery,
+} from "../../queries"
 
 type Props = {
     animalId: string
@@ -15,9 +19,12 @@ type Props = {
 const AnimalEntriesList = ({ animalId }: Props) => {
     const [selectedEntry, setSelectedEntry] = useState<AnimalEntry | null>(null)
     const [dialogVisible, setDialogVisible] = useState(false)
-    
-    // Use the dedicated query for animal entries
+
+    // Use the dedicated queries
     const entriesQuery = useAnimalEntriesQuery(animalId)
+    const entryTypesQuery = useEntryTypesQuery()
+    const exitTypesQuery = useExitTypesQuery()
+
     const entries = entriesQuery.data || []
 
     const handleEditEntry = (entry: AnimalEntry) => {
@@ -54,6 +61,19 @@ const AnimalEntriesList = ({ animalId }: Props) => {
     const exitDateTemplate = (entry: AnimalEntry) =>
         dateTemplate(entry.exit_date ?? null)
 
+    // Template functions to map type codes to labels
+    const entryTypeTemplate = (entry: AnimalEntry) => {
+        const entryTypes = entryTypesQuery.data || []
+        const type = entryTypes.find((t) => t.id === entry.entry_type)
+        return type ? type.label : entry.entry_type || "-"
+    }
+
+    const exitTypeTemplate = (entry: AnimalEntry) => {
+        const exitTypes = exitTypesQuery.data || []
+        const type = exitTypes.find((t) => t.id === entry.exit_type)
+        return type ? type.label : entry.exit_type || "-"
+    }
+
     return (
         <div className="space-y-4">
             <h3 className="text-lg font-semibold">Storico Ingressi/Uscite</h3>
@@ -66,7 +86,9 @@ const AnimalEntriesList = ({ animalId }: Props) => {
             ) : entriesQuery.error ? (
                 <div className="text-center py-8 text-red-500">
                     <i className="pi pi-exclamation-triangle text-2xl"></i>
-                    <p className="mt-2">Errore nel caricamento degli ingressi</p>
+                    <p className="mt-2">
+                        Errore nel caricamento degli ingressi
+                    </p>
                 </div>
             ) : (
                 <DataTable
@@ -76,37 +98,47 @@ const AnimalEntriesList = ({ animalId }: Props) => {
                     className="p-datatable-sm"
                     emptyMessage="Nessun ingresso trovato"
                 >
-                <Column
-                    field="entry_date"
-                    header="Data Ingresso"
-                    body={entryDateTemplate}
-                    sortable
-                />
-                <Column field="entry_type" header="Tipo Ingresso" sortable />
-                <Column
-                    field="exit_date"
-                    header="Data Uscita"
-                    body={exitDateTemplate}
-                    sortable
-                />
-                <Column field="exit_type" header="Tipo Uscita" sortable />
-                <Column
-                    field="entry_notes"
-                    header="Note Ingresso"
-                    style={{ maxWidth: "200px" }}
-                    className="text-sm"
-                />
-                <Column
-                    field="exit_notes"
-                    header="Note Uscita"
-                    style={{ maxWidth: "200px" }}
-                    className="text-sm"
-                />
-                <Column
-                    header="Azioni"
-                    body={actionsTemplate}
-                    style={{ width: "80px" }}
-                />
+                    <Column
+                        field="entry_date"
+                        header="Data Ingresso"
+                        body={entryDateTemplate}
+                        sortable
+                    />
+                    <Column
+                        field="entry_type"
+                        header="Tipo Ingresso"
+                        body={entryTypeTemplate}
+                        sortable
+                    />
+                    <Column
+                        field="exit_date"
+                        header="Data Uscita"
+                        body={exitDateTemplate}
+                        sortable
+                    />
+                    <Column
+                        field="exit_type"
+                        header="Tipo Uscita"
+                        body={exitTypeTemplate}
+                        sortable
+                    />
+                    <Column
+                        field="entry_notes"
+                        header="Note Ingresso"
+                        style={{ maxWidth: "200px" }}
+                        className="text-sm"
+                    />
+                    <Column
+                        field="exit_notes"
+                        header="Note Uscita"
+                        style={{ maxWidth: "200px" }}
+                        className="text-sm"
+                    />
+                    <Column
+                        header="Azioni"
+                        body={actionsTemplate}
+                        style={{ width: "80px" }}
+                    />
                 </DataTable>
             )}
 
