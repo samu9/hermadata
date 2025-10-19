@@ -5,7 +5,7 @@ from typing import Callable
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from hermadata.constants import AnimalFur, DocKindCode, EntryType, ExitType
+from hermadata.constants import DocKindCode, EntryType, ExitType
 from hermadata.database.models import (
     Animal,
     AnimalDocument,
@@ -21,7 +21,6 @@ from hermadata.repositories.animal.models import (
 )
 from hermadata.services.animal_service import AnimalService
 from hermadata.storage.disk_storage import DiskStorage
-from tests.utils import random_chip_code
 
 
 def test_new_entry(
