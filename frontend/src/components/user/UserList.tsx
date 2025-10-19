@@ -162,7 +162,7 @@ const UserList: React.FC = () => {
             <div className="bg-white">
                 <div className="mb-4 flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-gray-800">
-                        Lista Utenti ({usersQuery.data?.length || 0})
+                        Lista Utenti ({usersQuery.data?.total || 0})
                     </h2>
                     <Button
                         label="Aggiorna"
@@ -174,7 +174,7 @@ const UserList: React.FC = () => {
                 </div>
 
                 <DataTable
-                    value={usersQuery.data || []}
+                    value={usersQuery.data?.items || []}
                     paginator
                     rows={10}
                     rowsPerPageOptions={[5, 10, 25]}
