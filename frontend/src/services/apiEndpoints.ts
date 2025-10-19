@@ -43,7 +43,7 @@ const ApiEndpoints = {
         login: "/user/login",
         register: "/user/register",
         getAll: "/user/",
-        create: "/user/create",
+        create: "/user/",
         update: (id: number) => `/user/${id}`,
         delete: (id: number) => `/user/${id}`,
         changePassword: (id: number) => `/user/${id}/password`,
