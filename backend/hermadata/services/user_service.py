@@ -22,6 +22,11 @@ class RegisterUserModel(BaseModel):
     password: str
 
 
+class ChangePasswordModel(BaseModel):
+    current_password: str
+    new_password: str
+
+
 class TokenData(BaseModel):
     user_id: int
     email: EmailStr
@@ -129,9 +134,41 @@ class UserService:
 
         return user
 
+    def get_user_by_id(self, user_id: int) -> UserModel:
+        """Get user details by ID"""
+        user_data = self.user_repository.get_by_id(user_id)
+
+        user = UserModel.model_validate(user_data, from_attributes=True)
+
+        return user
+
     def get_all_users(
         self, query: UserListQuery
     ) -> PaginationResult[UserModel]:
         """Get all users with pagination"""
         result = self.user_repository.get_all(query)
         return result
+
+    def change_password(
+        self, user_id: int, current_password: str, new_password: str
+    ) -> bool:
+        """Change user password after verifying current password"""
+        try:
+            # Get user by ID
+            user_data = self.user_repository.get_by_id(user_id)
+
+            # Verify current password
+            if not self._verify_password(
+                current_password, user_data.hashed_password
+            ):
+                return False
+
+            # Hash new password
+            new_hashed_password = self.pwd_context.hash(new_password)
+
+            # Update password in database
+            self.user_repository.update_password(user_id, new_hashed_password)
+
+            return True
+        except NoResultFound:
+            return False
