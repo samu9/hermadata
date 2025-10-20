@@ -1,5 +1,6 @@
 import { Button } from "primereact/button"
 import { classNames } from "primereact/utils"
+import { Link } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 
 const LoggedUserCard = () => {
@@ -18,9 +19,11 @@ const LoggedUserCard = () => {
         >
             {/* <Avatar size="normal" /> */}
             <div className="flex flex-col flex-grow">
-                <div className="text-xs font-medium">
-                    {user?.username || "Username"}
-                </div>
+                <Link to="/profile">
+                    <div className="text-xs font-medium">
+                        {user?.username || "Username"}
+                    </div>
+                </Link>
             </div>
             <Button
                 size="small"
