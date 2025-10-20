@@ -25,7 +25,7 @@ const AdminPage: React.FC = () => {
                     </Link>
                 </Card>
 
-                <Card title="Configurazioni Sistema" className="mb-4">
+                {/* <Card title="Configurazioni Sistema" className="mb-4">
                     <p className="mb-3">
                         Modifica le configurazioni del sistema
                     </p>
@@ -40,7 +40,7 @@ const AdminPage: React.FC = () => {
                 <Card title="Backup Database" className="mb-4">
                     <p className="mb-3">Crea backup del database</p>
                     <Button label="Crea Backup" severity="danger" />
-                </Card>
+                </Card> */}
             </div>
         </div>
     )
