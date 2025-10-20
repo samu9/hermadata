@@ -14,6 +14,7 @@ from hermadata.repositories.user_repository import (
     UserListQuery,
 )
 from hermadata.services.user_service import (
+    ChangePasswordModel,
     RegisterUserModel,
     TokenData,
     UserModel,
@@ -42,6 +43,15 @@ def get_all_users(
 ):
     """Get all users with pagination. Requires authentication."""
     return service.get_all_users(query)
+
+
+@router.get("/me", response_model=UserModel)
+def get_current_user_profile(
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    service: Annotated[UserService, Depends(get_user_service)],
+):
+    """Get current user's profile information"""
+    return service.get_user_by_id(current_user.user_id)
 
 
 @router.post("/register")
@@ -89,3 +99,30 @@ def update(
             status_code=403, detail="Not authorized to update this user"
         )
     user_repository.update(user_id, data)
+
+
+@router.post("/{user_id}/password")
+def change_password(
+    user_id: int,
+    data: ChangePasswordModel,
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    service: Annotated[UserService, Depends(get_user_service)],
+):
+    """Change user password with current password verification"""
+    # Users can only change their own password, unless they are superuser
+    if not current_user.is_superuser and current_user.user_id != user_id:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to change this password"
+        )
+    
+    # Change password
+    success = service.change_password(
+        user_id, data.current_password, data.new_password
+    )
+    
+    if not success:
+        raise HTTPException(
+            status_code=400, detail="Current password is incorrect"
+        )
+    
+    return {"message": "Password changed successfully"}
