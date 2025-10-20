@@ -11,7 +11,7 @@ import ControlledInputPassword from "../forms/ControlledInputPassword"
 import { useEffect } from "react"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
-import logo from "../../../public/hermadata.svg"
+import logo from "../../assets/hermadata.svg"
 const LoginForm = () => {
     const form = useForm<Login>({
         resolver: zodResolver(loginSchema),
@@ -54,11 +54,16 @@ const LoginForm = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
             <Card className="w-full max-w-md shadow-2xl border-0 overflow-hidden">
-                <div className="flex items-center gap-4 px-8">
+                <div className="flex items-center gap-2 px-8">
                     <img src={logo} alt="HermaData Logo" className="w-24" />
-                    <span className="text-3xl text-primary font-bold">
-                        HERMADATA
-                    </span>
+                    <div>
+                        <span className="text-3xl text-primary font-bold">
+                            HERMADATA
+                        </span>
+                        <p className="text-xs text-gray-500">
+                            Animal Shelter Management System
+                        </p>
+                    </div>
                 </div>
                 {/* Form Section */}
                 <div className="p-8">
@@ -117,11 +122,7 @@ const LoginForm = () => {
                     </FormProvider>
 
                     {/* Footer */}
-                    <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-                        <p className="text-xs text-gray-500">
-                            HermaData Management System
-                        </p>
-                    </div>
+                    <div className="mt-8 pt-6 border-t border-gray-200 text-center"></div>
                 </div>
             </Card>
         </div>
