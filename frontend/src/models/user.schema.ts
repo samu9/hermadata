@@ -73,3 +73,18 @@ export const userActivitySchema = z.object({
 })
 
 export type UserActivity = z.infer<typeof userActivitySchema>
+
+export const changePasswordSchema = z
+    .object({
+        currentPassword: z.string().min(1, "La password attuale è richiesta"),
+        newPassword: z
+            .string()
+            .min(6, "La password deve essere di almeno 6 caratteri"),
+        confirmPassword: z.string().min(1, "Conferma la tua password"),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+        message: "Le password non corrispondono",
+        path: ["confirmPassword"],
+    })
+
+export type ChangePassword = z.infer<typeof changePasswordSchema>
