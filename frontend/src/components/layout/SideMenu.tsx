@@ -12,6 +12,7 @@ import {
     faUserShield,
 } from "@fortawesome/free-solid-svg-icons"
 import { usePermissions } from "../../hooks/usePermissions"
+import logo from "../../assets/hermadata.svg"
 type MenuElementProps = {
     to: string
     label: string | React.ReactNode
@@ -36,8 +37,11 @@ const SideMenu = () => {
 
     return (
         <div className="h-screen w-64 bg-slate-300 pt-4 border-r border-slate-400">
-            <div className="w-full font-bold text-[1.5rem] text-slate-700 px-4">
-                Hermadata
+            <div className="flex items-center gap-2 px-4">
+                <img src={logo} className="w-8" />
+                <div className="w-full font-bold text-[1.5rem] text-slate-700">
+                    Hermadata
+                </div>
             </div>
             <div className="p-4">
                 <LoggedUserCard />
