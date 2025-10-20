@@ -61,8 +61,9 @@ class AnimalService:
         return affected
 
     def complete_entry(self, animal_id: int, data: CompleteEntryModel):
-        entry_id = self.animal_repository.complete_entry(animal_id, data)
+        self.animal_repository.complete_entry(animal_id, data)
 
+    def generate_entry_report(self, entry_id: int):
         entry = self.animal_repository.get_animal_entry(entry_id)
 
         report = self.report_generator.build_animal_entry_report(
