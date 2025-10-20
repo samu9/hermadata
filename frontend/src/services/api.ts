@@ -242,10 +242,10 @@ class ApiService {
         entryId: number,
         data: UpdateAnimalEntry
     ): Promise<{ message: string; updated_rows: number }> {
-        const result = await this.put<{ message: string; updated_rows: number }>(
-            ApiEndpoints.animal.updateEntry(animalId, entryId),
-            data
-        )
+        const result = await this.put<{
+            message: string
+            updated_rows: number
+        }>(ApiEndpoints.animal.updateEntry(animalId, entryId), data)
 
         return result
     }
@@ -469,11 +469,13 @@ class ApiService {
     }
 
     // User Management methods
-    async getAllUsers(query?: PaginationQuery): Promise<{total: number, items: ManagementUser[]}> {
-        const result = await this.get<{total: number, items: ManagementUser[]}>(
-            ApiEndpoints.user.getAll,
-            query
-        )
+    async getAllUsers(
+        query?: PaginationQuery
+    ): Promise<{ total: number; items: ManagementUser[] }> {
+        const result = await this.get<{
+            total: number
+            items: ManagementUser[]
+        }>(ApiEndpoints.user.getAll, query)
         return result
     }
 
@@ -496,15 +498,24 @@ class ApiService {
 
     async changeUserPassword(
         userId: number,
+        currentPassword: string,
         newPassword: string
     ): Promise<void> {
         await this.post(ApiEndpoints.user.changePassword(userId), {
-            password: newPassword,
+            current_password: currentPassword,
+            new_password: newPassword,
         })
     }
 
     async getUserActivities(): Promise<any[]> {
         const result = await this.get<any[]>(ApiEndpoints.user.activities)
+        return result
+    }
+
+    async getCurrentUser(): Promise<ManagementUser> {
+        const result = await this.get<ManagementUser>(
+            ApiEndpoints.user.getCurrentUser
+        )
         return result
     }
 
