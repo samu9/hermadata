@@ -62,6 +62,14 @@ class SQLUserRepository(SQLBaseRepository):
             .where(User.id == user_id)
         )
 
+    def update_password(self, user_id: int, hashed_password: str):
+        """Update user password with hashed password"""
+        self.session.execute(
+            update(User)
+            .values(hashed_password=hashed_password)
+            .where(User.id == user_id)
+        )
+
     def get_all(self, query: UserListQuery) -> PaginationResult[UserModel]:
         """Get all users with pagination"""
         # Base query for users
