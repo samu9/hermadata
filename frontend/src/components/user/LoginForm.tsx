@@ -11,7 +11,7 @@ import ControlledInputPassword from "../forms/ControlledInputPassword"
 import { useEffect } from "react"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
-import logo from "../../assets/hermadata.svg"
+import HermaDataLogo from "../HermaDataLogo"
 const LoginForm = () => {
     const form = useForm<Login>({
         resolver: zodResolver(loginSchema),
@@ -55,7 +55,8 @@ const LoginForm = () => {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
             <Card className="w-full max-w-md shadow-2xl border-0 overflow-hidden">
                 <div className="flex items-center gap-2 px-8">
-                    <img src={logo} alt="HermaData Logo" className="w-24" />
+                    {/* <img src={logo} alt="HermaData Logo" className="w-24" /> */}
+                    <HermaDataLogo size={100} color="#6366f1" />
                     <div>
                         <span className="text-3xl text-primary font-bold">
                             HERMADATA
@@ -109,12 +110,12 @@ const LoginForm = () => {
                                         Accesso in corso...
                                     </span>
                                 ) : (
-                                    <span className="flex items-center justify-center">
+                                    <span className="flex gap-2 items-center justify-center">
+                                        Accedi
                                         <FontAwesomeIcon
                                             icon={faRightToBracket}
-                                            className="mr-2"
+                                            fixedWidth
                                         />
-                                        Accedi
                                     </span>
                                 )}
                             </Button>
