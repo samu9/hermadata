@@ -268,8 +268,12 @@ def animal_service(
 @pytest.fixture()
 def adopter_service(
     adopter_repository: SQLAdopterRepository,
+    city_repository: SQLCityRepository,
 ) -> AdopterService:
-    return AdopterService(adopter_repository=adopter_repository)
+    return AdopterService(
+        adopter_repository=adopter_repository,
+        city_repository=city_repository,
+    )
 
 
 @pytest.fixture(scope="function")

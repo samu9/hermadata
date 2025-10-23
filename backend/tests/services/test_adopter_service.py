@@ -48,6 +48,43 @@ def test_search_adopters(
 
     result = adopter_service.search(search_query)
 
-    assert result.total >= 1
-    assert len(result.items) >= 1
-    assert any(adopter.name == "MARIO" for adopter in result.items)
+    assert len(result.items) > 0
+    assert result.items[0].name == "MARIO"
+
+
+def test_create_adopter_invalid_birth_city(adopter_service: AdopterService):
+    """Test that creating an adopter with invalid birth city raises error."""
+    import pytest
+    
+    new_adopter_data = NewAdopterRequest(
+        name="Mario",
+        surname="Rossi",
+        fiscal_code="RSSMRA80A01ZZZZU",  # Invalid city code ZZZZ
+        residence_city_code="H501",
+        phone="3331234567",
+        document_type="id",
+        document_number="AR1234567",
+    )
+
+    with pytest.raises(ValueError, match="wrong birthplace code"):
+        adopter_service.create(new_adopter_data)
+
+
+def test_create_adopter_invalid_residence_city(
+    adopter_service: AdopterService,
+):
+    """Test creating adopter with invalid residence city raises error."""
+    import pytest
+    
+    new_adopter_data = NewAdopterRequest(
+        name="Mario",
+        surname="Rossi",
+        fiscal_code="RSSMRA80A01H501U",
+        residence_city_code="ZZZZ",  # Invalid city code
+        phone="3331234567",
+        document_type="id",
+        document_number="AR1234567",
+    )
+
+    with pytest.raises(ValueError, match="Residence city code 'ZZZZ'"):
+        adopter_service.create(new_adopter_data)
