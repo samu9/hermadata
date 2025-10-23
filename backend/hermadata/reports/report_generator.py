@@ -49,7 +49,11 @@ NullableInt = Annotated[
 ]
 
 NullableDate = Annotated[
-    date | None, Field(default=None), PlainSerializer(lambda x: x.strftime("%d/%m/%Y") if x else "", return_type=str)
+    date | None,
+    Field(default=None),
+    PlainSerializer(
+        lambda x: x.strftime("%d/%m/%Y") if x else "", return_type=str
+    ),
 ]
 
 
