@@ -11,7 +11,6 @@ import {
 } from "../../models/adopter.schema"
 import { useComuniQuery } from "../../queries"
 import ControlledDropdown from "../forms/ControlledDropdown"
-import ControlledInputDate from "../forms/ControlledInputDate"
 import ControlledInputText from "../forms/ControlledInputText"
 import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
 
@@ -20,10 +19,8 @@ type Props = {
 }
 
 const NewAdopterForm = (props: Props) => {
-    const [provinciaNascita, setProvinciaNascita] = useState<string>()
     const [provinciaResidenza, setProvinciaResidenza] = useState<string>()
 
-    const comuneNascitaQuery = useComuniQuery(provinciaNascita)
     const comuneResidenzaQuery = useComuniQuery(provinciaResidenza)
 
     const form = useForm<NewAdopter>({
@@ -70,27 +67,6 @@ const NewAdopterForm = (props: Props) => {
                                 fieldName="fiscal_code"
                                 label="Codice fiscale"
                                 uppercase
-                                className="w-64"
-                            />
-                            <ControlledInputDate
-                                fieldName="birth_date"
-                                label="Data di nascita"
-                                className="w-64"
-                            />
-                        </div>
-                        <div className="flex gap-2">
-                            <UncontrolledProvinceDropdown
-                                onChange={(value) => setProvinciaNascita(value)}
-                                className="w-64"
-                                label="Provincia di nascita"
-                            />
-                            <ControlledDropdown
-                                label="Comune di nascita"
-                                disabled={!comuneNascitaQuery.data}
-                                optionLabel="name"
-                                optionValue="id"
-                                options={comuneNascitaQuery.data}
-                                fieldName="birth_city_code"
                                 className="w-64"
                             />
                         </div>
