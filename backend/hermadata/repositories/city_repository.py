@@ -58,3 +58,10 @@ class SQLCityRepository(SQLBaseRepository):
         )
 
         return result
+
+    def city_exists(self, city_code: str) -> bool:
+        """Check if a city code exists in the database."""
+        result = self.session.execute(
+            select(Comune).where(Comune.id == city_code)
+        ).first()
+        return result is not None

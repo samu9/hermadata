@@ -130,8 +130,14 @@ def get_adopter_service(
     adopter_repository: Annotated[
         SQLAdopterRepository, Depends(get_adopter_repository)
     ],
+    city_repository: Annotated[
+        SQLCityRepository, Depends(get_city_repository)
+    ],
 ) -> AdopterService:
-    return AdopterService(adopter_repository=adopter_repository)
+    return AdopterService(
+        adopter_repository=adopter_repository,
+        city_repository=city_repository,
+    )
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login")

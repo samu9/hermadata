@@ -15,6 +15,7 @@ from hermadata.repositories.adopter_repository import (
     NewAdopter,
     SQLAdopterRepository,
 )
+from hermadata.repositories.city_repository import SQLCityRepository
 
 
 class NewAdopterRequest(BaseModel):
@@ -37,12 +38,40 @@ class CompleteNewAdopter(NewAdopterRequest):
 
 
 class AdopterService:
-    def __init__(self, adopter_repository: SQLAdopterRepository) -> None:
+    def __init__(
+        self,
+        adopter_repository: SQLAdopterRepository,
+        city_repository: SQLCityRepository,
+    ) -> None:
         self.adopter_repository = adopter_repository
+        self.city_repository = city_repository
 
     def __call__(self, session: Annotated[Session, Depends(get_db_session)]):
         self.adopter_repository(session)
+        self.city_repository(session)
         return self
+
+    def _validate_birth_city_code(self, city_code: str) -> str:
+        """Validate that the birth city code exists in the database.
+        
+        Args:
+            city_code: The city code to validate
+            
+        Returns:
+            The validated city code
+            
+        Raises:
+            ValueError: If the city code doesn't exist in the database
+        """
+        if not city_code:
+            raise ValueError("Birth city code cannot be empty")
+            
+        if not self.city_repository.city_exists(city_code):
+            raise ValueError(
+                f"Birth city code '{city_code}' not found in database"
+            )
+            
+        return city_code
 
     def create(self, data: NewAdopterRequest) -> AdopterModel:
         """Create a new adopter."""
@@ -50,10 +79,22 @@ class AdopterService:
         birth_date = decoded.get("birthdate")
         birth_place_code = decoded.get("birthplace").get("code")
 
+        # Validate that both city codes exist in the database
+        validated_birth_city_code = self._validate_birth_city_code(
+            birth_place_code
+        )
+        
+        # Also validate residence city code
+        if not self.city_repository.city_exists(data.residence_city_code):
+            raise ValueError(
+                f"Residence city code '{data.residence_city_code}' "
+                f"not found in database"
+            )
+
         # Convert to repository model
         repo_data = NewAdopter(
             **data.model_dump(),
-            birth_city_code=birth_place_code,
+            birth_city_code=validated_birth_city_code,
             birth_date=birth_date,
         )
 
