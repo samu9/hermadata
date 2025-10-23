@@ -58,9 +58,11 @@ const DataRow: React.FC<DataRowProps> = ({ label, value, icon }) => {
         <div className="flex justify-between items-start">
             <div className="flex items-center gap-2">
                 {icon}
-                <span className="text-sm font-medium text-gray-600">
-                    {label}:
-                </span>
+                {label ? (
+                    <span className="text-sm font-medium text-gray-600">
+                        {label}:
+                    </span>
+                ) : null}
             </div>
             <div className="text-sm text-gray-900 font-semibold text-right flex-1 ml-4">
                 {value}

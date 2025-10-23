@@ -33,8 +33,6 @@ const AnimalEntriesForm = () => {
     const {
         handleSubmit,
         formState: { isValid },
-        watch,
-        getValues,
     } = form
 
     // React Query Mutation for API call
@@ -42,9 +40,7 @@ const AnimalEntriesForm = () => {
         mutationFn: (request: AnimalEntriesReportSchema) =>
             apiService.animalEntriesReport(request),
         onSuccess: (
-            result: { url: string; filename: string },
-            variables: AnimalEntriesReportSchema,
-            context
+            result: { url: string; filename: string }
         ) => {
             const link = document.createElement("a")
             link.href = result.url

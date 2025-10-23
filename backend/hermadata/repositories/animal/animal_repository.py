@@ -998,6 +998,8 @@ class SQLAnimalRepository(SQLBaseRepository):
                 FurColor.name.label("fur_color"),
                 Comune.name.label("origin_city"),
                 AnimalEntry.entry_date,
+                Animal.birth_date,
+                Animal.size,
             )
             .select_from(Animal)
             .join(

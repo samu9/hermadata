@@ -61,7 +61,7 @@ const generateItems = (data: Animal): Item[] => [
         icon: <FontAwesomeIcon icon={faPencil} fixedWidth className="px-1" />,
         path: "edit",
     },
-    ...((!Boolean(data.exit_date) && [
+    ...((!data.exit_date && [
         {
             label: "Uscita",
             icon: (

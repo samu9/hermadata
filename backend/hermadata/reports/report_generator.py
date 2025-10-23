@@ -21,7 +21,9 @@ from hermadata.constants import (
     ENTRY_TYPE_LABELS,
     EXIT_TYPE_LABELS,
     FUR_LABELS,
+    SIZE_LABELS,
     AnimalFur,
+    AnimalSize,
     ExitType,
 )
 from hermadata.repositories.animal.models import (
@@ -44,6 +46,10 @@ NullableString = Annotated[
 
 NullableInt = Annotated[
     int | None, Field(default=""), AfterValidator(lambda x: x or "")
+]
+
+NullableDate = Annotated[
+    date | None, Field(default=None), PlainSerializer(lambda x: x.strftime("%d/%m/%Y") if x else "", return_type=str)
 ]
 
 
@@ -103,6 +109,8 @@ class AnimalVariables(BaseVariables):
     breed: NullableString
     sex: NullableString
     age: NullableInt
+    birth_date: ReportDate | None = None
+    size: NullableString
     fur_type: NullableString
     fur_color: NullableString
     origin_city: str
@@ -118,6 +126,12 @@ class AnimalVariables(BaseVariables):
     def validate_fur(value: int | str):
         if isinstance(value, int):
             value = FUR_LABELS[AnimalFur(value)]
+        return value
+
+    @field_validator("size", mode="before")
+    def validate_size(value: int | str):
+        if isinstance(value, int):
+            value = SIZE_LABELS[AnimalSize(value)]
         return value
 
 
