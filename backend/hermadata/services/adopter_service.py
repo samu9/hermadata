@@ -53,24 +53,24 @@ class AdopterService:
 
     def _validate_birth_city_code(self, city_code: str) -> str:
         """Validate that the birth city code exists in the database.
-        
+
         Args:
             city_code: The city code to validate
-            
+
         Returns:
             The validated city code
-            
+
         Raises:
             ValueError: If the city code doesn't exist in the database
         """
         if not city_code:
             raise ValueError("Birth city code cannot be empty")
-            
+
         if not self.city_repository.city_exists(city_code):
             raise ValueError(
                 f"Birth city code '{city_code}' not found in database"
             )
-            
+
         return city_code
 
     def create(self, data: NewAdopterRequest) -> AdopterModel:
@@ -83,7 +83,7 @@ class AdopterService:
         validated_birth_city_code = self._validate_birth_city_code(
             birth_place_code
         )
-        
+
         # Also validate residence city code
         if not self.city_repository.city_exists(data.residence_city_code):
             raise ValueError(
