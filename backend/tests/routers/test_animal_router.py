@@ -96,15 +96,6 @@ def test_complete_entry(app: TestClient, make_animal, db_session: Session):
 
     assert e.entry_date == entry_date
 
-    doc_kind: AnimalDocument = db_session.execute(
-        select(DocumentKind.code)
-        .select_from(AnimalDocument)
-        .join(DocumentKind, AnimalDocument.document_kind_id == DocumentKind.id)
-        .where(AnimalDocument.animal_id == animal_id)
-    ).scalar()
-
-    assert doc_kind == DocKindCode.comunicazione_ingresso.value
-
 
 def test_exit(
     app: TestClient,

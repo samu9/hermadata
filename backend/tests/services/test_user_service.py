@@ -11,14 +11,14 @@ def test_register_and_login_user(
     user_service: UserService, db_session: Session
 ):
     data = RegisterUserModel(email=f"{uuid4().hex}@test.it", password="test")
-    user_id = user_service.register(data)
+    user = user_service.register(data)
 
-    user = db_session.execute(
-        select(User).where(User.id == user_id)
+    db_user = db_session.execute(
+        select(User).where(User.id == user.id)
     ).scalar_one()
 
-    assert user.email == data.email
-    assert user_service._verify_password("test", user.hashed_password)
+    assert db_user.email == data.email
+    assert user_service._verify_password("test", db_user.hashed_password)
 
     jwt = user_service.login(data.email, data.password)
 

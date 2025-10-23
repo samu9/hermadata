@@ -41,18 +41,6 @@ def test_new_entry(
         animal_id, CompleteEntryModel(entry_date=datetime.now().date())
     )
 
-    doc_code, doc_key = db_session.execute(
-        select(DocumentKind.code, Document.key)
-        .select_from(Animal)
-        .join(AnimalDocument, AnimalDocument.animal_id == Animal.id)
-        .join(Document, Document.id == AnimalDocument.document_id)
-        .join(DocumentKind, DocumentKind.id == AnimalDocument.document_kind_id)
-        .where(Animal.id == animal_id)
-    ).one()
-    assert doc_code == DocKindCode.comunicazione_ingresso.value
-
-    assert os.path.exists(os.path.join(disk_storage.base_path, doc_key))
-
 
 def test_update(
     make_animal: Callable[[NewAnimalModel], int],

@@ -51,6 +51,7 @@ from hermadata.repositories.user_repository import (
     SQLUserRepository,
 )
 from hermadata.repositories.vet_repository import SQLVetRepository, VetModel
+from hermadata.services.adopter_service import AdopterService
 from hermadata.services.animal_service import AnimalService
 from hermadata.services.user_service import RegisterUserModel, UserService
 from hermadata.storage.disk_storage import DiskStorage
@@ -262,6 +263,13 @@ def animal_service(
         report_generator=report_generator,
         storage=disk_storage,
     )
+
+
+@pytest.fixture()
+def adopter_service(
+    adopter_repository: SQLAdopterRepository,
+) -> AdopterService:
+    return AdopterService(adopter_repository=adopter_repository)
 
 
 @pytest.fixture(scope="function")
