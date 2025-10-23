@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta
 from typing import Callable
 
@@ -6,12 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from hermadata.constants import DocKindCode, EntryType, ExitType
-from hermadata.database.models import (
-    Animal,
-    AnimalDocument,
-    Document,
-    DocumentKind,
-)
+from hermadata.database.models import AnimalDocument, Document, DocumentKind
 from hermadata.repositories.adopter_repository import AdopterModel
 from hermadata.repositories.animal.models import (
     AnimalExit,
