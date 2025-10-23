@@ -20,6 +20,7 @@ from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.repositories.race_repository import SQLRaceRepository
 from hermadata.repositories.user_repository import SQLUserRepository
 from hermadata.repositories.vet_repository import SQLVetRepository
+from hermadata.services.adopter_service import AdopterService
 from hermadata.services.animal_service import AnimalService
 from hermadata.services.user_service import TokenData, UserService
 from hermadata.settings import settings
@@ -123,6 +124,14 @@ def get_user_service(
         access_token_expire_minutes=settings.auth.access_token_expire_minutes,
         algorithm=settings.auth.algorithm,
     )
+
+
+def get_adopter_service(
+    adopter_repository: Annotated[
+        SQLAdopterRepository, Depends(get_adopter_repository)
+    ],
+) -> AdopterService:
+    return AdopterService(adopter_repository=adopter_repository)
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login")
