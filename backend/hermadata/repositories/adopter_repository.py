@@ -1,4 +1,3 @@
-from datetime import date
 from enum import Enum
 from typing import Annotated
 
@@ -20,8 +19,6 @@ class IDDocumentType(Enum):
 class NewAdopter(BaseModel):
     name: Annotated[str, StringConstraints(to_upper=True)]
     surname: Annotated[str, StringConstraints(to_upper=True)]
-    birth_date: date
-    birth_city_code: str
     residence_city_code: str
     fiscal_code: Annotated[str, StringConstraints(to_upper=True)]
     phone: Annotated[str, StringConstraints(pattern=r"[\d\+\. ]+")]
