@@ -106,7 +106,8 @@ const AnimalRecordHeader = (props: Props) => {
                             className={classNames(
                                 "w-full h-full object-cover",
                                 {
-                                    "w-16 h-16": !props.data.img_path,
+                                    "w-12 h-12 object-cover":
+                                        !props.data.img_path,
                                 }
                             )}
                         />
