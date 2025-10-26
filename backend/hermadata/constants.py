@@ -3,6 +3,7 @@ from enum import Enum, IntEnum, auto
 
 class Permission(str, Enum):
     """Permission codes for role-based access control."""
+
     CREATE_ANIMAL = "CA"
     MAKE_ADOPTION = "MA"
     UPLOAD_DOCUMENT = "UD"
@@ -16,7 +17,6 @@ class Permission(str, Enum):
     DOWNLOAD_SUMMARY = "DS"
     SET_DOCUMENT_PERMISSION = "SDP"
     MANAGE_USERS = "MU"
-    LIST_VETS = "LV"
 
 
 class StorageType(Enum):
