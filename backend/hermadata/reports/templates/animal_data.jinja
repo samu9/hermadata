@@ -1,38 +1,53 @@
-<table class="my-4">
-    <tr class="border-b my-2">
-        <td class="m-2">Razza</td>
-        <td>{{ animal.breed }}</td>
-    </tr>
-    <tr class="border-b">
-        <td>Sesso</td>
-        <td>{{ animal.sex }}</td>
-    </tr>
-    <tr class="border-b">
-        <td>Età</td>
-        <td>{{ animal.age }}</td>
-    </tr>
-    <tr class="border-b">
-        <td>Mantello</td>
-        <td>{{ animal.fur_type }}</td>
-    </tr>
-    <tr class="border-b">
-        <td>Colore</td>
-        <td>{{ animal.fur_color }}</td>
-    </tr>
-    <tr class="border-b">
-        <td>Nome</td>
-        <td>{{ animal.name }}</td>
-    </tr>
-    <tr class="border-b">
-        <td>Codice chip</td>
-        <td>{{ animal.chip_code }}</td>
-    </tr>
-    <tr class="border-b">
-        <td>Arrivato da</td>
-        <td>{{ animal.origin_city }}</td>
-    </tr>
-    <tr class="border-b">
-        <td>Il</td>
-        <td>{{ animal.entry_date }}</td>
-    </tr>
-</table>
+<div class="my-4" style="display: flex; gap: 4rem;">
+    <!-- Left Column -->
+    <table style="flex: 1;">
+        <tr class="border-b my-2">
+            <td class="m-2" style="font-weight: bold; padding-right: 1rem;">Nome</td>
+            <td>{{ animal.name }}</td>
+        </tr>
+        <tr class="border-b">
+            <td style="font-weight: bold; padding-right: 1rem;">Razza</td>
+            <td>{{ animal.breed }}</td>
+        </tr>
+        <tr class="border-b">
+            <td style="font-weight: bold; padding-right: 1rem;">Sesso</td>
+            <td>{{ animal.sex }}</td>
+        </tr>
+        <tr class="border-b">
+            <td style="font-weight: bold; padding-right: 1rem;">Età</td>
+            <td>{{ animal.age }}</td>
+        </tr>
+        <tr class="border-b">
+            <td style="font-weight: bold; padding-right: 1rem;">Data di nascita</td>
+            <td>{{ animal.birth_date }}</td>
+        </tr>
+        <tr class="border-b">
+            <td style="font-weight: bold; padding-right: 1rem;">Codice chip</td>
+            <td>{{ animal.chip_code }}</td>
+        </tr>
+    </table>
+    
+    <!-- Right Column -->
+    <table style="flex: 1;">
+        <tr class="border-b my-2">
+            <td class="m-2" style="font-weight: bold; padding-right: 1rem;">Manto</td>
+            <td>{{ animal.fur_type }}</td>
+        </tr>
+        <tr class="border-b">
+            <td style="font-weight: bold; padding-right: 1rem;">Colore</td>
+            <td>{{ animal.fur_color }}</td>
+        </tr>
+        <tr class="border-b">
+            <td style="font-weight: bold; padding-right: 1rem;">Arrivato da</td>
+            <td>{{ animal.origin_city }}</td>
+        </tr>
+        <tr class="border-b">
+            <td style="font-weight: bold; padding-right: 1rem;">Arrivato il</td>
+            <td>{{ animal.entry_date }}</td>
+        </tr>
+        <tr class="border-b">
+            <td style="font-weight: bold; padding-right: 1rem;">Taglia</td>
+            <td>{{ animal.size }}</td>
+        </tr>
+    </table>
+</div>

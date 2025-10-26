@@ -1,17 +1,14 @@
 import {
-    faHeart,
     faKitMedical,
     faTents,
     faTriangleExclamation,
     faXmarkCircle,
+    faCalendarAlt,
+    faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
-import { Menu } from "primereact/menu"
-import { MenuItem } from "primereact/menuitem"
 import { classNames } from "primereact/utils"
-import { useRef } from "react"
-import { Link } from "react-router-dom"
 import cat from "../../assets/cat.svg"
 import dog from "../../assets/dog.svg"
 import { useExitTypesMap } from "../../hooks/useMaps"
@@ -22,135 +19,176 @@ type Props = {
 }
 
 const ADOPTABILITY_FLAG_COLOR: { [key: number]: string } = {
-    0: "#000000",
-    1: "#FF0000",
-    2: "#FFFF00",
+    0: "#6B7280", // gray-500
+    1: "#EF4444", // red-500
+    2: "#F59E0B", // amber-500
 }
 
-const SanitarioBadge = () => (
-    <span className="text-xs border px-2 py-1 border-red-500 bg-red-50 rounded">
-        <FontAwesomeIcon icon={faKitMedical} /> Sanitario
-    </span>
-)
-
-const RifugioBadge = () => (
-    <span className="text-xs border px-2 py-1 border-green-700 bg-green-50 rounded">
-        <FontAwesomeIcon icon={faTents} /> Rifugio
-    </span>
-)
-
-const NotPresentInfo = (props: Props) => {
+const NotPresentAlert = (props: Props) => {
     const exitTypesMap = useExitTypesMap()
     const exitDate = new Date(props.data.exit_date!)
     const notPresent = exitDate < new Date()
-    const title = notPresent ? "Non presente" : "In uscita"
+
     return (
         <div
-            className={classNames("px-3 py-1 rounded", {
-                "bg-red-200": notPresent,
-                "bg-yellow-200": !notPresent,
-            })}
+            className={classNames(
+                "px-4 py-3 rounded-lg border-l-4 shadow-sm max-w-sm",
+                {
+                    "bg-red-50 border-red-400": notPresent,
+                    "bg-amber-50 border-amber-400": !notPresent,
+                }
+            )}
         >
-            <div className="flex flex-col">
+            <div className="flex items-start gap-3">
                 <div
-                    className={classNames("flex gap-1 items-center", {
-                        "text-red-600": notPresent,
-                        "text-yellow-700": !notPresent,
+                    className={classNames("flex-shrink-0 mt-0.5", {
+                        "text-red-500": notPresent,
+                        "text-amber-500": !notPresent,
                     })}
                 >
                     <FontAwesomeIcon
                         icon={
                             notPresent ? faXmarkCircle : faTriangleExclamation
                         }
+                        className="w-4 h-4"
                     />
-                    <span className="font-bold">{title}</span>
                 </div>
-                <div className="grid grid-cols-2 text-sm gap-x-1">
-                    <span className="font-light">Data uscita</span>
-                    <span className="font-bold">
-                        {format(exitDate, "dd/MM/y")}
-                    </span>
-                    <span className="font-light">Motivo</span>
-                    <span className="font-bold">
-                        {exitTypesMap?.[props.data.exit_type!]}
-                    </span>
+                <div className="flex-1 min-w-0">
+                    <h3
+                        className={classNames("text-sm font-semibold", {
+                            "text-red-800": notPresent,
+                            "text-amber-800": !notPresent,
+                        })}
+                    >
+                        {notPresent
+                            ? "Animale non presente"
+                            : "Animale in uscita"}
+                    </h3>
+                    <div className="mt-2 space-y-1 text-xs">
+                        <div className="flex items-center gap-2">
+                            <FontAwesomeIcon
+                                icon={faCalendarAlt}
+                                className="w-3 h-3 text-gray-500"
+                            />
+                            <span className="text-gray-700">
+                                <span className="font-medium">
+                                    Data uscita:
+                                </span>{" "}
+                                {format(exitDate, "dd/MM/yyyy")}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <FontAwesomeIcon
+                                icon={faSignOutAlt}
+                                className="w-3 h-3 text-gray-500"
+                            />
+                            <span className="text-gray-700">
+                                <span className="font-medium">Motivo:</span>{" "}
+                                {exitTypesMap?.[props.data.exit_type!]}
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex gap-1 text-sm"></div>
-
-                <div className="flex gap-1  text-sm"></div>
             </div>
         </div>
     )
 }
 const AnimalRecordHeader = (props: Props) => {
-    const menuRef = useRef<Menu>(null)
-
-    const menuItems: MenuItem[] = [
-        {
-            template: (item) => (
-                <div className="p-menuitem-content">
-                    <Link
-                        to="adoption"
-                        className="flex align-items-center p-menuitem-link"
-                    >
-                        <FontAwesomeIcon
-                            className="text-red-500"
-                            icon={faHeart}
-                        />
-                        <span className="mx-2 font-bold">Adozione</span>
-                    </Link>
-                </div>
-            ),
-        },
-    ]
-    const img_url = new URL(
-        props.data.img_path || "",
-        import.meta.env.VITE_ASSETS_BASE_URL
-    )
     return (
-        <div className="flex gap-4 items-start relative">
-            <div
-                className={classNames("w-28 h-28 rounded-full", {
-                    border: !props.data.img_path,
-                })}
-            >
-                <img
-                    src={props.data.race_id == "C" ? dog : cat}
-                    className={classNames("object-cover", {
-                        "rounded-none m-8": !props.data.img_path,
-                    })}
-                />
-            </div>
-            <div className="grow">
-                <div className="flex justify-between w-3/4 min-w-[480px]">
-                    <div className="">
-                        {props.data.adoptability_index && (
-                            <div
-                                className="inline-block rounded-full w-4 h-4"
-                                style={{
-                                    backgroundColor:
-                                        ADOPTABILITY_FLAG_COLOR[
-                                            props.data.adoptability_index
-                                        ],
-                                }}
-                            />
-                        )}
-                        <h1
-                            className={classNames("font-bold text-[2rem]", {
-                                "text-gray-300": !props.data.name,
-                            })}
-                        >
-                            {props.data.name || "Nome non assegnato"}
-                        </h1>
-                        <ChipCodeBadge
-                            code={props.data.chip_code || undefined}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex gap-6 items-start">
+                {/* Animal Image */}
+                <div className="flex-shrink-0">
+                    <div className="w-32 h-32 rounded-full border-4 border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center">
+                        <img
+                            src={props.data.race_id === "C" ? dog : cat}
+                            alt="Animal"
+                            className={classNames(
+                                "w-full h-full object-cover",
+                                {
+                                    "w-12 h-12 object-cover":
+                                        !props.data.img_path,
+                                }
+                            )}
                         />
                     </div>
-                    {props.data.exit_type && props.data.exit_date && (
-                        <NotPresentInfo data={props.data} />
-                    )}
                 </div>
-                {/* <RifugioBadge /> */}
+
+                {/* Main Content */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        {/* Animal Info */}
+                        <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                                {/* Adoptability Flag */}
+                                {props.data.adoptability_index !== null &&
+                                    props.data.adoptability_index !==
+                                        undefined && (
+                                        <div
+                                            className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                                            style={{
+                                                backgroundColor:
+                                                    ADOPTABILITY_FLAG_COLOR[
+                                                        props.data
+                                                            .adoptability_index
+                                                    ] || "#gray",
+                                            }}
+                                            title={`Indice adottabilità: ${props.data.adoptability_index}`}
+                                        />
+                                    )}
+
+                                {/* Stage Badge */}
+                                {props.data.stage === "S" && (
+                                    <span className="text-xs px-2 py-1 border border-green-600 bg-green-50 text-green-700 rounded-md font-medium">
+                                        <FontAwesomeIcon
+                                            icon={faTents}
+                                            className="mr-1"
+                                        />
+                                        Rifugio
+                                    </span>
+                                )}
+                                {props.data.stage === "H" && (
+                                    <span className="text-xs px-2 py-1 border border-red-500 bg-red-50 text-red-700 rounded-md font-medium">
+                                        <FontAwesomeIcon
+                                            icon={faKitMedical}
+                                            className="mr-1"
+                                        />
+                                        Sanitario
+                                    </span>
+                                )}
+                            </div>
+
+                            <h1
+                                className={classNames(
+                                    "text-3xl font-bold mb-3 leading-tight",
+                                    {
+                                        "text-gray-800": props.data.name,
+                                        "text-gray-400": !props.data.name,
+                                    }
+                                )}
+                            >
+                                {props.data.name || "Nome non assegnato"}
+                            </h1>
+
+                            <div className="flex flex-wrap items-center gap-4">
+                                <ChipCodeBadge
+                                    code={props.data.chip_code || undefined}
+                                />
+                                <div className="text-sm text-gray-600">
+                                    <span className="font-medium">Codice:</span>{" "}
+                                    {props.data.code}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Alert for Not Present Animals */}
+                        {props.data.exit_type && props.data.exit_date && (
+                            <div className="lg:flex-shrink-0">
+                                <NotPresentAlert data={props.data} />
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     )

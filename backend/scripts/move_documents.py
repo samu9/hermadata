@@ -17,12 +17,16 @@ def upload_pdfs_to_s3():
 
     with db_session() as session:
         keys = session.execute(
-            select(Document.key, Document.filename).where(Document.storage_service == StorageType.disk.value)
+            select(Document.key, Document.filename).where(
+                Document.storage_service == StorageType.disk.value
+            )
         ).all()
 
     # Check if the provided directory path is valid
     if not os.path.isdir(directory_path):
-        print(f"The provided path '{directory_path}' is not a valid directory.")
+        print(
+            f"The provided path '{directory_path}' is not a valid directory."
+        )
         return
 
     # Loop through all files in the directory
@@ -44,7 +48,9 @@ def upload_pdfs_to_s3():
             continue
         with db_session.begin() as session:
             session.execute(
-                update(Document).where(Document.key == k).values({Document.storage_service: StorageType.aws_s3.value})
+                update(Document)
+                .where(Document.key == k)
+                .values({Document.storage_service: StorageType.aws_s3.value})
             )
 
 

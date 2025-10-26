@@ -4,9 +4,9 @@ import { useMatches, useNavigate } from "react-router-dom"
 
 const AppBreadCrumbs = () => {
     // const [crumbs, setCrumbs] = useState<MenuItem[]>([])
-    let matches = useMatches()
+    const matches = useMatches()
     const navigate = useNavigate()
-    let crumbs = matches
+    const crumbs = matches
         // first get rid of any matches that don't have handle and crumb
         .filter((match) => Boolean(match.handle?.crumb))
         // now map them into an array of elements, passing the loader

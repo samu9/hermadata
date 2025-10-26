@@ -11,9 +11,12 @@ from hermadata.repositories.animal.animal_repository import (
 logger = logging.getLogger(__name__)
 
 API_ERROR_MESSAGES = {
-    AnimalWithoutChipCodeException: "Chip non inserito. Non è possibile completare l'operazione",
-    EntryNotCompleteException: "Data di ingresso non inserita. Non è possibile completare l'operazione",
-    NoRequiredExitDataException: "Dati animale non completi. Non è possibile completare l'operazione",
+    AnimalWithoutChipCodeException: "Chip non inserito. "
+    "Non è possibile completare l'operazione",
+    EntryNotCompleteException: "Data di ingresso non inserita. "
+    "Non è possibile completare l'operazione",
+    NoRequiredExitDataException: "Dati animale non completi. "
+    "Non è possibile completare l'operazione",
 }
 DEFAULT_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 

@@ -1,26 +1,77 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Adopter } from "../../models/adopter.schema"
-import { faPhone, faUser } from "@fortawesome/free-solid-svg-icons"
+import { faPhone, faUser, faIdCard } from "@fortawesome/free-solid-svg-icons"
 
-const AdopterCard = (props: { data: Adopter }) => {
+interface AdopterCardProps {
+    data: Adopter
+    variant?: 'default' | 'compact' | 'selected'
+    interactive?: boolean
+    onClick?: () => void
+}
+
+const AdopterCard = ({ data, variant = 'default', interactive = false, onClick }: AdopterCardProps) => {
+    const baseClasses = "border rounded-lg transition-all duration-200"
+    
+    const variantClasses = {
+        default: "p-4 shadow-sm bg-white",
+        compact: "p-3 shadow-sm bg-white",
+        selected: "p-4 shadow-md bg-blue-50 border-blue-200"
+    }
+    
+    const interactiveClasses = interactive 
+        ? "hover:shadow-md hover:border-blue-300 cursor-pointer hover:bg-blue-50" 
+        : ""
+    
+    const cardClasses = `${baseClasses} ${variantClasses[variant]} ${interactiveClasses}`
+    
+    const isCompact = variant === 'compact'
+    
     return (
-        <div className="px-4 py-2 shadow rounded card flex gap-4 items-center">
-            <FontAwesomeIcon
-                icon={faUser}
-                className="text-[2rem] w-16"
-                fixedWidth
-            />
-            <div className="flex flex-col text-gray-500 gap-1">
-                <span className="text-xl font-bold text-gray-600">
-                    {props.data.name} {props.data.surname}
-                </span>
-                <div className="text-xs flex gap-1 items-center">
-                    <span className="text-sm">{props.data.fiscal_code}</span>
+        <div 
+            className={cardClasses}
+            onClick={onClick}
+        >
+            <div className="flex items-center gap-3">
+                {/* Avatar */}
+                <div className={`flex-shrink-0 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 ${isCompact ? 'w-10 h-10' : 'w-12 h-12'}`}>
+                    <FontAwesomeIcon 
+                        icon={faUser} 
+                        className={isCompact ? 'text-lg' : 'text-xl'}
+                    />
                 </div>
-
-                <div className="text-xs flex gap-1 items-center">
-                    <FontAwesomeIcon icon={faPhone} />
-                    <span className="text-sm">{props.data.phone}</span>
+                
+                {/* Main Content */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                        {/* Name */}
+                        <div>
+                            <h3 className={`font-semibold text-gray-900 truncate ${isCompact ? 'text-base' : 'text-lg'}`}>
+                                {data.name} {data.surname}
+                            </h3>
+                        </div>
+                        
+                        {/* Phone - Right aligned on desktop, below name on mobile */}
+                        <div className="flex items-center gap-1 text-gray-600">
+                            <FontAwesomeIcon 
+                                icon={faPhone} 
+                                className={`text-gray-400 ${isCompact ? 'text-xs' : 'text-sm'}`}
+                            />
+                            <span className={`${isCompact ? 'text-sm' : 'text-base'} font-medium`}>
+                                {data.phone}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {/* Fiscal Code */}
+                    <div className="flex items-center gap-1 mt-1">
+                        <FontAwesomeIcon 
+                            icon={faIdCard} 
+                            className={`text-gray-400 ${isCompact ? 'text-xs' : 'text-sm'}`}
+                        />
+                        <span className={`text-gray-600 font-mono ${isCompact ? 'text-sm' : 'text-base'}`}>
+                            {data.fiscal_code}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>

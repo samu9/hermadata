@@ -27,7 +27,9 @@ T = TypeVar("T")
 
 FurColorName = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, to_upper=True, min_length=2, max_length=100),
+    StringConstraints(
+        strip_whitespace=True, to_upper=True, min_length=2, max_length=100
+    ),
 ]
 
 
@@ -81,7 +83,9 @@ class AnimalSearchModel(PaginationQuery):
     name: Optional[str] = None
     from_created_at: datetime | None = None
     to_created_at: datetime | None = None
-    rescue_city_code: str | None = Field(pattern=rescue_city_code_PATTERN, default=None)
+    rescue_city_code: str | None = Field(
+        pattern=rescue_city_code_PATTERN, default=None
+    )
     entry_type: Optional[str] = None
     exit_type: Optional[str] = None
     present: bool = True
@@ -90,14 +94,26 @@ class AnimalSearchModel(PaginationQuery):
 
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
-        "chip_code": WhereClauseMapItem(lambda v: Animal.chip_code.like(f"%{v}%")),
-        "rescue_city_code": WhereClauseMapItem(lambda v: AnimalEntry.origin_city_code == v),
-        "entry_type": WhereClauseMapItem(lambda v: AnimalEntry.entry_type == v),
+        "chip_code": WhereClauseMapItem(
+            lambda v: Animal.chip_code.like(f"%{v}%")
+        ),
+        "rescue_city_code": WhereClauseMapItem(
+            lambda v: AnimalEntry.origin_city_code == v
+        ),
+        "entry_type": WhereClauseMapItem(
+            lambda v: AnimalEntry.entry_type == v
+        ),
         "exit_type": WhereClauseMapItem(lambda v: AnimalEntry.exit_type == v),
         "race_id": WhereClauseMapItem(lambda v: Animal.race_id == v),
-        "from_entry_date": WhereClauseMapItem(lambda v: AnimalEntry.entry_date >= v),
-        "to_entry_date": WhereClauseMapItem(lambda v: AnimalEntry.entry_date <= v),
-        "from_created_at": WhereClauseMapItem(lambda v: Animal.created_at >= v),
+        "from_entry_date": WhereClauseMapItem(
+            lambda v: AnimalEntry.entry_date >= v
+        ),
+        "to_entry_date": WhereClauseMapItem(
+            lambda v: AnimalEntry.entry_date <= v
+        ),
+        "from_created_at": WhereClauseMapItem(
+            lambda v: Animal.created_at >= v
+        ),
         "to_created_at": WhereClauseMapItem(lambda v: Animal.created_at <= v),
         "present": WhereClauseMapItem(
             lambda v: (
@@ -124,7 +140,10 @@ class AnimalSearchModel(PaginationQuery):
     }
 
     def as_order_by_clause(self) -> MappedColumn | None:
-        if not (self.sort_field and self.sort_order) and self.sort_field not in SORT_FIELD_MAP:
+        if (
+            not (self.sort_field and self.sort_order)
+            and self.sort_field not in SORT_FIELD_MAP
+        ):
             return Animal.created_at.desc()
         column: MappedColumn = SORT_FIELD_MAP[self.sort_field]
         if self.sort_order == 1:
@@ -180,7 +199,9 @@ class AnimalModel(BaseModel):
 class UpdateAnimalModel(BaseModel):
     name: str | None = None
     breed_id: int | None = None
-    chip_code: str | None = Field(pattern=r"\d{3}\.\d{3}\.\d{3}\.\d{3}\.\d{3}", default=None)
+    chip_code: str | None = Field(
+        pattern=r"\d{3}\.\d{3}\.\d{3}\.\d{3}\.\d{3}", default=None
+    )
     chip_code_set: bool | None = False
 
     sex: int | None = None
@@ -196,7 +217,9 @@ class AnimalQueryModel(BaseModel):
     id: int = None
     code: str = None
     race_id: str = None
-    rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN, default=None)
+    rescue_city_code: str = Field(
+        pattern=rescue_city_code_PATTERN, default=None
+    )
     rescue_date: date = None
 
 
@@ -215,7 +238,9 @@ class AnimalSearchResult(BaseModel):
     exit_type: str | None = None
 
 
-AnimalSearchResultQuery = namedtuple("AnimalSearchResultQuery", AnimalSearchResult.model_fields.keys())
+AnimalSearchResultQuery = namedtuple(
+    "AnimalSearchResultQuery", AnimalSearchResult.model_fields.keys()
+)
 
 AnimalGetQuery = namedtuple("AnimalGetQuery", AnimalModel.model_fields.keys())
 
@@ -304,9 +329,10 @@ class AddMedicalRecordModel(BaseModel):
 
 
 class AnimalEntryModel(BaseModel):
+    id: int
     animal_id: int
     animal_name: str | None = None
-    entry_date: date
+    entry_date: date | None = None
     exit_date: date | None = None
     entry_type: EntryType
     exit_type: ExitType | None = None
@@ -314,12 +340,25 @@ class AnimalEntryModel(BaseModel):
     origin_city_name: str
     animal_race: str
     animal_race_id: str
+    entry_notes: str | None = None
+    exit_notes: str | None = None
+
+
+class UpdateAnimalEntryModel(BaseModel):
+    entry_date: date | None = None
+    entry_type: EntryType | None = None
+    exit_date: date | None = None
+    exit_type: ExitType | None = None
+    entry_notes: str | None = None
+    exit_notes: str | None = None
 
 
 class NewAdoption(BaseModel):
     animal_id: int
     adopter_id: int
-    location_address: Annotated[str, StringConstraints(to_upper=True)] | None = None
+    location_address: (
+        Annotated[str, StringConstraints(to_upper=True)] | None
+    ) = None
     location_city_code: str | None = None
 
 

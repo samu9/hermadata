@@ -21,6 +21,9 @@ const ApiEndpoints = {
         update: (id: string) => `/animal/${id}`,
         addEntry: (id: string) => `/animal/${id}/entry`,
         completeEntry: (id: string) => `/animal/${id}/entry/complete`,
+        getEntries: (id: string) => `/animal/${id}/entries`,
+        updateEntry: (animalId: string, entryId: number) =>
+            `/animal/${animalId}/entries/${entryId}`,
         documents: (id: number) => `/animal/${id}/document`,
         newDocument: (id: number) => `/animal/${id}/document`,
         exit: (id: number) => `/animal/${id}/exit`,
@@ -35,6 +38,17 @@ const ApiEndpoints = {
     },
     adoption: {
         create: "/adoption",
+    },
+    user: {
+        login: "/user/login",
+        register: "/user/register",
+        getAll: "/user/",
+        create: "/user/",
+        update: (id: number) => `/user/${id}`,
+        delete: (id: number) => `/user/${id}`,
+        changePassword: (id: number) => `/user/${id}/password`,
+        getCurrentUser: "/user/me",
+        activities: "/user/activities",
     },
     util: {
         getProvince: "/util/province",

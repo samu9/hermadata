@@ -21,7 +21,6 @@ import { useParams } from "react-router-dom"
 import SearchAdopter from "../adoption/SearchAdopter"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faAdd, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
-import { SubTitle } from "../typography"
 import NewAdopterForm from "../adopter/NewAdopterForm"
 import { Dialog } from "primereact/dialog"
 import ControlledTextarea from "../forms/ControlledTextarea"
@@ -99,16 +98,20 @@ const AnimalExitForm = () => {
         setIsDetention(["A", "R"].includes(values.exit_type))
     }, [watch()])
     return (
-        <div>
-            <div className="flex gap-3">
-                <FormProvider {...form}>
-                    <form onSubmit={handleSubmit(onSubmit)}>
-                        <div className="flex gap-2 mb-2">
+        <div className="max-w-6xl mx-auto p-6">
+            <FormProvider {...form}>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    {/* Basic Exit Information */}
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            Informazioni Uscita
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <ControlledInputDate<AnimalExit>
                                 fieldName="exit_date"
                                 label="Data uscita"
                                 disabled={true}
-                                className="w-32"
+                                className="w-full"
                             />
                             <ControlledDropdown
                                 fieldName="exit_type"
@@ -116,97 +119,199 @@ const AnimalExitForm = () => {
                                 optionValue="id"
                                 optionLabel="label"
                                 options={exitTypesQuery.data}
+                                className="w-full"
                             />
                         </div>
-                        <ControlledInputText
-                            label="Indirizzo di detenzione"
-                            fieldName="location_address"
-                            disabled={!isDetention}
-                        />
-                        <div className="flex gap-2">
-                            <UncontrolledProvinceDropdown
-                                label="Provincia di detenzione"
-                                onChange={(value) =>
-                                    setProvinciaDetenzione(value)
-                                }
-                                disabled={!isDetention}
-                                className="w-64"
-                            />
-                            <ControlledDropdown
-                                label="Comune di detenzione"
-                                disabled={
-                                    !comuneDetenzioneQuery.data || !isDetention
-                                }
-                                optionLabel="name"
-                                optionValue="id"
-                                options={comuneDetenzioneQuery.data}
-                                fieldName="location_city_code"
-                                className="w-64"
-                            />
-                        </div>
-                        <ControlledTextarea fieldName="notes" label="Note" />
-                        <Button disabled={!isValid} type="submit">
-                            Salva
-                        </Button>
-                    </form>
-                </FormProvider>
-                <div className="flex flex-col w-full gap-2">
-                    {selectedAdopter && isDetention && (
-                        <div>
-                            <AdopterCard data={selectedAdopter} />
-                        </div>
-                    )}
-                    {isDetention && (
-                        <div className="border rounded p-4 shadow w-full">
-                            <SubTitle>Cerca o aggiungi adottante</SubTitle>
+                    </div>
 
-                            <div className="flex gap-2 mb-2 items-center w-full justify-center">
-                                <Button
-                                    onClick={() => {
-                                        setAdopterAction("search")
-                                    }}
-                                    disabled={adopterAction == "search"}
-                                >
-                                    <FontAwesomeIcon icon={faMagnifyingGlass} />
-                                </Button>
-                                <Button
-                                    onClick={() => setDialogVisible(true)}
-                                    disabled={adopterAction == "add"}
-                                >
-                                    <FontAwesomeIcon icon={faAdd} />
-                                </Button>
-                            </div>
-                            {adopterAction == "search" && (
-                                <SearchAdopter
-                                    onSelected={(a) => {
-                                        setValue("adopter_id", a.id, {
-                                            shouldDirty: true,
-                                            shouldValidate: true,
-                                        })
-                                        setSelectedAdopter(a)
-                                    }}
-                                    onNoResultsCallback={() => null}
+                    {/* Detention Details - Only shown when exit type is detention */}
+                    {isDetention && (
+                        <div className="bg-blue-50 rounded-lg shadow p-6 border border-blue-200">
+                            <h3 className="text-lg font-semibold text-blue-900 mb-4">
+                                Dettagli Detenzione
+                            </h3>
+
+                            {/* Location Information */}
+                            <div className="space-y-4">
+                                <ControlledInputText
+                                    label="Indirizzo di detenzione"
+                                    fieldName="location_address"
+                                    className="w-full"
                                 />
-                            )}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <UncontrolledProvinceDropdown
+                                        label="Provincia di detenzione"
+                                        onChange={(value) =>
+                                            setProvinciaDetenzione(value)
+                                        }
+                                        className="w-full"
+                                    />
+                                    <ControlledDropdown
+                                        label="Comune di detenzione"
+                                        disabled={!comuneDetenzioneQuery.data}
+                                        optionLabel="name"
+                                        optionValue="id"
+                                        options={comuneDetenzioneQuery.data}
+                                        fieldName="location_city_code"
+                                        className="w-full"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Adopter Section */}
+                            <div className="mt-6">
+                                <h4 className="text-md font-medium text-blue-800 mb-3">
+                                    Adottante
+                                </h4>
+
+                                {/* Selected Adopter Card */}
+                                {selectedAdopter && (
+                                    <div className="mb-4">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-green-800 font-medium text-sm">
+                                                ✓ Adottante Selezionato
+                                            </span>
+                                            <Button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedAdopter(null)
+                                                    setValue(
+                                                        "adopter_id",
+                                                        undefined
+                                                    )
+                                                }}
+                                                text
+                                                severity="secondary"
+                                                size="small"
+                                                className="text-xs"
+                                            >
+                                                Cambia
+                                            </Button>
+                                        </div>
+                                        <AdopterCard 
+                                            data={selectedAdopter} 
+                                            variant="selected"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Adopter Search/Add Actions */}
+                                {!selectedAdopter && (
+                                    <div className="space-y-4">
+                                        <div className="flex flex-wrap gap-3">
+                                            <Button
+                                                type="button"
+                                                onClick={() =>
+                                                    setAdopterAction("search")
+                                                }
+                                                outlined={
+                                                    adopterAction !== "search"
+                                                }
+                                                severity={
+                                                    adopterAction === "search"
+                                                        ? "info"
+                                                        : "secondary"
+                                                }
+                                                className="flex-1 sm:flex-none"
+                                            >
+                                                <FontAwesomeIcon
+                                                    icon={faMagnifyingGlass}
+                                                    className="mr-2"
+                                                />
+                                                Cerca Adottante
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                onClick={() =>
+                                                    setDialogVisible(true)
+                                                }
+                                                outlined
+                                                severity="success"
+                                                className="flex-1 sm:flex-none"
+                                            >
+                                                <FontAwesomeIcon
+                                                    icon={faAdd}
+                                                    className="mr-2"
+                                                />
+                                                Nuovo Adottante
+                                            </Button>
+                                        </div>
+
+                                        {/* Search Component */}
+                                        {adopterAction === "search" && (
+                                            <div className="bg-white p-4 border border-gray-200 rounded-lg">
+                                                <SearchAdopter
+                                                    onSelected={(a) => {
+                                                        setValue(
+                                                            "adopter_id",
+                                                            a.id,
+                                                            {
+                                                                shouldDirty:
+                                                                    true,
+                                                                shouldValidate:
+                                                                    true,
+                                                            }
+                                                        )
+                                                        setSelectedAdopter(a)
+                                                    }}
+                                                    onNoResultsCallback={() =>
+                                                        null
+                                                    }
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
-                </div>
-            </div>
+
+                    {/* Notes Section */}
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            Note Aggiuntive
+                        </h3>
+                        <ControlledTextarea
+                            fieldName="notes"
+                            label="Note"
+                            className="w-full"
+                        />
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="flex justify-end">
+                        <Button
+                            disabled={!isValid}
+                            type="submit"
+                            size="large"
+                            className="px-8"
+                        >
+                            Salva Uscita
+                        </Button>
+                    </div>
+                </form>
+            </FormProvider>
+
+            {/* Add Adopter Dialog */}
             <Dialog
                 visible={dialogVisibile}
-                className="w-2/3"
-                header={"Aggiungi adottante"}
+                className="w-full max-w-4xl"
+                header="Aggiungi Nuovo Adottante"
                 onHide={() => setDialogVisible(false)}
+                modal
             >
                 <NewAdopterForm
                     onSaved={(a) => {
                         setValue("adopter_id", a.id, {
                             shouldDirty: true,
+                            shouldValidate: true,
                         })
+                        setSelectedAdopter(a)
                         setDialogVisible(false)
                     }}
                 />
             </Dialog>
+
             <Toast ref={toast} position="bottom-right" />
         </div>
     )

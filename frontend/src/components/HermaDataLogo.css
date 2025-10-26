@@ -1,0 +1,157 @@
+/* HermaData Logo Animations */
+
+.hermadata-logo-animated {
+    animation: logoEntry 2s ease-out;
+}
+
+.hermadata-logo-animated .main-path {
+    animation: pathDraw 4s ease-in-out forwards;
+    stroke-dasharray: 2000;
+    stroke-dashoffset: 2000;
+    stroke-width: 3;
+    fill: transparent;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.hermadata-logo-animated .eye-left {
+    animation: 
+        pulse 2s infinite 3s,
+        fadeIn 0.5s ease-out 2.5s,
+        scaleIn 0.5s ease-out 2.5s;
+    animation-fill-mode: forwards;
+    opacity: 0;
+    transform-origin: center;
+}
+
+.hermadata-logo-animated .eye-right {
+    animation: 
+        pulse 2s infinite 3.2s,
+        fadeIn 0.5s ease-out 2.7s,
+        scaleIn 0.5s ease-out 2.7s;
+    animation-fill-mode: forwards;
+    opacity: 0;
+    transform-origin: center;
+}
+
+@keyframes logoEntry {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) rotate(-10deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+@keyframes pathDraw {
+    0% {
+        stroke-dashoffset: 2000;
+        fill: transparent;
+        stroke-width: 3;
+    }
+    80% {
+        stroke-dashoffset: 0;
+        fill: transparent;
+        stroke-width: 3;
+    }
+    90% {
+        stroke-dashoffset: 0;
+        fill: transparent;
+        stroke-width: 2;
+    }
+    100% {
+        stroke-dashoffset: 0;
+        stroke-width: 0;
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    0% {
+        transform: scale(0.5);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+/* Hover effects */
+.hermadata-logo-animated:hover .main-path {
+    animation: none !important;
+    stroke-width: 1;
+    filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.3));
+    transition: all 0.3s ease;
+}
+
+.hermadata-logo-animated:hover .eye-left,
+.hermadata-logo-animated:hover .eye-right {
+    animation: pulse 0.5s ease-in-out !important;
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
+}
+
+/* Variants for different themes */
+.hermadata-logo-blue .main-path {
+    stroke: #3b82f6;
+}
+
+.hermadata-logo-blue .main-path.filled {
+    fill: #3b82f6;
+}
+
+.hermadata-logo-green .main-path {
+    stroke: #10b981;
+}
+
+.hermadata-logo-green .main-path.filled {
+    fill: #10b981;
+}
+
+.hermadata-logo-red .main-path {
+    stroke: #ef4444;
+}
+
+.hermadata-logo-red .main-path.filled {
+    fill: #ef4444;
+}
+
+/* Size variants */
+.hermadata-logo-small {
+    width: 40px;
+    height: 40px;
+}
+
+.hermadata-logo-medium {
+    width: 80px;
+    height: 80px;
+}
+
+.hermadata-logo-large {
+    width: 120px;
+    height: 120px;
+}
+
+.hermadata-logo-xl {
+    width: 200px;
+    height: 200px;
+}

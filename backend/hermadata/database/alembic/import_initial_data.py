@@ -15,7 +15,11 @@ def import_comuni_and_province(engine: Engine):
         with open(os.path.join(INITIAL_DATA_DIR, "province.csv"), "r") as fp:
             reader = csv.DictReader(fp, delimiter=";")
             for r in reader:
-                check = s.execute(select(Provincia.id).where(Provincia.id == r["sigla_provincia"])).first()
+                check = s.execute(
+                    select(Provincia.id).where(
+                        Provincia.id == r["sigla_provincia"]
+                    )
+                ).first()
                 if check:
                     continue
                 s.execute(
@@ -28,7 +32,9 @@ def import_comuni_and_province(engine: Engine):
         with open(os.path.join(INITIAL_DATA_DIR, "comuni.csv"), "r") as fp:
             reader = csv.DictReader(fp, delimiter=";")
             for r in reader:
-                check = s.execute(select(Comune.id).where(Comune.id == r["codice_belfiore"])).first()
+                check = s.execute(
+                    select(Comune.id).where(Comune.id == r["codice_belfiore"])
+                ).first()
                 if check:
                     continue
                 s.execute(
@@ -46,7 +52,9 @@ def import_races(engine: Engine):
         with open(os.path.join(INITIAL_DATA_DIR, "races.csv"), "r") as fp:
             reader = csv.DictReader(fp)
             for _, r in enumerate(reader):
-                check = s.execute(select(Race.id).where(Race.id == r["id"])).first()
+                check = s.execute(
+                    select(Race.id).where(Race.id == r["id"])
+                ).first()
                 if check:
                     continue
                 s.execute(
@@ -71,7 +79,9 @@ def import_doc_kinds(engine: Engine | None = None):
                 code, name, uploadable, rendered = r
                 uploadable = int(uploadable)
                 rendered = int(rendered)
-                check = s.execute(select(DocumentKind.id).where(DocumentKind.code == code)).first()
+                check = s.execute(
+                    select(DocumentKind.id).where(DocumentKind.code == code)
+                ).first()
                 if check:
                     s.execute(
                         update(DocumentKind)

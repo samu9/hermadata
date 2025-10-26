@@ -18,7 +18,9 @@ class RaceQuery(BaseModel):
 
 class SQLRaceRepository(SQLBaseRepository):
     def save(self, model: RaceModel):
-        result = self.session.execute(insert(Race).values(**model.model_dump()))
+        result = self.session.execute(
+            insert(Race).values(**model.model_dump())
+        )
         self.session.flush()
         return result
 

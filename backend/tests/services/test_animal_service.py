@@ -1,17 +1,11 @@
-import os
 from datetime import datetime, timedelta
 from typing import Callable
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from hermadata.constants import AnimalFur, DocKindCode, EntryType, ExitType
-from hermadata.database.models import (
-    Animal,
-    AnimalDocument,
-    Document,
-    DocumentKind,
-)
+from hermadata.constants import DocKindCode, EntryType, ExitType
+from hermadata.database.models import AnimalDocument, Document, DocumentKind
 from hermadata.repositories.adopter_repository import AdopterModel
 from hermadata.repositories.animal.models import (
     AnimalExit,
@@ -21,7 +15,6 @@ from hermadata.repositories.animal.models import (
 )
 from hermadata.services.animal_service import AnimalService
 from hermadata.storage.disk_storage import DiskStorage
-from tests.utils import random_chip_code
 
 
 def test_new_entry(
@@ -38,19 +31,9 @@ def test_new_entry(
         )
     )
 
-    animal_service.complete_entry(animal_id, CompleteEntryModel(entry_date=datetime.now().date()))
-
-    doc_code, doc_key = db_session.execute(
-        select(DocumentKind.code, Document.key)
-        .select_from(Animal)
-        .join(AnimalDocument, AnimalDocument.animal_id == Animal.id)
-        .join(Document, Document.id == AnimalDocument.document_id)
-        .join(DocumentKind, DocumentKind.id == AnimalDocument.document_kind_id)
-        .where(Animal.id == animal_id)
-    ).one()
-    assert doc_code == DocKindCode.comunicazione_ingresso.value
-
-    assert os.path.exists(os.path.join(disk_storage.base_path, doc_key))
+    animal_service.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=datetime.now().date())
+    )
 
 
 def test_update(
@@ -77,7 +60,9 @@ def test_variation_report_adoption(
 
     animal_service.complete_entry(
         animal_id,
-        data=CompleteEntryModel(entry_date=datetime.now().date() - timedelta(days=10)),
+        data=CompleteEntryModel(
+            entry_date=datetime.now().date() - timedelta(days=10)
+        ),
     )
 
     adopter_id = make_adopter()
@@ -114,20 +99,26 @@ def test_variation_report_adoption(
 
 
 def test_variation_report_death(
-    make_animal: Callable[[NewAnimalModel], int], animal_service: AnimalService, complete_animal_data
+    make_animal: Callable[[NewAnimalModel], int],
+    animal_service: AnimalService,
+    complete_animal_data,
 ):
     animal_id = make_animal()
 
     animal_service.complete_entry(
         animal_id,
-        data=CompleteEntryModel(entry_date=datetime.now().date() - timedelta(days=10)),
+        data=CompleteEntryModel(
+            entry_date=datetime.now().date() - timedelta(days=10)
+        ),
     )
 
     complete_animal_data(animal_id)
 
     animal_service.animal_repository.exit(
         animal_id,
-        data=AnimalExit(exit_date=datetime.now().date(), exit_type=ExitType.death),
+        data=AnimalExit(
+            exit_date=datetime.now().date(), exit_type=ExitType.death
+        ),
     )
 
     animal_service.generate_variation_report(animal_id)

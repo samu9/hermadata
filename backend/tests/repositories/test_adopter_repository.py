@@ -23,6 +23,8 @@ def test_save_and_search(adopter_repository: SQLAdopterRepository):
         )
     )
 
-    result = adopter_repository.search(AdopterSearchQuery(fiscal_code="AAAAAA12Z12Z123A"))
+    result = adopter_repository.search(
+        AdopterSearchQuery(fiscal_code="AAAAAA12Z12Z123A")
+    )
 
     assert result.total == 1

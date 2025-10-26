@@ -11,4 +11,6 @@ INTERVAL_MAP = {
 
 
 def recurrence_to_sql_interval(type_: RecurrenceType, amount: int) -> Interval:
-    return func.interval(f"{amount} {INTERVAL_MAP[type_] + ('s' if amount > 1 else '')}")
+    return func.interval(
+        f"{amount} {INTERVAL_MAP[type_] + ('s' if amount > 1 else '')}"
+    )

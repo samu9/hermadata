@@ -13,7 +13,6 @@ import {
 } from "../models/animal.schema"
 import {
     useComuniQuery,
-    useEntryTypesQuery,
     useExitTypesQuery,
     useProvinceQuery,
 } from "../queries"
@@ -41,9 +40,7 @@ const AnimalExitsForm = () => {
         mutationFn: (request: AnimalExitsReportSchema) =>
             apiService.animalExitsReport(request),
         onSuccess: (
-            result: { url: string; filename: string },
-            variables: AnimalExitsReportSchema,
-            context
+            result: { url: string; filename: string }
         ) => {
             const link = document.createElement("a")
             link.href = result.url

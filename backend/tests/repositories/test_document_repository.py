@@ -13,7 +13,9 @@ from hermadata.storage.disk_storage import DiskStorage
 
 
 def test_init(db_session: Session):
-    repo = SQLDocumentRepository(db_session, storage={}, selected_storage=StorageType.disk)
+    repo = SQLDocumentRepository(
+        db_session, storage={}, selected_storage=StorageType.disk
+    )
     assert DocKindCode.documento_ingresso in repo.document_kind_ids
 
 
@@ -36,7 +38,9 @@ def test_new_document(
     )
     result = document_repository.new_document(data)
 
-    doc_key = db_session.execute(select(Document.key).where(Document.id == result)).scalar_one()
+    doc_key = db_session.execute(
+        select(Document.key).where(Document.id == result)
+    ).scalar_one()
     assert os.path.exists(os.path.join(disk_storage.base_path, doc_key))
     os.remove(os.path.join(disk_storage.base_path, doc_key))
     assert result

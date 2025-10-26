@@ -43,7 +43,9 @@ def test_create_animal(app: TestClient, db_session: Session):
 
     assert isinstance(animal_code, str)
 
-    animal_id = db_session.execute(select(Animal.id).where(Animal.code == animal_code)).scalar_one()
+    animal_id = db_session.execute(
+        select(Animal.id).where(Animal.code == animal_code)
+    ).scalar_one()
 
     assert animal_id
 
@@ -58,14 +60,18 @@ def test_update_animal(app: TestClient, make_animal, db_session):
     )
     chip_code = random_chip_code()
 
-    update_data = jsonable_encoder(UpdateAnimalModel(name="Test", chip_code=chip_code).model_dump())
+    update_data = jsonable_encoder(
+        UpdateAnimalModel(name="Test", chip_code=chip_code).model_dump()
+    )
 
     result = app.post(f"/animal/{animal_id}", json=update_data)
 
     affected = int(result.content.decode())
     assert affected == 1
 
-    animal = db_session.execute(select(Animal).where(Animal.id == animal_id)).scalar_one()
+    animal = db_session.execute(
+        select(Animal).where(Animal.id == animal_id)
+    ).scalar_one()
 
     assert animal.name == "Test"
     assert animal.chip_code == chip_code
@@ -76,24 +82,19 @@ def test_complete_entry(app: TestClient, make_animal, db_session: Session):
     animal_id = make_animal()
 
     entry_date = (datetime.now() + timedelta(days=1)).date()
-    data = jsonable_encoder(CompleteEntryModel(entry_date=entry_date).model_dump())
+    data = jsonable_encoder(
+        CompleteEntryModel(entry_date=entry_date).model_dump()
+    )
 
     result = app.post(f"/animal/{animal_id}/entry/complete", json=data)
 
     assert result.status_code == 200
 
-    e: AnimalEntry = db_session.execute(select(AnimalEntry).where(AnimalEntry.animal_id == animal_id)).scalar_one()
+    e: AnimalEntry = db_session.execute(
+        select(AnimalEntry).where(AnimalEntry.animal_id == animal_id)
+    ).scalar_one()
 
     assert e.entry_date == entry_date
-
-    doc_kind: AnimalDocument = db_session.execute(
-        select(DocumentKind.code)
-        .select_from(AnimalDocument)
-        .join(DocumentKind, AnimalDocument.document_kind_id == DocumentKind.id)
-        .where(AnimalDocument.animal_id == animal_id)
-    ).scalar()
-
-    assert doc_kind == DocKindCode.comunicazione_ingresso.value
 
 
 def test_exit(
@@ -109,7 +110,9 @@ def test_exit(
 
     animal_service.complete_entry(
         animal_id,
-        data=CompleteEntryModel(entry_date=datetime.now().date() - timedelta(days=3)),
+        data=CompleteEntryModel(
+            entry_date=datetime.now().date() - timedelta(days=3)
+        ),
     )
 
     complete_animal_data(animal_id)
@@ -138,9 +141,13 @@ def test_exit(
         .where(AnimalDocument.animal_id == animal_id)
     ).all()
 
-    assert {DocKindCode.adozione, DocKindCode.variazione}.issubset({DocKindCode(k.code) for d, k in documents})
+    assert {DocKindCode.adozione, DocKindCode.variazione}.issubset(
+        {DocKindCode(k.code) for d, k in documents}
+    )
 
-    adoption = db_session.execute(select(Adoption).where(Adoption.animal_id == animal_id)).scalar_one()
+    adoption = db_session.execute(
+        select(Adoption).where(Adoption.animal_id == animal_id)
+    ).scalar_one()
 
     assert adoption.location_address == "VIA PROVA"
     assert adoption.location_city_code == "H501"

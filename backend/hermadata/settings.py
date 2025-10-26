@@ -27,6 +27,12 @@ class StorageSettings(BaseSettings):
     selected: StorageType
 
 
+class AuthSettings(BaseSettings):
+    secret: str
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+
+
 class AppSettings(BaseSettings):
     preferred_provinces: list[str] | None = None
     preferred_cities: list[str] | None = None
@@ -36,6 +42,7 @@ class Settings(BaseSettings):
     stage: str
     db: DBSettings
     storage: StorageSettings
+    auth: AuthSettings
     app: AppSettings = Field(default_factory=AppSettings)
     model_config = SettingsConfigDict(
         env_file=ENV_PATH,
