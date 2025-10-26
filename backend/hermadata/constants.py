@@ -1,6 +1,24 @@
 from enum import Enum, IntEnum, auto
 
 
+class Permission(str, Enum):
+    """Permission codes for role-based access control."""
+    CREATE_ANIMAL = "CA"
+    MAKE_ADOPTION = "MA"
+    UPLOAD_DOCUMENT = "UD"
+    EDIT_ADOPTER = "EAD"
+    EDIT_ANIMAL = "EAN"
+    BROWSE_PRESENT_ANIMALS = "BPA"
+    BROWSE_NON_PRESENT_ANIMALS = "BNA"
+    BROWSE_ADOPTERS = "BAD"
+    BROWSE_VETS = "BAV"
+    DOWNLOAD_DOCUMENT = "DD"
+    DOWNLOAD_SUMMARY = "DS"
+    SET_DOCUMENT_PERMISSION = "SDP"
+    MANAGE_USERS = "MU"
+    LIST_VETS = "LV"
+
+
 class StorageType(Enum):
     disk = "dd"
     aws_s3 = "s3"
