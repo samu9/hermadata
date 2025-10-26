@@ -3,13 +3,15 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.exc import NoResultFound
 
-from hermadata.constants import EXCEL_MEDIA_TYPE, ApiErrorCode
+from hermadata.constants import EXCEL_MEDIA_TYPE, ApiErrorCode, Permission
 from hermadata.initializations import (
     get_animal_repository,
     get_animal_service,
+    get_current_user,
     get_document_repository,
 )
 from hermadata.models import ApiError, PaginationResult
+from hermadata.permissions import check_permission
 from hermadata.repositories.animal.animal_repository import (
     ExistingChipCodeException,
     SQLAnimalRepository,
@@ -34,6 +36,7 @@ from hermadata.repositories.animal.models import (
 )
 from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.services.animal_service import AnimalService
+from hermadata.services.user_service import TokenData
 
 router = APIRouter(prefix="/animal")
 
@@ -57,7 +60,28 @@ def get_animal_list():
 def search_animals(
     query: Annotated[AnimalSearchModel, Depends(use_cache=False)],
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
+    if (
+        query.present
+        and check_permission(current_user, Permission.BROWSE_PRESENT_ANIMALS)
+        is False
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to browse present animals",
+        )
+    if (
+        query.not_present
+        and check_permission(
+            current_user, Permission.BROWSE_NOT_PRESENT_ANIMALS
+        )
+        is False
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to browse non-present animals",
+        )
     # Here `Depends`is used to use a pydantic model as query params.
     result = repo.search(query)
 
