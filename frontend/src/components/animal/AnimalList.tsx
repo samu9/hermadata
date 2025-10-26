@@ -30,6 +30,8 @@ import { classNames } from "primereact/utils"
 import { InputText } from "primereact/inputtext"
 import { useEntryTypesMap, useExitTypesMap } from "../../hooks/useMaps"
 import UncontrolledRacesDropdown from "../forms/uncontrolled/UncontrolledRacesDropdown"
+import { useAuth } from "../../contexts/AuthContext"
+import { Permission } from "../../constants"
 
 type LazyTableState = {
     first: number
@@ -100,11 +102,16 @@ const AnimalList = () => {
             },
         },
     })
+    const { can } = useAuth()
+    const canBrowseNotPresentOnly =
+        can(Permission.BROWSE_NOT_PRESENT_ANIMALS) &&
+        !can(Permission.BROWSE_PRESENT_ANIMALS)
+
     const [queryData, setQueryData] = useState<AnimalSearchQuery>({
         from_index: lazyState.first,
         to_index: lazyState.first + lazyState.rows,
-        present: true,
-        not_present: false,
+        present: canBrowseNotPresentOnly ? false : true,
+        not_present: canBrowseNotPresentOnly ? true : false,
     })
     const animalQuery = useAnimalSearchQuery(queryData)
     const entryTypesQuery = useEntryTypesQuery()
@@ -206,22 +213,32 @@ const AnimalList = () => {
     return (
         <div className="w-full">
             <div className="py-2 flex gap-2">
-                <SwitchFilter
-                    label="Mostra presenti"
-                    checked={queryData.present || false}
-                    onChange={(e) =>
-                        setQueryData({ ...queryData, present: e.value })
-                    }
-                />
+                {can(Permission.BROWSE_PRESENT_ANIMALS) &&
+                    can(Permission.BROWSE_NOT_PRESENT_ANIMALS) && (
+                        <>
+                            <SwitchFilter
+                                label="Mostra presenti"
+                                checked={queryData.present || false}
+                                onChange={(e) =>
+                                    setQueryData({
+                                        ...queryData,
+                                        present: e.value,
+                                    })
+                                }
+                            />
 
-                <SwitchFilter
-                    label="Mostra non presenti"
-                    checked={queryData.not_present || false}
-                    onChange={(e) =>
-                        setQueryData({ ...queryData, not_present: e.value })
-                    }
-                />
-
+                            <SwitchFilter
+                                label="Mostra non presenti"
+                                checked={queryData.not_present || false}
+                                onChange={(e) =>
+                                    setQueryData({
+                                        ...queryData,
+                                        not_present: e.value,
+                                    })
+                                }
+                            />
+                        </>
+                    )}
                 <SwitchFilter
                     label="Sanitario / Rifugio"
                     checked={false}

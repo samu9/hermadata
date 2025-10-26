@@ -19,6 +19,8 @@ import {
     useNavigate,
     useParams,
 } from "react-router-dom"
+import { Permission } from "../../constants"
+import { useAuth } from "../../contexts/AuthContext"
 import { useToolbar } from "../../contexts/Toolbar"
 import { Animal } from "../../models/animal.schema"
 import NewAnimalForm from "../new-entry/NewAnimalEntryForm"
@@ -35,34 +37,54 @@ type Item = {
     disabled?: boolean
 }
 
-const generateItems = (data: Animal): Item[] => [
-    {
-        label: "Panoramica",
-        icon: <FontAwesomeIcon icon={faHome} fixedWidth className="px-1" />,
-        path: "overview",
-    },
-    {
-        label: "Documenti",
-        icon: <FontAwesomeIcon icon={faFile} fixedWidth className="px-1" />,
-        path: "docs",
-    },
-    {
+const generateItems = (
+    data: Animal,
+    can: (permissionCode: string) => boolean
+): Item[] => {
+    const items: Item[] = [
+        {
+            label: "Panoramica",
+            icon: <FontAwesomeIcon icon={faHome} fixedWidth className="px-1" />,
+            path: "overview",
+        },
+    ]
+
+    // Documents tab - requires document viewing permissions
+    can(Permission.DOWNLOAD_DOCUMENT) &&
+        items.push({
+            label: "Documenti",
+            icon: <FontAwesomeIcon icon={faFile} fixedWidth className="px-1" />,
+            path: "docs",
+        })
+
+    // Events tab - always visible for now (could add specific permission later)
+    items.push({
         label: "Eventi",
         icon: <FontAwesomeIcon icon={faList} fixedWidth className="px-1" />,
         path: "events",
-    },
-    {
+    })
+
+    // Health data tab - always visible for now (could add specific permission later)
+    items.push({
         label: "Dati sanitari",
         icon: <FontAwesomeIcon icon={faHospital} fixedWidth className="px-1" />,
         path: "health",
-    },
-    {
-        label: "Modifica",
-        icon: <FontAwesomeIcon icon={faPencil} fixedWidth className="px-1" />,
-        path: "edit",
-    },
-    ...((!data.exit_date && [
-        {
+    })
+
+    // Edit tab - requires animal editing permissions
+    can(Permission.EDIT_ANIMAL) &&
+        items.push({
+            label: "Modifica",
+            icon: (
+                <FontAwesomeIcon icon={faPencil} fixedWidth className="px-1" />
+            ),
+            path: "edit",
+        })
+
+    // Exit tab - only show if animal hasn't exited yet and user can create animals
+    !data.exit_date &&
+        can(Permission.CREATE_ANIMAL) &&
+        items.push({
             label: "Uscita",
             icon: (
                 <FontAwesomeIcon
@@ -73,23 +95,24 @@ const generateItems = (data: Animal): Item[] => [
             ),
             path: "exit",
             disabled: Boolean(data.exit_date),
-        },
-    ]) ||
-        []),
-]
+        })
+
+    return items
+}
 
 const AnimalRecord = (props: Props) => {
     const navigate = useNavigate()
     const { id } = useParams()
+    const { can } = useAuth()
 
     const location = useLocation()
-    const items: Item[] = generateItems(props.data)
+    const items: Item[] = generateItems(props.data, can)
     const [activeIndex, setActiveIndex] = useState(1)
 
     const { addButton, removeButton } = useToolbar()
 
     useEffect(() => {
-        if (props.data?.exit_date) {
+        if (props.data?.exit_date && can(Permission.CREATE_ANIMAL)) {
             addButton({
                 id: "new-entry",
                 buttonText: "Nuovo ingresso",
@@ -103,7 +126,7 @@ const AnimalRecord = (props: Props) => {
                 },
             })
         }
-    }, [])
+    }, [props.data?.exit_date, can, addButton, removeButton, id])
     useEffect(() => {
         const pathElements = location.pathname.split("/").filter((e) => e)
 
@@ -113,9 +136,11 @@ const AnimalRecord = (props: Props) => {
             setActiveIndex(index)
         } else {
             setActiveIndex(0)
-            navigate(items[0].path)
+            if (items.length > 0) {
+                navigate(items[0].path)
+            }
         }
-    }, [])
+    }, [items, location.pathname, navigate])
     const tabMenuItems: MenuItem[] = items.map((tabItem, i) => ({
         icon: tabItem.icon,
         label: tabItem.label,

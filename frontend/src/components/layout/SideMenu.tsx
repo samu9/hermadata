@@ -13,6 +13,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons"
 import { usePermissions } from "../../hooks/usePermissions"
 import logo from "../../assets/hermadata.svg"
+import { useAuth } from "../../contexts/AuthContext"
+import { Permission } from "../../constants"
 type MenuElementProps = {
     to: string
     label: string | React.ReactNode
@@ -33,6 +35,7 @@ const MenuElement = (props: MenuElementProps) => (
     </NavLink>
 )
 const SideMenu = () => {
+    const { user, can } = useAuth()
     const { canAccessSuperUserFeatures } = usePermissions()
 
     return (
@@ -60,16 +63,20 @@ const SideMenu = () => {
                             to="/adopters"
                             label="Adottanti"
                         />
-                        <MenuElement
-                            icon={faUserDoctor}
-                            to="/vets"
-                            label="Veterinari"
-                        />
-                        <MenuElement
-                            icon={faDatabase}
-                            to="/exports"
-                            label="Estrazioni"
-                        />
+                        {can(Permission.BROWSE_VETS) && (
+                            <MenuElement
+                                icon={faUserDoctor}
+                                to="/vets"
+                                label="Veterinari"
+                            />
+                        )}
+                        {can(Permission.DOWNLOAD_SUMMARY) && (
+                            <MenuElement
+                                icon={faDatabase}
+                                to="/exports"
+                                label="Estrazioni"
+                            />
+                        )}
 
                         {/* Super user only menu items */}
                         {canAccessSuperUserFeatures() && (
