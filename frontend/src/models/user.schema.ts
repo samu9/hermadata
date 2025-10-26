@@ -12,6 +12,8 @@ export const loginResponseSchema = z.object({
     token_type: z.string(),
     username: z.string().optional(),
     is_superuser: z.boolean().optional(),
+    role: z.string().optional(),
+    permissions: z.array(z.string()).optional(),
 })
 
 export type LoginResponse = z.infer<typeof loginResponseSchema>
@@ -20,6 +22,8 @@ export const userSchema = z.object({
     username: z.string(),
     is_superuser: z.boolean(),
     email: z.string().optional(),
+    role: z.string().optional(),
+    permissions: z.array(z.string()).default([]),
 })
 
 export type User = z.infer<typeof userSchema>
@@ -32,6 +36,7 @@ export const managementUserSchema = z.object({
     email: z.string().email(),
     is_active: z.boolean(),
     is_superuser: z.boolean(),
+    role_name: z.string().optional(),
     created_at: z.string(),
     updated_at: z.string().optional(),
     last_login: z.string().optional(),
