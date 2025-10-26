@@ -5,7 +5,7 @@ UD,upload_document,Upload documents to the system
 EAD,edit_adopter,Edit adopter information
 EAN,edit_animal,Edit animal information
 BPA,browse_present_animals,Browse animals currently present
-BNA,browse_non_present_animals,Browse animals no longer present
+BNA,browse_not_present_animals,Browse animals no longer present
 BAD,browse_adopters,Browse adopter records
 BAV,browse_vets,Browse veterinarian records
 DD,download_document,Download documents from the system
