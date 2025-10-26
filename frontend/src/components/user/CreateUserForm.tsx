@@ -11,6 +11,8 @@ import { useMutation } from "react-query"
 import { z } from "zod"
 import { apiService } from "../../main"
 import { CreateUser } from "../../models/user.schema"
+import { useRolesQuery } from "../../queries"
+import ControlledDropdown from "../forms/ControlledDropdown"
 
 const createUserSchema = z
     .object({
@@ -21,6 +23,7 @@ const createUserSchema = z
             .string()
             .min(6, "La password deve essere di almeno 6 caratteri"),
         confirmPassword: z.string(),
+        role_name: z.string().min(1, "Seleziona un ruolo"),
         is_superuser: z.boolean().default(false),
         is_active: z.boolean().default(true),
     })
@@ -37,6 +40,7 @@ interface CreateUserFormProps {
 
 const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
     const toast = useRef<Toast>(null)
+    const { data: roles, isLoading: rolesLoading } = useRolesQuery()
 
     const form = useForm<CreateUserForm>({
         resolver: zodResolver(createUserSchema),
@@ -46,6 +50,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
             email: "",
             password: "",
             confirmPassword: "",
+            role_name: "",
             is_superuser: false,
             is_active: true,
         },
@@ -197,6 +202,18 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                                 </small>
                             )}
                         </div>
+
+                        {/* Ruolo */}
+                        <ControlledDropdown
+                            fieldName="role_name"
+                            label="Ruolo *"
+                            options={roles}
+                            optionLabel="name"
+                            optionValue="name"
+                            placeholder="Seleziona un ruolo"
+                            disabled={rolesLoading}
+                            className="field"
+                        />
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Password */}
