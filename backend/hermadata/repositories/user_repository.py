@@ -2,8 +2,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 from sqlalchemy import func, select, update
+from sqlalchemy.exc import NoResultFound
 
-from hermadata.database.models import User
+from hermadata.database.models import User, UserRole, UserRolePermission
 from hermadata.models import PaginationQuery, PaginationResult
 from hermadata.repositories import SQLBaseRepository
 
@@ -50,10 +51,14 @@ class SQLUserRepository(SQLBaseRepository):
 
     def get_by_id(self, id: int) -> User:
         result = self.session.execute(
-            select(User).where(User.id == id)
-        ).scalar_one()
-
-        return result
+    def get_all_roles(self) -> list[RoleModel]:
+        """Get all roles"""
+        result = self.session.execute(select(UserRole)).scalars().all()
+        
+        return [
+            RoleModel.model_validate(role, from_attributes=True)
+            for role in result
+        ]
 
     def update(self, user_id: int, data: UpdateUserModel):
         self.session.execute(

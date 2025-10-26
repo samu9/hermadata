@@ -49,6 +49,7 @@ const ApiEndpoints = {
         changePassword: (id: number) => `/user/${id}/password`,
         getCurrentUser: "/user/me",
         activities: "/user/activities",
+        roles: "/user/roles",
     },
     util: {
         getProvince: "/util/province",

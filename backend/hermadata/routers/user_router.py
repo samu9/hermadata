@@ -10,6 +10,8 @@ from hermadata.initializations import (
 )
 from hermadata.models import PaginationResult
 from hermadata.repositories.user_repository import (
+    RoleModel,
+    SQLUserRepository,
     UpdateUserModel,
     UserListQuery,
 )
@@ -114,15 +116,26 @@ def change_password(
         raise HTTPException(
             status_code=403, detail="Not authorized to change this password"
         )
-    
+
     # Change password
     success = service.change_password(
         user_id, data.current_password, data.new_password
     )
-    
+
     if not success:
         raise HTTPException(
             status_code=400, detail="Current password is incorrect"
         )
-    
+
     return {"message": "Password changed successfully"}
+
+
+@router.get("/roles", response_model=list[RoleModel])
+def get_all_roles(
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    user_repository: Annotated[
+        SQLUserRepository, Depends(get_user_repository)
+    ],
+):
+    """Get all available user roles. Requires authentication."""
+    return user_repository.get_all_roles()

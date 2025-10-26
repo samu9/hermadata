@@ -35,6 +35,7 @@ import {
 } from "../models/city.schema"
 import { DocKind, NewDocKind } from "../models/docs.schema"
 import { Race, raceSchema } from "../models/race.schema"
+import { Role, roleSchema } from "../models/role.schema"
 import { IntUtilItem } from "../models/util.schema"
 import ApiEndpoints from "./apiEndpoints"
 import {
@@ -517,6 +518,11 @@ class ApiService {
             ApiEndpoints.user.getCurrentUser
         )
         return result
+    }
+
+    async getRoles(): Promise<Role[]> {
+        const result = await this.get<Role[]>(ApiEndpoints.user.roles)
+        return result.map(role => roleSchema.parse(role))
     }
 
     isAuthenticated(): boolean {

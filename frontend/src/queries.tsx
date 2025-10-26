@@ -126,3 +126,9 @@ export const useVetSearchQuery = (queryData: VetSearch) =>
         queryFn: () => apiService.searchVet(queryData),
         staleTime: Infinity,
     })
+
+export const useRolesQuery = () =>
+    useQuery("roles", () => apiService.getRoles(), {
+        placeholderData: [],
+        staleTime: Infinity,
+    })
