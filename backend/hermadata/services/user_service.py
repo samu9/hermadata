@@ -20,6 +20,7 @@ from hermadata.repositories.user_repository import (
 class RegisterUserModel(BaseModel):
     email: EmailStr
     password: str
+    role_name: str | None = None
 
 
 class ChangePasswordModel(BaseModel):
@@ -32,6 +33,8 @@ class TokenData(BaseModel):
     email: EmailStr
     is_active: bool = False
     is_superuser: bool = False
+    role: str | None = None
+    permissions: list[str] = []
 
 
 class UserService:
@@ -56,7 +59,11 @@ class UserService:
         hashed_password = self.pwd_context.hash(data.password)
 
         user_id = self.user_repository.create(
-            CreateUserModel(email=data.email, hashed_password=hashed_password)
+            CreateUserModel(
+                email=data.email,
+                role_name=data.role_name,
+                hashed_password=hashed_password,
+            )
         )
 
         user = UserModel(
@@ -96,23 +103,23 @@ class UserService:
 
     def login(self, email: str, password: str) -> UserModel:
         try:
-            user_data = self.user_repository.get_by_email(email)
+            hashed_password = self.user_repository.get_for_login(email)
 
         except NoResultFound:
             return
 
-        password_verified = self._verify_password(
-            password, user_data.hashed_password
-        )
+        password_verified = self._verify_password(password, hashed_password)
 
         if not password_verified:
             return
-
+        user_data = self.user_repository.get_by_email(email)
         user = TokenData(
             user_id=user_data.id,
             email=user_data.email,
             is_superuser=user_data.is_superuser,
             is_active=user_data.is_active,
+            role=user_data.role_name,
+            permissions=user_data.permissions,
         )
 
         jwt = self._encode_jwt(user.model_dump())
@@ -136,9 +143,7 @@ class UserService:
 
     def get_user_by_id(self, user_id: int) -> UserModel:
         """Get user details by ID"""
-        user_data = self.user_repository.get_by_id(user_id)
-
-        user = UserModel.model_validate(user_data, from_attributes=True)
+        user = self.user_repository.get_by_id(user_id)
 
         return user
 

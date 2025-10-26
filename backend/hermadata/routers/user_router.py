@@ -86,6 +86,7 @@ def login(
         "token_type": "bearer",
         "username": user_details.email,
         "is_superuser": user_details.is_superuser,
+        "permissions": user_details.permissions,
     }
 
 
