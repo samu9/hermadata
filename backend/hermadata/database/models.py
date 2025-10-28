@@ -295,7 +295,9 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean(), default=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean(), default=False)
 
-    role_id: Mapped[int] = mapped_column(ForeignKey("user_roles.id"))
+    role_id: Mapped[int] = mapped_column(
+        ForeignKey("user_roles.id"), nullable=True
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
@@ -327,7 +329,7 @@ class UserRolePermission(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     role_id: Mapped[int] = mapped_column(ForeignKey("user_roles.id"))
-    permission_code: Mapped[str] = mapped_column(String(50))
+    permission_code: Mapped[str] = mapped_column(String(3))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
@@ -340,9 +342,7 @@ class UserRolePermission(Base):
 class Permission(Base):
     __tablename__ = "permissions"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-
-    code: Mapped[str] = mapped_column(String(50), unique=True)
+    code: Mapped[str] = mapped_column(String(3), primary_key=True)
     description: Mapped[str] = mapped_column(String(255), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
