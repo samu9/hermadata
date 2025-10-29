@@ -32,7 +32,7 @@ class UserModel(BaseModel):
     role_name: str | None = None
     created_at: datetime
     updated_at: datetime | None = None
-    permissions: list[Permission]
+    permissions: list[Permission] = []
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -196,10 +196,21 @@ class SQLUserRepository(SQLBaseRepository):
         # Convert to UserModel instances
         user_models = []
         for user, role_name in result:
-            user_dict = UserModel.model_validate(
-                user, from_attributes=True
-            ).model_dump()
-            user_dict["role_name"] = role_name
-            user_models.append(UserModel.model_validate(user_dict))
+            permissions = self.get_user_permissions(user.role_id)
+
+            user_data = UserModel(
+                id=user.id,
+                name=user.name,
+                surname=user.surname,
+                email=user.email,
+                permissions=permissions,
+                role_name=role_name,
+                is_active=user.is_active,
+                is_superuser=user.is_superuser,
+                created_at=user.created_at,
+                updated_at=user.updated_at,
+            )
+
+            user_models.append(user_data)
 
         return PaginationResult(items=user_models, total=total)
