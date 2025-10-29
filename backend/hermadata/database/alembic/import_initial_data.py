@@ -119,24 +119,22 @@ def import_roles(engine: Engine | None = None):
         Session = get_session_maker()
     else:
         Session = sessionmaker(engine)
-    
+
     with Session.begin() as s:
         with open(os.path.join(INITIAL_DATA_DIR, "roles.csv"), "r") as fp:
             reader = csv.reader(fp)
             for row in reader:
                 role_name = row[0].strip()
-                
+
                 # Check if role already exists
                 check = s.execute(
                     select(UserRole.id).where(UserRole.name == role_name)
                 ).first()
-                
+
                 if check:
                     continue
-                    
-                s.execute(
-                    insert(UserRole).values(name=role_name)
-                )
+
+                s.execute(insert(UserRole).values(name=role_name))
 
 
 def import_permissions(engine: Engine | None = None):
@@ -147,7 +145,7 @@ def import_permissions(engine: Engine | None = None):
         Session = get_session_maker()
     else:
         Session = sessionmaker(engine)
-    
+
     with Session.begin() as s:
         with open(
             os.path.join(INITIAL_DATA_DIR, "permissions.csv"), "r"
@@ -156,12 +154,12 @@ def import_permissions(engine: Engine | None = None):
             for row in reader:
                 code = row["code"].strip()
                 description = row["description"].strip()
-                
+
                 # Check if permission already exists
                 check = s.execute(
-                    select(Permission.id).where(Permission.code == code)
+                    select(Permission.code).where(Permission.code == code)
                 ).first()
-                
+
                 if check:
                     # Update description if permission exists
                     s.execute(
@@ -170,11 +168,10 @@ def import_permissions(engine: Engine | None = None):
                         .where(Permission.code == code)
                     )
                     continue
-                    
+
                 s.execute(
                     insert(Permission).values(
-                        code=code,
-                        description=description
+                        code=code, description=description
                     )
                 )
 
@@ -187,7 +184,7 @@ def import_role_permissions(engine: Engine | None = None):
         Session = get_session_maker()
     else:
         Session = sessionmaker(engine)
-    
+
     with Session.begin() as s:
         with open(
             os.path.join(INITIAL_DATA_DIR, "role-permissions.csv"), "r"
@@ -196,35 +193,34 @@ def import_role_permissions(engine: Engine | None = None):
             for row in reader:
                 role_name = row["role"].strip()
                 permission_code = row["permission_code"].strip()
-                
+
                 # Get role ID
                 role_result = s.execute(
                     select(UserRole.id).where(UserRole.name == role_name)
                 ).first()
-                
+
                 if not role_result:
                     print(
                         f"Warning: Role '{role_name}' not found, "
                         f"skipping permission mapping"
                     )
                     continue
-                
+
                 role_id = role_result[0]
-                
+
                 # Check if mapping already exists
                 check = s.execute(
                     select(UserRolePermission.id).where(
                         UserRolePermission.role_id == role_id,
-                        UserRolePermission.permission_code == permission_code
+                        UserRolePermission.permission_code == permission_code,
                     )
                 ).first()
-                
+
                 if check:
                     continue
-                    
+
                 s.execute(
                     insert(UserRolePermission).values(
-                        role_id=role_id,
-                        permission_code=permission_code
+                        role_id=role_id, permission_code=permission_code
                     )
                 )
