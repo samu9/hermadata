@@ -3,7 +3,9 @@ operator,CA
 operator,DS
 operator,UD
 operator,MA
-operator,EA
+operator,EAD
+operator,BPA
+operator,BNA
 city_admin,BPA
 city_admin,BNA
 city_admin,DD
