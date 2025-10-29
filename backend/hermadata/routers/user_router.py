@@ -118,7 +118,15 @@ def change_password(
             status_code=403, detail="Not authorized to change this password"
         )
 
-    # Change password
+    # If user is changing their own password, current_password is required
+    if current_user.user_id == user_id and data.current_password is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Current password required when changing your own password"
+        )
+
+    # If superuser is changing another user's password, current_password not
+    # needed but if provided, it should be verified
     success = service.change_password(
         user_id, data.current_password, data.new_password
     )

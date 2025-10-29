@@ -24,7 +24,7 @@ class RegisterUserModel(BaseModel):
 
 
 class ChangePasswordModel(BaseModel):
-    current_password: str
+    current_password: str | None = None
     new_password: str
 
 
@@ -155,18 +155,19 @@ class UserService:
         return result
 
     def change_password(
-        self, user_id: int, current_password: str, new_password: str
+        self, user_id: int, current_password: str | None, new_password: str
     ) -> bool:
-        """Change user password after verifying current password"""
+        """Change user password after verifying current password if provided"""
         try:
             # Get user by ID
             user_data = self.user_repository.get_by_id(user_id)
 
-            # Verify current password
-            if not self._verify_password(
-                current_password, user_data.hashed_password
-            ):
-                return False
+            # Verify current password only if provided
+            if current_password is not None:
+                if not self._verify_password(
+                    current_password, user_data.hashed_password
+                ):
+                    return False
 
             # Hash new password
             new_hashed_password = self.pwd_context.hash(new_password)
