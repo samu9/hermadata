@@ -508,6 +508,15 @@ class ApiService {
         })
     }
 
+    async changeUserPasswordAsAdmin(
+        userId: number,
+        newPassword: string
+    ): Promise<void> {
+        await this.post(ApiEndpoints.user.changePassword(userId), {
+            new_password: newPassword,
+        })
+    }
+
     async getUserActivities(): Promise<any[]> {
         const result = await this.get<any[]>(ApiEndpoints.user.activities)
         return result

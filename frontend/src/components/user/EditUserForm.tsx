@@ -10,7 +10,8 @@ import { Controller, FormProvider, useForm } from "react-hook-form"
 import { useMutation } from "react-query"
 import { z } from "zod"
 import { apiService } from "../../main"
-import { ManagementUser, UpdateUser } from "../../models/user.schema"
+import { ManagementUser } from "../../models/user.schema"
+import { useAuth } from "../../contexts/AuthContext"
 
 const editUserSchema = z.object({
     name: z.string().optional(),
@@ -48,6 +49,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
 }) => {
     const [showPasswordForm, setShowPasswordForm] = useState(false)
     const toast = useRef<Toast>(null)
+    const { user: currentUser } = useAuth()
 
     const userForm = useForm<EditUserFormData>({
         resolver: zodResolver(editUserSchema),
@@ -92,8 +94,15 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
     )
 
     const changePasswordMutation = useMutation(
-        (data: { newPassword: string }) =>
-            apiService.changeUserPassword(user.id, data.newPassword),
+        (data: { newPassword: string }) => {
+            // Use admin method if current user is superuser, otherwise use regular method
+            if (currentUser?.is_superuser) {
+                return apiService.changeUserPasswordAsAdmin(user.id, data.newPassword)
+            } else {
+                // This case shouldn't happen as non-superusers shouldn't be able to edit other users
+                throw new Error("Non autorizzato a cambiare questa password")
+            }
+        },
         {
             onSuccess: () => {
                 toast.current?.show({
