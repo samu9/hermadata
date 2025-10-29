@@ -5,6 +5,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.exc import NoResultFound
 
 from hermadata.constants import Permission
+from hermadata.database.models import Permission as PermissionEntity
 from hermadata.database.models import User, UserRole, UserRolePermission
 from hermadata.models import PaginationQuery, PaginationResult
 from hermadata.repositories import SQLBaseRepository
@@ -43,6 +44,13 @@ class UserListQuery(PaginationQuery):
 class RoleModel(BaseModel):
     id: int
     name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PermissionModel(BaseModel):
+    code: str
+    description: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -214,3 +222,15 @@ class SQLUserRepository(SQLBaseRepository):
             user_models.append(user_data)
 
         return PaginationResult(items=user_models, total=total)
+
+    def get_all_permissions(self) -> list[PermissionModel]:
+        """Get all available permissions with their codes and descriptions"""
+        query = select(PermissionEntity)
+        result = self.session.execute(query).scalars().all()
+
+        return [
+            PermissionModel(
+                code=permission.code, description=permission.description
+            )
+            for permission in result
+        ]

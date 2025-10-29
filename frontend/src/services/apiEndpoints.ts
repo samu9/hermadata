@@ -50,6 +50,7 @@ const ApiEndpoints = {
         getCurrentUser: "/user/me",
         activities: "/user/activities",
         roles: "/user/roles",
+        permissions: "/user/permissions",
     },
     util: {
         getProvince: "/util/province",

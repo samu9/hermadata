@@ -10,6 +10,7 @@ from hermadata.initializations import (
 )
 from hermadata.models import PaginationResult
 from hermadata.repositories.user_repository import (
+    PermissionModel,
     RoleModel,
     SQLUserRepository,
     UpdateUserModel,
@@ -148,3 +149,14 @@ def get_all_roles(
 ):
     """Get all available user roles. Requires authentication."""
     return user_repository.get_all_roles()
+
+
+@router.get("/permissions", response_model=list[PermissionModel])
+def get_all_permissions(
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    user_repository: Annotated[
+        SQLUserRepository, Depends(get_user_repository)
+    ],
+):
+    """Get all available permissions. Requires authentication."""
+    return user_repository.get_all_permissions()

@@ -36,6 +36,7 @@ import {
 import { DocKind, NewDocKind } from "../models/docs.schema"
 import { Race, raceSchema } from "../models/race.schema"
 import { Role, roleSchema } from "../models/role.schema"
+import { Permission, permissionSchema } from "../models/permission.schema"
 import { IntUtilItem } from "../models/util.schema"
 import ApiEndpoints from "./apiEndpoints"
 import {
@@ -532,6 +533,11 @@ class ApiService {
     async getRoles(): Promise<Role[]> {
         const result = await this.get<Role[]>(ApiEndpoints.user.roles)
         return result.map(role => roleSchema.parse(role))
+    }
+
+    async getPermissions(): Promise<Permission[]> {
+        const result = await this.get<Permission[]>(ApiEndpoints.user.permissions)
+        return result.map(permission => permissionSchema.parse(permission))
     }
 
     isAuthenticated(): boolean {
