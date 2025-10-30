@@ -5,15 +5,18 @@ import {
     faXmarkCircle,
     faCalendarAlt,
     faSignOutAlt,
+    faCamera,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
 import { classNames } from "primereact/utils"
+import { useState } from "react"
 import cat from "../../assets/cat.svg"
 import dog from "../../assets/dog.svg"
 import { useExitTypesMap } from "../../hooks/useMaps"
 import { Animal } from "../../models/animal.schema"
 import { ChipCodeBadge } from "./misc"
+import AnimalImageUploadDialog from "./AnimalImageUploadDialog"
 type Props = {
     data: Animal
 }
@@ -94,23 +97,40 @@ const NotPresentAlert = (props: Props) => {
     )
 }
 const AnimalRecordHeader = (props: Props) => {
+    const [imageUploadDialogVisible, setImageUploadDialogVisible] = useState(false)
+
+    const handleImageClick = () => {
+        setImageUploadDialogVisible(true)
+    }
+
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <div className="flex gap-6 items-start">
                 {/* Animal Image */}
                 <div className="flex-shrink-0">
-                    <div className="w-32 h-32 rounded-full border-4 border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center">
+                    <div 
+                        className="w-32 h-32 rounded-full border-4 border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center relative group cursor-pointer transition-all duration-200 hover:border-gray-300"
+                        onClick={handleImageClick}
+                        title="Clicca per cambiare l'immagine"
+                    >
                         <img
-                            src={props.data.race_id === "C" ? dog : cat}
+                            src={props.data.img_path || (props.data.race_id === "C" ? dog : cat)}
                             alt="Animal"
                             className={classNames(
-                                "w-full h-full object-cover",
+                                "w-full h-full object-cover transition-all duration-200 group-hover:brightness-75",
                                 {
                                     "w-12 h-12 object-cover":
                                         !props.data.img_path,
                                 }
                             )}
                         />
+                        {/* Overlay with camera icon on hover */}
+                        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <FontAwesomeIcon
+                                icon={faCamera}
+                                className="text-white text-2xl"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -190,6 +210,14 @@ const AnimalRecordHeader = (props: Props) => {
                     </div>
                 </div>
             </div>
+
+            {/* Image Upload Dialog */}
+            <AnimalImageUploadDialog
+                visible={imageUploadDialogVisible}
+                onHide={() => setImageUploadDialogVisible(false)}
+                animalId={props.data.code}
+                animalName={props.data.name || undefined}
+            />
         </div>
     )
 }
