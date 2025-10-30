@@ -35,7 +35,7 @@ const MenuElement = (props: MenuElementProps) => (
     </NavLink>
 )
 const SideMenu = () => {
-    const { user, can } = useAuth()
+    const { can } = useAuth()
     const { canAccessSuperUserFeatures } = usePermissions()
 
     return (
