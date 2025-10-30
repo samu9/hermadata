@@ -271,3 +271,9 @@ def serve_animal_exits_report(
         media_type=EXCEL_MEDIA_TYPE,
         headers={"X-filename": filename},
     )
+
+
+# TODO: Add animal image upload endpoints here
+# See TODO_ANIMAL_IMAGE_UPLOAD.md for implementation details
+# @router.post("/{animal_id}/image", response_model=int)
+# @router.put("/{animal_id}/image", response_model=None)
