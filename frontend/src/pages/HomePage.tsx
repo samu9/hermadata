@@ -28,18 +28,11 @@ import { AnimalSearchResult } from "../models/animal.schema"
 
 const HomePage = () => {
     const navigate = useNavigate()
-    const { user, hasPermission } = useAuth()
+    const { user } = useAuth()
     const { data: stats, isLoading: statsLoading } = useDashboardStatsQuery()
     const { data: recentAnimals, isLoading: recentLoading } =
         useRecentAnimalsQuery(5)
     const { data: races } = useRacesQuery()
-
-    const currentDate = new Date().toLocaleDateString("it-IT", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-    })
 
     const getRaceLabel = (raceId: string) => {
         const race = races?.find((r) => r.id === raceId)
@@ -265,45 +258,47 @@ const HomePage = () => {
 
             {/* Important Dates and Reminders */}
             <div className="grid mt-4">
-                <div className="col-12 lg:col-6">
-                    <Card title="Date Importanti">
-                        <div className="flex flex-column gap-3">
-                            <div className="flex justify-content-between align-items-center p-3 border-1 border-200 border-round">
-                                <div>
-                                    <div className="font-medium">
-                                        Controlli Veterinari
+                {user?.is_superuser && (
+                    <div className="col-12 lg:col-6">
+                        <Card title="Date Importanti">
+                            <div className="flex flex-column gap-3">
+                                <div className="flex justify-content-between align-items-center p-3 border-1 border-200 border-round">
+                                    <div>
+                                        <div className="font-medium">
+                                            Controlli Veterinari
+                                        </div>
+                                        <div className="text-600 text-sm">
+                                            Prossimi appuntamenti programmati
+                                        </div>
                                     </div>
-                                    <div className="text-600 text-sm">
-                                        Prossimi appuntamenti programmati
-                                    </div>
+                                    <Badge value="0" severity="warning" />
                                 </div>
-                                <Badge value="0" severity="warning" />
-                            </div>
-                            <div className="flex justify-content-between align-items-center p-3 border-1 border-200 border-round">
-                                <div>
-                                    <div className="font-medium">
-                                        Vaccinazioni
+                                <div className="flex justify-content-between align-items-center p-3 border-1 border-200 border-round">
+                                    <div>
+                                        <div className="font-medium">
+                                            Vaccinazioni
+                                        </div>
+                                        <div className="text-600 text-sm">
+                                            Animali che necessitano vaccinazioni
+                                        </div>
                                     </div>
-                                    <div className="text-600 text-sm">
-                                        Animali che necessitano vaccinazioni
-                                    </div>
+                                    <Badge value="0" severity="info" />
                                 </div>
-                                <Badge value="0" severity="info" />
-                            </div>
-                            <div className="flex justify-content-between align-items-center p-3 border-1 border-200 border-round">
-                                <div>
-                                    <div className="font-medium">
-                                        Sterilizzazioni
+                                <div className="flex justify-content-between align-items-center p-3 border-1 border-200 border-round">
+                                    <div>
+                                        <div className="font-medium">
+                                            Sterilizzazioni
+                                        </div>
+                                        <div className="text-600 text-sm">
+                                            Appuntamenti per sterilizzazione
+                                        </div>
                                     </div>
-                                    <div className="text-600 text-sm">
-                                        Appuntamenti per sterilizzazione
-                                    </div>
+                                    <Badge value="0" severity="success" />
                                 </div>
-                                <Badge value="0" severity="success" />
                             </div>
-                        </div>
-                    </Card>
-                </div>
+                        </Card>
+                    </div>
+                )}
 
                 <div className="col-12 lg:col-6">
                     <Card title="Utilità e Report">
