@@ -58,11 +58,13 @@ const SideMenu = () => {
                             to="/animal"
                             label="Animali"
                         />
-                        <MenuElement
-                            icon={faPerson}
-                            to="/adopters"
-                            label="Adottanti"
-                        />
+                        {can(Permission.BROWSE_ADOPTERS) && (
+                            <MenuElement
+                                icon={faPerson}
+                                to="/adopters"
+                                label="Adottanti"
+                            />
+                        )}
                         {can(Permission.BROWSE_VETS) && (
                             <MenuElement
                                 icon={faUserDoctor}
