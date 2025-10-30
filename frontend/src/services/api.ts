@@ -17,6 +17,7 @@ import {
     AnimalExit,
     AnimalExitsReportSchema,
     AnimalSearchQuery,
+    AnimalSearchResult,
     NewAnimalAdoption,
     NewAnimalEntry,
     PaginatedAnimalSearchResult,
@@ -532,12 +533,52 @@ class ApiService {
 
     async getRoles(): Promise<Role[]> {
         const result = await this.get<Role[]>(ApiEndpoints.user.roles)
-        return result.map(role => roleSchema.parse(role))
+        return result.map((role) => roleSchema.parse(role))
     }
 
     async getPermissions(): Promise<Permission[]> {
-        const result = await this.get<Permission[]>(ApiEndpoints.user.permissions)
-        return result.map(permission => permissionSchema.parse(permission))
+        const result = await this.get<Permission[]>(
+            ApiEndpoints.user.permissions
+        )
+        return result.map((permission) => permissionSchema.parse(permission))
+    }
+    // Dashboard statistics methods
+    async getDashboardStats(): Promise<{
+        totalAnimals: number
+        activeAnimals: number
+        adoptedAnimals: number
+        recentEntries: number
+        recentExits: number
+    }> {
+        // Since there's no dedicated stats endpoint, we'll use search to get counts
+        const activeAnimalsResult = await this.searchAnimals({
+            from_index: 0,
+            to_index: 1,
+            present: true,
+        })
+        const totalAnimalsResult = await this.searchAnimals({
+            from_index: 0,
+            to_index: 1,
+        })
+
+        return {
+            totalAnimals: totalAnimalsResult.total,
+            activeAnimals: activeAnimalsResult.total,
+            adoptedAnimals:
+                totalAnimalsResult.total - activeAnimalsResult.total,
+            recentEntries: 0, // Would need better date filtering
+            recentExits: 0, // Would need exit endpoint to calculate properly
+        }
+    }
+
+    async getRecentAnimals(limit: number = 5): Promise<AnimalSearchResult[]> {
+        const result = await this.searchAnimals({
+            from_index: 0,
+            to_index: limit,
+            sort_field: "entry_date",
+            sort_order: -1, // descending
+        })
+        return result.items
     }
 
     isAuthenticated(): boolean {

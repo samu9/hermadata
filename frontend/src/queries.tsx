@@ -132,3 +132,20 @@ export const useRolesQuery = () =>
         placeholderData: [],
         staleTime: Infinity,
     })
+
+// Dashboard queries
+export const useDashboardStatsQuery = () =>
+    useQuery(["dashboard-stats"], () => apiService.getDashboardStats(), {
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        refetchOnWindowFocus: false,
+    })
+
+export const useRecentAnimalsQuery = (limit: number = 5) =>
+    useQuery(
+        ["recent-animals", limit],
+        () => apiService.getRecentAnimals(limit),
+        {
+            staleTime: 2 * 60 * 1000, // 2 minutes
+            refetchOnWindowFocus: false,
+        }
+    )
