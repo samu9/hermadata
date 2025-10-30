@@ -102,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const can = (permissionCode: string): boolean => {
         if (!isAuthenticated || !user) return false
-        return user.is_superuser || user.permissions.includes(permissionCode)
+        return user.is_superuser || user.permissions?.includes(permissionCode)
     }
 
     const isSuperUser = user?.is_superuser === true
