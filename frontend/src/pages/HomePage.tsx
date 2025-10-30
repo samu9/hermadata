@@ -123,16 +123,6 @@ const HomePage = () => {
         <div className="p-4">
             <div className="mb-5">
                 <PageTitle>Dashboard</PageTitle>
-                <div className="text-600 mt-2 text-lg">
-                    Buongiorno,{" "}
-                    <span className="font-semibold text-primary">
-                        {user?.username || "Utente"}
-                    </span>
-                    !
-                </div>
-                <div className="text-500 text-sm mt-1">
-                    Oggi è {currentDate}
-                </div>
             </div>
 
             {/* Statistics Cards */}
@@ -176,8 +166,7 @@ const HomePage = () => {
             </div>
 
             <div className="grid">
-                {/* Quick Actions */}
-                <div className="col-12 lg:col-4">
+                {/* <div className="col-12 lg:col-4">
                     <Card title="Azioni Rapide" className="h-full">
                         <div className="flex flex-column gap-3">
                             <QuickActionButton
@@ -211,7 +200,7 @@ const HomePage = () => {
                             )}
                         </div>
                     </Card>
-                </div>
+                </div> */}
 
                 {/* Recent Animals */}
                 <div className="col-12 lg:col-8">
@@ -288,7 +277,7 @@ const HomePage = () => {
                                         Prossimi appuntamenti programmati
                                     </div>
                                 </div>
-                                <Badge value="3" severity="warning" />
+                                <Badge value="0" severity="warning" />
                             </div>
                             <div className="flex justify-content-between align-items-center p-3 border-1 border-200 border-round">
                                 <div>
@@ -299,7 +288,7 @@ const HomePage = () => {
                                         Animali che necessitano vaccinazioni
                                     </div>
                                 </div>
-                                <Badge value="7" severity="info" />
+                                <Badge value="0" severity="info" />
                             </div>
                             <div className="flex justify-content-between align-items-center p-3 border-1 border-200 border-round">
                                 <div>
@@ -310,7 +299,7 @@ const HomePage = () => {
                                         Appuntamenti per sterilizzazione
                                     </div>
                                 </div>
-                                <Badge value="2" severity="success" />
+                                <Badge value="0" severity="success" />
                             </div>
                         </div>
                     </Card>
