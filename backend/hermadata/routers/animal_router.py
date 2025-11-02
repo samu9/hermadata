@@ -11,7 +11,7 @@ from hermadata.initializations import (
     get_document_repository,
 )
 from hermadata.models import ApiError, PaginationResult
-from hermadata.permissions import check_permission
+from hermadata.permissions import check_permission, require_permission
 from hermadata.repositories.animal.animal_repository import (
     ExistingChipCodeException,
     SQLAnimalRepository,
@@ -45,6 +45,9 @@ router = APIRouter(prefix="/animal")
 def new_animal_entry(
     data: NewAnimalModel,
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.CREATE_ANIMAL))
+    ],
 ) -> str:
     animal_code = repo.new_animal(data)
 
@@ -106,6 +109,9 @@ def update_animal(
     animal_id: int,
     data: UpdateAnimalModel,
     service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.EDIT_ANIMAL))
+    ],
 ) -> int | ApiError:
     try:
         result = service.update(animal_id, data)
@@ -137,6 +143,9 @@ def upload_animal_document(
     doc_repo: Annotated[
         SQLDocumentRepository, Depends(get_document_repository)
     ],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.UPLOAD_DOCUMENT))
+    ],
 ):
     doc_kind = doc_repo.get_document_kind_by_code(data.document_kind_code)
 
@@ -154,6 +163,9 @@ def animal_exit(
     animal_id: int,
     data: AnimalExit,
     service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.MAKE_ADOPTION))
+    ],
 ):
     service.exit(animal_id, data)
 
