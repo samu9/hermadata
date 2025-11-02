@@ -11,7 +11,8 @@ import ControlledInputPassword from "../forms/ControlledInputPassword"
 import { useEffect } from "react"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
-import HermaDataLogo from "../HermaDataLogo"
+// import HermaDataLogo from "../HermaDataLogo"
+import logo from "../../assets/hermadata.svg"
 const LoginForm = () => {
     const form = useForm<Login>({
         resolver: zodResolver(loginSchema),
@@ -55,8 +56,8 @@ const LoginForm = () => {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
             <Card className="w-full max-w-md shadow-2xl border-0 overflow-hidden">
                 <div className="flex items-center gap-2 px-8">
-                    {/* <img src={logo} alt="HermaData Logo" className="w-24" /> */}
-                    <HermaDataLogo size={100} color="#6366f1" />
+                    <img src={logo} alt="HermaData Logo" className="w-24" />
+                    {/* <HermaDataLogo size={100} color="#6366f1" /> */}
                     <div>
                         <span className="text-3xl text-primary font-bold">
                             HERMADATA
@@ -105,8 +106,7 @@ const LoginForm = () => {
                                 size="large"
                             >
                                 {loginMutation.isLoading ? (
-                                    <span className="flex items-center justify-center">
-                                        <i className="pi pi-spin pi-spinner mr-2"></i>
+                                    <span className="ml-4">
                                         Accesso in corso...
                                     </span>
                                 ) : (

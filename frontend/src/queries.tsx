@@ -127,6 +127,12 @@ export const useVetSearchQuery = (queryData: VetSearch) =>
         staleTime: Infinity,
     })
 
+export const useRolesQuery = () =>
+    useQuery("roles", () => apiService.getRoles(), {
+        placeholderData: [],
+        staleTime: Infinity,
+    })
+
 // Dashboard queries
 export const useDashboardStatsQuery = () =>
     useQuery(["dashboard-stats"], () => apiService.getDashboardStats(), {
@@ -135,7 +141,11 @@ export const useDashboardStatsQuery = () =>
     })
 
 export const useRecentAnimalsQuery = (limit: number = 5) =>
-    useQuery(["recent-animals", limit], () => apiService.getRecentAnimals(limit), {
-        staleTime: 2 * 60 * 1000, // 2 minutes
-        refetchOnWindowFocus: false,
-    })
+    useQuery(
+        ["recent-animals", limit],
+        () => apiService.getRecentAnimals(limit),
+        {
+            staleTime: 2 * 60 * 1000, // 2 minutes
+            refetchOnWindowFocus: false,
+        }
+    )

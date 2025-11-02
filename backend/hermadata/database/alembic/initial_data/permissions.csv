@@ -1,0 +1,14 @@
+code,permission,description
+CA,create_animal,Create new animal records
+MA,make_adoption,Process animal adoptions
+UD,upload_document,Upload documents to the system
+EAD,edit_adopter,Edit adopter information
+EAN,edit_animal,Edit animal information
+BPA,browse_present_animals,Browse animals currently present
+BNA,browse_not_present_animals,Browse animals no longer present
+BAD,browse_adopters,Browse adopter records
+BAV,browse_vets,Browse veterinarian records
+DD,download_document,Download documents from the system
+DS,download_summary,Download summary reports
+SDP,set_document_permission,Set document permissions
+MU,manage_users,Manage user accounts and roles

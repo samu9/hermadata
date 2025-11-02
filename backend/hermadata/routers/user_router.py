@@ -10,6 +10,9 @@ from hermadata.initializations import (
 )
 from hermadata.models import PaginationResult
 from hermadata.repositories.user_repository import (
+    PermissionModel,
+    RoleModel,
+    SQLUserRepository,
     UpdateUserModel,
     UserListQuery,
 )
@@ -84,6 +87,7 @@ def login(
         "token_type": "bearer",
         "username": user_details.email,
         "is_superuser": user_details.is_superuser,
+        "permissions": user_details.permissions,
     }
 
 
@@ -114,15 +118,45 @@ def change_password(
         raise HTTPException(
             status_code=403, detail="Not authorized to change this password"
         )
-    
-    # Change password
+
+    # If user is changing their own password, current_password is required
+    if current_user.user_id == user_id and data.current_password is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Current password required when changing your own password"
+        )
+
+    # If superuser is changing another user's password, current_password not
+    # needed but if provided, it should be verified
     success = service.change_password(
         user_id, data.current_password, data.new_password
     )
-    
+
     if not success:
         raise HTTPException(
             status_code=400, detail="Current password is incorrect"
         )
-    
+
     return {"message": "Password changed successfully"}
+
+
+@router.get("/roles", response_model=list[RoleModel])
+def get_all_roles(
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    user_repository: Annotated[
+        SQLUserRepository, Depends(get_user_repository)
+    ],
+):
+    """Get all available user roles. Requires authentication."""
+    return user_repository.get_all_roles()
+
+
+@router.get("/permissions", response_model=list[PermissionModel])
+def get_all_permissions(
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    user_repository: Annotated[
+        SQLUserRepository, Depends(get_user_repository)
+    ],
+):
+    """Get all available permissions. Requires authentication."""
+    return user_repository.get_all_permissions()

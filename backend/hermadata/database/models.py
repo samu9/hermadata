@@ -295,6 +295,10 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean(), default=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean(), default=False)
 
+    role_id: Mapped[int] = mapped_column(
+        ForeignKey("user_roles.id"), nullable=True
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )
@@ -302,6 +306,51 @@ class User(Base):
         DateTime(), server_onupdate=func.now(), nullable=True
     )
     deleted_at: Mapped[datetime] = mapped_column(DateTime(), nullable=True)
+
+
+class UserRole(Base):
+    __tablename__ = "user_roles"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    name: Mapped[str] = mapped_column(String(50))
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+
+class UserRolePermission(Base):
+    __tablename__ = "user_role_permissions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    role_id: Mapped[int] = mapped_column(ForeignKey("user_roles.id"))
+    permission_code: Mapped[str] = mapped_column(String(3))
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+
+class Permission(Base):
+    __tablename__ = "permissions"
+
+    code: Mapped[str] = mapped_column(String(3), primary_key=True)
+    description: Mapped[str] = mapped_column(String(255), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
 
 # class Procedure(Base):
@@ -365,6 +414,38 @@ class DocumentKind(Base):
         Boolean(), server_default=true(), default=True
     )
     rendered: Mapped[bool] = mapped_column(
+        Boolean(), server_default=true(), default=True
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+
+class DocumentPermission(Base):
+    __tablename__ = "document_permissions"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    role_id: Mapped[int] = mapped_column(
+        ForeignKey("user_roles.id"), nullable=True
+    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
+    document_kind_id: Mapped[int] = mapped_column(
+        ForeignKey("document_kind.id")
+    )
+    document_id: Mapped[int] = mapped_column(
+        ForeignKey("document.id"), nullable=True
+    )
+    can_view: Mapped[bool] = mapped_column(
+        Boolean(), server_default=true(), default=True
+    )
+    can_upload: Mapped[bool] = mapped_column(
+        Boolean(), server_default=true(), default=True
+    )
+    can_delete: Mapped[bool] = mapped_column(
         Boolean(), server_default=true(), default=True
     )
 

@@ -1,0 +1,65 @@
+{% extends "base.jinja" %} {% block content%}
+
+<div>
+    <div class="text-center font-bold mb-8">
+        Elementi identificativi dell'animale
+    </div>
+    <p>
+        Il/la sottoscritto/a <strong>Luigi Vescovini</strong> per
+        <strong>ASSOCIAZIONE AMICI DEGLI ANIMALI - ODV</strong>, residente in
+        <strong>51016 Montecatini Terme in Via delle Padulette</strong>, tel.
+        <strong>3503060217</strong>, in qualità di proprietario del cane
+        iscritto all'Anagrafe Canina Regionale rispondente al seguente stato
+        segnaletico:
+    </p>
+
+    <table class="my-4">
+        <tr class="border-b">
+            <td>Razza</td>
+            <td>{{ animal_breed }}</td>
+        </tr>
+        <tr class="border-b">
+            <td>Sesso</td>
+            <td>{{ animal_sex }}</td>
+        </tr>
+        <tr class="border-b">
+            <td>Età</td>
+            <td>{{ animal_age }}</td>
+        </tr>
+        <tr class="border-b">
+            <td>Mantello</td>
+            <td>{{ animal_fur_type }}</td>
+        </tr>
+        <tr class="border-b">
+            <td>Colore</td>
+            <td>{{ animal_fur_color }}</td>
+        </tr>
+        <tr class="border-b">
+            <td>Nome</td>
+            <td>{{ animal_name }}</td>
+        </tr>
+        <tr class="border-b">
+            <td>Codice di Identificazione</td>
+            <td>{{ animal_chip_code }}</td>
+        </tr>
+        <tr class="border-b">
+            <td>Arrivato da</td>
+            <td>{{ animal_origin_city }}</td>
+        </tr>
+        <tr class="border-b">
+            <td>Il</td>
+            <td>{{ animal_entry_date }}</td>
+        </tr>
+    </table>
+
+    <div>
+        <div class="w-full font-bold text-center my-4">DICHIARAZIONE</div>
+        <p>
+            Il/La sottoscritto/a {{ adopter.surname }} {{ adopter.name }} nato/a
+            il {{ adopter.birtdate }} a {{ adopter.birthcity }}, residente in
+            {{ adopter.residence_city }} tel. {{ adopter.phone }}
+        </p>
+    </div>
+</div>
+
+{% endblock %}

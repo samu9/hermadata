@@ -26,6 +26,8 @@ const ApiEndpoints = {
             `/animal/${animalId}/entries/${entryId}`,
         documents: (id: number) => `/animal/${id}/document`,
         newDocument: (id: number) => `/animal/${id}/document`,
+        uploadImage: (id: string) => `/animal/${id}/image`,
+        updateImage: (id: string) => `/animal/${id}/image`,
         exit: (id: number) => `/animal/${id}/exit`,
         daysReport: `/animal/days/report`,
         entriesReport: `/animal/entries/report`,
@@ -49,6 +51,8 @@ const ApiEndpoints = {
         changePassword: (id: number) => `/user/${id}/password`,
         getCurrentUser: "/user/me",
         activities: "/user/activities",
+        roles: "/user/roles",
+        permissions: "/user/permissions",
     },
     util: {
         getProvince: "/util/province",

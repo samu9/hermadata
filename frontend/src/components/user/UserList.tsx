@@ -71,12 +71,36 @@ const UserList: React.FC = () => {
     }
 
     const roleBodyTemplate = (user: ManagementUser) => {
+        const getRoleDisplay = (roleName?: string, isSuperuser?: boolean) => {
+            if (isSuperuser) {
+                return { label: "Super Admin", severity: "warning" as const }
+            }
+
+            switch (roleName) {
+                case "operator":
+                    return { label: "Operatore", severity: "info" as const }
+                case "city_admin":
+                    return { label: "Comune", severity: "success" as const }
+                case "volunteer":
+                    return { label: "Volontario", severity: "info" as const }
+                default:
+                    return {
+                        label: roleName || "Nessun Ruolo",
+                        severity: "danger" as const,
+                    }
+            }
+        }
+
+        const roleInfo = getRoleDisplay(user.role_name, user.is_superuser)
+
         return (
-            <Tag
-                value={user.is_superuser ? "Super Admin" : "Utente"}
-                severity={user.is_superuser ? "warning" : "info"}
-                className="text-sm"
-            />
+            user.role_name && (
+                <Tag
+                    value={roleInfo.label}
+                    severity={roleInfo.severity}
+                    className="text-sm"
+                />
+            )
         )
     }
 

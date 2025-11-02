@@ -3,13 +3,15 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.exc import NoResultFound
 
-from hermadata.constants import EXCEL_MEDIA_TYPE, ApiErrorCode
+from hermadata.constants import EXCEL_MEDIA_TYPE, ApiErrorCode, Permission
 from hermadata.initializations import (
     get_animal_repository,
     get_animal_service,
+    get_current_user,
     get_document_repository,
 )
 from hermadata.models import ApiError, PaginationResult
+from hermadata.permissions import check_permission, require_permission
 from hermadata.repositories.animal.animal_repository import (
     ExistingChipCodeException,
     SQLAnimalRepository,
@@ -34,6 +36,7 @@ from hermadata.repositories.animal.models import (
 )
 from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.services.animal_service import AnimalService
+from hermadata.services.user_service import TokenData
 
 router = APIRouter(prefix="/animal")
 
@@ -42,6 +45,9 @@ router = APIRouter(prefix="/animal")
 def new_animal_entry(
     data: NewAnimalModel,
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.CREATE_ANIMAL))
+    ],
 ) -> str:
     animal_code = repo.new_animal(data)
 
@@ -57,7 +63,28 @@ def get_animal_list():
 def search_animals(
     query: Annotated[AnimalSearchModel, Depends(use_cache=False)],
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
+    if (
+        query.present
+        and check_permission(current_user, Permission.BROWSE_PRESENT_ANIMALS)
+        is False
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to browse present animals",
+        )
+    if (
+        query.not_present
+        and check_permission(
+            current_user, Permission.BROWSE_NOT_PRESENT_ANIMALS
+        )
+        is False
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to browse non-present animals",
+        )
     # Here `Depends`is used to use a pydantic model as query params.
     result = repo.search(query)
 
@@ -82,6 +109,9 @@ def update_animal(
     animal_id: int,
     data: UpdateAnimalModel,
     service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.EDIT_ANIMAL))
+    ],
 ) -> int | ApiError:
     try:
         result = service.update(animal_id, data)
@@ -113,6 +143,9 @@ def upload_animal_document(
     doc_repo: Annotated[
         SQLDocumentRepository, Depends(get_document_repository)
     ],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.UPLOAD_DOCUMENT))
+    ],
 ):
     doc_kind = doc_repo.get_document_kind_by_code(data.document_kind_code)
 
@@ -130,6 +163,9 @@ def animal_exit(
     animal_id: int,
     data: AnimalExit,
     service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.MAKE_ADOPTION))
+    ],
 ):
     service.exit(animal_id, data)
 
@@ -247,3 +283,9 @@ def serve_animal_exits_report(
         media_type=EXCEL_MEDIA_TYPE,
         headers={"X-filename": filename},
     )
+
+
+# TODO: Add animal image upload endpoints here
+# See TODO_ANIMAL_IMAGE_UPLOAD.md for implementation details
+# @router.post("/{animal_id}/image", response_model=int)
+# @router.put("/{animal_id}/image", response_model=None)

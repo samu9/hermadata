@@ -2,13 +2,16 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
+from hermadata.constants import Permission
 from hermadata.initializations import get_vet_repository
 from hermadata.models import PaginationResult
+from hermadata.permissions import require_permission
 from hermadata.repositories.vet_repository import (
     SearchVetQuery,
     SQLVetRepository,
     VetModel,
 )
+from hermadata.services.user_service import TokenData
 
 router = APIRouter(prefix="/vet")
 
@@ -26,6 +29,9 @@ def create_vet(
 def search_vet(
     query: Annotated[SearchVetQuery, Depends()],
     repo: Annotated[SQLVetRepository, Depends(get_vet_repository)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.BROWSE_VETS))
+    ],
 ):
     result = repo.search(query)
 

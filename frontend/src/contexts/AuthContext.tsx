@@ -10,6 +10,7 @@ interface AuthContextType {
     logout: () => void
     loading: boolean
     hasPermission: (requiredRole?: "superuser") => boolean
+    can: (permissionCode: string) => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -54,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             if (loginData) {
                 setIsAuthenticated(true)
 
-                // Store user data if available in login response
+                // Store user data from login response
                 if (
                     loginData.username !== undefined &&
                     loginData.is_superuser !== undefined
@@ -62,6 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                     const userData: User = {
                         username: loginData.username,
                         is_superuser: loginData.is_superuser,
+                        role: loginData.role,
+                        permissions: loginData.permissions || [],
                     }
                     setUser(userData)
                     localStorage.setItem("userData", JSON.stringify(userData))
@@ -97,6 +100,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
     }
 
+    const can = (permissionCode: string): boolean => {
+        if (!isAuthenticated || !user) return false
+        return user.is_superuser || user.permissions?.includes(permissionCode)
+    }
+
     const isSuperUser = user?.is_superuser === true
 
     return (
@@ -109,6 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 logout,
                 loading,
                 hasPermission,
+                can,
             }}
         >
             {children}
