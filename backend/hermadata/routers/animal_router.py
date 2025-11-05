@@ -91,6 +91,48 @@ def search_animals(
     return result
 
 
+@router.get("/days/report")
+def serve_animal_days_report(
+    query: Annotated[AnimalDaysQuery, Depends()],
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+):
+    filename, report = service.days_report(query)
+
+    return Response(
+        content=report,
+        media_type=EXCEL_MEDIA_TYPE,
+        headers={"X-filename": filename},
+    )
+
+
+@router.get("/entries/report")
+def serve_animal_entries_report(
+    query: Annotated[AnimalEntriesQuery, Depends()],
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+):
+    filename, report = service.entries_report(query)
+
+    return Response(
+        content=report,
+        media_type=EXCEL_MEDIA_TYPE,
+        headers={"X-filename": filename},
+    )
+
+
+@router.get("/exits/report")
+def serve_animal_exits_report(
+    query: Annotated[AnimalExitsQuery, Depends()],
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+):
+    filename, report = service.exits_report(query)
+
+    return Response(
+        content=report,
+        media_type=EXCEL_MEDIA_TYPE,
+        headers={"X-filename": filename},
+    )
+
+
 @router.get("/{animal_id}", response_model=AnimalModel)
 def get_animal(
     animal_id: int,
@@ -241,48 +283,6 @@ def get_warnings(
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
 ):
     return
-
-
-@router.get("/days/report")
-def serve_animal_days_report(
-    query: Annotated[AnimalDaysQuery, Depends()],
-    service: Annotated[AnimalService, Depends(get_animal_service)],
-):
-    filename, report = service.days_report(query)
-
-    return Response(
-        content=report,
-        media_type=EXCEL_MEDIA_TYPE,
-        headers={"X-filename": filename},
-    )
-
-
-@router.get("/entries/report")
-def serve_animal_entries_report(
-    query: Annotated[AnimalEntriesQuery, Depends()],
-    service: Annotated[AnimalService, Depends(get_animal_service)],
-):
-    filename, report = service.entries_report(query)
-
-    return Response(
-        content=report,
-        media_type=EXCEL_MEDIA_TYPE,
-        headers={"X-filename": filename},
-    )
-
-
-@router.get("/exits/report")
-def serve_animal_exits_report(
-    query: Annotated[AnimalExitsQuery, Depends()],
-    service: Annotated[AnimalService, Depends(get_animal_service)],
-):
-    filename, report = service.exits_report(query)
-
-    return Response(
-        content=report,
-        media_type=EXCEL_MEDIA_TYPE,
-        headers={"X-filename": filename},
-    )
 
 
 # TODO: Add animal image upload endpoints here
