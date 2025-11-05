@@ -91,6 +91,28 @@ def login(
     }
 
 
+@router.get("/roles", response_model=list[RoleModel])
+def get_all_roles(
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    user_repository: Annotated[
+        SQLUserRepository, Depends(get_user_repository)
+    ],
+):
+    """Get all available user roles. Requires authentication."""
+    return user_repository.get_all_roles()
+
+
+@router.get("/permissions", response_model=list[PermissionModel])
+def get_all_permissions(
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    user_repository: Annotated[
+        SQLUserRepository, Depends(get_user_repository)
+    ],
+):
+    """Get all available permissions. Requires authentication."""
+    return user_repository.get_all_permissions()
+
+
 @router.put("/{user_id}/")
 def update(
     user_id: int,
@@ -123,7 +145,7 @@ def change_password(
     if current_user.user_id == user_id and data.current_password is None:
         raise HTTPException(
             status_code=400,
-            detail="Current password required when changing your own password"
+            detail="Current password required when changing your own password",
         )
 
     # If superuser is changing another user's password, current_password not
@@ -138,25 +160,3 @@ def change_password(
         )
 
     return {"message": "Password changed successfully"}
-
-
-@router.get("/roles", response_model=list[RoleModel])
-def get_all_roles(
-    current_user: Annotated[TokenData, Depends(get_current_user)],
-    user_repository: Annotated[
-        SQLUserRepository, Depends(get_user_repository)
-    ],
-):
-    """Get all available user roles. Requires authentication."""
-    return user_repository.get_all_roles()
-
-
-@router.get("/permissions", response_model=list[PermissionModel])
-def get_all_permissions(
-    current_user: Annotated[TokenData, Depends(get_current_user)],
-    user_repository: Annotated[
-        SQLUserRepository, Depends(get_user_repository)
-    ],
-):
-    """Get all available permissions. Requires authentication."""
-    return user_repository.get_all_permissions()
