@@ -26,6 +26,7 @@ dependencies = [
     "weasyprint>=63.1",
     "email-validator>=2.2.0",
     "passlib[bcrypt]>=1.7.4",
+    "bcrypt>=4.3.0",
     "pyjwt>=2.10.1",
     "python-codicefiscale>=0.10.4",
 ]
