@@ -21,14 +21,14 @@ stage=$1
 #fi
 
 # Build the React app
-npm run build
+npx vite build --mode production
 
 # Create the Git tag with timestamp
 #timestamp=$(date +%Y%m%d-%H%M%S)
 #git tag "deploy-fe-$stage-$timestamp"
 
 # Rsync to the remote server
-rsync -avz --delete dist/ meltdown:/opt/hermadata/frontend
+rsync -avz --delete dist/ cs:/var/www/hermadata
 # rsync -avz --delete dist/ "${config[$stage][@]}"
 
 #echo "Deployment to $stage completed successfully!"
