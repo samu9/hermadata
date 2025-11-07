@@ -27,7 +27,7 @@ from hermadata.services.user_service import (
 router = APIRouter(prefix="/user", tags=["user"])
 
 
-@router.post("/", response_model=UserModel)
+@router.post("", response_model=UserModel)
 def create_user(
     current_user: Annotated[TokenData, Depends(get_current_user)],
     data: RegisterUserModel,
@@ -38,7 +38,7 @@ def create_user(
     return user
 
 
-@router.get("/", response_model=PaginationResult[UserModel])
+@router.get("", response_model=PaginationResult[UserModel])
 def get_all_users(
     query: Annotated[UserListQuery, Depends()],
     current_user: Annotated[TokenData, Depends(get_current_user)],
@@ -113,7 +113,7 @@ def get_all_permissions(
     return user_repository.get_all_permissions()
 
 
-@router.put("/{user_id}/")
+@router.put("/{user_id}")
 def update(
     user_id: int,
     data: UpdateUserModel,
