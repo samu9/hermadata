@@ -38,7 +38,7 @@ def create_user(
     return user
 
 
-@router.get("", response_model=PaginationResult[UserModel])
+@router.get("/", response_model=PaginationResult[UserModel])
 def get_all_users(
     query: Annotated[UserListQuery, Depends()],
     current_user: Annotated[TokenData, Depends(get_current_user)],
