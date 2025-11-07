@@ -15,6 +15,7 @@ import AnimalsPage from "../pages/AnimalsPage"
 import DataExtractionsPage from "../pages/DataExtractionsPage"
 import HomePage from "../pages/HomePage"
 import LoginPage from "../pages/LoginPage"
+import NotFoundPage from "../pages/NotFoundPage"
 import ProfilePage from "../pages/ProfilePage"
 import UserManagementPage from "../pages/UserManagementPage"
 import VetsPage from "../pages/VetsPage"
@@ -120,6 +121,11 @@ const routes: RouteObject[] = [
                 handle: {
                     crumb: () => "Amministrazione",
                 },
+            },
+            // Catch-all route for 404 - inside protected routes
+            {
+                path: "*",
+                element: <NotFoundPage />,
             },
         ],
     },
