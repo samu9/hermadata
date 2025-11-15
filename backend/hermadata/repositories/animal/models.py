@@ -48,6 +48,7 @@ class NewAnimalModel(BaseModel):
     race_id: str
     rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
     entry_type: str
+    healthcare_stage: bool = False
 
 
 class CompleteEntryModel(BaseModel):
@@ -57,6 +58,7 @@ class CompleteEntryModel(BaseModel):
 class NewEntryModel(BaseModel):
     rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
     entry_type: str
+    healthcare_stage: bool = False
 
 
 class AnimalSearchSortField(str, Enum):
