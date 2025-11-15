@@ -49,6 +49,9 @@ class Animal(Base):
     )
     sex: Mapped[int | None] = mapped_column(nullable=True)
     birth_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
+    in_shelter_from: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
 
     sterilized: Mapped[bool | None] = mapped_column(nullable=True)
     adoptable: Mapped[bool | None] = mapped_column(nullable=True)
