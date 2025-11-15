@@ -7,7 +7,11 @@ from sqlalchemy import and_, func, insert, or_, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
-from hermadata.constants import AnimalEvent, ExitType
+from hermadata.constants import (
+    HEALTHCARE_STAGE_ENTRY_TYPES,
+    AnimalEvent,
+    ExitType,
+)
 from hermadata.database.models import (
     Adopter,
     Adoption,
@@ -142,9 +146,19 @@ class SQLAnimalRepository(SQLBaseRepository):
             rescue_date=datetime.now().date(),
         )
 
+        # Determine if in_shelter_from should be set
+        # If healthcare_stage is True, don't set in_shelter_from
+        in_shelter_from = None
+        if not data.healthcare_stage and (
+            data.race_id == "G"
+            or data.entry_type not in HEALTHCARE_STAGE_ENTRY_TYPES
+        ):
+            in_shelter_from = datetime.now()
+
         animal = Animal(
             code=code,
             race_id=data.race_id,
+            in_shelter_from=in_shelter_from,
         )
         animal_entry = AnimalEntry(
             animal=animal,
@@ -163,9 +177,9 @@ class SQLAnimalRepository(SQLBaseRepository):
         return code
 
     def add_entry(self, animal_id: int, data: NewEntryModel) -> int:
-        self.session.execute(
-            select(Animal.id).where(Animal.id == animal_id)
-        ).one()
+        animal = self.session.execute(
+            select(Animal).where(Animal.id == animal_id)
+        ).scalar_one()
 
         last_entry_id, exit_date = self.session.execute(
             select(AnimalEntry.id, AnimalEntry.exit_date).where(
@@ -200,6 +214,14 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
             .values(current=False)
         )
+
+        # Update in_shelter_from if applicable
+        # If healthcare_stage is True, don't set in_shelter_from
+        if not data.healthcare_stage and (
+            animal.race_id == "G"
+            or data.entry_type not in HEALTHCARE_STAGE_ENTRY_TYPES
+        ):
+            animal.in_shelter_from = datetime.now()
 
         new_entry = AnimalEntry(
             animal_id=animal_id,
