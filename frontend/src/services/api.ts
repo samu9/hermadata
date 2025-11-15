@@ -181,10 +181,12 @@ class ApiService {
         return result
     }
 
-    async getEntryTypes(): Promise<{ id: string; label: string }[]> {
-        const data = await this.get<{ id: string; label: string }[]>(
-            ApiEndpoints.util.getEntryTypes
-        )
+    async getEntryTypes(): Promise<
+        { id: string; label: string; healthcare_stage: boolean }[]
+    > {
+        const data = await this.get<
+            { id: string; label: string; healthcare_stage: boolean }[]
+        >(ApiEndpoints.util.getEntryTypes)
 
         return data
     }

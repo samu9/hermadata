@@ -18,6 +18,7 @@ export const newAnimalEntrySchema = z.object({
     rescue_city_code: cityCodeValidator,
 
     entry_type: z.string(),
+    healthcare_stage: z.boolean().optional(),
 })
 
 export type NewAnimalEntry = z.infer<typeof newAnimalEntrySchema>
