@@ -9,13 +9,14 @@ from hermadata.constants import (
     ENTRY_TYPE_LABELS,
     EXIT_TYPE_LABELS,
     FUR_LABELS,
+    HEALTHCARE_STAGE_ENTRY_TYPES,
     SIZE_LABELS,
 )
 from hermadata.initializations import (
     get_animal_repository,
     get_city_repository,
 )
-from hermadata.models import UtilElement
+from hermadata.models import EntryTypeElement, UtilElement
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import FurColorName
 from hermadata.repositories.city_repository import (
@@ -44,10 +45,15 @@ def get_comuni(
     return comuni
 
 
-@router.get("/entry-types", response_model=list[UtilElement])
+@router.get("/entry-types", response_model=list[EntryTypeElement])
 def get_entry_types():
     result = [
-        UtilElement(id=k.value, label=v) for k, v in ENTRY_TYPE_LABELS.items()
+        EntryTypeElement(
+            id=k.value,
+            label=v,
+            healthcare_stage=k in HEALTHCARE_STAGE_ENTRY_TYPES,
+        )
+        for k, v in ENTRY_TYPE_LABELS.items()
     ]
     return result
 

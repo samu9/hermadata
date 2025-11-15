@@ -51,6 +51,12 @@ class UtilElement(BaseModel):
     label: str
 
 
+class EntryTypeElement(BaseModel):
+    id: str
+    label: str
+    healthcare_stage: bool
+
+
 class ApiError(BaseModel):
     code: ApiErrorCode
     content: dict
