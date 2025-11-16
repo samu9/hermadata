@@ -44,12 +44,12 @@ const HomePage = () => {
         return new Date(date).toLocaleDateString("it-IT")
     }
 
-    const animalCodeTemplate = (rowData: AnimalSearchResult) => (
+    const animalNameTemplate = (rowData: AnimalSearchResult) => (
         <Button
-            label={rowData.code}
+            label={rowData.name || "N/A"}
             link
             className="p-0"
-            onClick={() => navigate(`/animal/${rowData.code}/overview`)}
+            onClick={() => navigate(`/animal/${rowData.id}/overview`)}
         />
     )
 
@@ -214,14 +214,9 @@ const HomePage = () => {
                                 emptyMessage="Nessun animale trovato"
                             >
                                 <Column
-                                    field="code"
-                                    header="Codice"
-                                    body={animalCodeTemplate}
-                                />
-                                <Column
                                     field="name"
                                     header="Nome"
-                                    body={(rowData) => rowData.name || "N/A"}
+                                    body={animalNameTemplate}
                                 />
                                 <Column
                                     field="race_id"
