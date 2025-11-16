@@ -95,6 +95,8 @@ class AnimalSearchModel(PaginationQuery):
     exit_type: Optional[str] = None
     present: bool = True
     not_present: bool = False
+    healthcare_stage: bool | None = None
+    shelter_stage: bool | None = None
     chip_code: Optional[str] = None
 
     _where_clause_map: dict[str, WhereClauseMapItem] = {
@@ -130,6 +132,7 @@ class AnimalSearchModel(PaginationQuery):
                 else None
             ),
             in_or=True,
+            or_group="presence",
         ),
         "not_present": WhereClauseMapItem(
             lambda v: (
@@ -141,6 +144,25 @@ class AnimalSearchModel(PaginationQuery):
                 else None
             ),
             in_or=True,
+            or_group="presence",
+        ),
+        "healthcare_stage": WhereClauseMapItem(
+            lambda v: (
+                Animal.in_shelter_from.is_(None)
+                if v
+                else Animal.in_shelter_from.is_not(None)
+            ),
+            in_or=True,
+            or_group="stage",
+        ),
+        "shelter_stage": WhereClauseMapItem(
+            lambda v: (
+                Animal.in_shelter_from.is_not(None)
+                if v
+                else Animal.in_shelter_from.is_(None)
+            ),
+            in_or=True,
+            or_group="stage",
         ),
     }
 
@@ -224,6 +246,8 @@ class AnimalModel(BaseModel):
     size: int | None = None
     exit_date: date | None = None
     exit_type: ExitType | None = None
+    in_shelter_from: datetime | None = None
+    healthcare_stage: bool = False
 
     model_config = ConfigDict(extra="ignore")
 
@@ -268,6 +292,8 @@ class AnimalSearchResult(BaseModel):
     entry_type: str
     exit_date: date | None = None
     exit_type: str | None = None
+    in_shelter_from: datetime | None = None
+    healthcare_stage: bool = False
 
 
 AnimalSearchResultQuery = namedtuple(
