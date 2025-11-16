@@ -3,7 +3,7 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 
 from pydantic import validate_call
-from sqlalchemy import and_, func, insert, or_, select, text, update
+from sqlalchemy import and_, case, func, insert, or_, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
@@ -50,6 +50,7 @@ from hermadata.repositories.animal.models import (
     AnimalExit,
     AnimalExitsItem,
     AnimalExitsQuery,
+    AnimalGetQuery,
     AnimalModel,
     AnimalQueryModel,
     AnimalReportResult,
@@ -285,6 +286,11 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Animal.size,
                 AnimalEntry.exit_date,
                 AnimalEntry.exit_type,
+                Animal.in_shelter_from,
+                case(
+                    (Animal.in_shelter_from.is_not(None), False),
+                    else_=True,
+                ).label("healthcare_stage"),
             )
             .where(*where)
             .join(
@@ -297,7 +303,8 @@ class SQLAnimalRepository(SQLBaseRepository):
         ).one()
 
         data = AnimalModel.model_validate(
-            dict(zip(result._fields, result, strict=False))
+            AnimalGetQuery(*result)._asdict(),
+            from_attributes=True,
         )
         return data
 
@@ -348,6 +355,11 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.entry_type,
                 AnimalEntry.exit_date,
                 AnimalEntry.exit_type,
+                Animal.in_shelter_from,
+                case(
+                    (Animal.in_shelter_from.is_not(None), False),
+                    else_=True,
+                ).label("healthcare_stage"),
             )
             .select_from(Animal)
             .join(
@@ -378,7 +390,8 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         response = [
             AnimalSearchResult.model_validate(
-                AnimalSearchResultQuery(*r), from_attributes=True
+                AnimalSearchResultQuery(*r)._asdict(),
+                from_attributes=True,
             )
             for r in result
         ]
