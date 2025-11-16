@@ -263,6 +263,15 @@ class ApiService {
         return result
     }
 
+    async moveAnimalToShelter(animalId: string): Promise<number> {
+        const result = await this.post<number>(
+            ApiEndpoints.animal.moveToShelter(animalId),
+            {}
+        )
+
+        return result
+    }
+
     async addBreed(data: NewBreed): Promise<Breed> {
         const result = await this.post<Breed>(ApiEndpoints.breed.create, data)
 
