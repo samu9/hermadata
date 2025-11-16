@@ -1,4 +1,10 @@
-import { IconDefinition, faCat, faDog } from "@fortawesome/free-solid-svg-icons"
+import {
+    IconDefinition,
+    faCat,
+    faDog,
+    faHospital,
+    faHome,
+} from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
 import { FilterMatchMode } from "primereact/api"
@@ -32,6 +38,7 @@ import { useEntryTypesMap, useExitTypesMap } from "../../hooks/useMaps"
 import UncontrolledRacesDropdown from "../forms/uncontrolled/UncontrolledRacesDropdown"
 import { useAuth } from "../../contexts/AuthContext"
 import { Permission } from "../../constants"
+import { Tooltip } from "primereact/tooltip"
 
 type LazyTableState = {
     first: number
@@ -112,6 +119,8 @@ const AnimalList = () => {
         to_index: lazyState.first + lazyState.rows,
         present: canBrowseNotPresentOnly ? false : true,
         not_present: canBrowseNotPresentOnly ? true : false,
+        healthcare_stage: true,
+        shelter_stage: true,
     })
     const animalQuery = useAnimalSearchQuery(queryData)
     const entryTypesQuery = useEntryTypesQuery()
@@ -219,33 +228,85 @@ const AnimalList = () => {
                             <SwitchFilter
                                 label="Mostra presenti"
                                 checked={queryData.present || false}
-                                onChange={(e) =>
-                                    setQueryData({
-                                        ...queryData,
-                                        present: e.value,
-                                    })
-                                }
+                                onChange={(e) => {
+                                    // If trying to disable presenti while non_presenti is already disabled,
+                                    // enable non_presenti instead
+                                    if (!e.value && !queryData.not_present) {
+                                        setQueryData({
+                                            ...queryData,
+                                            present: false,
+                                            not_present: true,
+                                        })
+                                    } else {
+                                        setQueryData({
+                                            ...queryData,
+                                            present: e.value,
+                                        })
+                                    }
+                                }}
                             />
 
                             <SwitchFilter
                                 label="Mostra non presenti"
                                 checked={queryData.not_present || false}
-                                onChange={(e) =>
-                                    setQueryData({
-                                        ...queryData,
-                                        not_present: e.value,
-                                    })
-                                }
+                                onChange={(e) => {
+                                    // If trying to disable non_presenti while presenti is already disabled,
+                                    // enable presenti instead
+                                    if (!e.value && !queryData.present) {
+                                        setQueryData({
+                                            ...queryData,
+                                            not_present: false,
+                                            present: true,
+                                        })
+                                    } else {
+                                        setQueryData({
+                                            ...queryData,
+                                            not_present: e.value,
+                                        })
+                                    }
+                                }}
                             />
                         </>
                     )}
                 <SwitchFilter
-                    label="Sanitario / Rifugio"
-                    checked={false}
-                    onChange={
-                        (e) => null
-                        // setQueryData({ ...queryData, not_present: e.value })
-                    }
+                    label="Mostra sanitario"
+                    checked={queryData.healthcare_stage || false}
+                    onChange={(e) => {
+                        // If trying to disable sanitario while rifugio is already disabled,
+                        // enable rifugio instead
+                        if (!e.value && !queryData.shelter_stage) {
+                            setQueryData({
+                                ...queryData,
+                                healthcare_stage: false,
+                                shelter_stage: true,
+                            })
+                        } else {
+                            setQueryData({
+                                ...queryData,
+                                healthcare_stage: e.value,
+                            })
+                        }
+                    }}
+                />
+                <SwitchFilter
+                    label="Mostra rifugio"
+                    checked={queryData.shelter_stage || false}
+                    onChange={(e) => {
+                        // If trying to disable rifugio while sanitario is already disabled,
+                        // enable sanitario instead
+                        if (!e.value && !queryData.healthcare_stage) {
+                            setQueryData({
+                                ...queryData,
+                                shelter_stage: false,
+                                healthcare_stage: true,
+                            })
+                        } else {
+                            setQueryData({
+                                ...queryData,
+                                shelter_stage: e.value,
+                            })
+                        }
+                    }}
                 />
             </div>
 
@@ -388,7 +449,32 @@ const AnimalList = () => {
                         className="text-center"
                     />
                 )}
-                <Column header="Stato" />
+                <Column
+                    header="Stato"
+                    body={(animal: AnimalSearchResult) => (
+                        <>
+                            <Tooltip target={`.stato-icon-${animal.id}`} />
+                            <FontAwesomeIcon
+                                className={`stato-icon-${animal.id} text-lg ${
+                                    animal.healthcare_stage
+                                        ? "text-red-600"
+                                        : "text-green-600"
+                                }`}
+                                icon={
+                                    animal.healthcare_stage
+                                        ? faHospital
+                                        : faHome
+                                }
+                                data-pr-tooltip={
+                                    animal.healthcare_stage
+                                        ? "Sanitario"
+                                        : "Rifugio"
+                                }
+                                data-pr-position="top"
+                            />
+                        </>
+                    )}
+                />
             </DataTable>
         </div>
     )
