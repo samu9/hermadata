@@ -29,6 +29,7 @@ const ApiEndpoints = {
         uploadImage: (id: string) => `/animal/${id}/image`,
         updateImage: (id: string) => `/animal/${id}/image`,
         exit: (id: number) => `/animal/${id}/exit`,
+        moveToShelter: (id: string) => `/animal/${id}/move_to_shelter`,
         daysReport: `/animal/days/report`,
         entriesReport: `/animal/entries/report`,
         exitsReport: `/animal/exits/report`,
