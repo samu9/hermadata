@@ -285,6 +285,26 @@ def get_warnings(
     return
 
 
+@router.post("/{animal_id}/move_to_shelter", response_model=int)
+def move_to_shelter(
+    animal_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.EDIT_ANIMAL))
+    ],
+):
+    """Move animal to shelter by setting in_shelter_from to current datetime"""
+    try:
+        updated_rows = repo.move_to_shelter(animal_id)
+        if updated_rows == 0:
+            raise HTTPException(
+                status_code=404, detail=f"Animal {animal_id} not found"
+            )
+        return updated_rows
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
 # TODO: Add animal image upload endpoints here
 # See TODO_ANIMAL_IMAGE_UPLOAD.md for implementation details
 # @router.post("/{animal_id}/image", response_model=int)
