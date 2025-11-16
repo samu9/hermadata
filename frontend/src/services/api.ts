@@ -96,6 +96,17 @@ class ApiService {
         this.toastRef = toastRef
     }
 
+    showSuccess(message: string, summary: string = "Successo") {
+        if (this.toastRef?.current) {
+            this.toastRef.current.show({
+                severity: "success",
+                summary: summary,
+                detail: message,
+                life: 3000,
+            })
+        }
+    }
+
     private handleError(error: AxiosError): void {
         let message = DEFAULT_ERROR_MESSAGE
 
@@ -314,14 +325,21 @@ class ApiService {
     async uploadAnimalImage(animalId: string, file: File): Promise<number> {
         const formData = new FormData()
         formData.append("image", file)
-        const result = this.post<number>(ApiEndpoints.animal.uploadImage(animalId), formData, {
-            "Content-Type": "multipart/form-data",
-        })
+        const result = this.post<number>(
+            ApiEndpoints.animal.uploadImage(animalId),
+            formData,
+            {
+                "Content-Type": "multipart/form-data",
+            }
+        )
 
         return result
     }
 
-    async updateAnimalImage(animalId: string, data: { image_id: number }): Promise<void> {
+    async updateAnimalImage(
+        animalId: string,
+        data: { image_id: number }
+    ): Promise<void> {
         const result = await this.put<void>(
             ApiEndpoints.animal.updateImage(animalId),
             data
