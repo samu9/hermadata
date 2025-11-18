@@ -40,8 +40,9 @@ const NewAnimalForm = (props: Props) => {
     const comuniQuery = useComuniQuery(provincia)
     const entryTypesQuery = useEntryTypesQuery()
 
-    // Watch the entry_type field
+    // Watch the entry_type and race_id fields
     const selectedEntryType = watch("entry_type")
+    const selectedRaceId = watch("race_id")
 
     // Automatically set healthcare_stage based on selected entry type
     useEffect(() => {
@@ -50,10 +51,12 @@ const NewAnimalForm = (props: Props) => {
                 (et) => et.id === selectedEntryType
             )
             if (entryType) {
-                setValue("healthcare_stage", entryType.healthcare_stage)
+                // Never set healthcare_stage to true if race is cat (G)
+                const shouldBeHealthcare = entryType.healthcare_stage && selectedRaceId !== "G"
+                setValue("healthcare_stage", shouldBeHealthcare)
             }
         }
-    }, [selectedEntryType, entryTypesQuery.data, setValue])
+    }, [selectedEntryType, entryTypesQuery.data, selectedRaceId, setValue])
 
     const queryClient = useQueryClient()
     const newEntryMutation = useMutation({
@@ -200,6 +203,7 @@ const NewAnimalForm = (props: Props) => {
                                         onChange={(e) =>
                                             field.onChange(e.checked)
                                         }
+                                        disabled={selectedRaceId === "G"}
                                     />
                                     <label
                                         htmlFor="healthcare_stage"
