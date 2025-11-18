@@ -121,6 +121,8 @@ const AnimalList = () => {
         not_present: canBrowseNotPresentOnly ? true : false,
         healthcare_stage: true,
         shelter_stage: true,
+        cats: true,
+        dogs: true,
     })
     const animalQuery = useAnimalSearchQuery(queryData)
     const entryTypesQuery = useEntryTypesQuery()
@@ -221,7 +223,7 @@ const AnimalList = () => {
     }, [lazyState])
     return (
         <div className="w-full">
-            <div className="py-2 flex gap-2">
+            <div className="py-2 flex gap-2 flex-wrap">
                 {can(Permission.BROWSE_PRESENT_ANIMALS) &&
                     can(Permission.BROWSE_NOT_PRESENT_ANIMALS) && (
                         <>
@@ -266,6 +268,7 @@ const AnimalList = () => {
                                     }
                                 }}
                             />
+                            <div className="w-px h-8 bg-slate-300 mx-1"></div>
                         </>
                     )}
                 <SwitchFilter
@@ -304,6 +307,47 @@ const AnimalList = () => {
                             setQueryData({
                                 ...queryData,
                                 shelter_stage: e.value,
+                            })
+                        }
+                    }}
+                />
+                <div className="w-px h-8 bg-slate-300 mx-1"></div>
+                <SwitchFilter
+                    label="Mostra Cani"
+                    checked={queryData.dogs || false}
+                    onChange={(e) => {
+                        // If trying to disable dogs while cats is already disabled,
+                        // enable cats instead
+                        if (!e.value && !queryData.cats) {
+                            setQueryData({
+                                ...queryData,
+                                dogs: false,
+                                cats: true,
+                            })
+                        } else {
+                            setQueryData({
+                                ...queryData,
+                                dogs: e.value,
+                            })
+                        }
+                    }}
+                />
+                <SwitchFilter
+                    label="Mostra Gatti"
+                    checked={queryData.cats || false}
+                    onChange={(e) => {
+                        // If trying to disable cats while dogs is already disabled,
+                        // enable dogs instead
+                        if (!e.value && !queryData.dogs) {
+                            setQueryData({
+                                ...queryData,
+                                cats: false,
+                                dogs: true,
+                            })
+                        } else {
+                            setQueryData({
+                                ...queryData,
+                                cats: e.value,
                             })
                         }
                     }}
