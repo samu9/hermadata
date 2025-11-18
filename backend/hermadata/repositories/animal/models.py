@@ -98,6 +98,8 @@ class AnimalSearchModel(PaginationQuery):
     healthcare_stage: bool | None = None
     shelter_stage: bool | None = None
     chip_code: Optional[str] = None
+    cats: bool | None = None
+    dogs: bool | None = None
 
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
@@ -163,6 +165,16 @@ class AnimalSearchModel(PaginationQuery):
             ),
             in_or=True,
             or_group="stage",
+        ),
+        "cats": WhereClauseMapItem(
+            lambda v: Animal.race_id == "G" if v else None,
+            in_or=True,
+            or_group="race",
+        ),
+        "dogs": WhereClauseMapItem(
+            lambda v: Animal.race_id == "C" if v else None,
+            in_or=True,
+            or_group="race",
         ),
     }
 
