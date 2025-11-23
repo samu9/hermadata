@@ -46,7 +46,12 @@ import {
     Vet,
     VetSearch,
 } from "../models/vet.schema"
-import { Login, LoginResponse, ManagementUser } from "../models/user.schema"
+import {
+    Login,
+    LoginResponse,
+    ManagementUser,
+    UpdateUser,
+} from "../models/user.schema"
 import { PaginationQuery } from "../models/pagination.schema"
 
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
@@ -535,7 +540,7 @@ class ApiService {
         return result
     }
 
-    async updateUser(userId: number, data: any): Promise<any> {
+    async updateUser(userId: number, data: UpdateUser): Promise<any> {
         const result = await this.put<any>(
             ApiEndpoints.user.update(userId),
             data
