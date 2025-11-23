@@ -61,3 +61,15 @@ def test_update_repository(
     assert updated_user.email == new_email
     assert updated_user.name == new_name
     assert updated_user.surname == new_surname
+
+
+def test_email_exists(
+    user_repository: SQLUserRepository, make_user, db_session: Session
+):
+    user_id: int = make_user()
+    existing_email = db_session.execute(
+        select(User.email).where(User.id == user_id)
+    ).scalar_one()
+
+    assert user_repository.email_exists(existing_email)
+    assert not user_repository.email_exists(f"{uuid4().hex}@test.it")

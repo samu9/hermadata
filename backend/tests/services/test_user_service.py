@@ -1,5 +1,7 @@
 from uuid import uuid4
 
+import pytest
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -46,3 +48,28 @@ def test_wrong_login_user(user_service: UserService):
     logged = user_service.login(f"{uuid4().hex}@test.it", uuid4().hex)
 
     assert not logged
+
+
+def test_register_duplicate_email(user_service: UserService):
+    email = f"{uuid4().hex}@test.it"
+    user_service.register(
+        RegisterUserModel(
+            email=email,
+            password="test",
+            name="First",
+            surname="User",
+        )
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        user_service.register(
+            RegisterUserModel(
+                email=email,
+                password="another",
+                name="Second",
+                surname="User",
+            )
+        )
+
+    assert exc.value.status_code == 400
+    assert exc.value.detail == "Email already registered"
