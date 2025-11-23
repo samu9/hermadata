@@ -60,9 +60,7 @@ class UserService:
 
     def register(self, data: RegisterUserModel) -> UserModel:
         if self.user_repository.email_exists(data.email):
-            raise HTTPException(
-                status_code=400, detail="Email already registered"
-            )
+            raise HTTPException(status_code=400, detail="Email già registrata")
 
         hashed_password = self.pwd_context.hash(data.password)
 

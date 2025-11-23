@@ -72,4 +72,4 @@ def test_register_duplicate_email(user_service: UserService):
         )
 
     assert exc.value.status_code == 400
-    assert exc.value.detail == "Email already registered"
+    assert exc.value.detail == "Email già registrata"
