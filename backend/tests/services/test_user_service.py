@@ -10,7 +10,13 @@ from hermadata.services.user_service import RegisterUserModel, UserService
 def test_register_and_login_user(
     user_service: UserService, db_session: Session
 ):
-    data = RegisterUserModel(email=f"{uuid4().hex}@test.it", password="test")
+    data = RegisterUserModel(
+        email=f"{uuid4().hex}@test.it",
+        password="test",
+        name="Test",
+        surname="User",
+        is_active=False,
+    )
     user = user_service.register(data)
 
     db_user = db_session.execute(
@@ -18,6 +24,9 @@ def test_register_and_login_user(
     ).scalar_one()
 
     assert db_user.email == data.email
+    assert db_user.name == data.name
+    assert db_user.surname == data.surname
+    assert db_user.is_active == data.is_active
     assert user_service._verify_password("test", db_user.hashed_password)
 
     jwt = user_service.login(data.email, data.password)
