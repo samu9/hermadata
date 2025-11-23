@@ -75,15 +75,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                 reset()
                 onUserCreated?.()
             },
-            onError: (error: any) => {
-                toast.current?.show({
-                    severity: "error",
-                    summary: "Errore",
-                    detail:
-                        error.message ||
-                        "Errore durante la creazione dell'utente",
-                })
-            },
+            onError: (error: any) => {},
         }
     )
 
