@@ -21,6 +21,9 @@ class RegisterUserModel(BaseModel):
     email: EmailStr
     password: str
     role_name: str | None = None
+    name: str | None = None
+    surname: str | None = None
+    is_active: bool = True
 
 
 class ChangePasswordModel(BaseModel):
@@ -63,16 +66,19 @@ class UserService:
                 email=data.email,
                 role_name=data.role_name,
                 hashed_password=hashed_password,
+                name=data.name,
+                surname=data.surname,
+                is_active=data.is_active,
             )
         )
 
         user = UserModel(
             id=user_id,
             email=data.email,
-            is_active=True,
+            is_active=data.is_active,
             is_superuser=False,
-            name=None,
-            surname=None,
+            name=data.name,
+            surname=data.surname,
             created_at=datetime.now(timezone.utc),
         )
         return user
