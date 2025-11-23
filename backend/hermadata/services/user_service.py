@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 import jwt
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.exc import NoResultFound
@@ -59,6 +59,11 @@ class UserService:
         return self
 
     def register(self, data: RegisterUserModel) -> UserModel:
+        if self.user_repository.email_exists(data.email):
+            raise HTTPException(
+                status_code=400, detail="Email already registered"
+            )
+
         hashed_password = self.pwd_context.hash(data.password)
 
         user_id = self.user_repository.create(

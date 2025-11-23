@@ -241,3 +241,11 @@ class SQLUserRepository(SQLBaseRepository):
             )
             for permission in result
         ]
+
+    def email_exists(self, email: EmailStr) -> bool:
+        """Return True if a user with the given email already exists"""
+        result = self.session.execute(
+            select(func.count()).select_from(User).where(User.email == email)
+        ).scalar_one()
+
+        return result > 0
