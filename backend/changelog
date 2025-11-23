@@ -3,6 +3,15 @@
 -   add size and birth_date in variation report
 -   add users management, roles and permissions
 -   healthcare/shelter stage mechanism
+-   track `in_shelter_from` on animals (new migration, auto-population on entries, manual move-to-shelter action)
+-   expose healthcare vs shelter stage plus cat/dog filters in `AnimalSearchModel` responses
+-   return entry types with `healthcare_stage` metadata for clients that drive form logic
+-   add `/animals/{animal_id}/move_to_shelter` endpoint to flip shelter stage under `EDIT_ANIMAL`
+
+# FIXES:
+
+-   ensure `/users/` listing route matches FastAPI expectations
+-   pin `bcrypt` to 4.3.0 to avoid upstream regressions
 
 # 0.9.0
 
