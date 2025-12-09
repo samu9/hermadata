@@ -11,30 +11,27 @@ const LoggedUserCard = () => {
     }
 
     return (
-        <div
-            className={classNames(
-                "rounded-lg bg-surface-800 border border-surface-700 flex items-center justify-between p-3 mt-auto",
-                { "border-primary-500/50": isSuperUser }
-            )}
-        >
-            <div className="flex flex-col overflow-hidden">
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-surface-800 border border-surface-700 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-primary-900 flex items-center justify-center text-primary-300 font-bold text-lg border border-primary-800">
+                {user?.username.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
                 <Link
                     to="/profile"
-                    className="hover:text-primary-400 transition-colors"
+                    className="font-semibold text-sm text-surface-100 truncate hover:text-primary-400 transition-colors block"
                 >
-                    <div className="text-sm font-medium text-surface-200 truncate">
-                        {user?.username || "Username"}
-                    </div>
-                    {isSuperUser && (
-                        <div className="text-[10px] text-primary-400 uppercase tracking-wider font-bold">
-                            Superuser
-                        </div>
-                    )}
+                    {user?.username || "Username"}
                 </Link>
+                {isSuperUser && (
+                    <div className="text-xs text-primary-400 font-medium flex items-center gap-1">
+                        <i className="pi pi-shield text-[10px]"></i>
+                        Superuser
+                    </div>
+                )}
             </div>
             <Button
                 icon="pi pi-sign-out"
-                className="w-8 h-8 !p-0 text-surface-400 hover:text-white hover:bg-surface-700"
+                className="w-8 h-8 !p-0 text-surface-400 hover:text-surface-200 hover:bg-surface-700"
                 text
                 rounded
                 onClick={logout}
