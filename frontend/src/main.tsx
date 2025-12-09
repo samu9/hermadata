@@ -1,5 +1,7 @@
-import "primereact/resources/themes/lara-light-teal/theme.css"
+// IMPORTANT: do not change the order of these imports
 import "./index.css"
+import "primereact/resources/primereact.css"
+import "primereact/resources/themes/lara-light-teal/theme.css"
 
 import "primeicons/primeicons.css"
 
