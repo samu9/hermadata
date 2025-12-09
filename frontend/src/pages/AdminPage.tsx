@@ -1,46 +1,58 @@
 import React from "react"
-import { Card } from "primereact/card"
 import { Button } from "primereact/button"
 import { Link } from "react-router-dom"
 import { usePermissions } from "../hooks/usePermissions"
+import { PageTitle } from "../components/typography"
 
 const AdminPage: React.FC = () => {
     const { user } = usePermissions()
 
     return (
-        <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">
-                Pannello Amministrazione
-            </h1>
-            <p className="mb-4">
-                Benvenuto, {user?.username}! Questa pagina è accessibile solo ai
-                super utenti.
-            </p>
+        <div className="max-w-7xl mx-auto">
+            <div className="mb-8">
+                <PageTitle>Pannello Amministrazione</PageTitle>
+                <p className="text-surface-600 mt-2">
+                    Benvenuto, {user?.username}! Questa pagina è accessibile
+                    solo ai super utenti.
+                </p>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card title="Gestione Utenti" className="mb-4">
-                    <p className="mb-3">Gestisci gli utenti del sistema</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6 flex flex-col h-full">
+                    <h3 className="text-lg font-semibold text-surface-900 mb-2">
+                        Gestione Utenti
+                    </h3>
+                    <p className="text-surface-600 mb-6 flex-grow">
+                        Gestisci gli utenti del sistema, i loro ruoli e
+                        permessi.
+                    </p>
                     <Link to="/admin/users">
-                        <Button label="Gestisci Utenti" severity="info" />
+                        <Button
+                            label="Gestisci Utenti"
+                            className="w-full !bg-primary-600 !border-primary-600 hover:!bg-primary-700"
+                        />
                     </Link>
-                </Card>
+                </div>
 
-                {/* <Card title="Configurazioni Sistema" className="mb-4">
-                    <p className="mb-3">
+                {/* <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6 flex flex-col h-full">
+                    <h3 className="text-lg font-semibold text-surface-900 mb-2">Configurazioni Sistema</h3>
+                    <p className="text-surface-600 mb-6 flex-grow">
                         Modifica le configurazioni del sistema
                     </p>
-                    <Button label="Configurazioni" severity="warning" />
-                </Card>
+                    <Button label="Configurazioni" severity="warning" className="w-full" />
+                </div>
 
-                <Card title="Log di Sistema" className="mb-4">
-                    <p className="mb-3">Visualizza i log del sistema</p>
-                    <Button label="Visualizza Log" severity="secondary" />
-                </Card>
+                <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6 flex flex-col h-full">
+                    <h3 className="text-lg font-semibold text-surface-900 mb-2">Log di Sistema</h3>
+                    <p className="text-surface-600 mb-6 flex-grow">Visualizza i log del sistema</p>
+                    <Button label="Visualizza Log" severity="secondary" className="w-full" />
+                </div>
 
-                <Card title="Backup Database" className="mb-4">
-                    <p className="mb-3">Crea backup del database</p>
-                    <Button label="Crea Backup" severity="danger" />
-                </Card> */}
+                <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6 flex flex-col h-full">
+                    <h3 className="text-lg font-semibold text-surface-900 mb-2">Backup Database</h3>
+                    <p className="text-surface-600 mb-6 flex-grow">Crea backup del database</p>
+                    <Button label="Crea Backup" severity="danger" className="w-full" />
+                </div> */}
             </div>
         </div>
     )

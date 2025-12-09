@@ -113,12 +113,12 @@ const UserActivities: React.FC = () => {
 
     return (
         <div className="bg-white">
-            <div className="mb-4 flex justify-between items-center">
+            <div className="mb-6 flex justify-between items-center">
                 <div>
-                    <h2 className="text-xl font-semibold text-gray-800">
+                    <h2 className="text-xl font-semibold text-surface-900">
                         Attività Recenti
                     </h2>
-                    <p className="text-gray-600 text-sm mt-1">
+                    <p className="text-surface-600 text-sm mt-1">
                         Monitora le azioni degli utenti nel sistema
                     </p>
                 </div>
@@ -126,7 +126,7 @@ const UserActivities: React.FC = () => {
                     <Button
                         label="Aggiorna"
                         icon="pi pi-refresh"
-                        className="p-button-outlined p-button-sm"
+                        className="!bg-white !text-surface-700 !border-surface-300 hover:!bg-surface-50"
                         onClick={() => activitiesQuery.refetch()}
                         loading={activitiesQuery.isRefetching}
                     />
@@ -143,6 +143,10 @@ const UserActivities: React.FC = () => {
                 sortField="timestamp"
                 sortOrder={-1}
                 loading={activitiesQuery.isLoading}
+                pt={{
+                    headerRow: { className: "bg-surface-50 text-surface-700" },
+                    thead: { className: "bg-surface-50" },
+                }}
             >
                 <Column
                     field="timestamp"

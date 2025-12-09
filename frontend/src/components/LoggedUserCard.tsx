@@ -13,24 +13,33 @@ const LoggedUserCard = () => {
     return (
         <div
             className={classNames(
-                { "border-blue-400 bg-blue-100": isSuperUser },
-                "rounded-lg bg-slate-100 border border-slate-400 flex items-center justify-start gap-2 px-4"
+                "rounded-lg bg-surface-800 border border-surface-700 flex items-center justify-between p-3 mt-auto",
+                { "border-primary-500/50": isSuperUser }
             )}
         >
-            {/* <Avatar size="normal" /> */}
-            <div className="flex flex-col flex-grow">
-                <Link to="/profile">
-                    <div className="text-xs font-medium">
+            <div className="flex flex-col overflow-hidden">
+                <Link
+                    to="/profile"
+                    className="hover:text-primary-400 transition-colors"
+                >
+                    <div className="text-sm font-medium text-surface-200 truncate">
                         {user?.username || "Username"}
                     </div>
+                    {isSuperUser && (
+                        <div className="text-[10px] text-primary-400 uppercase tracking-wider font-bold">
+                            Superuser
+                        </div>
+                    )}
                 </Link>
             </div>
             <Button
-                size="small"
+                icon="pi pi-sign-out"
+                className="w-8 h-8 !p-0 text-surface-400 hover:text-white hover:bg-surface-700"
                 text
-                severity="secondary"
+                rounded
                 onClick={logout}
-                label="Esci"
+                tooltip="Esci"
+                tooltipOptions={{ position: "top" }}
             />
         </div>
     )

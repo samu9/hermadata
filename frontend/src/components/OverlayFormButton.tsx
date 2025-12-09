@@ -32,14 +32,25 @@ const OverlayFormButton = <T,>({
     return (
         <div className="bottom-4 right-4">
             <Button
-                className="shadow-lg flex gap-2"
+                className="shadow-lg !rounded-full px-6 py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
                 severity={severity}
                 onClick={(e) => op.current && op.current.toggle(e)}
             >
                 <FontAwesomeIcon icon={buttonIcon} fixedWidth /> {buttonText}
             </Button>
-            <OverlayPanel showCloseIcon ref={op}>
-                <div className="w-[20rem]">
+            <OverlayPanel
+                showCloseIcon
+                ref={op}
+                className="shadow-xl rounded-xl border border-surface-200"
+                pt={{
+                    content: { className: "p-0" },
+                    closeButton: {
+                        className:
+                            "w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-100 transition-colors m-2",
+                    },
+                }}
+            >
+                <div className="w-[25rem] p-6 bg-white rounded-xl">
                     <FormComponent onSuccess={handleSuccess} {...formProps} />
                 </div>
             </OverlayPanel>

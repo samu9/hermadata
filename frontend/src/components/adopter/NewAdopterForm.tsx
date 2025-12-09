@@ -113,7 +113,13 @@ const NewAdopterForm = (props: Props) => {
                             className="w-64"
                         />
                     </div>
-                    <Button label="Salva" size="small" />
+                    <div className="mt-4">
+                        <Button
+                            label="Salva nuovo adottante"
+                            icon="pi pi-check"
+                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700"
+                        />
+                    </div>
                 </form>
             </FormProvider>
         </div>

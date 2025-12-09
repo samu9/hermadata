@@ -76,9 +76,9 @@ const NotPresentAlert = (props: Props) => {
                         <div className="flex items-center gap-2">
                             <FontAwesomeIcon
                                 icon={faCalendarAlt}
-                                className="w-3 h-3 text-gray-500"
+                                className="w-3 h-3 text-surface-500"
                             />
-                            <span className="text-gray-700">
+                            <span className="text-surface-700">
                                 <span className="font-medium">
                                     Data uscita:
                                 </span>{" "}
@@ -88,9 +88,9 @@ const NotPresentAlert = (props: Props) => {
                         <div className="flex items-center gap-2">
                             <FontAwesomeIcon
                                 icon={faSignOutAlt}
-                                className="w-3 h-3 text-gray-500"
+                                className="w-3 h-3 text-surface-500"
                             />
-                            <span className="text-gray-700">
+                            <span className="text-surface-700">
                                 <span className="font-medium">Motivo:</span>{" "}
                                 {exitTypesMap?.[props.data.exit_type!]}
                             </span>
@@ -149,9 +149,9 @@ const StageInfo = (props: {
                             <div className="flex items-center gap-2">
                                 <FontAwesomeIcon
                                     icon={faCalendarAlt}
-                                    className="w-3 h-3 text-gray-500"
+                                    className="w-3 h-3 text-surface-500"
                                 />
-                                <span className="text-gray-700">
+                                <span className="text-surface-700">
                                     <span className="font-medium">Dal:</span>{" "}
                                     {format(
                                         new Date(inShelterFrom),
@@ -216,12 +216,12 @@ const AnimalRecordHeader = (props: Props) => {
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6 mb-6">
             <div className="flex gap-6 items-start">
                 {/* Animal Image */}
                 <div className="flex-shrink-0">
                     <div
-                        className="w-32 h-32 rounded-full border-4 border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center relative group cursor-pointer transition-all duration-200 hover:border-gray-300"
+                        className="w-32 h-32 rounded-full border-4 border-surface-100 overflow-hidden bg-surface-50 flex items-center justify-center relative group cursor-pointer transition-all duration-200 hover:border-surface-300"
                         onClick={handleImageClick}
                         title="Clicca per cambiare l'immagine"
                     >
@@ -297,8 +297,8 @@ const AnimalRecordHeader = (props: Props) => {
                                 className={classNames(
                                     "text-3xl font-bold mb-3 leading-tight",
                                     {
-                                        "text-gray-800": props.data.name,
-                                        "text-gray-400": !props.data.name,
+                                        "text-surface-900": props.data.name,
+                                        "text-surface-400": !props.data.name,
                                     }
                                 )}
                             >
@@ -309,7 +309,7 @@ const AnimalRecordHeader = (props: Props) => {
                                 <ChipCodeBadge
                                     code={props.data.chip_code || undefined}
                                 />
-                                <div className="text-sm text-gray-600">
+                                <div className="text-sm text-surface-600">
                                     <span className="font-medium">Codice:</span>{" "}
                                     {props.data.code}
                                 </div>
@@ -346,8 +346,7 @@ const AnimalRecordHeader = (props: Props) => {
                                     }
                                     onClick={handleMoveToShelter}
                                     loading={isMovingToShelter}
-                                    className="p-button-success"
-                                    outlined
+                                    className="!bg-green-600 !border-green-600 hover:!bg-green-700 !text-white"
                                 />
                             </div>
                         )}

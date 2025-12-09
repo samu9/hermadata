@@ -72,10 +72,15 @@ const AnimalAdoptionPage = () => {
         newAdoptionMutation.mutate(exitPayload)
     }
     const dialogFooter = (
-        <div>
+        <div className="flex justify-end gap-2">
             <Button
-                label="Si"
-                severity="success"
+                label="Annulla"
+                className="p-button-text !text-surface-600 hover:!bg-surface-100"
+                onClick={() => setShowNewAdopterDialog(false)}
+            />
+            <Button
+                label="Si, crea nuovo"
+                className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700"
                 onClick={() => {
                     setShowNewAdopterDialog(false)
                     setSection(Section.new)
@@ -86,41 +91,67 @@ const AnimalAdoptionPage = () => {
     useEffect(() => {}, [])
 
     return (
-        <div className="flex flex-col h-full gap-3 max-w-3xl">
-            <div className="grow">
-                <div className="mb-2">
+        <div className="flex flex-col h-full gap-6 max-w-4xl mx-auto p-4">
+            <div className="grow space-y-6">
+                <div className="flex items-center justify-between">
                     <PageTitle>Nuova adozione</PageTitle>
                 </div>
+
                 {animalQuery.data && <AnimalCard data={animalQuery.data} />}
-                <Divider align="center">
-                    <FontAwesomeIcon
-                        icon={faHandHoldingHeart}
-                        className="text-xl text-gray-600"
-                    />
-                </Divider>
-                <div>
-                    <div className="flex gap-2 mb-2 items-center w-full justify-center">
+
+                <div className="relative flex py-2 items-center">
+                    <div className="flex-grow border-t border-surface-200"></div>
+                    <span className="flex-shrink-0 mx-4 text-surface-400">
+                        <FontAwesomeIcon
+                            icon={faHandHoldingHeart}
+                            className="text-2xl"
+                        />
+                    </span>
+                    <div className="flex-grow border-t border-surface-200"></div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6">
+                    <div className="flex gap-2 mb-6 items-center w-full justify-center">
                         <Button
+                            className={`!px-6 !py-3 !rounded-lg transition-all ${
+                                section === Section.search
+                                    ? "!bg-primary-600 !text-white !border-primary-600"
+                                    : "!bg-surface-100 !text-surface-600 !border-surface-100 hover:!bg-surface-200"
+                            }`}
                             onClick={() => {
                                 setSection(Section.search)
                             }}
                             disabled={section == Section.search}
+                            tooltip="Cerca esistente"
                         >
-                            <FontAwesomeIcon icon={faMagnifyingGlass} />
+                            <FontAwesomeIcon
+                                icon={faMagnifyingGlass}
+                                className="mr-2"
+                            />
+                            <span className="font-semibold">Cerca</span>
                         </Button>
                         <Button
+                            className={`!px-6 !py-3 !rounded-lg transition-all ${
+                                section === Section.new
+                                    ? "!bg-primary-600 !text-white !border-primary-600"
+                                    : "!bg-surface-100 !text-surface-600 !border-surface-100 hover:!bg-surface-200"
+                            }`}
                             onClick={() => {
                                 setSection(Section.new)
                             }}
                             disabled={section == Section.new}
+                            tooltip="Nuovo adottante"
                         >
-                            <FontAwesomeIcon icon={faAdd} />
+                            <FontAwesomeIcon icon={faAdd} className="mr-2" />
+                            <span className="font-semibold">Nuovo</span>
                         </Button>
                     </div>
 
                     {section == Section.search && (
-                        <div>
-                            <SubTitle>Cerca adottante</SubTitle>
+                        <div className="animate-fade-in">
+                            <div className="mb-4">
+                                <SubTitle>Cerca adottante</SubTitle>
+                            </div>
                             <SearchAdopter
                                 onSelected={(data) => {
                                     setAdopter(data)
@@ -131,18 +162,48 @@ const AnimalAdoptionPage = () => {
                                 }}
                             />
                             <Dialog
-                                header="Nessun risultato, vuoi inserire un nuovo adottante?"
+                                header="Nessun risultato"
                                 visible={showNewAdopterDialog}
                                 style={{ width: "50vw" }}
                                 onHide={() => setShowNewAdopterDialog(false)}
                                 footer={dialogFooter}
-                            />
+                                pt={{
+                                    root: {
+                                        className:
+                                            "bg-white rounded-xl shadow-xl border border-surface-200",
+                                    },
+                                    header: {
+                                        className:
+                                            "p-4 border-b border-surface-200 bg-surface-50 rounded-t-xl",
+                                    },
+                                    title: {
+                                        className:
+                                            "text-xl font-bold text-surface-900",
+                                    },
+                                    content: { className: "p-6" },
+                                    footer: {
+                                        className:
+                                            "p-4 border-t border-surface-200 bg-surface-50 rounded-b-xl",
+                                    },
+                                    closeButton: {
+                                        className:
+                                            "hover:bg-surface-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors",
+                                    },
+                                }}
+                            >
+                                <p className="text-surface-600">
+                                    Non abbiamo trovato nessun adottante con
+                                    questi criteri. Vuoi inserirne uno nuovo?
+                                </p>
+                            </Dialog>
                         </div>
                     )}
 
                     {section == Section.new && (
-                        <div>
-                            <SubTitle>Nuovo adottante</SubTitle>
+                        <div className="animate-fade-in">
+                            <div className="mb-4">
+                                <SubTitle>Nuovo adottante</SubTitle>
+                            </div>
 
                             <NewAdopterForm
                                 onSaved={(data) => {
@@ -153,26 +214,39 @@ const AnimalAdoptionPage = () => {
                         </div>
                     )}
                     {adopter && section == Section.adopter && (
-                        <AdopterCard data={adopter} />
+                        <div className="animate-fade-in">
+                            <div className="flex justify-between items-center mb-4">
+                                <SubTitle>Adottante selezionato</SubTitle>
+                                <Button
+                                    icon="pi pi-times"
+                                    className="p-button-rounded p-button-text !text-surface-500 hover:!bg-surface-100"
+                                    onClick={() => {
+                                        setAdopter(null)
+                                        setSection(Section.search)
+                                    }}
+                                    tooltip="Rimuovi selezione"
+                                />
+                            </div>
+                            <AdopterCard data={adopter} variant="selected" />
+                        </div>
                     )}
                 </div>
             </div>
-            <div className="shrink-0 flex gap-2">
+
+            <div className="shrink-0 flex gap-4 pt-4 border-t border-surface-200 bg-surface-50 -mx-4 px-4 -mb-4 pb-4 sticky bottom-0 z-10">
                 <Button
                     onClick={() => onConfirm(false)}
-                    severity="info"
-                    className="text-center block font-bold w-full"
+                    className="!bg-white !text-surface-700 !border-surface-300 hover:!bg-surface-50 w-full justify-center font-bold shadow-sm"
                     disabled={!adopter}
                 >
                     Salva senza completare
                 </Button>
                 <Button
                     onClick={() => onConfirm(true)}
-                    severity="success"
-                    className="text-center block font-bold w-full"
+                    className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 w-full justify-center font-bold shadow-sm"
                     disabled={!adopter}
                 >
-                    Completa
+                    Completa adozione
                 </Button>
             </div>
             <Toast ref={toast} position="bottom-center" />

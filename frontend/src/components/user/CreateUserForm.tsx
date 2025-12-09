@@ -88,12 +88,12 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
         <>
             <Toast ref={toast} />
 
-            <Card className="mt-0">
-                <div className="mb-4">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            <div className="mt-0">
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold text-surface-900 mb-2">
                         Crea Nuovo Utente
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-surface-600">
                         Inserisci i dati per creare un nuovo utente del sistema
                     </p>
                 </div>
@@ -101,14 +101,14 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                 <FormProvider {...form}>
                     <form
                         onSubmit={handleSubmit(onSubmit)}
-                        className="space-y-4"
+                        className="space-y-6"
                     >
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Nome */}
-                            <div className="field">
+                            <div className="flex flex-col gap-2">
                                 <label
                                     htmlFor="name"
-                                    className="block text-sm font-medium text-gray-700 mb-2"
+                                    className="text-sm font-medium text-surface-700"
                                 >
                                     Nome
                                 </label>
@@ -127,17 +127,17 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                                     )}
                                 />
                                 {errors.name && (
-                                    <small className="p-error">
+                                    <small className="text-red-500">
                                         {errors.name.message}
                                     </small>
                                 )}
                             </div>
 
                             {/* Cognome */}
-                            <div className="field">
+                            <div className="flex flex-col gap-2">
                                 <label
                                     htmlFor="surname"
-                                    className="block text-sm font-medium text-gray-700 mb-2"
+                                    className="text-sm font-medium text-surface-700"
                                 >
                                     Cognome
                                 </label>
@@ -158,7 +158,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                                     )}
                                 />
                                 {errors.surname && (
-                                    <small className="p-error">
+                                    <small className="text-red-500">
                                         {errors.surname.message}
                                     </small>
                                 )}
@@ -166,10 +166,10 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                         </div>
 
                         {/* Email */}
-                        <div className="field">
+                        <div className="flex flex-col gap-2">
                             <label
                                 htmlFor="email"
-                                className="block text-sm font-medium text-gray-700 mb-2"
+                                className="text-sm font-medium text-surface-700"
                             >
                                 Email *
                             </label>
@@ -189,7 +189,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                                 )}
                             />
                             {errors.email && (
-                                <small className="p-error">
+                                <small className="text-red-500">
                                     {errors.email.message}
                                 </small>
                             )}
@@ -204,15 +204,15 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                             optionValue="name"
                             placeholder="Seleziona un ruolo"
                             disabled={rolesLoading}
-                            className="field"
+                            className="w-full"
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Password */}
-                            <div className="field">
+                            <div className="flex flex-col gap-2">
                                 <label
                                     htmlFor="password"
-                                    className="block text-sm font-medium text-gray-700 mb-2"
+                                    className="text-sm font-medium text-surface-700"
                                 >
                                     Password *
                                 </label>
@@ -228,6 +228,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                                                     ? "p-invalid"
                                                     : ""
                                             }`}
+                                            inputClassName="w-full"
                                             placeholder="Inserisci la password"
                                             toggleMask
                                             feedback={false}
@@ -235,17 +236,17 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                                     )}
                                 />
                                 {errors.password && (
-                                    <small className="p-error">
+                                    <small className="text-red-500">
                                         {errors.password.message}
                                     </small>
                                 )}
                             </div>
 
                             {/* Conferma Password */}
-                            <div className="field">
+                            <div className="flex flex-col gap-2">
                                 <label
                                     htmlFor="confirmPassword"
-                                    className="block text-sm font-medium text-gray-700 mb-2"
+                                    className="text-sm font-medium text-surface-700"
                                 >
                                     Conferma Password *
                                 </label>
@@ -261,6 +262,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                                                     ? "p-invalid"
                                                     : ""
                                             }`}
+                                            inputClassName="w-full"
                                             placeholder="Conferma la password"
                                             toggleMask
                                             feedback={false}
@@ -268,7 +270,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                                     )}
                                 />
                                 {errors.confirmPassword && (
-                                    <small className="p-error">
+                                    <small className="text-red-500">
                                         {errors.confirmPassword.message}
                                     </small>
                                 )}
@@ -276,13 +278,13 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                         </div>
 
                         {/* Autorizzazioni */}
-                        <div className="field">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-medium text-surface-700">
                                 Autorizzazioni
                             </label>
 
                             <div className="flex flex-col gap-3">
-                                <div className="flex align-items-center">
+                                <div className="flex items-center gap-2">
                                     <Controller
                                         name="is_active"
                                         control={control}
@@ -293,19 +295,18 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                                                 onChange={(e) =>
                                                     field.onChange(e.checked)
                                                 }
-                                                className="mr-2"
                                             />
                                         )}
                                     />
                                     <label
                                         htmlFor="is_active"
-                                        className="text-sm"
+                                        className="text-sm text-surface-700 cursor-pointer"
                                     >
                                         Utente attivo
                                     </label>
                                 </div>
 
-                                <div className="flex align-items-center">
+                                <div className="flex items-center gap-2">
                                     <Controller
                                         name="is_superuser"
                                         control={control}
@@ -316,13 +317,12 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                                                 onChange={(e) =>
                                                     field.onChange(e.checked)
                                                 }
-                                                className="mr-2"
                                             />
                                         )}
                                     />
                                     <label
                                         htmlFor="is_superuser"
-                                        className="text-sm"
+                                        className="text-sm text-surface-700 cursor-pointer"
                                     >
                                         Amministratore (Super User)
                                     </label>
@@ -331,11 +331,11 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                         </div>
 
                         {/* Bottoni */}
-                        <div className="flex justify-end gap-2 pt-4">
+                        <div className="flex justify-end gap-3 pt-4">
                             <Button
                                 type="button"
                                 label="Reset"
-                                className="p-button-outlined"
+                                className="!bg-white !text-surface-700 !border-surface-300 hover:!bg-surface-50"
                                 onClick={() => reset()}
                             />
                             <Button
@@ -343,11 +343,12 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
                                 label="Crea Utente"
                                 loading={createUserMutation.isLoading}
                                 disabled={!isValid}
+                                className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700"
                             />
                         </div>
                     </form>
                 </FormProvider>
-            </Card>
+            </div>
         </>
     )
 }

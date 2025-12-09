@@ -110,146 +110,147 @@ const ProfilePage: React.FC = () => {
     const displayUser = currentUserDetails || user
 
     return (
-        <div className="max-w-4xl px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="bg-white shadow rounded-lg mb-6">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h1 className="text-2xl font-bold text-gray-900">
-                        Impostazioni Profilo
-                    </h1>
-                    <p className="mt-1 text-gray-600">
-                        Gestisci le impostazioni del tuo account e le preferenze
-                    </p>
-                </div>
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-surface-900">
+                    Impostazioni Profilo
+                </h1>
+                <p className="mt-2 text-surface-600">
+                    Gestisci le impostazioni del tuo account e le preferenze
+                </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Profile Information */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-8">
                     {/* User Information Card */}
-                    <div className="bg-white shadow rounded-lg">
-                        <div className="px-6 py-4 border-b border-gray-200">
-                            <h2 className="text-lg font-medium text-gray-900">
+                    <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-surface-200 bg-surface-50">
+                            <h2 className="text-lg font-semibold text-surface-900">
                                 Informazioni Utente
                             </h2>
                         </div>
-                        <div className="px-6 py-4 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Nome Utente
-                                </label>
-                                <div className="mt-1 p-3 bg-gray-50 rounded-md text-gray-900">
-                                    {"username" in displayUser
-                                        ? displayUser.username
-                                        : displayUser.email}
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Email
-                                </label>
-                                <div className="mt-1 p-3 bg-gray-50 rounded-md text-gray-900">
-                                    {displayUser.email || "Non disponibile"}
-                                </div>
-                            </div>
-                            {currentUserDetails?.name && (
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Nome
+                                    <label className="block text-sm font-medium text-surface-700 mb-1">
+                                        Nome Utente
                                     </label>
-                                    <div className="mt-1 p-3 bg-gray-50 rounded-md text-gray-900">
-                                        {currentUserDetails.name}
+                                    <div className="p-3 bg-surface-50 rounded-lg text-surface-900 border border-surface-200">
+                                        {"username" in displayUser
+                                            ? displayUser.username
+                                            : displayUser.email}
                                     </div>
                                 </div>
-                            )}
-                            {currentUserDetails?.surname && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Cognome
+                                    <label className="block text-sm font-medium text-surface-700 mb-1">
+                                        Email
                                     </label>
-                                    <div className="mt-1 p-3 bg-gray-50 rounded-md text-gray-900">
-                                        {currentUserDetails.surname}
+                                    <div className="p-3 bg-surface-50 rounded-lg text-surface-900 border border-surface-200">
+                                        {displayUser.email || "Non disponibile"}
                                     </div>
                                 </div>
-                            )}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Ruolo
-                                </label>
-                                <div className="mt-1 p-3 bg-gray-50 rounded-md">
-                                    <span
-                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                            displayUser.is_superuser
-                                                ? "bg-purple-100 text-purple-800"
-                                                : "bg-green-100 text-green-800"
-                                        }`}
-                                    >
-                                        {displayUser.is_superuser
-                                            ? "Amministratore"
-                                            : "Utente"}
-                                    </span>
+                                {currentUserDetails?.name && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-surface-700 mb-1">
+                                            Nome
+                                        </label>
+                                        <div className="p-3 bg-surface-50 rounded-lg text-surface-900 border border-surface-200">
+                                            {currentUserDetails.name}
+                                        </div>
+                                    </div>
+                                )}
+                                {currentUserDetails?.surname && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-surface-700 mb-1">
+                                            Cognome
+                                        </label>
+                                        <div className="p-3 bg-surface-50 rounded-lg text-surface-900 border border-surface-200">
+                                            {currentUserDetails.surname}
+                                        </div>
+                                    </div>
+                                )}
+                                <div>
+                                    <label className="block text-sm font-medium text-surface-700 mb-1">
+                                        Ruolo
+                                    </label>
+                                    <div className="p-3 bg-surface-50 rounded-lg border border-surface-200">
+                                        <span
+                                            className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full ${
+                                                displayUser.is_superuser
+                                                    ? "bg-purple-100 text-purple-800"
+                                                    : "bg-green-100 text-green-800"
+                                            }`}
+                                        >
+                                            {displayUser.is_superuser
+                                                ? "Amministratore"
+                                                : "Utente"}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Stato
-                                </label>
-                                <div className="mt-1 p-3 bg-gray-50 rounded-md">
-                                    <span
-                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                            currentUserDetails?.is_active !==
+                                <div>
+                                    <label className="block text-sm font-medium text-surface-700 mb-1">
+                                        Stato
+                                    </label>
+                                    <div className="p-3 bg-surface-50 rounded-lg border border-surface-200">
+                                        <span
+                                            className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full ${
+                                                currentUserDetails?.is_active !==
+                                                false
+                                                    ? "bg-green-100 text-green-800"
+                                                    : "bg-red-100 text-red-800"
+                                            }`}
+                                        >
+                                            {currentUserDetails?.is_active !==
                                             false
-                                                ? "bg-green-100 text-green-800"
-                                                : "bg-red-100 text-red-800"
-                                        }`}
-                                    >
-                                        {currentUserDetails?.is_active !== false
-                                            ? "Attivo"
-                                            : "Inattivo"}
-                                    </span>
+                                                ? "Attivo"
+                                                : "Inattivo"}
+                                        </span>
+                                    </div>
                                 </div>
+                                {currentUserDetails?.created_at && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-surface-700 mb-1">
+                                            Membro dal
+                                        </label>
+                                        <div className="p-3 bg-surface-50 rounded-lg text-surface-900 border border-surface-200">
+                                            {new Date(
+                                                currentUserDetails.created_at
+                                            ).toLocaleDateString("it-IT")}
+                                        </div>
+                                    </div>
+                                )}
+                                {currentUserDetails?.last_login && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-surface-700 mb-1">
+                                            Ultimo Accesso
+                                        </label>
+                                        <div className="p-3 bg-surface-50 rounded-lg text-surface-900 border border-surface-200">
+                                            {new Date(
+                                                currentUserDetails.last_login
+                                            ).toLocaleString("it-IT")}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            {currentUserDetails?.created_at && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Membro dal
-                                    </label>
-                                    <div className="mt-1 p-3 bg-gray-50 rounded-md text-gray-900">
-                                        {new Date(
-                                            currentUserDetails.created_at
-                                        ).toLocaleDateString("it-IT")}
-                                    </div>
-                                </div>
-                            )}
-                            {currentUserDetails?.last_login && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Ultimo Accesso
-                                    </label>
-                                    <div className="mt-1 p-3 bg-gray-50 rounded-md text-gray-900">
-                                        {new Date(
-                                            currentUserDetails.last_login
-                                        ).toLocaleString("it-IT")}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
 
                     {/* Change Password Card */}
-                    <div className="bg-white shadow rounded-lg">
-                        <div className="px-6 py-4 border-b border-gray-200">
-                            <h2 className="text-lg font-medium text-gray-900">
+                    <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-surface-200 bg-surface-50">
+                            <h2 className="text-lg font-semibold text-surface-900">
                                 Cambia Password
                             </h2>
-                            <p className="mt-1 text-sm text-gray-600">
+                            <p className="mt-1 text-sm text-surface-600">
                                 Aggiorna la tua password per mantenere il tuo
                                 account sicuro
                             </p>
                         </div>
-                        <div className="px-6 py-4">
+                        <div className="p-6">
                             {passwordChangeSuccess && (
-                                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
+                                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                                     <div className="flex">
                                         <div className="flex-shrink-0">
                                             <svg
@@ -276,7 +277,7 @@ const ProfilePage: React.FC = () => {
                             )}
 
                             {passwordChangeError && (
-                                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                                     <div className="flex">
                                         <div className="flex-shrink-0">
                                             <svg
@@ -302,12 +303,12 @@ const ProfilePage: React.FC = () => {
 
                             <form
                                 onSubmit={handleSubmit(onPasswordChange)}
-                                className="space-y-4"
+                                className="space-y-6"
                             >
                                 <div>
                                     <label
                                         htmlFor="currentPassword"
-                                        className="block text-sm font-medium text-gray-700"
+                                        className="block text-sm font-medium text-surface-700 mb-1"
                                     >
                                         Password Attuale
                                     </label>
@@ -315,7 +316,7 @@ const ProfilePage: React.FC = () => {
                                         type="password"
                                         id="currentPassword"
                                         {...register("currentPassword")}
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        className="block w-full px-3 py-2 border border-surface-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
                                         disabled={isSubmitting}
                                     />
                                     {errors.currentPassword && (
@@ -328,7 +329,7 @@ const ProfilePage: React.FC = () => {
                                 <div>
                                     <label
                                         htmlFor="newPassword"
-                                        className="block text-sm font-medium text-gray-700"
+                                        className="block text-sm font-medium text-surface-700 mb-1"
                                     >
                                         Nuova Password
                                     </label>
@@ -336,7 +337,7 @@ const ProfilePage: React.FC = () => {
                                         type="password"
                                         id="newPassword"
                                         {...register("newPassword")}
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        className="block w-full px-3 py-2 border border-surface-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
                                         disabled={isSubmitting}
                                     />
                                     {errors.newPassword && (
@@ -349,7 +350,7 @@ const ProfilePage: React.FC = () => {
                                 <div>
                                     <label
                                         htmlFor="confirmPassword"
-                                        className="block text-sm font-medium text-gray-700"
+                                        className="block text-sm font-medium text-surface-700 mb-1"
                                     >
                                         Conferma Nuova Password
                                     </label>
@@ -357,7 +358,7 @@ const ProfilePage: React.FC = () => {
                                         type="password"
                                         id="confirmPassword"
                                         {...register("confirmPassword")}
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        className="block w-full px-3 py-2 border border-surface-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors"
                                         disabled={isSubmitting}
                                     />
                                     {errors.confirmPassword && (
@@ -371,7 +372,7 @@ const ProfilePage: React.FC = () => {
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="inline-flex justify-center py-2.5 px-4 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
                                         {isSubmitting
                                             ? "Cambio in corso..."

@@ -53,22 +53,21 @@ const LoginForm = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
-            <Card className="w-full max-w-md shadow-2xl border-0 overflow-hidden">
-                <div className="flex items-center gap-2 px-8">
+        <div className="min-h-screen flex items-center justify-center bg-surface-50 p-4">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-surface-200 overflow-hidden">
+                <div className="flex flex-col items-center gap-4 pt-10 pb-6 px-8">
                     <img src={logo} alt="HermaData Logo" className="w-24" />
-                    {/* <HermaDataLogo size={100} color="#6366f1" /> */}
-                    <div>
-                        <span className="text-3xl text-primary font-bold">
+                    <div className="text-center">
+                        <span className="text-3xl text-primary-700 font-bold tracking-tight">
                             HERMADATA
                         </span>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm text-surface-500 mt-1">
                             Animal Shelter Management System
                         </p>
                     </div>
                 </div>
                 {/* Form Section */}
-                <div className="p-8">
+                <div className="p-8 pt-2">
                     <FormProvider {...form}>
                         <form
                             onSubmit={handleSubmit(onSubmit)}
@@ -86,7 +85,7 @@ const LoginForm = () => {
 
                             {/* Error Message */}
                             {loginMutation.isError && (
-                                <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-md">
+                                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                                     <div className="flex items-center">
                                         <i className="pi pi-exclamation-triangle text-red-500 mr-2"></i>
                                         <span className="text-red-700 text-sm font-medium">
@@ -102,7 +101,7 @@ const LoginForm = () => {
                                 type="submit"
                                 disabled={!isValid || loginMutation.isLoading}
                                 loading={loginMutation.isLoading}
-                                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 border-0 rounded-lg font-semibold text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                                className="w-full !bg-primary-600 !border-primary-600 hover:!bg-primary-700 py-3 font-semibold text-lg shadow-md transition-all duration-200"
                                 size="large"
                             >
                                 {loginMutation.isLoading ? (
@@ -123,9 +122,14 @@ const LoginForm = () => {
                     </FormProvider>
 
                     {/* Footer */}
-                    <div className="mt-8 pt-6 border-t border-gray-200 text-center"></div>
+                    <div className="mt-8 pt-6 border-t border-surface-200 text-center">
+                        <p className="text-xs text-surface-500">
+                            &copy; {new Date().getFullYear()} Hermadata. All
+                            rights reserved.
+                        </p>
+                    </div>
                 </div>
-            </Card>
+            </div>
         </div>
     )
 }

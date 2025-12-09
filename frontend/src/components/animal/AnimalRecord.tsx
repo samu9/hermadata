@@ -154,26 +154,45 @@ const AnimalRecord = (props: Props) => {
                 }}
                 role="menuitem"
                 to={tabItem.path}
-                className={classNames(options.className, "w-[150px]", {
-                    "text-yellow-300": item.disabled,
-                })}
+                className={classNames(
+                    "flex items-center px-4 py-3 font-medium transition-all duration-200 border-b-2 outline-none focus:outline-none",
+                    {
+                        "border-primary-600 text-primary-700":
+                            activeIndex === i,
+                        "border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300":
+                            activeIndex !== i,
+                        "opacity-50 cursor-not-allowed": item.disabled,
+                        "cursor-pointer": !item.disabled,
+                    }
+                )}
             >
-                <span className={options.iconClassName}>{item.icon}</span>
-                <span className={options.labelClassName}>{item.label}</span>
+                <span className="mr-2">{item.icon}</span>
+                <span>{item.label}</span>
             </NavLink>
         ),
     }))
     return (
         <div>
-            <div className="mb-4">
+            <div className="mb-6">
                 <AnimalRecordHeader data={props.data} />
             </div>
             <TabMenu
                 model={tabMenuItems}
                 activeIndex={activeIndex}
                 onTabChange={(e) => setActiveIndex(e.index)}
+                pt={{
+                    root: {
+                        className:
+                            "bg-transparent border-b border-surface-200 mb-6",
+                    },
+                    menu: {
+                        className: "bg-transparent border-none flex flex-wrap",
+                    },
+                    menuitem: { className: "bg-transparent border-none mr-2" },
+                    action: { className: "hidden" }, // Hide default action since we use template
+                }}
             />
-            <div className="py-4">
+            <div className="py-4 animate-fade-in">
                 <Outlet />
             </div>
         </div>
