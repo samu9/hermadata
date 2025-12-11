@@ -75,7 +75,7 @@ const LoginForm = () => {
                         >
                             <ControlledInputText<Login>
                                 fieldName="username"
-                                label="Email o Username"
+                                label="Email"
                             />
 
                             <ControlledInputPassword<Login>
