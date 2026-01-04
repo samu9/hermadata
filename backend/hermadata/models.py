@@ -25,7 +25,7 @@ class SearchQuery(PaginationQuery):
             value = getattr(self, field)
             if value is None:
                 continue
-            builder, in_or = self._where_clause_map[field]
+            builder, in_or, *_ = self._where_clause_map[field]
             attribute = builder(value)
 
             to_add = or_elems if in_or else where
