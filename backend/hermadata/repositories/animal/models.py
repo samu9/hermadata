@@ -446,3 +446,7 @@ class MedicalActivityModel(BaseModel):
     from_date: date | None = None
     to_date: date | None = None
     notes: str | None = None
+
+
+class MoveToShelterRequest(BaseModel):
+    date: datetime
