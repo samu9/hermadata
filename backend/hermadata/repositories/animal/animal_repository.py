@@ -607,12 +607,14 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.flush()
         return result.rowcount
 
-    def move_to_shelter(self, animal_id: int) -> int:
-        """Set in_shelter_from to current datetime for the specified animal"""
+    def move_to_shelter(self, animal_id: int, date: datetime) -> int:
+        """
+        Set in_shelter_from to specified datetime for the specified animal
+        """
         result = self.session.execute(
             update(Animal)
             .where(Animal.id == animal_id)
-            .values(in_shelter_from=datetime.now())
+            .values(in_shelter_from=date)
         )
         self.session.flush()
         return result.rowcount
