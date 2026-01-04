@@ -19,6 +19,8 @@ import { Animal } from "../../models/animal.schema"
 import { ChipCodeBadge } from "./misc"
 import AnimalImageUploadDialog from "./AnimalImageUploadDialog"
 import { Button } from "primereact/button"
+import { Dialog } from "primereact/dialog"
+import { Calendar } from "primereact/calendar"
 import { apiService } from "../../main"
 import { useQueryClient } from "react-query"
 import { useParams } from "react-router-dom"
@@ -171,6 +173,11 @@ const AnimalRecordHeader = (props: Props) => {
     const [imageUploadDialogVisible, setImageUploadDialogVisible] =
         useState(false)
     const [isMovingToShelter, setIsMovingToShelter] = useState(false)
+    const [moveToShelterDialogVisible, setMoveToShelterDialogVisible] =
+        useState(false)
+    const [moveToShelterDate, setMoveToShelterDate] = useState<Date | null>(
+        new Date()
+    )
     const [currentHealthcareStage, setCurrentHealthcareStage] = useState(
         props.data.healthcare_stage
     )
@@ -190,15 +197,20 @@ const AnimalRecordHeader = (props: Props) => {
         setImageUploadDialogVisible(true)
     }
 
-    const handleMoveToShelter = async () => {
-        if (!animalId) return
+    const handleMoveToShelterClick = () => {
+        setMoveToShelterDate(new Date())
+        setMoveToShelterDialogVisible(true)
+    }
+
+    const confirmMoveToShelter = async () => {
+        if (!animalId || !moveToShelterDate) return
 
         try {
             setIsMovingToShelter(true)
-            await apiService.moveAnimalToShelter(animalId)
+            await apiService.moveAnimalToShelter(animalId, moveToShelterDate)
             // Update local state immediately for instant UI feedback
             setCurrentHealthcareStage(false)
-            setCurrentInShelterFrom(new Date())
+            setCurrentInShelterFrom(moveToShelterDate)
             // Show success message
             const animalName = props.data.name || "L'animale"
             apiService.showSuccess(
@@ -207,6 +219,7 @@ const AnimalRecordHeader = (props: Props) => {
             )
             // Invalidate the query to refresh the data in the background
             queryClient.invalidateQueries(["animal", animalId])
+            setMoveToShelterDialogVisible(false)
         } catch (error) {
             // Error is already handled by API service
             console.error("Failed to move animal to shelter:", error)
@@ -344,7 +357,7 @@ const AnimalRecordHeader = (props: Props) => {
                                             className="mr-2"
                                         />
                                     }
-                                    onClick={handleMoveToShelter}
+                                    onClick={handleMoveToShelterClick}
                                     loading={isMovingToShelter}
                                     className="!bg-green-600 !border-green-600 hover:!bg-green-700 !text-white"
                                 />
@@ -353,6 +366,46 @@ const AnimalRecordHeader = (props: Props) => {
                     </div>
                 </div>
             </div>
+
+            {/* Move to Shelter Dialog */}
+            <Dialog
+                header="Sposta in rifugio"
+                visible={moveToShelterDialogVisible}
+                style={{ width: "400px" }}
+                onHide={() => setMoveToShelterDialogVisible(false)}
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            label="Annulla"
+                            icon="pi pi-times"
+                            onClick={() => setMoveToShelterDialogVisible(false)}
+                            className="p-button-text"
+                        />
+                        <Button
+                            label="Conferma"
+                            icon="pi pi-check"
+                            onClick={confirmMoveToShelter}
+                            loading={isMovingToShelter}
+                            autoFocus
+                        />
+                    </div>
+                }
+            >
+                <div className="flex flex-col gap-4">
+                    <p className="m-0">
+                        Seleziona la data in cui l'animale è stato spostato in
+                        rifugio:
+                    </p>
+                    <Calendar
+                        value={moveToShelterDate}
+                        onChange={(e) => setMoveToShelterDate(e.value as Date)}
+                        showIcon
+                        dateFormat="dd/mm/yy"
+                        className="w-full"
+                        maxDate={new Date()}
+                    />
+                </div>
+            </Dialog>
 
             {/* Image Upload Dialog */}
             <AnimalImageUploadDialog
