@@ -279,10 +279,10 @@ class ApiService {
         return result
     }
 
-    async moveAnimalToShelter(animalId: string): Promise<number> {
+    async moveAnimalToShelter(animalId: string, date: Date): Promise<number> {
         const result = await this.post<number>(
             ApiEndpoints.animal.moveToShelter(animalId),
-            {}
+            { date: date.toISOString() }
         )
 
         return result
