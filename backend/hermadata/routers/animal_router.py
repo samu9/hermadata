@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -28,6 +29,7 @@ from hermadata.repositories.animal.models import (
     AnimalSearchModel,
     AnimalSearchResult,
     CompleteEntryModel,
+    MoveToShelterRequest,
     NewAnimalDocument,
     NewAnimalModel,
     NewEntryModel,
@@ -288,14 +290,22 @@ def get_warnings(
 @router.post("/{animal_id}/move_to_shelter", response_model=int)
 def move_to_shelter(
     animal_id: int,
+    data: MoveToShelterRequest,
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
     current_user: Annotated[
         TokenData, Depends(require_permission(Permission.EDIT_ANIMAL))
     ],
 ):
-    """Move animal to shelter by setting in_shelter_from to current datetime"""
+    """
+    Move animal to shelter by setting in_shelter_from to specified datetime
+    """
     try:
-        updated_rows = repo.move_to_shelter(animal_id)
+        if data.date > datetime.now(data.date.tzinfo):
+            raise HTTPException(
+                status_code=400, detail="La data non può essere nel futuro"
+            )
+
+        updated_rows = repo.move_to_shelter(animal_id, data.date)
         if updated_rows == 0:
             raise HTTPException(
                 status_code=404, detail=f"Animal {animal_id} not found"
