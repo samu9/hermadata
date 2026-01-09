@@ -95,6 +95,7 @@ export const animalEditSuperUserSchema = animalEditSchema.extend({
     adoptability_index: z.number().min(0).max(3).optional().nullable(),
     img_path: z.string().nullish(),
     rescue_city_code: cityCodeValidator.nullish(),
+    in_shelter_from: dateFromString.nullish(),
     // Animal entries history
     entries: z.array(animalEntrySchema).optional(),
 })
