@@ -2,6 +2,7 @@ import logging
 
 from fastapi.responses import JSONResponse
 
+from hermadata.errors import InvalidFiscalCodeException
 from hermadata.repositories.animal.animal_repository import (
     AnimalWithoutChipCodeException,
     EntryNotCompleteException,
@@ -17,6 +18,7 @@ API_ERROR_MESSAGES = {
     "Non è possibile completare l'operazione",
     NoRequiredExitDataException: "Dati animale non completi. "
     "Non è possibile completare l'operazione",
+    InvalidFiscalCodeException: "Codice fiscale non valido.",
 }
 DEFAULT_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 
