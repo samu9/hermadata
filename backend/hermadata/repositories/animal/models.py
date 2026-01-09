@@ -279,6 +279,7 @@ class UpdateAnimalModel(BaseModel):
     fur: int | None = None
     color: int | None = None
     size: int | None = None
+    in_shelter_from: datetime | None = None
 
 
 class AnimalQueryModel(BaseModel):
