@@ -60,6 +60,9 @@ class AnimalService:
 
         return affected
 
+    def soft_delete(self, animal_id: int):
+        self.animal_repository.soft_delete_animal(animal_id)
+
     def complete_entry(self, animal_id: int, data: CompleteEntryModel):
         self.animal_repository.complete_entry(animal_id, data)
 

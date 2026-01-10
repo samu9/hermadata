@@ -228,6 +228,8 @@ class AnimalSearchModel(PaginationQuery):
         if or_elems:
             where.append(or_(*or_elems))
 
+        where.append(Animal.deleted_at.is_(None))
+
         return where
 
     def _add_to_list(self, target_list: list, attribute):

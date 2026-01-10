@@ -269,6 +269,8 @@ class SQLAnimalRepository(SQLBaseRepository):
         if query.rescue_city_code is not None:
             where.append(Animal.rescue_city_code == query.rescue_city_code)
 
+        where.append(Animal.deleted_at.is_(None))
+
         result = self.session.execute(
             select(
                 Animal.code,
@@ -459,6 +461,14 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.flush()
 
         return entry_id
+
+    def soft_delete_animal(self, animal_id: int):
+        self.session.execute(
+            update(Animal)
+            .where(Animal.id == animal_id)
+            .values(deleted_at=datetime.now())
+        )
+        self.session.flush()
 
     def get_animal_entry(self, entry_id: int) -> AnimalEntryModel:
         (

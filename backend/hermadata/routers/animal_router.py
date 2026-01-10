@@ -12,7 +12,11 @@ from hermadata.initializations import (
     get_document_repository,
 )
 from hermadata.models import ApiError, PaginationResult
-from hermadata.permissions import check_permission, require_permission
+from hermadata.permissions import (
+    check_permission,
+    require_permission,
+    require_superuser,
+)
 from hermadata.repositories.animal.animal_repository import (
     ExistingChipCodeException,
     SQLAnimalRepository,
@@ -165,6 +169,16 @@ def update_animal(
             content={"animal_id": e.animal_id},
         )
     return result
+
+
+@router.delete("/{animal_id}")
+def delete_animal(
+    animal_id: int,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(require_superuser)],
+):
+    service.soft_delete(animal_id)
+    return Response(content=None, status_code=204)
 
 
 @router.get("/{animal_id}/document", response_model=list[AnimalDocumentModel])
