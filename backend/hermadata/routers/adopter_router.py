@@ -2,13 +2,19 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from hermadata.initializations import get_adopter_repository
+from hermadata.initializations import (
+    get_adopter_repository,
+    get_adopter_service,
+)
 from hermadata.models import PaginationResult
 from hermadata.repositories.adopter_repository import (
     AdopterModel,
     AdopterSearchQuery,
-    NewAdopter,
     SQLAdopterRepository,
+)
+from hermadata.services.adopter_service import (
+    AdopterService,
+    NewAdopterRequest,
 )
 
 router = APIRouter(prefix="/adopter")
@@ -16,10 +22,10 @@ router = APIRouter(prefix="/adopter")
 
 @router.post("", response_model=AdopterModel)
 def create_adopter(
-    data: NewAdopter,
-    repo: Annotated[SQLAdopterRepository, Depends(get_adopter_repository)],
+    data: NewAdopterRequest,
+    service: Annotated[AdopterService, Depends(get_adopter_service)],
 ):
-    adopter = repo.create(data)
+    adopter = service.create(data)
     return adopter
 
 

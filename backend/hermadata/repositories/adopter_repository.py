@@ -43,10 +43,14 @@ class AdopterSearchQuery(SearchQuery):
     fiscal_code: str | None = None
 
     _where_clause_map: dict[str, WhereClauseMapItem] = {
-        "name": WhereClauseMapItem(lambda v: Adopter.name.like(f"{v}%")),
-        "surname": WhereClauseMapItem(lambda v: Adopter.surname.like(f"{v}%")),
+        "name": WhereClauseMapItem(
+            lambda v: Adopter.name.like(f"{v}%"), False
+        ),
+        "surname": WhereClauseMapItem(
+            lambda v: Adopter.surname.like(f"{v}%"), False
+        ),
         "fiscal_code": WhereClauseMapItem(
-            lambda v: Adopter.fiscal_code.like(f"{v}%")
+            lambda v: Adopter.fiscal_code.like(f"{v}%"), False
         ),
     }
 

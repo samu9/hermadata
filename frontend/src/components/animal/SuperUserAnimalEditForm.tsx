@@ -205,7 +205,7 @@ const SuperUserAnimalEditForm = () => {
                         {/* Administrative Fields Card */}
                         <Card title="Campi Amministrativi" className="h-fit">
                             <div className="flex flex-col gap-4">
-                                <ControlledDropdown
+                                {/* <ControlledDropdown
                                     fieldName="stage"
                                     label="Stadio"
                                     optionValue="id"
@@ -224,6 +224,11 @@ const SuperUserAnimalEditForm = () => {
                                 <ControlledInputText<AnimalEditSuperUser>
                                     fieldName="img_path"
                                     label="Percorso Immagine"
+                                    className="w-full"
+                                /> */}
+                                <ControlledInputDate<AnimalEditSuperUser>
+                                    fieldName="in_shelter_from"
+                                    label="In rifugio dal"
                                     className="w-full"
                                 />
                             </div>

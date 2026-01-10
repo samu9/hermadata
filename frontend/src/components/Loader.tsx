@@ -5,24 +5,13 @@ import { ProgressSpinner } from "primereact/progressspinner"
 const Loader: React.FC = () => {
     const { loading } = useLoader()
 
-    return loading ? (
-        <div
-            style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                background: "rgba(0, 0, 0, 0.5)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                zIndex: 1000,
-            }}
-        >
-            <ProgressSpinner />
+    if (!loading) return null
+
+    return (
+        <div className="fixed inset-0 w-full h-full bg-surface-900/50 backdrop-blur-sm flex justify-center items-center z-[1000]">
+            <ProgressSpinner strokeWidth="4" className="w-16 h-16" />
         </div>
-    ) : null
+    )
 }
 
 export default Loader

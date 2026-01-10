@@ -11,11 +11,7 @@ import {
     animalExitsReportSchema,
     AnimalExitsReportSchema,
 } from "../models/animal.schema"
-import {
-    useComuniQuery,
-    useExitTypesQuery,
-    useProvinceQuery,
-} from "../queries"
+import { useComuniQuery, useExitTypesQuery, useProvinceQuery } from "../queries"
 import ControlledInputDate from "./forms/ControlledInputDate"
 import { SubTitle } from "./typography"
 
@@ -39,9 +35,7 @@ const AnimalExitsForm = () => {
     const downloadReport = useMutation({
         mutationFn: (request: AnimalExitsReportSchema) =>
             apiService.animalExitsReport(request),
-        onSuccess: (
-            result: { url: string; filename: string }
-        ) => {
+        onSuccess: (result: { url: string; filename: string }) => {
             const link = document.createElement("a")
             link.href = result.url
             link.setAttribute("download", result.filename)
@@ -58,11 +52,11 @@ const AnimalExitsForm = () => {
     }
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
-            <SubTitle>Report uscite</SubTitle>
-            <FormProvider {...form}>
-                <div className="flex flex-col gap-2 items-start">
-                    <div className="flex gap-2">
+        <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6">
+            <form onSubmit={handleSubmit(onSubmit)}>
+                <SubTitle className="!mb-6">Report uscite</SubTitle>
+                <FormProvider {...form}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <ControlledInputDate
                             fieldName="from_date"
                             label="Data inizio"
@@ -71,11 +65,9 @@ const AnimalExitsForm = () => {
                             fieldName="to_date"
                             label="Data fine"
                         />
-                    </div>
-                    <div className="flex gap-2 items-center">
                         <div className="flex flex-col w-full">
                             <label
-                                className="text-xs text-gray-500"
+                                className="block text-sm font-medium mb-1 text-surface-700"
                                 htmlFor="provincia"
                             >
                                 Provincia
@@ -99,7 +91,7 @@ const AnimalExitsForm = () => {
                             render={({ field }) => (
                                 <div className="w-full">
                                     <label
-                                        className="text-xs text-gray-500"
+                                        className="block text-sm font-medium mb-1 text-surface-700"
                                         htmlFor={field.name}
                                     >
                                         Comune
@@ -115,15 +107,13 @@ const AnimalExitsForm = () => {
                                 </div>
                             )}
                         />
-                    </div>
-                    <div>
                         <Controller
                             name="exit_type"
                             control={form.control}
                             render={({ field }) => (
-                                <div className="w-full">
+                                <div className="w-full md:col-span-2">
                                     <label
-                                        className="text-xs text-gray-500"
+                                        className="block text-sm font-medium mb-1 text-surface-700"
                                         htmlFor={field.name}
                                     >
                                         Tipo di uscita
@@ -140,21 +130,20 @@ const AnimalExitsForm = () => {
                             )}
                         />
                     </div>
-                    <Button
-                        type="button"
-                        onClick={handleSubmit(onSubmit)}
-                        disabled={!isValid}
-                    >
-                        <FontAwesomeIcon
-                            icon={faDownload}
-                            fixedWidth
-                            className="pr-2"
-                        />{" "}
-                        Scarica
-                    </Button>
-                </div>
-            </FormProvider>
-        </form>
+                    <div className="mt-6 flex justify-end">
+                        <Button
+                            type="button"
+                            onClick={handleSubmit(onSubmit)}
+                            disabled={!isValid}
+                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 gap-2"
+                        >
+                            <FontAwesomeIcon icon={faDownload} fixedWidth />
+                            Scarica Report
+                        </Button>
+                    </div>
+                </FormProvider>
+            </form>
+        </div>
     )
 }
 

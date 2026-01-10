@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 import jwt
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.exc import NoResultFound
@@ -21,6 +21,9 @@ class RegisterUserModel(BaseModel):
     email: EmailStr
     password: str
     role_name: str | None = None
+    name: str | None = None
+    surname: str | None = None
+    is_active: bool = True
 
 
 class ChangePasswordModel(BaseModel):
@@ -56,6 +59,9 @@ class UserService:
         return self
 
     def register(self, data: RegisterUserModel) -> UserModel:
+        if self.user_repository.email_exists(data.email):
+            raise HTTPException(status_code=400, detail="Email già registrata")
+
         hashed_password = self.pwd_context.hash(data.password)
 
         user_id = self.user_repository.create(
@@ -63,16 +69,19 @@ class UserService:
                 email=data.email,
                 role_name=data.role_name,
                 hashed_password=hashed_password,
+                name=data.name,
+                surname=data.surname,
+                is_active=data.is_active,
             )
         )
 
         user = UserModel(
             id=user_id,
             email=data.email,
-            is_active=True,
+            is_active=data.is_active,
             is_superuser=False,
-            name=None,
-            surname=None,
+            name=data.name,
+            surname=data.surname,
             created_at=datetime.now(timezone.utc),
         )
         return user

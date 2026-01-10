@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -11,7 +12,11 @@ from hermadata.initializations import (
     get_document_repository,
 )
 from hermadata.models import ApiError, PaginationResult
-from hermadata.permissions import check_permission, require_permission
+from hermadata.permissions import (
+    check_permission,
+    require_permission,
+    require_superuser,
+)
 from hermadata.repositories.animal.animal_repository import (
     ExistingChipCodeException,
     SQLAnimalRepository,
@@ -28,6 +33,7 @@ from hermadata.repositories.animal.models import (
     AnimalSearchModel,
     AnimalSearchResult,
     CompleteEntryModel,
+    MoveToShelterRequest,
     NewAnimalDocument,
     NewAnimalModel,
     NewEntryModel,
@@ -165,6 +171,16 @@ def update_animal(
     return result
 
 
+@router.delete("/{animal_id}")
+def delete_animal(
+    animal_id: int,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(require_superuser)],
+):
+    service.soft_delete(animal_id)
+    return Response(content=None, status_code=204)
+
+
 @router.get("/{animal_id}/document", response_model=list[AnimalDocumentModel])
 def get_animal_documents(
     animal_id: int,
@@ -283,6 +299,34 @@ def get_warnings(
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
 ):
     return
+
+
+@router.post("/{animal_id}/move_to_shelter", response_model=int)
+def move_to_shelter(
+    animal_id: int,
+    data: MoveToShelterRequest,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.EDIT_ANIMAL))
+    ],
+):
+    """
+    Move animal to shelter by setting in_shelter_from to specified datetime
+    """
+    try:
+        if data.date > datetime.now(data.date.tzinfo):
+            raise HTTPException(
+                status_code=400, detail="La data non può essere nel futuro"
+            )
+
+        updated_rows = repo.move_to_shelter(animal_id, data.date)
+        if updated_rows == 0:
+            raise HTTPException(
+                status_code=404, detail=f"Animal {animal_id} not found"
+            )
+        return updated_rows
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # TODO: Add animal image upload endpoints here

@@ -1,9 +1,10 @@
 import { Controller, useForm } from "react-hook-form"
 import { apiService } from "../../main"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useMutation, useQueryClient } from "react-query"
 import { Button } from "primereact/button"
+import { Checkbox } from "primereact/checkbox"
 import { Dropdown } from "primereact/dropdown"
 import {
     Animal,
@@ -31,13 +32,31 @@ const NewAnimalForm = (props: Props) => {
         resolver: zodResolver(newAnimalEntrySchema),
     })
 
-    const { handleSubmit } = form
+    const { handleSubmit, watch, setValue } = form
 
     const [provincia, setProvincia] = useState<string>()
     const provinceQuery = useProvinceQuery()
     const racesQuery = useRacesQuery()
     const comuniQuery = useComuniQuery(provincia)
     const entryTypesQuery = useEntryTypesQuery()
+
+    // Watch the entry_type and race_id fields
+    const selectedEntryType = watch("entry_type")
+    const selectedRaceId = watch("race_id")
+
+    // Automatically set healthcare_stage based on selected entry type
+    useEffect(() => {
+        if (selectedEntryType && entryTypesQuery.data) {
+            const entryType = entryTypesQuery.data.find(
+                (et) => et.id === selectedEntryType
+            )
+            if (entryType) {
+                // Never set healthcare_stage to true if race is cat (G)
+                const shouldBeHealthcare = entryType.healthcare_stage && selectedRaceId !== "G"
+                setValue("healthcare_stage", shouldBeHealthcare)
+            }
+        }
+    }, [selectedEntryType, entryTypesQuery.data, selectedRaceId, setValue])
 
     const queryClient = useQueryClient()
     const newEntryMutation = useMutation({
@@ -168,6 +187,31 @@ const NewAnimalForm = (props: Props) => {
                                         className="w-full"
                                     />
                                 </div>
+                            )}
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Controller
+                            name="healthcare_stage"
+                            control={form.control}
+                            render={({ field }) => (
+                                <>
+                                    <Checkbox
+                                        inputId="healthcare_stage"
+                                        checked={field.value || false}
+                                        onChange={(e) =>
+                                            field.onChange(e.checked)
+                                        }
+                                        disabled={selectedRaceId === "G"}
+                                    />
+                                    <label
+                                        htmlFor="healthcare_stage"
+                                        className="text-sm cursor-pointer"
+                                    >
+                                        Sanitario
+                                    </label>
+                                </>
                             )}
                         />
                     </div>

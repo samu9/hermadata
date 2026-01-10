@@ -7,6 +7,7 @@ from pydantic import BaseModel, StringConstraints
 from sqlalchemy.orm import Session
 
 from hermadata.dependancies import get_db_session
+from hermadata.errors import InvalidFiscalCodeException
 from hermadata.models import PaginationResult
 from hermadata.repositories.adopter_repository import (
     AdopterModel,
@@ -75,6 +76,9 @@ class AdopterService:
 
     def create(self, data: NewAdopterRequest) -> AdopterModel:
         """Create a new adopter."""
+        if not codicefiscale.is_valid(data.fiscal_code):
+            raise InvalidFiscalCodeException()
+
         decoded = codicefiscale.decode(data.fiscal_code)
         birth_date = decoded.get("birthdate")
         birth_place_code = decoded.get("birthplace").get("code")

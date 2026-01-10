@@ -6,17 +6,24 @@ import {
     faCalendarAlt,
     faSignOutAlt,
     faCamera,
+    faHouseCircleCheck,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
 import { classNames } from "primereact/utils"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import cat from "../../assets/cat.svg"
 import dog from "../../assets/dog.svg"
 import { useExitTypesMap } from "../../hooks/useMaps"
 import { Animal } from "../../models/animal.schema"
 import { ChipCodeBadge } from "./misc"
 import AnimalImageUploadDialog from "./AnimalImageUploadDialog"
+import { Button } from "primereact/button"
+import { Dialog } from "primereact/dialog"
+import { Calendar } from "primereact/calendar"
+import { apiService } from "../../main"
+import { useQueryClient } from "react-query"
+import { useParams } from "react-router-dom"
 type Props = {
     data: Animal
 }
@@ -71,9 +78,9 @@ const NotPresentAlert = (props: Props) => {
                         <div className="flex items-center gap-2">
                             <FontAwesomeIcon
                                 icon={faCalendarAlt}
-                                className="w-3 h-3 text-gray-500"
+                                className="w-3 h-3 text-surface-500"
                             />
-                            <span className="text-gray-700">
+                            <span className="text-surface-700">
                                 <span className="font-medium">
                                     Data uscita:
                                 </span>{" "}
@@ -83,9 +90,9 @@ const NotPresentAlert = (props: Props) => {
                         <div className="flex items-center gap-2">
                             <FontAwesomeIcon
                                 icon={faSignOutAlt}
-                                className="w-3 h-3 text-gray-500"
+                                className="w-3 h-3 text-surface-500"
                             />
-                            <span className="text-gray-700">
+                            <span className="text-surface-700">
                                 <span className="font-medium">Motivo:</span>{" "}
                                 {exitTypesMap?.[props.data.exit_type!]}
                             </span>
@@ -96,25 +103,146 @@ const NotPresentAlert = (props: Props) => {
         </div>
     )
 }
+
+const StageInfo = (props: {
+    healthcareStage?: boolean
+    inShelterFrom?: Date | null
+}) => {
+    const isInShelter = !props.healthcareStage
+    const inShelterFrom = props.inShelterFrom
+
+    if (!isInShelter && !props.healthcareStage) {
+        return null
+    }
+
+    return (
+        <div
+            className={classNames(
+                "px-4 py-3 rounded-lg border-l-4 shadow-sm max-w-sm",
+                {
+                    "bg-green-50 border-green-400": isInShelter,
+                    "bg-red-50 border-red-400": !isInShelter,
+                }
+            )}
+        >
+            <div className="flex items-start gap-3">
+                <div
+                    className={classNames("flex-shrink-0 mt-0.5", {
+                        "text-green-600": isInShelter,
+                        "text-red-600": !isInShelter,
+                    })}
+                >
+                    <FontAwesomeIcon
+                        icon={isInShelter ? faTents : faKitMedical}
+                        className="w-4 h-4"
+                    />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h3
+                        className={classNames("text-sm font-semibold", {
+                            "text-green-800": isInShelter,
+                            "text-red-800": !isInShelter,
+                        })}
+                    >
+                        {isInShelter ? "In rifugio" : "In sanitario"}
+                    </h3>
+                    {isInShelter && inShelterFrom && (
+                        <div className="mt-2 space-y-1 text-xs">
+                            <div className="flex items-center gap-2">
+                                <FontAwesomeIcon
+                                    icon={faCalendarAlt}
+                                    className="w-3 h-3 text-surface-500"
+                                />
+                                <span className="text-surface-700">
+                                    <span className="font-medium">Dal:</span>{" "}
+                                    {format(
+                                        new Date(inShelterFrom),
+                                        "dd/MM/yyyy"
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    )
+}
+
 const AnimalRecordHeader = (props: Props) => {
-    const [imageUploadDialogVisible, setImageUploadDialogVisible] = useState(false)
+    const [imageUploadDialogVisible, setImageUploadDialogVisible] =
+        useState(false)
+    const [isMovingToShelter, setIsMovingToShelter] = useState(false)
+    const [moveToShelterDialogVisible, setMoveToShelterDialogVisible] =
+        useState(false)
+    const [moveToShelterDate, setMoveToShelterDate] = useState<Date | null>(
+        new Date()
+    )
+    const [currentHealthcareStage, setCurrentHealthcareStage] = useState(
+        props.data.healthcare_stage
+    )
+    const [currentInShelterFrom, setCurrentInShelterFrom] = useState(
+        props.data.in_shelter_from
+    )
+    const queryClient = useQueryClient()
+    const { id: animalId } = useParams<{ id: string }>()
+
+    // Sync local state with props when data changes
+    useEffect(() => {
+        setCurrentHealthcareStage(props.data.healthcare_stage)
+        setCurrentInShelterFrom(props.data.in_shelter_from)
+    }, [props.data.healthcare_stage, props.data.in_shelter_from])
 
     const handleImageClick = () => {
         setImageUploadDialogVisible(true)
     }
 
+    const handleMoveToShelterClick = () => {
+        setMoveToShelterDate(new Date())
+        setMoveToShelterDialogVisible(true)
+    }
+
+    const confirmMoveToShelter = async () => {
+        if (!animalId || !moveToShelterDate) return
+
+        try {
+            setIsMovingToShelter(true)
+            await apiService.moveAnimalToShelter(animalId, moveToShelterDate)
+            // Update local state immediately for instant UI feedback
+            setCurrentHealthcareStage(false)
+            setCurrentInShelterFrom(moveToShelterDate)
+            // Show success message
+            const animalName = props.data.name || "L'animale"
+            apiService.showSuccess(
+                `${animalName} è stato spostato in rifugio`,
+                "Spostamento completato"
+            )
+            // Invalidate the query to refresh the data in the background
+            queryClient.invalidateQueries(["animal", animalId])
+            setMoveToShelterDialogVisible(false)
+        } catch (error) {
+            // Error is already handled by API service
+            console.error("Failed to move animal to shelter:", error)
+        } finally {
+            setIsMovingToShelter(false)
+        }
+    }
+
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6 mb-6">
             <div className="flex gap-6 items-start">
                 {/* Animal Image */}
                 <div className="flex-shrink-0">
-                    <div 
-                        className="w-32 h-32 rounded-full border-4 border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center relative group cursor-pointer transition-all duration-200 hover:border-gray-300"
+                    <div
+                        className="w-32 h-32 rounded-full border-4 border-surface-100 overflow-hidden bg-surface-50 flex items-center justify-center relative group cursor-pointer transition-all duration-200 hover:border-surface-300"
                         onClick={handleImageClick}
                         title="Clicca per cambiare l'immagine"
                     >
                         <img
-                            src={props.data.img_path || (props.data.race_id === "C" ? dog : cat)}
+                            src={
+                                props.data.img_path ||
+                                (props.data.race_id === "C" ? dog : cat)
+                            }
                             alt="Animal"
                             className={classNames(
                                 "w-full h-full object-cover transition-all duration-200 group-hover:brightness-75",
@@ -182,8 +310,8 @@ const AnimalRecordHeader = (props: Props) => {
                                 className={classNames(
                                     "text-3xl font-bold mb-3 leading-tight",
                                     {
-                                        "text-gray-800": props.data.name,
-                                        "text-gray-400": !props.data.name,
+                                        "text-surface-900": props.data.name,
+                                        "text-surface-400": !props.data.name,
                                     }
                                 )}
                             >
@@ -194,7 +322,7 @@ const AnimalRecordHeader = (props: Props) => {
                                 <ChipCodeBadge
                                     code={props.data.chip_code || undefined}
                                 />
-                                <div className="text-sm text-gray-600">
+                                <div className="text-sm text-surface-600">
                                     <span className="font-medium">Codice:</span>{" "}
                                     {props.data.code}
                                 </div>
@@ -207,9 +335,77 @@ const AnimalRecordHeader = (props: Props) => {
                                 <NotPresentAlert data={props.data} />
                             </div>
                         )}
+
+                        {/* Stage Info - Show when animal is present */}
+                        {!props.data.exit_type && (
+                            <div className="lg:flex-shrink-0">
+                                <StageInfo
+                                    healthcareStage={currentHealthcareStage}
+                                    inShelterFrom={currentInShelterFrom}
+                                />
+                            </div>
+                        )}
+
+                        {/* Move to Shelter Button */}
+                        {currentHealthcareStage && !props.data.exit_type && (
+                            <div className="lg:flex-shrink-0">
+                                <Button
+                                    label="Sposta in rifugio"
+                                    icon={
+                                        <FontAwesomeIcon
+                                            icon={faHouseCircleCheck}
+                                            className="mr-2"
+                                        />
+                                    }
+                                    onClick={handleMoveToShelterClick}
+                                    loading={isMovingToShelter}
+                                    className="!bg-green-600 !border-green-600 hover:!bg-green-700 !text-white"
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Move to Shelter Dialog */}
+            <Dialog
+                header="Sposta in rifugio"
+                visible={moveToShelterDialogVisible}
+                style={{ width: "400px" }}
+                onHide={() => setMoveToShelterDialogVisible(false)}
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            label="Annulla"
+                            icon="pi pi-times"
+                            onClick={() => setMoveToShelterDialogVisible(false)}
+                            className="p-button-text"
+                        />
+                        <Button
+                            label="Conferma"
+                            icon="pi pi-check"
+                            onClick={confirmMoveToShelter}
+                            loading={isMovingToShelter}
+                            autoFocus
+                        />
+                    </div>
+                }
+            >
+                <div className="flex flex-col gap-4">
+                    <p className="m-0">
+                        Seleziona la data in cui l'animale è stato spostato in
+                        rifugio:
+                    </p>
+                    <Calendar
+                        value={moveToShelterDate}
+                        onChange={(e) => setMoveToShelterDate(e.value as Date)}
+                        showIcon
+                        dateFormat="dd/mm/yy"
+                        className="w-full"
+                        maxDate={new Date()}
+                    />
+                </div>
+            </Dialog>
 
             {/* Image Upload Dialog */}
             <AnimalImageUploadDialog

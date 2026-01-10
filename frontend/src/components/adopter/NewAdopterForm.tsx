@@ -4,6 +4,7 @@ import { useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 import { apiService } from "../../main"
+import { AxiosError } from "axios"
 import {
     Adopter,
     NewAdopter,
@@ -37,8 +38,19 @@ const NewAdopterForm = (props: Props) => {
             })
             props.onSaved?.(data)
         },
+        onError: (error: AxiosError) => {
+            if (error.response?.data) {
+                const detail = (error.response.data as any).detail
+                if (detail === "Codice fiscale non valido.") {
+                    setError("fiscal_code", {
+                        type: "manual",
+                        message: "Codice fiscale non valido",
+                    })
+                }
+            }
+        },
     })
-    const { handleSubmit } = form
+    const { handleSubmit, setError } = form
     const onSubmit = (data: NewAdopter) => {
         newAdopterMutation.mutate(data)
     }
@@ -113,7 +125,13 @@ const NewAdopterForm = (props: Props) => {
                             className="w-64"
                         />
                     </div>
-                    <Button label="Salva" size="small" />
+                    <div className="mt-4">
+                        <Button
+                            label="Salva nuovo adottante"
+                            icon="pi pi-check"
+                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700"
+                        />
+                    </div>
                 </form>
             </FormProvider>
         </div>

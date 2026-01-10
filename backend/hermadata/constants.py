@@ -42,6 +42,14 @@ ENTRY_TYPE_LABELS = {
     EntryType.other_structure_surrender: "Cessione da altra struttura",
 }
 
+# Entry types that should set in_shelter_from date
+HEALTHCARE_STAGE_ENTRY_TYPES = {
+    EntryType.rescue,
+    EntryType.confiscation,
+    EntryType.private_surrender,
+    EntryType.quitclaim,
+}
+
 
 class ExitType(str, Enum):
     adoption = "A"

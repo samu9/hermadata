@@ -393,7 +393,10 @@ def make_user(
     def make(data: CreateUserModel = None) -> int:
         if data is None:
             data = RegisterUserModel(
-                email=f"{uuid4().hex}@test.it", password=uuid4().hex
+                email=f"{uuid4().hex}@test.it",
+                password=uuid4().hex,
+                name="Fixture",
+                surname="User",
             )
         user_id = user_service.register(data=data)
 

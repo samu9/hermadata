@@ -184,14 +184,14 @@ const UserList: React.FC = () => {
             <ConfirmDialog />
 
             <div className="bg-white">
-                <div className="mb-4 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-gray-800">
+                <div className="mb-6 flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-surface-900">
                         Lista Utenti ({usersQuery.data?.total || 0})
                     </h2>
                     <Button
                         label="Aggiorna"
                         icon="pi pi-refresh"
-                        className="p-button-outlined"
+                        className="!bg-white !text-surface-700 !border-surface-300 hover:!bg-surface-50"
                         onClick={() => queryClient.invalidateQueries("users")}
                         loading={usersQuery.isRefetching}
                     />
@@ -206,6 +206,12 @@ const UserList: React.FC = () => {
                     emptyMessage="Nessun utente trovato"
                     sortField="created_at"
                     sortOrder={-1}
+                    pt={{
+                        headerRow: {
+                            className: "bg-surface-50 text-surface-700",
+                        },
+                        thead: { className: "bg-surface-50" },
+                    }}
                 >
                     <Column
                         field="id"

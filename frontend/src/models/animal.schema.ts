@@ -18,6 +18,7 @@ export const newAnimalEntrySchema = z.object({
     rescue_city_code: cityCodeValidator,
 
     entry_type: z.string(),
+    healthcare_stage: z.boolean().optional(),
 })
 
 export type NewAnimalEntry = z.infer<typeof newAnimalEntrySchema>
@@ -59,6 +60,8 @@ export const animalSchema = z.object({
     fur: z.number().nullish(),
     size: z.number().nullish(),
     color: z.number().nullish(),
+    in_shelter_from: dateFromString.nullish(),
+    healthcare_stage: z.boolean().optional(),
     entries: z.array(animalEntrySchema).optional(),
 })
 
@@ -92,6 +95,7 @@ export const animalEditSuperUserSchema = animalEditSchema.extend({
     adoptability_index: z.number().min(0).max(3).optional().nullable(),
     img_path: z.string().nullish(),
     rescue_city_code: cityCodeValidator.nullish(),
+    in_shelter_from: dateFromString.nullish(),
     // Animal entries history
     entries: z.array(animalEntrySchema).optional(),
 })
@@ -132,6 +136,11 @@ export const animalSearchResultSchema = z.object({
         .nullish()
         .transform((str) => (str && new Date(str)) || null),
     exit_type: z.string().nullish(),
+    in_shelter_from: z
+        .string()
+        .nullish()
+        .transform((str) => (str && new Date(str)) || null),
+    healthcare_stage: z.boolean().optional(),
 })
 
 export type AnimalSearchResult = z.infer<typeof animalSearchResultSchema>
@@ -167,11 +176,15 @@ export const animalSearchQuerySchema = paginationQuerySchema.extend({
     exit_type: z.string().nullish(),
     present: z.boolean().nullish(),
     not_present: z.boolean().nullish(),
+    healthcare_stage: z.boolean().nullish(),
+    shelter_stage: z.boolean().nullish(),
     name: z.string().nullish(),
     chip_code: z.string().nullish(),
     race_id: z.string().nullish(),
     sort_field: z.string().nullish(),
     sort_order: z.number().nullish(),
+    cats: z.boolean().nullish(),
+    dogs: z.boolean().nullish(),
 })
 
 export type AnimalSearchQuery = z.infer<typeof animalSearchQuerySchema>

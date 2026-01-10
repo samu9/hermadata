@@ -8,20 +8,25 @@ type Props = {
 
 const AnimalCard = (props: Props) => {
     return (
-        <div className="p-4 shadow rounded card flex gap-4">
-            <img className="w-16 h-16 rounded" />
+        <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-4 flex gap-4 items-center">
+            <div className="w-16 h-16 rounded-lg bg-surface-100 flex items-center justify-center text-surface-400">
+                {/* Placeholder for image if not present, or actual image */}
+                <i className="pi pi-image text-2xl"></i>
+            </div>
             <div>
-                <span className="text-xl font-bold text-gray-600">
+                <div className="text-xl font-bold text-surface-900 mb-1">
                     {props.data.name || "Nome non assegnato"}
-                </span>
-                <ChipCodeBadge code={props.data.chip_code ?? undefined} />
+                </div>
+                <div className="flex items-center gap-2 mb-1">
+                    <ChipCodeBadge code={props.data.chip_code ?? undefined} />
+                </div>
                 {props.data.entry_date && (
-                    <span className="text-sm">
+                    <div className="text-sm text-surface-600">
                         entrato il{" "}
-                        <span className="font-bold">
+                        <span className="font-semibold text-surface-900">
                             {format(new Date(props.data.entry_date), "dd/MM/y")}
                         </span>
-                    </span>
+                    </div>
                 )}
             </div>
         </div>

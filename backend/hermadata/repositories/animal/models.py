@@ -38,16 +38,20 @@ class WhereClauseMapItem(NamedTuple):
     * attribute_builder: callable which returns the attribute
     or a in iterable of attributes to put in the whereclause
     * in_or: bool which determines if the attribute should be put in or
+    * or_group: optional string to group multiple OR conditions together.
+      Items with the same or_group value will be grouped in parentheses.
     """
 
     attribute_builder: Callable[[Any], InstrumentedAttribute]
     in_or: bool = False
+    or_group: str | None = None
 
 
 class NewAnimalModel(BaseModel):
     race_id: str
     rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
     entry_type: str
+    healthcare_stage: bool = False
 
 
 class CompleteEntryModel(BaseModel):
@@ -57,6 +61,7 @@ class CompleteEntryModel(BaseModel):
 class NewEntryModel(BaseModel):
     rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
     entry_type: str
+    healthcare_stage: bool = False
 
 
 class AnimalSearchSortField(str, Enum):
@@ -90,7 +95,11 @@ class AnimalSearchModel(PaginationQuery):
     exit_type: Optional[str] = None
     present: bool = True
     not_present: bool = False
+    healthcare_stage: bool | None = None
+    shelter_stage: bool | None = None
     chip_code: Optional[str] = None
+    cats: bool | None = None
+    dogs: bool | None = None
 
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
@@ -125,6 +134,7 @@ class AnimalSearchModel(PaginationQuery):
                 else None
             ),
             in_or=True,
+            or_group="presence",
         ),
         "not_present": WhereClauseMapItem(
             lambda v: (
@@ -136,6 +146,35 @@ class AnimalSearchModel(PaginationQuery):
                 else None
             ),
             in_or=True,
+            or_group="presence",
+        ),
+        "healthcare_stage": WhereClauseMapItem(
+            lambda v: (
+                Animal.in_shelter_from.is_(None)
+                if v
+                else Animal.in_shelter_from.is_not(None)
+            ),
+            in_or=True,
+            or_group="stage",
+        ),
+        "shelter_stage": WhereClauseMapItem(
+            lambda v: (
+                Animal.in_shelter_from.is_not(None)
+                if v
+                else Animal.in_shelter_from.is_(None)
+            ),
+            in_or=True,
+            or_group="stage",
+        ),
+        "cats": WhereClauseMapItem(
+            lambda v: Animal.race_id == "G" if v else None,
+            in_or=True,
+            or_group="race",
+        ),
+        "dogs": WhereClauseMapItem(
+            lambda v: Animal.race_id == "C" if v else None,
+            in_or=True,
+            or_group="race",
         ),
     }
 
@@ -152,24 +191,53 @@ class AnimalSearchModel(PaginationQuery):
             return column.desc()
 
     def as_where_clause(self) -> list:
-        or_elems = []
+        or_groups: dict[str, list] = {}
+        or_elems = []  # Backward compatibility: in_or=True, no or_group
         where = []
+
         for field in self._where_clause_map.keys():
             value = getattr(self, field)
             if value is None:
                 continue
-            builder, in_or = self._where_clause_map[field]
+            builder, in_or, or_group = self._where_clause_map[field]
             attribute = builder(value)
 
-            to_add = or_elems if in_or else where
-            if isinstance(attribute, Iterable):
-                to_add.extend(attribute)
-            else:
-                to_add.append(attribute)
+            # Skip None attributes
+            if attribute is None:
+                continue
 
+            if in_or:
+                if or_group:
+                    # Add to specific OR group
+                    if or_group not in or_groups:
+                        or_groups[or_group] = []
+                    self._add_to_list(or_groups[or_group], attribute)
+                else:
+                    # Backward compatibility
+                    self._add_to_list(or_elems, attribute)
+            else:
+                # Add to WHERE (AND conditions)
+                self._add_to_list(where, attribute)
+
+        # Add grouped OR conditions to WHERE
+        for group_conditions in or_groups.values():
+            if group_conditions:
+                where.append(or_(*group_conditions))
+
+        # Add general OR conditions (backward compatibility)
         if or_elems:
             where.append(or_(*or_elems))
+
+        where.append(Animal.deleted_at.is_(None))
+
         return where
+
+    def _add_to_list(self, target_list: list, attribute):
+        """Helper to add attribute(s) to a list."""
+        if isinstance(attribute, Iterable):
+            target_list.extend(attribute)
+        else:
+            target_list.append(attribute)
 
 
 class AnimalModel(BaseModel):
@@ -192,6 +260,8 @@ class AnimalModel(BaseModel):
     size: int | None = None
     exit_date: date | None = None
     exit_type: ExitType | None = None
+    in_shelter_from: datetime | None = None
+    healthcare_stage: bool = False
 
     model_config = ConfigDict(extra="ignore")
 
@@ -211,6 +281,7 @@ class UpdateAnimalModel(BaseModel):
     fur: int | None = None
     color: int | None = None
     size: int | None = None
+    in_shelter_from: datetime | None = None
 
 
 class AnimalQueryModel(BaseModel):
@@ -236,6 +307,8 @@ class AnimalSearchResult(BaseModel):
     entry_type: str
     exit_date: date | None = None
     exit_type: str | None = None
+    in_shelter_from: datetime | None = None
+    healthcare_stage: bool = False
 
 
 AnimalSearchResultQuery = namedtuple(
@@ -376,3 +449,7 @@ class MedicalActivityModel(BaseModel):
     from_date: date | None = None
     to_date: date | None = None
     notes: str | None = None
+
+
+class MoveToShelterRequest(BaseModel):
+    date: datetime

@@ -10,14 +10,13 @@
  * - Role-based access control for admin features
  */
 
-import { Card } from "primereact/card"
 import { Button } from "primereact/button"
 import { Badge } from "primereact/badge"
 import { Skeleton } from "primereact/skeleton"
 import { DataTable } from "primereact/datatable"
 import { Column } from "primereact/column"
 import { useNavigate } from "react-router-dom"
-import { PageTitle } from "../components/typography"
+import { PageTitle, SectionTitle } from "../components/typography"
 import {
     useDashboardStatsQuery,
     useRecentAnimalsQuery,
@@ -25,6 +24,15 @@ import {
 } from "../queries"
 import { useAuth } from "../contexts/AuthContext"
 import { AnimalSearchResult } from "../models/animal.schema"
+import { classNames } from "primereact/utils"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import {
+    faArrowRight,
+    faChartBar,
+    faDatabase,
+    faDownload,
+    faUpload,
+} from "@fortawesome/free-solid-svg-icons"
 
 const HomePage = () => {
     const navigate = useNavigate()
@@ -44,287 +52,321 @@ const HomePage = () => {
         return new Date(date).toLocaleDateString("it-IT")
     }
 
-    const animalCodeTemplate = (rowData: AnimalSearchResult) => (
-        <Button
-            label={rowData.code}
-            link
-            className="p-0"
-            onClick={() => navigate(`/animal/${rowData.code}/overview`)}
-        />
+    const animalNameTemplate = (rowData: AnimalSearchResult) => (
+        <span
+            className="font-medium text-primary-600 hover:text-primary-700 cursor-pointer hover:underline"
+            onClick={() => navigate(`/animal/${rowData.id}/overview`)}
+        >
+            {rowData.name || "N/A"}
+        </span>
     )
 
     const raceTemplate = (rowData: AnimalSearchResult) => (
-        <span>{getRaceLabel(rowData.race_id)}</span>
+        <span className="text-surface-600">
+            {getRaceLabel(rowData.race_id)}
+        </span>
     )
 
     const dateTemplate = (rowData: AnimalSearchResult) => (
-        <span>{formatDate(rowData.entry_date)}</span>
+        <span className="text-surface-600">
+            {formatDate(rowData.entry_date)}
+        </span>
     )
 
     const StatCard = ({
         title,
         value,
         icon,
-        color,
+        colorClass,
+        bgClass,
         loading,
     }: {
         title: string
         value: number | string
         icon: string
-        color: string
+        colorClass: string
+        bgClass: string
         loading?: boolean
     }) => (
-        <Card className="shadow-2 h-full">
-            <div className="flex justify-content-between align-items-center">
-                <div>
-                    <div className="text-600 font-medium mb-2">{title}</div>
-                    {loading ? (
-                        <Skeleton width="4rem" height="2rem" />
-                    ) : (
-                        <div className={`text-3xl font-bold ${color}`}>
-                            {value}
-                        </div>
-                    )}
+        <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6 flex items-center justify-between transition-transform hover:-translate-y-1 duration-200">
+            <div>
+                <div className="text-surface-500 font-medium text-sm uppercase tracking-wide mb-2">
+                    {title}
                 </div>
-                <div className={`p-3 border-round ${color} bg-primary-100`}>
-                    <i className={`${icon} text-2xl`}></i>
-                </div>
+                {loading ? (
+                    <Skeleton width="4rem" height="2rem" />
+                ) : (
+                    <div
+                        className={classNames("text-3xl font-bold", colorClass)}
+                    >
+                        {value}
+                    </div>
+                )}
             </div>
-        </Card>
+            <div
+                className={classNames(
+                    "w-12 h-12 rounded-full flex items-center justify-center",
+                    bgClass
+                )}
+            >
+                <i className={classNames(icon, "text-xl", colorClass)}></i>
+            </div>
+        </div>
     )
 
     const QuickActionButton = ({
         label,
         icon,
         onClick,
-        color = "p-button-outlined",
+        description,
     }: {
         label: string
-        icon: string
+        icon: any
         onClick: () => void
-        color?: string
+        description?: string
     }) => (
-        <Button
-            label={label}
-            icon={icon}
+        <div
             onClick={onClick}
-            className={`w-full ${color}`}
-        />
+            className="bg-white border border-surface-200 rounded-lg p-4 cursor-pointer hover:border-primary-400 hover:shadow-md transition-all group flex items-center gap-4"
+        >
+            <div className="w-10 h-10 rounded-full bg-surface-100 flex items-center justify-center group-hover:bg-primary-50 transition-colors">
+                <FontAwesomeIcon
+                    icon={icon}
+                    className="text-surface-500 group-hover:text-primary-600"
+                />
+            </div>
+            <div>
+                <div className="font-semibold text-surface-700 group-hover:text-primary-700">
+                    {label}
+                </div>
+                {description && (
+                    <div className="text-xs text-surface-500 mt-0.5">
+                        {description}
+                    </div>
+                )}
+            </div>
+            <FontAwesomeIcon
+                icon={faArrowRight}
+                className="ml-auto text-surface-300 group-hover:text-primary-400 opacity-0 group-hover:opacity-100 transition-all"
+            />
+        </div>
     )
 
     return (
-        <div className="p-4">
-            <div className="mb-5">
+        <div className="space-y-8">
+            <div>
                 <PageTitle>Dashboard</PageTitle>
+                <p className="text-surface-500 mt-1">
+                    Benvenuto, {user?.username}. Ecco una panoramica del
+                    rifugio.
+                </p>
             </div>
 
             {/* Statistics Cards */}
-            <div className="flex gap-2 mb-4 w-full">
-                <div className="col-12 md:col-6 lg:col-3 mb-3 lg:mb-0">
-                    <StatCard
-                        title="Animali Totali"
-                        value={stats?.totalAnimals || 0}
-                        icon="pi pi-heart-fill"
-                        color="text-primary"
-                        loading={statsLoading}
-                    />
-                </div>
-                <div className="col-12 md:col-6 lg:col-3 mb-3 lg:mb-0">
-                    <StatCard
-                        title="Animali Presenti"
-                        value={stats?.activeAnimals || 0}
-                        icon="pi pi-home"
-                        color="text-green-500"
-                        loading={statsLoading}
-                    />
-                </div>
-                <div className="col-12 md:col-6 lg:col-3 mb-3 md:mb-0">
-                    <StatCard
-                        title="Animali Adottati"
-                        value={stats?.adoptedAnimals || 0}
-                        icon="pi pi-check-circle"
-                        color="text-blue-500"
-                        loading={statsLoading}
-                    />
-                </div>
-                <div className="col-12 md:col-6 lg:col-3">
-                    <StatCard
-                        title="Nuovi Ingressi (30gg)"
-                        value={stats?.recentEntries || 0}
-                        icon="pi pi-arrow-circle-down"
-                        color="text-orange-500"
-                        loading={statsLoading}
-                    />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard
+                    title="Animali Totali"
+                    value={stats?.totalAnimals || 0}
+                    icon="pi pi-heart-fill"
+                    colorClass="text-primary-600"
+                    bgClass="bg-primary-50"
+                    loading={statsLoading}
+                />
+                <StatCard
+                    title="Animali Presenti"
+                    value={stats?.activeAnimals || 0}
+                    icon="pi pi-home"
+                    colorClass="text-emerald-600"
+                    bgClass="bg-emerald-50"
+                    loading={statsLoading}
+                />
+                <StatCard
+                    title="Animali Adottati"
+                    value={stats?.adoptedAnimals || 0}
+                    icon="pi pi-check-circle"
+                    colorClass="text-blue-600"
+                    bgClass="bg-blue-50"
+                    loading={statsLoading}
+                />
+                <StatCard
+                    title="Nuovi Ingressi (30gg)"
+                    value={stats?.recentEntries || 0}
+                    icon="pi pi-arrow-circle-down"
+                    colorClass="text-amber-600"
+                    bgClass="bg-amber-50"
+                    loading={statsLoading}
+                />
             </div>
 
-            <div className="grid">
-                {/* <div className="col-12 lg:col-4">
-                    <Card title="Azioni Rapide" className="h-full">
-                        <div className="flex flex-column gap-3">
-                            <QuickActionButton
-                                label="Nuovo Ingresso"
-                                icon="pi pi-plus"
-                                onClick={() => navigate("/animal")}
-                                color="p-button-success"
-                            />
-                            <QuickActionButton
-                                label="Cerca Animali"
-                                icon="pi pi-search"
-                                onClick={() => navigate("/animal")}
-                            />
-                            <QuickActionButton
-                                label="Gestisci Adozioni"
-                                icon="pi pi-users"
-                                onClick={() => navigate("/adopters")}
-                            />
-                            <QuickActionButton
-                                label="Veterinari"
-                                icon="pi pi-briefcase"
-                                onClick={() => navigate("/vets")}
-                            />
-                            {hasPermission && hasPermission("superuser") && (
-                                <QuickActionButton
-                                    label="Amministrazione"
-                                    icon="pi pi-cog"
-                                    onClick={() => navigate("/admin")}
-                                    color="p-button-warning"
-                                />
-                            )}
-                        </div>
-                    </Card>
-                </div> */}
-
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Recent Animals */}
-                <div className="col-12 lg:col-8">
-                    <Card title="Ultimi Ingressi" className="h-full">
+                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden flex flex-col">
+                    <div className="p-6 border-b border-surface-100 flex justify-between items-center">
+                        <SectionTitle className="!mb-0">
+                            Ultimi Ingressi
+                        </SectionTitle>
+                        <Button
+                            label="Vedi Tutti"
+                            icon="pi pi-arrow-right"
+                            iconPos="right"
+                            link
+                            className="!p-0 text-primary-600 hover:text-primary-700"
+                            onClick={() => navigate("/animal")}
+                        />
+                    </div>
+                    <div className="p-0 flex-grow">
                         {recentLoading ? (
-                            <div className="flex flex-column gap-2">
+                            <div className="p-6 space-y-4">
                                 {Array(5)
                                     .fill(0)
                                     .map((_, i) => (
-                                        <Skeleton key={i} height="2rem" />
+                                        <Skeleton
+                                            key={i}
+                                            height="3rem"
+                                            className="!rounded-lg"
+                                        />
                                     ))}
                             </div>
                         ) : (
                             <DataTable
                                 value={recentAnimals}
                                 size="small"
-                                className="p-datatable-sm"
+                                className="w-full"
                                 emptyMessage="Nessun animale trovato"
+                                rowClassName={() =>
+                                    "hover:bg-surface-50 transition-colors"
+                                }
+                                pt={{
+                                    header: {
+                                        className:
+                                            "bg-surface-50 text-surface-600 font-medium text-sm",
+                                    },
+                                    thead: { className: "bg-surface-50" },
+                                    bodyRow: {
+                                        className:
+                                            "border-b border-surface-100 last:border-0",
+                                    },
+                                }}
                             >
-                                <Column
-                                    field="code"
-                                    header="Codice"
-                                    body={animalCodeTemplate}
-                                />
                                 <Column
                                     field="name"
                                     header="Nome"
-                                    body={(rowData) => rowData.name || "N/A"}
+                                    body={animalNameTemplate}
+                                    className="py-3 px-6"
                                 />
                                 <Column
                                     field="race_id"
                                     header="Specie"
                                     body={raceTemplate}
+                                    className="py-3 px-6"
                                 />
                                 <Column
                                     field="rescue_city"
                                     header="Città di Ritrovamento"
+                                    className="py-3 px-6 text-surface-600"
                                 />
                                 <Column
                                     field="entry_date"
                                     header="Data Ingresso"
                                     body={dateTemplate}
+                                    className="py-3 px-6"
                                 />
                                 <Column
                                     field="entry_type"
                                     header="Tipo Ingresso"
+                                    className="py-3 px-6 text-surface-600"
                                 />
                             </DataTable>
                         )}
-                        <div className="mt-3 text-right">
-                            <Button
-                                label="Vedi Tutti"
-                                icon="pi pi-arrow-right"
-                                iconPos="right"
-                                link
-                                onClick={() => navigate("/animal")}
-                            />
-                        </div>
-                    </Card>
-                </div>
-            </div>
-
-            {/* Important Dates and Reminders */}
-            <div className="grid mt-4">
-                {user?.is_superuser && (
-                    <div className="col-12 lg:col-6">
-                        <Card title="Date Importanti">
-                            <div className="flex flex-column gap-3">
-                                <div className="flex justify-content-between align-items-center p-3 border-1 border-200 border-round">
-                                    <div>
-                                        <div className="font-medium">
-                                            Controlli Veterinari
-                                        </div>
-                                        <div className="text-600 text-sm">
-                                            Prossimi appuntamenti programmati
-                                        </div>
-                                    </div>
-                                    <Badge value="0" severity="warning" />
-                                </div>
-                                <div className="flex justify-content-between align-items-center p-3 border-1 border-200 border-round">
-                                    <div>
-                                        <div className="font-medium">
-                                            Vaccinazioni
-                                        </div>
-                                        <div className="text-600 text-sm">
-                                            Animali che necessitano vaccinazioni
-                                        </div>
-                                    </div>
-                                    <Badge value="0" severity="info" />
-                                </div>
-                                <div className="flex justify-content-between align-items-center p-3 border-1 border-200 border-round">
-                                    <div>
-                                        <div className="font-medium">
-                                            Sterilizzazioni
-                                        </div>
-                                        <div className="text-600 text-sm">
-                                            Appuntamenti per sterilizzazione
-                                        </div>
-                                    </div>
-                                    <Badge value="0" severity="success" />
-                                </div>
-                            </div>
-                        </Card>
                     </div>
-                )}
+                </div>
 
-                <div className="col-12 lg:col-6">
-                    <Card title="Utilità e Report">
-                        <div className="flex flex-column gap-3">
+                {/* Right Column: Utilities & Reminders */}
+                <div className="space-y-8">
+                    {/* Utilities */}
+                    <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6">
+                        <SectionTitle>Utilità e Report</SectionTitle>
+                        <div className="grid grid-cols-1 gap-3 mt-4">
                             <QuickActionButton
                                 label="Report Ingressi"
-                                icon="pi pi-download"
+                                description="Scarica elenco ingressi"
+                                icon={faDownload}
                                 onClick={() => navigate("/exports")}
                             />
                             <QuickActionButton
                                 label="Report Uscite"
-                                icon="pi pi-upload"
+                                description="Scarica elenco uscite"
+                                icon={faUpload}
                                 onClick={() => navigate("/exports")}
                             />
                             <QuickActionButton
-                                label="Statistiche Dettagliate"
-                                icon="pi pi-chart-bar"
+                                label="Statistiche"
+                                description="Visualizza grafici"
+                                icon={faChartBar}
                                 onClick={() => navigate("/exports")}
                             />
                             <QuickActionButton
                                 label="Backup Dati"
-                                icon="pi pi-database"
+                                description="Esporta database"
+                                icon={faDatabase}
                                 onClick={() => navigate("/exports")}
                             />
                         </div>
-                    </Card>
+                    </div>
+
+                    {/* Important Dates (Superuser only) */}
+                    {user?.is_superuser && (
+                        <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6">
+                            <SectionTitle>Date Importanti</SectionTitle>
+                            <div className="space-y-3 mt-4">
+                                <div className="flex justify-between items-center p-3 bg-surface-50 rounded-lg border border-surface-100">
+                                    <div>
+                                        <div className="font-medium text-surface-700">
+                                            Controlli Veterinari
+                                        </div>
+                                        <div className="text-surface-500 text-xs">
+                                            Prossimi appuntamenti
+                                        </div>
+                                    </div>
+                                    <Badge
+                                        value="0"
+                                        severity="warning"
+                                        className="!bg-amber-100 !text-amber-700"
+                                    />
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-surface-50 rounded-lg border border-surface-100">
+                                    <div>
+                                        <div className="font-medium text-surface-700">
+                                            Vaccinazioni
+                                        </div>
+                                        <div className="text-surface-500 text-xs">
+                                            In scadenza
+                                        </div>
+                                    </div>
+                                    <Badge
+                                        value="0"
+                                        severity="info"
+                                        className="!bg-blue-100 !text-blue-700"
+                                    />
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-surface-50 rounded-lg border border-surface-100">
+                                    <div>
+                                        <div className="font-medium text-surface-700">
+                                            Sterilizzazioni
+                                        </div>
+                                        <div className="text-surface-500 text-xs">
+                                            Da programmare
+                                        </div>
+                                    </div>
+                                    <Badge
+                                        value="0"
+                                        severity="success"
+                                        className="!bg-emerald-100 !text-emerald-700"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

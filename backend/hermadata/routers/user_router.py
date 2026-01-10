@@ -27,7 +27,7 @@ from hermadata.services.user_service import (
 router = APIRouter(prefix="/user", tags=["user"])
 
 
-@router.post("", response_model=UserModel)
+@router.post("/", response_model=UserModel)
 def create_user(
     current_user: Annotated[TokenData, Depends(get_current_user)],
     data: RegisterUserModel,

@@ -13,8 +13,8 @@ type ResultProps = {
 const SearchResult = (props: ResultProps) => {
     return (
         <div className="group">
-            <AdopterCard 
-                data={props.data} 
+            <AdopterCard
+                data={props.data}
                 variant="compact"
                 interactive={true}
                 onClick={() => props.onSelected(props.data)}
@@ -51,7 +51,7 @@ const SearchAdopter = (props: SearchAdopterProps) => {
     return (
         <div className="space-y-4">
             {/* Search Input */}
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="bg-surface-50 p-4 rounded-xl border border-surface-200">
                 <div className="flex gap-3 items-end">
                     <div className="flex-1">
                         <UncontrolledInputText
@@ -59,21 +59,21 @@ const SearchAdopter = (props: SearchAdopterProps) => {
                             onChange={(v) => setFiscalCode(v)}
                         />
                     </div>
-                    <Button 
+                    <Button
                         onClick={handleSearch}
                         disabled={!fiscalCode || fiscalCode.length < 3}
                         loading={searchQuery.isLoading}
-                        className="px-6"
-                    >
-                        Cerca
-                    </Button>
+                        className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 px-6"
+                        label="Cerca"
+                        icon="pi pi-search"
+                    />
                 </div>
             </div>
 
             {/* Search Results */}
             {results.length > 0 && (
-                <div className="space-y-3">
-                    <h4 className="font-medium text-gray-700">
+                <div className="space-y-3 animate-fade-in">
+                    <h4 className="font-medium text-surface-700">
                         Risultati ({results.length})
                     </h4>
                     <div className="space-y-2">
@@ -94,15 +94,20 @@ const SearchAdopter = (props: SearchAdopterProps) => {
 
             {/* No Results Message */}
             {searchQuery.isSuccess && results.length === 0 && fiscalCode && (
-                <div className="text-center py-6 text-gray-500">
-                    <p className="mb-2">Nessun adottante trovato con questo codice fiscale</p>
-                    <p className="text-sm">Prova con un codice fiscale diverso o aggiungi un nuovo adottante</p>
+                <div className="text-center py-6 text-surface-500 animate-fade-in">
+                    <p className="mb-2">
+                        Nessun adottante trovato con questo codice fiscale
+                    </p>
+                    <p className="text-sm">
+                        Prova con un codice fiscale diverso o aggiungi un nuovo
+                        adottante
+                    </p>
                 </div>
             )}
 
             {/* Loading State */}
             {searchQuery.isLoading && (
-                <div className="text-center py-6 text-gray-500">
+                <div className="text-center py-6 text-surface-500 animate-fade-in">
                     <p>Ricerca in corso...</p>
                 </div>
             )}

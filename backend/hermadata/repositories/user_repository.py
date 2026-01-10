@@ -14,10 +14,15 @@ from hermadata.repositories import SQLBaseRepository
 class CreateUserModel(BaseModel):
     email: EmailStr
     hashed_password: str
-    role_name: str
+    role_name: str | None = None
+    name: str | None = None
+    surname: str | None = None
+    is_active: bool = True
 
 
 class UpdateUserModel(BaseModel):
+    name: str | None = None
+    surname: str | None = None
     email: EmailStr | None = None
     is_active: bool | None = None
     is_superuser: bool | None = None
@@ -56,8 +61,10 @@ class PermissionModel(BaseModel):
 
 
 class SQLUserRepository(SQLBaseRepository):
-    def _get_role_id_by_name(self, role_name: str) -> int | None:
+    def _get_role_id_by_name(self, role_name: str | None) -> int | None:
         """Get role ID by role name"""
+        if role_name is None:
+            return None
         try:
             result = self.session.execute(
                 select(UserRole.id).where(UserRole.name == role_name)
@@ -234,3 +241,11 @@ class SQLUserRepository(SQLBaseRepository):
             )
             for permission in result
         ]
+
+    def email_exists(self, email: EmailStr) -> bool:
+        """Return True if a user with the given email already exists"""
+        result = self.session.execute(
+            select(func.count()).select_from(User).where(User.email == email)
+        ).scalar_one()
+
+        return result > 0

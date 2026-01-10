@@ -12,6 +12,8 @@ import { useNavigate } from "react-router-dom"
 import { AdopterSearch } from "../../models/adopter.schema"
 import { useVetSearchQuery } from "../../queries"
 
+import { classNames } from "primereact/utils"
+
 type LazyTableState = {
     first: number
     rows: number
@@ -48,6 +50,8 @@ const VetList = () => {
             value={templateOptions.value || ""}
             type="text"
             onChange={(e) => templateOptions.filterCallback(e.target.value)}
+            className="w-full p-inputtext-sm"
+            placeholder="Cerca..."
         />
     )
     const onFilter = (event: DataTableStateEvent) => {
@@ -67,60 +71,77 @@ const VetList = () => {
     }, [lazyState])
     return (
         <div className="w-full">
-            <DataTable
-                className="w-full"
-                filters={lazyState.filters}
-                value={vetQuery.data?.items}
-                selectionMode="single"
-                onSelectionChange={(e) => navigate(e.value.id.toString())}
-                paginator
-                first={lazyState.first}
-                dataKey="fiscal_code"
-                rows={lazyState.rows}
-                rowsPerPageOptions={[5, 10, 25, 50]}
-                onFilter={onFilter}
-                onPage={setLazyState}
-                onSort={onSort}
-                sortField={lazyState.sortField}
-                sortOrder={lazyState.sortOrder as SortOrder}
-                totalRecords={totalRecords}
-                lazy
-                emptyMessage="Nessun risultato"
-                // rowClassName={(rowData) => classNames({})}
-            >
-                <Column
-                    field="business_name"
-                    header="Denominazione"
-                    filter
-                    showFilterMatchModes={false}
-                    filterElement={textFilterTemplate}
-                    filterField="business_name"
-                />
-                <Column
-                    field="fiscal_code"
-                    header="Codice Fiscale"
-                    filter
-                    showFilterMatchModes={false}
-                    filterElement={textFilterTemplate}
-                    filterField="fiscal_code"
-                />
-                <Column
-                    field="name"
-                    header="Nome"
-                    filter
-                    showFilterMatchModes={false}
-                    filterElement={textFilterTemplate}
-                    filterField="name"
-                />
-                <Column
-                    field="surname"
-                    header="Cognome"
-                    filter
-                    showFilterMatchModes={false}
-                    filterElement={textFilterTemplate}
-                    filterField="surname"
-                />
-            </DataTable>
+            <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+                <DataTable
+                    className="w-full"
+                    filters={lazyState.filters}
+                    value={vetQuery.data?.items}
+                    selectionMode="single"
+                    onSelectionChange={(e) => navigate(e.value.id.toString())}
+                    paginator
+                    first={lazyState.first}
+                    dataKey="fiscal_code"
+                    rows={lazyState.rows}
+                    rowsPerPageOptions={[5, 10, 25, 50]}
+                    onFilter={onFilter}
+                    onPage={setLazyState}
+                    onSort={onSort}
+                    sortField={lazyState.sortField}
+                    sortOrder={lazyState.sortOrder as SortOrder}
+                    totalRecords={totalRecords}
+                    lazy
+                    emptyMessage="Nessun risultato trovato"
+                    rowClassName={() =>
+                        "cursor-pointer hover:bg-surface-50 transition-colors"
+                    }
+                    pt={{
+                        header: {
+                            className:
+                                "bg-surface-50 border-b border-surface-200",
+                        },
+                        thead: { className: "bg-surface-50" },
+                    }}
+                >
+                    <Column
+                        field="business_name"
+                        header="Denominazione"
+                        filter
+                        showFilterMatchModes={false}
+                        filterElement={textFilterTemplate}
+                        filterField="business_name"
+                        body={(rowData) => (
+                            <span className="font-medium text-surface-900">
+                                {rowData.business_name}
+                            </span>
+                        )}
+                    />
+                    <Column
+                        field="fiscal_code"
+                        header="Codice Fiscale"
+                        filter
+                        showFilterMatchModes={false}
+                        filterElement={textFilterTemplate}
+                        filterField="fiscal_code"
+                        className="font-mono text-sm"
+                    />
+                    <Column
+                        field="phone"
+                        header="Telefono"
+                        filter
+                        showFilterMatchModes={false}
+                        filterElement={textFilterTemplate}
+                        filterField="phone"
+                    />
+                    <Column
+                        field="city"
+                        header="Città"
+                        filter
+                        showFilterMatchModes={false}
+                        filterElement={textFilterTemplate}
+                        filterField="city"
+                    />
+                </DataTable>
+            </div>
         </div>
     )
 }

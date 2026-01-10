@@ -46,7 +46,12 @@ import {
     Vet,
     VetSearch,
 } from "../models/vet.schema"
-import { Login, LoginResponse, ManagementUser } from "../models/user.schema"
+import {
+    Login,
+    LoginResponse,
+    ManagementUser,
+    UpdateUser,
+} from "../models/user.schema"
 import { PaginationQuery } from "../models/pagination.schema"
 
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
@@ -94,6 +99,17 @@ class ApiService {
 
     setToastRef(toastRef: React.RefObject<any>) {
         this.toastRef = toastRef
+    }
+
+    showSuccess(message: string, summary: string = "Successo") {
+        if (this.toastRef?.current) {
+            this.toastRef.current.show({
+                severity: "success",
+                summary: summary,
+                detail: message,
+                life: 3000,
+            })
+        }
     }
 
     private handleError(error: AxiosError): void {
@@ -181,10 +197,12 @@ class ApiService {
         return result
     }
 
-    async getEntryTypes(): Promise<{ id: string; label: string }[]> {
-        const data = await this.get<{ id: string; label: string }[]>(
-            ApiEndpoints.util.getEntryTypes
-        )
+    async getEntryTypes(): Promise<
+        { id: string; label: string; healthcare_stage: boolean }[]
+    > {
+        const data = await this.get<
+            { id: string; label: string; healthcare_stage: boolean }[]
+        >(ApiEndpoints.util.getEntryTypes)
 
         return data
     }
@@ -261,6 +279,15 @@ class ApiService {
         return result
     }
 
+    async moveAnimalToShelter(animalId: string, date: Date): Promise<number> {
+        const result = await this.post<number>(
+            ApiEndpoints.animal.moveToShelter(animalId),
+            { date: date.toISOString() }
+        )
+
+        return result
+    }
+
     async addBreed(data: NewBreed): Promise<Breed> {
         const result = await this.post<Breed>(ApiEndpoints.breed.create, data)
 
@@ -303,14 +330,21 @@ class ApiService {
     async uploadAnimalImage(animalId: string, file: File): Promise<number> {
         const formData = new FormData()
         formData.append("image", file)
-        const result = this.post<number>(ApiEndpoints.animal.uploadImage(animalId), formData, {
-            "Content-Type": "multipart/form-data",
-        })
+        const result = this.post<number>(
+            ApiEndpoints.animal.uploadImage(animalId),
+            formData,
+            {
+                "Content-Type": "multipart/form-data",
+            }
+        )
 
         return result
     }
 
-    async updateAnimalImage(animalId: string, data: { image_id: number }): Promise<void> {
+    async updateAnimalImage(
+        animalId: string,
+        data: { image_id: number }
+    ): Promise<void> {
         const result = await this.put<void>(
             ApiEndpoints.animal.updateImage(animalId),
             data
@@ -506,7 +540,7 @@ class ApiService {
         return result
     }
 
-    async updateUser(userId: number, data: any): Promise<any> {
+    async updateUser(userId: number, data: UpdateUser): Promise<any> {
         const result = await this.put<any>(
             ApiEndpoints.user.update(userId),
             data

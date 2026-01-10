@@ -13,7 +13,11 @@ from hermadata.repositories.user_repository import (
 
 def test_add_user(user_repository: SQLUserRepository, db_session: Session):
     data = CreateUserModel(
-        email=f"{uuid4().hex}@test.it", hashed_password=uuid4().hex
+        email=f"{uuid4().hex}@test.it",
+        hashed_password=uuid4().hex,
+        name="Repo",
+        surname="Test",
+        is_active=False,
     )
 
     result = user_repository.create(data)
@@ -26,6 +30,9 @@ def test_add_user(user_repository: SQLUserRepository, db_session: Session):
 
     assert new_user.email == data.email
     assert new_user.hashed_password == data.hashed_password
+    assert new_user.name == data.name
+    assert new_user.surname == data.surname
+    assert new_user.is_active == data.is_active
 
 
 def test_update_repository(
@@ -34,8 +41,16 @@ def test_update_repository(
     user_id: int = make_user()
 
     new_email = f"{uuid4().hex}@test.it"
+    new_name = "Updated"
+    new_surname = "User"
     user_repository.update(
-        user_id, data=UpdateUserModel(email=new_email, is_superuser=True)
+        user_id,
+        data=UpdateUserModel(
+            email=new_email,
+            is_superuser=True,
+            name=new_name,
+            surname=new_surname,
+        ),
     )
 
     updated_user = db_session.execute(
@@ -43,3 +58,18 @@ def test_update_repository(
     ).scalar_one()
 
     assert updated_user.is_superuser
+    assert updated_user.email == new_email
+    assert updated_user.name == new_name
+    assert updated_user.surname == new_surname
+
+
+def test_email_exists(
+    user_repository: SQLUserRepository, make_user, db_session: Session
+):
+    user_id: int = make_user()
+    existing_email = db_session.execute(
+        select(User.email).where(User.id == user_id)
+    ).scalar_one()
+
+    assert user_repository.email_exists(existing_email)
+    assert not user_repository.email_exists(f"{uuid4().hex}@test.it")

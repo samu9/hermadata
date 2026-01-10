@@ -3,11 +3,15 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 
 from pydantic import validate_call
-from sqlalchemy import and_, func, insert, or_, select, text, update
+from sqlalchemy import and_, case, func, insert, or_, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
-from hermadata.constants import AnimalEvent, ExitType
+from hermadata.constants import (
+    HEALTHCARE_STAGE_ENTRY_TYPES,
+    AnimalEvent,
+    ExitType,
+)
 from hermadata.database.models import (
     Adopter,
     Adoption,
@@ -46,6 +50,7 @@ from hermadata.repositories.animal.models import (
     AnimalExit,
     AnimalExitsItem,
     AnimalExitsQuery,
+    AnimalGetQuery,
     AnimalModel,
     AnimalQueryModel,
     AnimalReportResult,
@@ -91,6 +96,10 @@ EXIT_REQUIRED_DATA: dict[str, tuple] = {
 
 
 class EntryNotCompleteException(APIException):
+    pass
+
+
+class MoveBeforeEntryException(APIException):
     pass
 
 
@@ -142,9 +151,19 @@ class SQLAnimalRepository(SQLBaseRepository):
             rescue_date=datetime.now().date(),
         )
 
+        # Determine if in_shelter_from should be set
+        # If healthcare_stage is True, don't set in_shelter_from
+        in_shelter_from = None
+        if not data.healthcare_stage and (
+            data.race_id == "G"
+            or data.entry_type not in HEALTHCARE_STAGE_ENTRY_TYPES
+        ):
+            in_shelter_from = datetime.now()
+
         animal = Animal(
             code=code,
             race_id=data.race_id,
+            in_shelter_from=in_shelter_from,
         )
         animal_entry = AnimalEntry(
             animal=animal,
@@ -163,9 +182,9 @@ class SQLAnimalRepository(SQLBaseRepository):
         return code
 
     def add_entry(self, animal_id: int, data: NewEntryModel) -> int:
-        self.session.execute(
-            select(Animal.id).where(Animal.id == animal_id)
-        ).one()
+        animal = self.session.execute(
+            select(Animal).where(Animal.id == animal_id)
+        ).scalar_one()
 
         last_entry_id, exit_date = self.session.execute(
             select(AnimalEntry.id, AnimalEntry.exit_date).where(
@@ -200,6 +219,14 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
             .values(current=False)
         )
+
+        # Update in_shelter_from if applicable
+        # If healthcare_stage is True, don't set in_shelter_from
+        if not data.healthcare_stage and (
+            animal.race_id == "G"
+            or data.entry_type not in HEALTHCARE_STAGE_ENTRY_TYPES
+        ):
+            animal.in_shelter_from = datetime.now()
 
         new_entry = AnimalEntry(
             animal_id=animal_id,
@@ -242,6 +269,8 @@ class SQLAnimalRepository(SQLBaseRepository):
         if query.rescue_city_code is not None:
             where.append(Animal.rescue_city_code == query.rescue_city_code)
 
+        where.append(Animal.deleted_at.is_(None))
+
         result = self.session.execute(
             select(
                 Animal.code,
@@ -263,6 +292,11 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Animal.size,
                 AnimalEntry.exit_date,
                 AnimalEntry.exit_type,
+                Animal.in_shelter_from,
+                case(
+                    (Animal.in_shelter_from.is_not(None), False),
+                    else_=True,
+                ).label("healthcare_stage"),
             )
             .where(*where)
             .join(
@@ -275,7 +309,8 @@ class SQLAnimalRepository(SQLBaseRepository):
         ).one()
 
         data = AnimalModel.model_validate(
-            dict(zip(result._fields, result, strict=False))
+            AnimalGetQuery(*result)._asdict(),
+            from_attributes=True,
         )
         return data
 
@@ -326,6 +361,11 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.entry_type,
                 AnimalEntry.exit_date,
                 AnimalEntry.exit_type,
+                Animal.in_shelter_from,
+                case(
+                    (Animal.in_shelter_from.is_not(None), False),
+                    else_=True,
+                ).label("healthcare_stage"),
             )
             .select_from(Animal)
             .join(
@@ -356,7 +396,8 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         response = [
             AnimalSearchResult.model_validate(
-                AnimalSearchResultQuery(*r), from_attributes=True
+                AnimalSearchResultQuery(*r)._asdict(),
+                from_attributes=True,
             )
             for r in result
         ]
@@ -420,6 +461,14 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.flush()
 
         return entry_id
+
+    def soft_delete_animal(self, animal_id: int):
+        self.session.execute(
+            update(Animal)
+            .where(Animal.id == animal_id)
+            .values(deleted_at=datetime.now())
+        )
+        self.session.flush()
 
     def get_animal_entry(self, entry_id: int) -> AnimalEntryModel:
         (
@@ -569,6 +618,31 @@ class SQLAnimalRepository(SQLBaseRepository):
             data=json.loads(updates.model_dump_json()),
         )
         self.session.add(event_log)
+        self.session.flush()
+        return result.rowcount
+
+    def move_to_shelter(self, animal_id: int, date: datetime) -> int:
+        """
+        Set in_shelter_from to specified datetime for the specified animal
+        """
+        current_entry = self.session.execute(
+            select(AnimalEntry).where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
+        ).scalar_one_or_none()
+
+        if not current_entry or not current_entry.entry_date:
+            raise EntryNotCompleteException
+
+        if date.date() < current_entry.entry_date:
+            raise MoveBeforeEntryException
+
+        result = self.session.execute(
+            update(Animal)
+            .where(Animal.id == animal_id)
+            .values(in_shelter_from=date)
+        )
         self.session.flush()
         return result.rowcount
 
