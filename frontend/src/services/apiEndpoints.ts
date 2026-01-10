@@ -19,6 +19,7 @@ const ApiEndpoints = {
         create: "/animal",
         search: "/animal/search",
         update: (id: string) => `/animal/${id}`,
+        delete: (id: number) => `/animal/${id}`,
         addEntry: (id: string) => `/animal/${id}/entry`,
         completeEntry: (id: string) => `/animal/${id}/entry/complete`,
         getEntries: (id: string) => `/animal/${id}/entries`,
