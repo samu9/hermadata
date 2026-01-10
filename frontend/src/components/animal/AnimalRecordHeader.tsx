@@ -7,6 +7,7 @@ import {
     faSignOutAlt,
     faCamera,
     faHouseCircleCheck,
+    faTrash,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
@@ -23,7 +24,10 @@ import { Dialog } from "primereact/dialog"
 import { Calendar } from "primereact/calendar"
 import { apiService } from "../../main"
 import { useQueryClient } from "react-query"
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
+import { useAuth } from "../../contexts/AuthContext"
+import { ConfirmDialog } from "primereact/confirmdialog"
+
 type Props = {
     data: Animal
 }
@@ -175,6 +179,8 @@ const AnimalRecordHeader = (props: Props) => {
     const [isMovingToShelter, setIsMovingToShelter] = useState(false)
     const [moveToShelterDialogVisible, setMoveToShelterDialogVisible] =
         useState(false)
+    const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
+
     const [moveToShelterDate, setMoveToShelterDate] = useState<Date | null>(
         new Date()
     )
@@ -186,6 +192,8 @@ const AnimalRecordHeader = (props: Props) => {
     )
     const queryClient = useQueryClient()
     const { id: animalId } = useParams<{ id: string }>()
+    const { isSuperUser } = useAuth()
+    const navigate = useNavigate()
 
     // Sync local state with props when data changes
     useEffect(() => {
@@ -195,6 +203,21 @@ const AnimalRecordHeader = (props: Props) => {
 
     const handleImageClick = () => {
         setImageUploadDialogVisible(true)
+    }
+
+    const handleDeleteClick = () => {
+        setDeleteDialogVisible(true)
+    }
+
+    const confirmDelete = async () => {
+        try {
+            await apiService.deleteAnimal(Number(animalId))
+            await queryClient.invalidateQueries(["animal-search"])
+            apiService.showSuccess("Animale eliminato correttamente")
+            navigate("/animal")
+        } catch (error) {
+            console.error("Failed to delete animal", error)
+        }
     }
 
     const handleMoveToShelterClick = () => {
@@ -347,25 +370,53 @@ const AnimalRecordHeader = (props: Props) => {
                         )}
 
                         {/* Move to Shelter Button */}
-                        {currentHealthcareStage && !props.data.exit_type && (
-                            <div className="lg:flex-shrink-0">
-                                <Button
-                                    label="Sposta in rifugio"
-                                    icon={
-                                        <FontAwesomeIcon
-                                            icon={faHouseCircleCheck}
-                                            className="mr-2"
+                        <div className="flex flex-col gap-2">
+                            {currentHealthcareStage &&
+                                !props.data.exit_type && (
+                                    <div className="lg:flex-shrink-0">
+                                        <Button
+                                            label="Sposta in rifugio"
+                                            icon={
+                                                <FontAwesomeIcon
+                                                    icon={faHouseCircleCheck}
+                                                    className="mr-2"
+                                                />
+                                            }
+                                            onClick={handleMoveToShelterClick}
+                                            loading={isMovingToShelter}
+                                            className="!bg-green-600 !border-green-600 hover:!bg-green-700 !text-white w-full"
                                         />
-                                    }
-                                    onClick={handleMoveToShelterClick}
-                                    loading={isMovingToShelter}
-                                    className="!bg-green-600 !border-green-600 hover:!bg-green-700 !text-white"
-                                />
-                            </div>
-                        )}
+                                    </div>
+                                )}
+
+                            {isSuperUser && (
+                                <div className="lg:flex-shrink-0">
+                                    <Button
+                                        label="Elimina animale"
+                                        icon="pi pi-trash"
+                                        severity="danger"
+                                        onClick={handleDeleteClick}
+                                        className="w-full"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <ConfirmDialog
+                visible={deleteDialogVisible}
+                onHide={() => setDeleteDialogVisible(false)}
+                message="Sei sicuro di voler eliminare questo animale? L'azione non può essere annullata."
+                header="Conferma eliminazione"
+                icon="pi pi-exclamation-triangle"
+                accept={confirmDelete}
+                reject={() => setDeleteDialogVisible(false)}
+                acceptClassName="p-button-danger"
+                acceptLabel="Elimina"
+                rejectLabel="Annulla"
+            />
 
             {/* Move to Shelter Dialog */}
             <Dialog
