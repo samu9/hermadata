@@ -153,3 +153,17 @@ def require_permission_or_raise(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=(f"Insufficient permissions. Required: {permission_str}"),
         )
+
+
+def require_superuser(
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+) -> TokenData:
+    """
+    FastAPI dependency that requires the user to be a superuser.
+    """
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Superuser privileges required.",
+        )
+    return current_user
