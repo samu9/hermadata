@@ -99,6 +99,10 @@ class EntryNotCompleteException(APIException):
     pass
 
 
+class MoveBeforeEntryException(APIException):
+    pass
+
+
 class AnimalNotPresentException(APIException):
     pass
 
@@ -611,6 +615,19 @@ class SQLAnimalRepository(SQLBaseRepository):
         """
         Set in_shelter_from to specified datetime for the specified animal
         """
+        current_entry = self.session.execute(
+            select(AnimalEntry).where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
+        ).scalar_one_or_none()
+
+        if not current_entry or not current_entry.entry_date:
+            raise EntryNotCompleteException
+
+        if date.date() < current_entry.entry_date:
+            raise MoveBeforeEntryException
+
         result = self.session.execute(
             update(Animal)
             .where(Animal.id == animal_id)
