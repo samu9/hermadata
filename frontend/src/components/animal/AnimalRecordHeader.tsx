@@ -6,27 +6,17 @@ import {
     faCalendarAlt,
     faSignOutAlt,
     faCamera,
-    faHouseCircleCheck,
-    faTrash,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
 import { classNames } from "primereact/utils"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import cat from "../../assets/cat.svg"
 import dog from "../../assets/dog.svg"
 import { useExitTypesMap } from "../../hooks/useMaps"
 import { Animal } from "../../models/animal.schema"
 import { ChipCodeBadge } from "./misc"
 import AnimalImageUploadDialog from "./AnimalImageUploadDialog"
-import { Button } from "primereact/button"
-import { Dialog } from "primereact/dialog"
-import { Calendar } from "primereact/calendar"
-import { apiService } from "../../main"
-import { useQueryClient } from "react-query"
-import { useParams, useNavigate } from "react-router-dom"
-import { useAuth } from "../../contexts/AuthContext"
-import { ConfirmDialog } from "primereact/confirmdialog"
 
 type Props = {
     data: Animal
@@ -176,79 +166,9 @@ const StageInfo = (props: {
 const AnimalRecordHeader = (props: Props) => {
     const [imageUploadDialogVisible, setImageUploadDialogVisible] =
         useState(false)
-    const [isMovingToShelter, setIsMovingToShelter] = useState(false)
-    const [moveToShelterDialogVisible, setMoveToShelterDialogVisible] =
-        useState(false)
-    const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
-
-    const [moveToShelterDate, setMoveToShelterDate] = useState<Date | null>(
-        new Date()
-    )
-    const [currentHealthcareStage, setCurrentHealthcareStage] = useState(
-        props.data.healthcare_stage
-    )
-    const [currentInShelterFrom, setCurrentInShelterFrom] = useState(
-        props.data.in_shelter_from
-    )
-    const queryClient = useQueryClient()
-    const { id: animalId } = useParams<{ id: string }>()
-    const { isSuperUser } = useAuth()
-    const navigate = useNavigate()
-
-    // Sync local state with props when data changes
-    useEffect(() => {
-        setCurrentHealthcareStage(props.data.healthcare_stage)
-        setCurrentInShelterFrom(props.data.in_shelter_from)
-    }, [props.data.healthcare_stage, props.data.in_shelter_from])
 
     const handleImageClick = () => {
         setImageUploadDialogVisible(true)
-    }
-
-    const handleDeleteClick = () => {
-        setDeleteDialogVisible(true)
-    }
-
-    const confirmDelete = async () => {
-        try {
-            await apiService.deleteAnimal(Number(animalId))
-            await queryClient.invalidateQueries(["animal-search"])
-            apiService.showSuccess("Animale eliminato correttamente")
-            navigate("/animal")
-        } catch (error) {
-            console.error("Failed to delete animal", error)
-        }
-    }
-
-    const handleMoveToShelterClick = () => {
-        setMoveToShelterDate(new Date())
-        setMoveToShelterDialogVisible(true)
-    }
-
-    const confirmMoveToShelter = async () => {
-        if (!animalId || !moveToShelterDate) return
-
-        try {
-            setIsMovingToShelter(true)
-            await apiService.moveAnimalToShelter(animalId, moveToShelterDate)
-            // Update local state immediately for instant UI feedback
-            setCurrentHealthcareStage(false)
-            setCurrentInShelterFrom(moveToShelterDate)
-            // Show success message
-            const animalName = props.data.name || "L'animale"
-            apiService.showSuccess(
-                `${animalName} è stato spostato in rifugio`,
-                "Spostamento completato"
-            )
-            // Invalidate the query to refresh the data in the background
-            queryClient.invalidateQueries(["animal", animalId])
-            setMoveToShelterDialogVisible(false)
-        } catch (error) {
-            // Error is already handled by API service
-            console.error("Failed to move animal to shelter:", error)
-        } finally {
-            setIsMovingToShelter(false)
-        }
     }
 
     return (
@@ -363,100 +283,14 @@ const AnimalRecordHeader = (props: Props) => {
                         {!props.data.exit_type && (
                             <div className="lg:flex-shrink-0">
                                 <StageInfo
-                                    healthcareStage={currentHealthcareStage}
-                                    inShelterFrom={currentInShelterFrom}
+                                    healthcareStage={props.data.healthcare_stage}
+                                    inShelterFrom={props.data.in_shelter_from}
                                 />
                             </div>
                         )}
-
-                        {/* Move to Shelter Button */}
-                        <div className="flex flex-col gap-2">
-                            {currentHealthcareStage &&
-                                !props.data.exit_type && (
-                                    <div className="lg:flex-shrink-0">
-                                        <Button
-                                            label="Sposta in rifugio"
-                                            icon={
-                                                <FontAwesomeIcon
-                                                    icon={faHouseCircleCheck}
-                                                    className="mr-2"
-                                                />
-                                            }
-                                            onClick={handleMoveToShelterClick}
-                                            loading={isMovingToShelter}
-                                            className="!bg-green-600 !border-green-600 hover:!bg-green-700 !text-white w-full"
-                                        />
-                                    </div>
-                                )}
-
-                            {isSuperUser && (
-                                <div className="lg:flex-shrink-0">
-                                    <Button
-                                        label="Elimina animale"
-                                        icon="pi pi-trash"
-                                        severity="danger"
-                                        onClick={handleDeleteClick}
-                                        className="w-full"
-                                    />
-                                </div>
-                            )}
-                        </div>
                     </div>
                 </div>
             </div>
-
-            <ConfirmDialog
-                visible={deleteDialogVisible}
-                onHide={() => setDeleteDialogVisible(false)}
-                message="Sei sicuro di voler eliminare questo animale? L'azione non può essere annullata."
-                header="Conferma eliminazione"
-                icon="pi pi-exclamation-triangle"
-                accept={confirmDelete}
-                reject={() => setDeleteDialogVisible(false)}
-                acceptClassName="p-button-danger"
-                acceptLabel="Elimina"
-                rejectLabel="Annulla"
-            />
-
-            {/* Move to Shelter Dialog */}
-            <Dialog
-                header="Sposta in rifugio"
-                visible={moveToShelterDialogVisible}
-                style={{ width: "400px" }}
-                onHide={() => setMoveToShelterDialogVisible(false)}
-                footer={
-                    <div className="flex justify-end gap-2">
-                        <Button
-                            label="Annulla"
-                            icon="pi pi-times"
-                            onClick={() => setMoveToShelterDialogVisible(false)}
-                            className="p-button-text"
-                        />
-                        <Button
-                            label="Conferma"
-                            icon="pi pi-check"
-                            onClick={confirmMoveToShelter}
-                            loading={isMovingToShelter}
-                            autoFocus
-                        />
-                    </div>
-                }
-            >
-                <div className="flex flex-col gap-4">
-                    <p className="m-0">
-                        Seleziona la data in cui l'animale è stato spostato in
-                        rifugio:
-                    </p>
-                    <Calendar
-                        value={moveToShelterDate}
-                        onChange={(e) => setMoveToShelterDate(e.value as Date)}
-                        showIcon
-                        dateFormat="dd/mm/yy"
-                        className="w-full"
-                        maxDate={new Date()}
-                    />
-                </div>
-            </Dialog>
 
             {/* Image Upload Dialog */}
             <AnimalImageUploadDialog
