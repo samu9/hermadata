@@ -17,6 +17,7 @@ class Permission(str, Enum):
     DOWNLOAD_SUMMARY = "DS"
     SET_DOCUMENT_PERMISSION = "SDP"
     MANAGE_USERS = "MU"
+    BROWSE_DELETED_ANIMALS = "BDA"
 
 
 class StorageType(Enum):
