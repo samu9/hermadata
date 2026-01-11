@@ -27,6 +27,7 @@ from hermadata.repositories.animal.models import (
     AnimalEntriesQuery,
     AnimalEntryModel,
     AnimalExit,
+    ExitCheckResult,
     AnimalExitsQuery,
     AnimalModel,
     AnimalQueryModel,
@@ -237,6 +238,15 @@ def animal_exit(
     service.exit(animal_id, data)
 
     return True
+
+
+@router.get("/{animal_id}/exit-check")
+def check_animal_exit(
+    animal_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+) -> ExitCheckResult:
+    return repo.check_exit_requirements(animal_id)
 
 
 @router.post("/{animal_id}/entry/complete")
