@@ -91,6 +91,15 @@ def search_animals(
             status_code=403,
             detail="Insufficient permissions to browse non-present animals",
         )
+    if (
+        query.deleted is not False
+        and check_permission(current_user, Permission.BROWSE_DELETED_ANIMALS)
+        is False
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to browse deleted animals",
+        )
     # Here `Depends`is used to use a pydantic model as query params.
     result = repo.search(query)
 
