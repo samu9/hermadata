@@ -18,12 +18,14 @@ import {
     AnimalExitsReportSchema,
     AnimalSearchQuery,
     AnimalSearchResult,
+    ExitCheckResult,
     NewAnimalAdoption,
     NewAnimalEntry,
     PaginatedAnimalSearchResult,
     UpdateAnimalEntry,
     animalDocumentSchema,
     animalSchema,
+    exitCheckResultSchema,
     paginatedAnimalSearchResultSchema,
 } from "../models/animal.schema"
 import { ApiError } from "../models/api.schema"
@@ -447,6 +449,14 @@ class ApiService {
         )
 
         return result
+    }
+
+    async checkAnimalExit(id: number): Promise<ExitCheckResult> {
+        const result = await this.get<ExitCheckResult>(
+            ApiEndpoints.animal.checkExit(id),
+        )
+
+        return exitCheckResultSchema.parse(result)
     }
 
     async animalDaysReport(data: AnimalDaysRequest) {

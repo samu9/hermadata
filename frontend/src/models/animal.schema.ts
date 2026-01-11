@@ -247,3 +247,10 @@ export const addFurColorSchema = z.object({
     name: breedNameValidator,
 })
 export type NewFurColor = z.infer<typeof addFurColorSchema>
+
+export const exitCheckResultSchema = z.object({
+    can_exit: z.boolean(),
+    missing_fields: z.array(z.string()),
+})
+export type ExitCheckResult = z.infer<typeof exitCheckResultSchema>
+

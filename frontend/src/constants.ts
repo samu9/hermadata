@@ -27,3 +27,14 @@ export type SeverityType =
     | "danger"
     | "help"
     | undefined
+
+export const REQUIRED_EXIT_FIELDS_LABELS: Record<string, string> = {
+    chip_code: "Microchip",
+    fur: "Pelo",
+    color: "Colore",
+    breed_id: "Razza",
+    sex: "Sesso",
+    birth_date: "Data di nascita",
+    size: "Taglia",
+}
+
