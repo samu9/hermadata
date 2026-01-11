@@ -6,9 +6,10 @@ type ToolbarButton = {
     buttonText: string
     buttonIcon: any // Use the appropriate FontAwesomeIcon type
     severity?: SeverityType
-    FormComponent: React.ComponentType<{ onSuccess: (data: any) => void }>
-    onSuccessAction: (data: any) => void
+    FormComponent?: React.ComponentType<{ onSuccess: (data: any) => void }>
+    onSuccessAction?: (data: any) => void
     formProps?: Record<string, any>
+    onClick?: () => void
 }
 
 type ToolbarContextType = {
