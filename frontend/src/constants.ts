@@ -16,6 +16,7 @@ export enum Permission {
     DOWNLOAD_SUMMARY = "DS",
     SET_DOCUMENT_PERMISSION = "SDP",
     MANAGE_USERS = "MU",
+    BROWSE_DELETED_ANIMALS = "BDA",
 }
 
 export type SeverityType =
