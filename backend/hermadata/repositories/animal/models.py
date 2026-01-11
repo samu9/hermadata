@@ -100,6 +100,7 @@ class AnimalSearchModel(PaginationQuery):
     chip_code: Optional[str] = None
     cats: bool | None = None
     dogs: bool | None = None
+    deleted: bool | None = False
 
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
@@ -176,6 +177,13 @@ class AnimalSearchModel(PaginationQuery):
             in_or=True,
             or_group="race",
         ),
+        "deleted": WhereClauseMapItem(
+            lambda v: (
+                Animal.deleted_at.is_not(None)
+                if v
+                else Animal.deleted_at.is_(None)
+            )
+        ),
     }
 
     def as_order_by_clause(self) -> MappedColumn | None:
@@ -227,8 +235,6 @@ class AnimalSearchModel(PaginationQuery):
         # Add general OR conditions (backward compatibility)
         if or_elems:
             where.append(or_(*or_elems))
-
-        where.append(Animal.deleted_at.is_(None))
 
         return where
 
