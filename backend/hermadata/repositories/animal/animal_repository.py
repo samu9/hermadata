@@ -7,66 +7,46 @@ from sqlalchemy import and_, case, func, insert, or_, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
-from hermadata.constants import (
-    HEALTHCARE_STAGE_ENTRY_TYPES,
-    AnimalEvent,
-    ExitType,
-)
-from hermadata.database.models import (
-    Adopter,
-    Adoption,
-    Animal,
-    AnimalDocument,
-    AnimalEntry,
-    AnimalLog,
-    Breed,
-    Comune,
-    DocumentKind,
-    FurColor,
-    MedicalActivity,
-    MedicalActivityRecord,
-    Race,
-    VetServiceRecord,
-)
+from hermadata.constants import (HEALTHCARE_STAGE_ENTRY_TYPES, AnimalEvent,
+                                 ExitType)
+from hermadata.database.models import (Adopter, Adoption, Animal,
+                                       AnimalDocument, AnimalEntry, AnimalLog,
+                                       Breed, Comune, DocumentKind, FurColor,
+                                       MedicalActivity, MedicalActivityRecord,
+                                       Race, VetServiceRecord)
 from hermadata.errors import APIException
 from hermadata.models import PaginationResult, UtilElement
-from hermadata.reports.report_generator import (
-    AdopterVariables,
-    AnimalVariables,
-    ReportAdoptionVariables,
-    ReportVariationVariables,
-)
+from hermadata.reports.report_generator import (AdopterVariables,
+                                                AnimalVariables,
+                                                ReportAdoptionVariables,
+                                                ReportVariationVariables)
 from hermadata.repositories import SQLBaseRepository
-from hermadata.repositories.animal.models import (
-    AddMedicalRecordModel,
-    AdoptionModel,
-    AnimalDaysItem,
-    AnimalDaysQuery,
-    AnimalDaysResult,
-    AnimalDocumentModel,
-    AnimalEntriesItem,
-    AnimalEntriesQuery,
-    AnimalEntryModel,
-    AnimalExit,
-    AnimalExitsItem,
-    AnimalExitsQuery,
-    AnimalGetQuery,
-    AnimalModel,
-    AnimalQueryModel,
-    AnimalReportResult,
-    AnimalSearchModel,
-    AnimalSearchResult,
-    AnimalSearchResultQuery,
-    CompleteEntryModel,
-    FurColorName,
-    MedicalActivityModel,
-    NewAdoption,
-    NewAnimalDocument,
-    NewAnimalModel,
-    NewEntryModel,
-    UpdateAnimalEntryModel,
-    UpdateAnimalModel,
-)
+from hermadata.repositories.animal.models import (AddMedicalRecordModel,
+                                                  AdoptionModel,
+                                                  AnimalDaysItem,
+                                                  AnimalDaysQuery,
+                                                  AnimalDaysResult,
+                                                  AnimalDocumentModel,
+                                                  AnimalEntriesItem,
+                                                  AnimalEntriesQuery,
+                                                  AnimalEntryModel, AnimalExit,
+                                                  AnimalExitsItem,
+                                                  AnimalExitsQuery,
+                                                  AnimalGetQuery, AnimalModel,
+                                                  AnimalQueryModel,
+                                                  AnimalReportResult,
+                                                  AnimalSearchModel,
+                                                  AnimalSearchResult,
+                                                  AnimalSearchResultQuery,
+                                                  CompleteEntryModel,
+                                                  FurColorName,
+                                                  MedicalActivityModel,
+                                                  NewAdoption,
+                                                  NewAnimalDocument,
+                                                  NewAnimalModel,
+                                                  NewEntryModel,
+                                                  UpdateAnimalEntryModel,
+                                                  UpdateAnimalModel)
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +163,9 @@ class SQLAnimalRepository(SQLBaseRepository):
 
     def add_entry(self, animal_id: int, data: NewEntryModel) -> int:
         animal = self.session.execute(
-            select(Animal).where(Animal.id == animal_id)
+            select(Animal).where(
+                Animal.id == animal_id, Animal.deleted_at.is_(None)
+            )
         ).scalar_one()
 
         last_entry_id, exit_date = self.session.execute(
@@ -319,7 +301,11 @@ class SQLAnimalRepository(SQLBaseRepository):
             select()
             .select_from(Adoption)
             .join(Adopter, Adopter.id == Adoption.adopter_id)
-            .where(Adoption.animal_id == animal_id)
+            .join(Animal, Animal.id == Adoption.animal_id)
+            .where(
+                Adoption.animal_id == animal_id,
+                Animal.deleted_at.is_(None),
+            )
         ).first()
 
         if not result:
@@ -436,9 +422,12 @@ class SQLAnimalRepository(SQLBaseRepository):
 
     def complete_entry(self, animal_id: str, data: CompleteEntryModel) -> int:
         entry_id = self.session.execute(
-            select(AnimalEntry.id).where(
+            select(AnimalEntry.id)
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+            .where(
                 AnimalEntry.animal_id == animal_id,
                 AnimalEntry.entry_date.is_(None),
+                Animal.deleted_at.is_(None),
             )
         ).scalar()
 
@@ -489,7 +478,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             .join(Animal, AnimalEntry.animal_id == Animal.id)
             .join(Race, Animal.race_id == Race.id)
             .join(Comune, Comune.id == AnimalEntry.origin_city_code)
-            .where(AnimalEntry.id == entry_id)
+            .where(
+                AnimalEntry.id == entry_id,
+                Animal.deleted_at.is_(None),
+            )
         ).one()
         animal_entry: AnimalEntry
         result = AnimalEntryModel(
@@ -523,7 +515,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             .join(Animal, AnimalEntry.animal_id == Animal.id)
             .join(Race, Animal.race_id == Race.id)
             .join(Comune, Comune.id == AnimalEntry.origin_city_code)
-            .where(AnimalEntry.animal_id == animal_id)
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                Animal.deleted_at.is_(None),
+            )
             .order_by(AnimalEntry.entry_date.desc())
         ).all()
 
@@ -588,7 +583,9 @@ class SQLAnimalRepository(SQLBaseRepository):
         values = updates.model_dump(exclude_none=True)
         if updates.chip_code:
             is_set = self.session.execute(
-                select(Animal.chip_code_set).where(Animal.id == id)
+                select(Animal.chip_code_set).where(
+                    Animal.id == id, Animal.deleted_at.is_(None)
+                )
             ).scalar_one()
 
             if is_set:
@@ -598,18 +595,22 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         try:
             result = self.session.execute(
-                update(Animal).where(Animal.id == id).values(**values)
+                update(Animal)
+                .where(Animal.id == id, Animal.deleted_at.is_(None))
+                .values(**values)
             )
         except IntegrityError as e:
             if updates.chip_code and "chip_code" in e.orig.args[1]:
                 other_animal_id = self.session.execute(
                     select(Animal.id).where(
-                        Animal.chip_code == updates.chip_code
+                        Animal.chip_code == updates.chip_code,
+                        Animal.deleted_at.is_(None),
                     )
-                ).scalar_one()
-                raise ExistingChipCodeException(
-                    animal_id=other_animal_id
-                ) from e
+                ).scalar_one_or_none()
+                if other_animal_id:
+                    raise ExistingChipCodeException(
+                        animal_id=other_animal_id
+                    ) from e
             self.session.rollback()
             raise e
         event_log = AnimalLog(
@@ -626,9 +627,12 @@ class SQLAnimalRepository(SQLBaseRepository):
         Set in_shelter_from to specified datetime for the specified animal
         """
         current_entry = self.session.execute(
-            select(AnimalEntry).where(
+            select(AnimalEntry)
+            .join(Animal, AnimalEntry.animal_id == Animal.id)
+            .where(
                 AnimalEntry.animal_id == animal_id,
                 AnimalEntry.current.is_(True),
+                Animal.deleted_at.is_(None),
             )
         ).scalar_one_or_none()
 
@@ -640,13 +644,20 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         result = self.session.execute(
             update(Animal)
-            .where(Animal.id == animal_id)
+            .where(Animal.id == animal_id, Animal.deleted_at.is_(None))
             .values(in_shelter_from=date)
         )
         self.session.flush()
         return result.rowcount
 
     def new_document(self, animal_id: int, data: NewAnimalDocument):
+        # Verify animal exists and is not deleted
+        self.session.execute(
+            select(Animal.id).where(
+                Animal.id == animal_id, Animal.deleted_at.is_(None)
+            )
+        ).scalar_one()
+
         document_kind_id = self.session.execute(
             select(DocumentKind.id).where(
                 DocumentKind.code == data.document_kind_code
@@ -681,7 +692,11 @@ class SQLAnimalRepository(SQLBaseRepository):
                 DocumentKind,
                 DocumentKind.id == AnimalDocument.document_kind_id,
             )
-            .where(AnimalDocument.animal_id == animal_id)
+            .join(Animal, Animal.id == AnimalDocument.animal_id)
+            .where(
+                AnimalDocument.animal_id == animal_id,
+                Animal.deleted_at.is_(None),
+            )
         ).all()
 
         docs = [
@@ -708,6 +723,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             .where(
                 AnimalEntry.animal_id == animal_id,
                 AnimalEntry.current.is_(True),
+                Animal.deleted_at.is_(None),
             )
         ).first()
         if not check:
@@ -772,10 +788,13 @@ class SQLAnimalRepository(SQLBaseRepository):
             raise ExistingAdoptionException
 
         current_entry_id = self.session.execute(
-            select(AnimalEntry.id).where(
+            select(AnimalEntry.id)
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+            .where(
                 AnimalEntry.animal_id == data.animal_id,
                 AnimalEntry.current.is_(True),
                 AnimalEntry.exit_date.is_(None),
+                Animal.deleted_at.is_(None),
             )
         ).scalar()
 
@@ -816,6 +835,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                     AnimalEntry.exit_date > query.from_date,
                 ),
                 AnimalEntry.origin_city_code == query.city_code,
+                Animal.deleted_at.is_(None),
             )
             .join(Animal, Animal.id == AnimalEntry.animal_id)
         ).all()
@@ -877,6 +897,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.entry_date.is_not(None),
                 AnimalEntry.entry_date <= query.to_date,
                 AnimalEntry.entry_date >= query.from_date,
+                Animal.deleted_at.is_(None),
             )
             .join(Animal, Animal.id == AnimalEntry.animal_id)
             .join(Race, Race.id == Animal.race_id)
@@ -936,6 +957,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.exit_date.is_not(None),
                 AnimalEntry.exit_date <= query.to_date,
                 AnimalEntry.exit_date >= query.from_date,
+                Animal.deleted_at.is_(None),
             )
             .join(Animal, Animal.id == AnimalEntry.animal_id)
             .join(Race, Race.id == Animal.race_id)
@@ -975,6 +997,13 @@ class SQLAnimalRepository(SQLBaseRepository):
         return result
 
     def add_vet_service_record(self, animal_id, data: AddMedicalRecordModel):
+        # Verify animal exists and is not deleted
+        self.session.execute(
+            select(Animal.id).where(
+                Animal.id == animal_id, Animal.deleted_at.is_(None)
+            )
+        ).scalar_one()
+
         medical_record = VetServiceRecord(
             animal_id=animal_id, **data.model_dump()
         )
@@ -985,6 +1014,13 @@ class SQLAnimalRepository(SQLBaseRepository):
         return result
 
     def new_medical_activity(self, animal_id, data: MedicalActivityModel):
+        # Verify animal exists and is not deleted
+        self.session.execute(
+            select(Animal.id).where(
+                Animal.id == animal_id, Animal.deleted_at.is_(None)
+            )
+        ).scalar_one()
+
         return self.add_entity(
             MedicalActivity,
             animal_id=animal_id,
@@ -1051,6 +1087,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                         MedicalActivity.recurrence_value,
                     ),
                 ),
+                Animal.deleted_at.is_(None),
             )
         )
 
@@ -1087,7 +1124,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             .join(Breed, Breed.id == Animal.breed_id, isouter=True)
             .join(Race, Race.id == Animal.race_id)
             .join(FurColor, FurColor.id == Animal.color, isouter=True)
-            .where(Animal.id == animal_id)
+            .where(
+                Animal.id == animal_id,
+                Animal.deleted_at.is_(None),
+            )
         ).one()
 
         animal_variables = AnimalVariables.model_validate(
