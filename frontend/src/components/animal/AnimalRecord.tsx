@@ -6,6 +6,8 @@ import {
     faHospital,
     faList,
     faPencil,
+    faTrash,
+    faHouseCircleCheck,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { MenuItem } from "primereact/menuitem"
@@ -25,6 +27,12 @@ import { useToolbar } from "../../contexts/Toolbar"
 import { Animal } from "../../models/animal.schema"
 import NewAnimalForm from "../new-entry/NewAnimalEntryForm"
 import AnimalRecordHeader from "./AnimalRecordHeader"
+import { ConfirmDialog } from "primereact/confirmdialog"
+import { Dialog } from "primereact/dialog"
+import { Calendar } from "primereact/calendar"
+import { Button } from "primereact/button"
+import { apiService } from "../../main"
+import { useQueryClient } from "react-query"
 
 type Props = {
     data: Animal
@@ -103,13 +111,92 @@ const generateItems = (
 const AnimalRecord = (props: Props) => {
     const navigate = useNavigate()
     const { id } = useParams()
-    const { can } = useAuth()
+    const { can, isSuperUser } = useAuth()
+    const queryClient = useQueryClient()
 
     const location = useLocation()
     const items: Item[] = generateItems(props.data, can)
     const [activeIndex, setActiveIndex] = useState(1)
+    const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
+    const [moveToShelterDialogVisible, setMoveToShelterDialogVisible] =
+        useState(false)
+    const [moveToShelterDate, setMoveToShelterDate] = useState<Date | null>(
+        new Date()
+    )
+    const [isMovingToShelter, setIsMovingToShelter] = useState(false)
 
     const { addButton, removeButton } = useToolbar()
+
+    const confirmDelete = async () => {
+        try {
+            await apiService.deleteAnimal(Number(id))
+            await queryClient.invalidateQueries(["animal-search"])
+            apiService.showSuccess("Animale eliminato correttamente")
+            navigate("/")
+        } catch (error) {
+            console.error("Failed to delete animal", error)
+        }
+    }
+
+    const confirmMoveToShelter = async () => {
+        if (!id || !moveToShelterDate) return
+
+        try {
+            setIsMovingToShelter(true)
+            await apiService.moveAnimalToShelter(id, moveToShelterDate)
+
+            // Show success message
+            const animalName = props.data.name || "L'animale"
+            apiService.showSuccess(
+                `${animalName} è stato spostato in rifugio`,
+                "Spostamento completato"
+            )
+            // Invalidate the query to refresh the data in the background
+            queryClient.invalidateQueries(["animal", id])
+            setMoveToShelterDialogVisible(false)
+        } catch (error) {
+            // Error is already handled by API service
+            console.error("Failed to move animal to shelter:", error)
+        } finally {
+            setIsMovingToShelter(false)
+        }
+    }
+
+    useEffect(() => {
+        if (props.data.healthcare_stage && !props.data.exit_type) {
+            addButton({
+                id: "move-to-shelter",
+                buttonText: "Sposta in rifugio",
+                buttonIcon: faHouseCircleCheck,
+                severity: "success",
+                onClick: () => {
+                    setMoveToShelterDate(new Date())
+                    setMoveToShelterDialogVisible(true)
+                },
+            })
+        }
+        return () => removeButton("move-to-shelter")
+    }, [
+        props.data.healthcare_stage,
+        props.data.exit_type,
+        addButton,
+        removeButton,
+    ])
+
+    useEffect(() => {
+        if (isSuperUser) {
+            addButton({
+                id: "delete-animal",
+                buttonText: "",
+                buttonIcon: faTrash,
+                severity: "danger",
+                onClick: () => setDeleteDialogVisible(true),
+            })
+        }
+        return () => {
+            if (isSuperUser) removeButton("delete-animal")
+        }
+    }, [isSuperUser, addButton, removeButton])
 
     useEffect(() => {
         if (props.data?.exit_date && can(Permission.CREATE_ANIMAL)) {
@@ -126,7 +213,9 @@ const AnimalRecord = (props: Props) => {
                 },
             })
         }
+        return () => removeButton("new-entry")
     }, [props.data?.exit_date, can, addButton, removeButton, id])
+
     useEffect(() => {
         const pathElements = location.pathname.split("/").filter((e) => e)
 
@@ -195,6 +284,59 @@ const AnimalRecord = (props: Props) => {
             <div className="py-4 animate-fade-in">
                 <Outlet />
             </div>
+
+            <ConfirmDialog
+                visible={deleteDialogVisible}
+                onHide={() => setDeleteDialogVisible(false)}
+                message="Sei sicuro di voler eliminare questo animale? Questa azione non può essere annullata."
+                header="Conferma eliminazione"
+                icon="pi pi-exclamation-triangle"
+                accept={confirmDelete}
+                reject={() => setDeleteDialogVisible(false)}
+                acceptLabel="Elimina"
+                rejectLabel="Annulla"
+                acceptClassName="p-button-danger"
+            />
+
+            {/* Move to Shelter Dialog */}
+            <Dialog
+                header="Sposta in rifugio"
+                visible={moveToShelterDialogVisible}
+                style={{ width: "400px" }}
+                onHide={() => setMoveToShelterDialogVisible(false)}
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            label="Annulla"
+                            icon="pi pi-times"
+                            onClick={() => setMoveToShelterDialogVisible(false)}
+                            className="p-button-text"
+                        />
+                        <Button
+                            label="Conferma"
+                            icon="pi pi-check"
+                            onClick={confirmMoveToShelter}
+                            loading={isMovingToShelter}
+                            autoFocus
+                        />
+                    </div>
+                }
+            >
+                <div className="flex flex-col gap-4">
+                    <p className="m-0">
+                        Seleziona la data in cui l'animale è stato spostato in
+                        rifugio:
+                    </p>
+                    <Calendar
+                        value={moveToShelterDate}
+                        onChange={(e) => setMoveToShelterDate(e.value as Date)}
+                        showIcon
+                        dateFormat="dd/mm/yy"
+                        className="w-full"
+                        maxDate={new Date()}
+                    />
+                </div>
+            </Dialog>
         </div>
     )
 }
