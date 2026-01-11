@@ -30,6 +30,7 @@ from hermadata.repositories.animal.models import (AddMedicalRecordModel,
                                                   AnimalEntriesItem,
                                                   AnimalEntriesQuery,
                                                   AnimalEntryModel, AnimalExit,
+                                                  ExitCheckResult,
                                                   AnimalExitsItem,
                                                   AnimalExitsQuery,
                                                   AnimalGetQuery, AnimalModel,
@@ -710,6 +711,47 @@ class SQLAnimalRepository(SQLBaseRepository):
         ]
 
         return docs
+
+    @validate_call
+    def check_exit_requirements(self, animal_id: int) -> ExitCheckResult:
+        check = self.session.execute(
+            select(
+                Animal.race_id,
+                AnimalEntry.entry_date,
+            )
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+                Animal.deleted_at.is_(None),
+            )
+        ).first()
+
+        if not check:
+            raise AnimalNotPresentException
+
+        race_code, entry_date = check
+        missing_fields = []
+
+        if not entry_date:
+            missing_fields.append("entry_date")
+
+        if race_code in EXIT_REQUIRED_DATA:
+            required_cols = EXIT_REQUIRED_DATA[race_code]
+            required_data = self.session.execute(
+                select(*required_cols).where(
+                    Animal.id == animal_id,
+                )
+            ).one()
+
+            for col, val in zip(required_cols, required_data):
+                if val is None:
+                    missing_fields.append(col.key)
+
+        return ExitCheckResult(
+            can_exit=len(missing_fields) == 0,
+            missing_fields=missing_fields,
+        )
 
     def exit(self, animal_id: int, data: AnimalExit):
         check = self.session.execute(

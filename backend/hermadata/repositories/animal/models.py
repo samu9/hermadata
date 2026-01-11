@@ -347,6 +347,11 @@ class AnimalExit(BaseModel):
     notes: str | None = None
 
 
+class ExitCheckResult(BaseModel):
+    can_exit: bool
+    missing_fields: list[str] = []
+
+
 class ExtractionQuery(BaseModel):
     from_date: date
     to_date: date
