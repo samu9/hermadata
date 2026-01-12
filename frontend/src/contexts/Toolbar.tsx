@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from "react"
+import React, {
+    createContext,
+    useContext,
+    useState,
+    ReactNode,
+    useCallback,
+} from "react"
 import { SeverityType } from "../constants"
 
 type ToolbarButton = {
@@ -23,19 +29,19 @@ const ToolbarContext = createContext<ToolbarContextType | undefined>(undefined)
 export const ToolbarProvider = ({ children }: { children: ReactNode }) => {
     const [buttons, setButtons] = useState<ToolbarButton[]>([])
 
-    const addButton = (button: ToolbarButton) => {
+    const addButton = useCallback((button: ToolbarButton) => {
         setButtons((prev) => {
             const exists = prev.some((b) => b.id === button.id)
             if (exists) {
-                return prev // Do not add a button with a duplicate ID
+                return prev.map((b) => (b.id === button.id ? button : b))
             }
             return [...prev, button]
         })
-    }
+    }, [])
 
-    const removeButton = (id: string) => {
+    const removeButton = useCallback((id: string) => {
         setButtons((prev) => prev.filter((button) => button.id !== id))
-    }
+    }, [])
 
     return (
         <ToolbarContext.Provider value={{ buttons, addButton, removeButton }}>
