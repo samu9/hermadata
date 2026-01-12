@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from "axios"
 import {
     Adopter,
+    adopterSchema,
     AdopterSearch,
     NewAdopter,
     PaginatedAdopterSearchResult,
@@ -368,6 +369,11 @@ class ApiService {
         )
 
         return result
+    }
+
+    async getAdopter(id: number): Promise<Adopter> {
+        const result = await this.get<Adopter>(ApiEndpoints.adopter.getById(id))
+        return adopterSchema.parse(result)
     }
 
     async newAnimalDocument(
