@@ -18,6 +18,8 @@ export type NewAdopter = z.infer<typeof newAdopterSchema>
 
 export const adopterSchema = newAdopterSchema.extend({
     id: z.number(),
+    document_type: z.string().length(2).nullish(),
+    document_number: z.string().nullish(),
 })
 
 export type Adopter = z.infer<typeof adopterSchema>
