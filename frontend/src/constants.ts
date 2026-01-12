@@ -36,5 +36,5 @@ export const REQUIRED_EXIT_FIELDS_LABELS: Record<string, string> = {
     sex: "Sesso",
     birth_date: "Data di nascita",
     size: "Taglia",
+    entry_date: "Data ingresso",
 }
-
