@@ -121,6 +121,13 @@ export const useAdopterSearchQuery = (queryData: AdopterSearch) =>
         staleTime: Infinity,
     })
 
+export const useAdopterQuery = (id: number | null | undefined) =>
+    useQuery(["adopter", id], {
+        queryFn: () => (id ? apiService.getAdopter(id) : null),
+        enabled: !!id,
+        staleTime: Infinity,
+    })
+
 export const useVetSearchQuery = (queryData: VetSearch) =>
     useQuery(["vet-search", queryData], {
         queryFn: () => apiService.searchVet(queryData),

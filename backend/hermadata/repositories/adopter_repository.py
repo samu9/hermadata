@@ -93,3 +93,9 @@ class SQLAdopterRepository(SQLBaseRepository):
         ]
 
         return PaginationResult(items=response, total=total)
+
+    def get_by_id(self, id: int) -> AdopterModel:
+        result = self.session.get(Adopter, id)
+        if not result:
+            raise Exception("Adopter not found")
+        return AdopterModel.model_validate(result, from_attributes=True)

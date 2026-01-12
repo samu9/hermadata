@@ -39,6 +39,7 @@ const ApiEndpoints = {
     adopter: {
         create: "/adopter",
         get: "/adopter",
+        getById: (id: number) => `/adopter/${id}`,
         search: "/adopter/search",
     },
     adoption: {
