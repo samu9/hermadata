@@ -13,7 +13,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { MenuItem } from "primereact/menuitem"
 import { TabMenu } from "primereact/tabmenu"
 import { classNames } from "primereact/utils"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
     NavLink,
     Outlet,
@@ -115,7 +115,10 @@ const AnimalRecord = (props: Props) => {
     const queryClient = useQueryClient()
 
     const location = useLocation()
-    const items: Item[] = generateItems(props.data, can)
+    const items: Item[] = useMemo(
+        () => generateItems(props.data, can),
+        [props.data, can]
+    )
     const [activeIndex, setActiveIndex] = useState(1)
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
     const [moveToShelterDialogVisible, setMoveToShelterDialogVisible] =
