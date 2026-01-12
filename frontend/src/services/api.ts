@@ -114,6 +114,17 @@ class ApiService {
         }
     }
 
+    showError(message: string | React.ReactNode, summary: string = "Errore") {
+        if (this.toastRef?.current) {
+            this.toastRef.current.show({
+                severity: "error",
+                summary: summary,
+                detail: message,
+                life: 5000,
+            })
+        }
+    }
+
     private handleError(error: AxiosError): void {
         let message = DEFAULT_ERROR_MESSAGE
 
@@ -453,7 +464,7 @@ class ApiService {
 
     async checkAnimalExit(id: number): Promise<ExitCheckResult> {
         const result = await this.get<ExitCheckResult>(
-            ApiEndpoints.animal.checkExit(id),
+            ApiEndpoints.animal.checkExit(id)
         )
 
         return exitCheckResultSchema.parse(result)

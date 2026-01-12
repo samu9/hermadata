@@ -21,7 +21,7 @@ import {
     useNavigate,
     useParams,
 } from "react-router-dom"
-import { Permission } from "../../constants"
+import { Permission, REQUIRED_EXIT_FIELDS_LABELS } from "../../constants"
 import { useAuth } from "../../contexts/AuthContext"
 import { useToolbar } from "../../contexts/Toolbar"
 import { Animal } from "../../models/animal.schema"
@@ -236,8 +236,39 @@ const AnimalRecord = (props: Props) => {
         command: () => setActiveIndex(i),
         template: (item, options) => (
             <NavLink
-                onClick={(e) => {
+                onClick={async (e) => {
                     e.preventDefault()
+                    if (tabItem.path === "exit" && id) {
+                        try {
+                            const check = await apiService.checkAnimalExit(
+                                Number(id)
+                            )
+                            if (!check.can_exit) {
+                                apiService.showError(
+                                    <div>
+                                        <p>
+                                            Alcuni dati necessari per l'uscita
+                                            sono mancanti:
+                                        </p>
+                                        <ul className="list-disc pl-5 mt-2">
+                                            {check.missing_fields.map((f) => (
+                                                <li key={f}>
+                                                    {REQUIRED_EXIT_FIELDS_LABELS[
+                                                        f
+                                                    ] || f}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>,
+                                    "Dati mancanti"
+                                )
+                                return
+                            }
+                        } catch (error) {
+                            console.error(error)
+                            return
+                        }
+                    }
                     options.onClick(e)
                     navigate(tabItem.path)
                 }}
