@@ -16,6 +16,12 @@ type Props = {
 const UncontrolledProvinceDropdown = (props: Props) => {
     const provinceQuery = useProvinceQuery()
     const [value, setValue] = useState<string | null>(props.value || null)
+    
+    // React to prop changes
+    if (props.value !== undefined && props.value !== value) {
+        setValue(props.value)
+    }
+
     return (
         <div className={classNames(props.className)}>
             <InputLabel disabled={props.disabled}>
