@@ -12,6 +12,7 @@ import {
     useAnimalQuery,
     useComuniQuery,
     useExitTypesQuery,
+    useAdopterQuery,
 } from "../../queries"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "react-query"
@@ -29,15 +30,17 @@ import AdopterCard from "../adoption/AdopterCard"
 import { Adopter } from "../../models/adopter.schema"
 import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
 import ControlledInputText from "../forms/ControlledInputText"
+import { useFormPersist } from "../../hooks/useFormPersist"
+
+type AnimalExitFormState = AnimalExit & {
+    _provincia_detenzione?: string
+}
 
 const AnimalExitForm = () => {
     const { id } = useParams()
     const animalQuery = useAnimalQuery(id!)
 
     const queryClient = useQueryClient()
-
-    const [provinciaDetenzione, setProvinciaDetenzione] = useState<string>()
-    const comuneDetenzioneQuery = useComuniQuery(provinciaDetenzione)
 
     const toast = useRef<Toast>(null)
 
@@ -49,7 +52,7 @@ const AnimalExitForm = () => {
     const { startLoading, stopLoading } = useLoader()
 
     const exitTypesQuery = useExitTypesQuery()
-    const form = useForm<AnimalExit>({
+    const form = useForm<AnimalExitFormState>({
         resolver: zodResolver(animalExitSchema),
         defaultValues: {
             animal_id: parseInt(id!),
@@ -57,6 +60,35 @@ const AnimalExitForm = () => {
             exit_type: animalQuery.data?.exit_type || undefined,
         },
     })
+
+    const {
+        handleSubmit,
+        watch,
+        formState: { isValid, errors },
+        getValues,
+        setValue,
+        reset,
+        register,
+    } = form
+
+    // Register UI state fields so they are persisted
+    useEffect(() => {
+        register("_provincia_detenzione")
+    }, [register])
+
+    const provinciaDetenzione = watch("_provincia_detenzione")
+    const comuneDetenzioneQuery = useComuniQuery(provinciaDetenzione)
+
+    const adopterId = watch("adopter_id")
+    const adopterQuery = useAdopterQuery(adopterId)
+
+    useEffect(() => {
+        if (adopterQuery.data) {
+            setSelectedAdopter(adopterQuery.data)
+        } else if (!adopterId) {
+            setSelectedAdopter(null)
+        }
+    }, [adopterQuery.data, adopterId])
 
     const animalExitMutation = useMutation({
         mutationFn: (data: AnimalExit) => apiService.animalExit(data),
@@ -79,24 +111,24 @@ const AnimalExitForm = () => {
         },
     })
 
-    const {
-        handleSubmit,
-        watch,
-        formState: { isValid, errors },
-        getValues,
-        setValue,
-        reset,
-    } = form
+    const { clearStorage } = useFormPersist(`animal-exit-form-${id}`, form)
+
     const onSubmit = (data: AnimalExit) => {
-        animalExitMutation.mutate(data, { onSuccess: () => reset() })
+        animalExitMutation.mutate(data, {
+            onSuccess: () => {
+                clearStorage()
+                reset()
+            },
+        })
     }
 
     const [isDetention, setIsDetention] = useState(false)
     useEffect(() => {
         const values = getValues()
-        console.log(values, isValid, errors)
+        // console.log(values, isValid, errors)
         setIsDetention(["A", "R"].includes(values.exit_type))
-    }, [watch()])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [watch("exit_type")]) 
     return (
         <div className="max-w-6xl mx-auto p-6">
             <FormProvider {...form}>
@@ -142,8 +174,12 @@ const AnimalExitForm = () => {
                                     <UncontrolledProvinceDropdown
                                         label="Provincia di detenzione"
                                         onChange={(value) =>
-                                            setProvinciaDetenzione(value)
+                                            setValue(
+                                                "_provincia_detenzione",
+                                                value
+                                            )
                                         }
+                                        value={provinciaDetenzione}
                                         className="w-full"
                                     />
                                     <ControlledDropdown
