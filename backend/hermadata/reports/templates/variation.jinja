@@ -23,15 +23,15 @@
                 elif variation_type.value == "C" %} stato ceduto al Sig.
                 {{ adopter.surname }} {{ adopter.name }} nato il
                 {{ adopter.birth_date }} a {{ adopter.birth_city }}, residente in
-                {{ adopter.residence_city }} tel. {{ adopter.phone }}
+                {{ adopter.residence_city }} C.F. {{adopter.fiscal_code}} Documento n. {{adopter.document_number}} tel. {{ adopter.phone }}
                 {%elif variation_type.value == 'A'%} stato adottato dal Sig.
                 {{ adopter.surname }} {{ adopter.name }} nato il
                 {{ adopter.birth_date }} a {{ adopter.birth_city }}, residente
-                in {{ adopter.residence_city }} tel. {{ adopter.phone }} 
+                in {{ adopter.residence_city }} C.F. {{adopter.fiscal_code}} Documento n. {{adopter.document_number}} tel. {{ adopter.phone }} 
                 {%elif variation_type.value == 'R'%} stato restituito dal Sig.
                 {{ adopter.surname }} {{ adopter.name }} nato il
                 {{ adopter.birth_date }} a {{ adopter.birth_city }}, residente
-                in {{ adopter.residence_city }} tel. {{ adopter.phone }}
+                in {{ adopter.residence_city }} C.F. {{adopter.fiscal_code}} Documento n. {{adopter.document_number}} tel. {{ adopter.phone }}
                 {%endif%} il
                 {{ variation_date }}.
             </li>

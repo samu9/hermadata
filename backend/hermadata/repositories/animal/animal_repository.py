@@ -7,47 +7,67 @@ from sqlalchemy import and_, case, func, insert, or_, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
-from hermadata.constants import (HEALTHCARE_STAGE_ENTRY_TYPES, AnimalEvent,
-                                 ExitType)
-from hermadata.database.models import (Adopter, Adoption, Animal,
-                                       AnimalDocument, AnimalEntry, AnimalLog,
-                                       Breed, Comune, DocumentKind, FurColor,
-                                       MedicalActivity, MedicalActivityRecord,
-                                       Race, VetServiceRecord)
+from hermadata.constants import (
+    HEALTHCARE_STAGE_ENTRY_TYPES,
+    AnimalEvent,
+    ExitType,
+)
+from hermadata.database.models import (
+    Adopter,
+    Adoption,
+    Animal,
+    AnimalDocument,
+    AnimalEntry,
+    AnimalLog,
+    Breed,
+    Comune,
+    DocumentKind,
+    FurColor,
+    MedicalActivity,
+    MedicalActivityRecord,
+    Race,
+    VetServiceRecord,
+)
 from hermadata.errors import APIException
 from hermadata.models import PaginationResult, UtilElement
-from hermadata.reports.report_generator import (AdopterVariables,
-                                                AnimalVariables,
-                                                ReportAdoptionVariables,
-                                                ReportVariationVariables)
+from hermadata.reports.report_generator import (
+    AdopterVariables,
+    AnimalVariables,
+    ReportAdoptionVariables,
+    ReportVariationVariables,
+)
 from hermadata.repositories import SQLBaseRepository
-from hermadata.repositories.animal.models import (AddMedicalRecordModel,
-                                                  AdoptionModel,
-                                                  AnimalDaysItem,
-                                                  AnimalDaysQuery,
-                                                  AnimalDaysResult,
-                                                  AnimalDocumentModel,
-                                                  AnimalEntriesItem,
-                                                  AnimalEntriesQuery,
-                                                  AnimalEntryModel, AnimalExit,
-                                                  ExitCheckResult,
-                                                  AnimalExitsItem,
-                                                  AnimalExitsQuery,
-                                                  AnimalGetQuery, AnimalModel,
-                                                  AnimalQueryModel,
-                                                  AnimalReportResult,
-                                                  AnimalSearchModel,
-                                                  AnimalSearchResult,
-                                                  AnimalSearchResultQuery,
-                                                  CompleteEntryModel,
-                                                  FurColorName,
-                                                  MedicalActivityModel,
-                                                  NewAdoption,
-                                                  NewAnimalDocument,
-                                                  NewAnimalModel,
-                                                  NewEntryModel,
-                                                  UpdateAnimalEntryModel,
-                                                  UpdateAnimalModel)
+from hermadata.repositories.animal.models import (
+    AddMedicalRecordModel,
+    AdoptionModel,
+    AnimalDaysItem,
+    AnimalDaysQuery,
+    AnimalDaysResult,
+    AnimalDocumentModel,
+    AnimalEntriesItem,
+    AnimalEntriesQuery,
+    AnimalEntryModel,
+    AnimalExit,
+    AnimalExitsItem,
+    AnimalExitsQuery,
+    AnimalGetQuery,
+    AnimalModel,
+    AnimalQueryModel,
+    AnimalReportResult,
+    AnimalSearchModel,
+    AnimalSearchResult,
+    AnimalSearchResultQuery,
+    CompleteEntryModel,
+    ExitCheckResult,
+    FurColorName,
+    MedicalActivityModel,
+    NewAdoption,
+    NewAnimalDocument,
+    NewAnimalModel,
+    NewEntryModel,
+    UpdateAnimalEntryModel,
+    UpdateAnimalModel,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -744,7 +764,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 )
             ).one()
 
-            for col, val in zip(required_cols, required_data):
+            for col, val in zip(required_cols, required_data, strict=False):
                 if val is None:
                     missing_fields.append(col.key)
 
@@ -1192,6 +1212,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 comune_residence.name.label("residence_city"),
                 comune_birth.name.label("birth_city"),
                 Adopter.phone,
+                Adopter.document_number,
             )
             .join(
                 comune_residence,
@@ -1261,26 +1282,38 @@ class SQLAnimalRepository(SQLBaseRepository):
         return variables
 
     def get_variation_report_variables(self, animal_id: int):
-        variation_date, variation_type, notes, adopter_id = (
-            self.session.execute(
-                select(
-                    AnimalEntry.exit_date,
-                    AnimalEntry.exit_type,
-                    AnimalEntry.exit_notes,
-                    Adoption.adopter_id,
-                )
-                .select_from(AnimalEntry)
-                .join(
-                    Adoption,
-                    Adoption.animal_entry_id == AnimalEntry.id,
-                    isouter=True,
-                )
-                .where(
-                    AnimalEntry.animal_id == animal_id,
-                    AnimalEntry.current.is_(True),
-                )
-            ).one()
-        )
+        (
+            variation_date,
+            variation_type,
+            notes,
+            adopter_id,
+            location_address,
+            location_city,
+            location_province,
+        ) = self.session.execute(
+            select(
+                AnimalEntry.exit_date,
+                AnimalEntry.exit_type,
+                AnimalEntry.exit_notes,
+                Adoption.adopter_id,
+                Adoption.location_address,
+                Comune.name.label("location_city"),
+                Comune.provincia.label("location_province"),
+            )
+            .select_from(AnimalEntry)
+            .join(
+                Adoption,
+                Adoption.animal_entry_id == AnimalEntry.id,
+                isouter=True,
+            )
+            .join(
+                Comune, Adoption.location_city_code == Comune.id, isouter=True
+            )
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
+        ).one()
 
         adopter = (
             variation_type in ADOPTER_EXIT_TYPES
@@ -1296,6 +1329,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             variation_date=variation_date,
             adopter=adopter,
             notes=notes,
+            location_address=location_address,
+            location_city=location_city,
+            location_province=location_province,
         )
 
         return variables

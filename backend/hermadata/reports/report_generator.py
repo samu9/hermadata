@@ -105,6 +105,8 @@ class AdopterVariables(BaseModel):
     birth_city: str
     birth_date: ReportDate
     phone: NullableString
+    fiscal_code: NullableString
+    document_number: NullableString
 
 
 class AnimalVariables(BaseVariables):
@@ -147,6 +149,9 @@ class ReportVariationVariables(ReportDefaultVariables):
     variation_type: ExitType  # scomparso, deceduto, stato ceduto
     variation_date: ReportDate
     notes: NullableString
+    location_address: NullableString
+    location_city: NullableString
+    location_province: NullableString
 
 
 class ReportAdoptionVariables(ReportDefaultVariables):

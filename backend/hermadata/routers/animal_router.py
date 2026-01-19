@@ -18,6 +18,7 @@ from hermadata.permissions import (
     require_superuser,
 )
 from hermadata.repositories.animal.animal_repository import (
+    EntryNotCompleteException,
     ExistingChipCodeException,
     SQLAnimalRepository,
 )
@@ -27,13 +28,13 @@ from hermadata.repositories.animal.models import (
     AnimalEntriesQuery,
     AnimalEntryModel,
     AnimalExit,
-    ExitCheckResult,
     AnimalExitsQuery,
     AnimalModel,
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
     CompleteEntryModel,
+    ExitCheckResult,
     MoveToShelterRequest,
     NewAnimalDocument,
     NewAnimalModel,
@@ -344,6 +345,12 @@ def move_to_shelter(
                 status_code=404, detail=f"Animal {animal_id} not found"
             )
         return updated_rows
+    except EntryNotCompleteException as e:
+        raise HTTPException(
+            status_code=400,
+            detail="Ingresso non completato. Imposta una data di uscita.",
+        ) from e
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
