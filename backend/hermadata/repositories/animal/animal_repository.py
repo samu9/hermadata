@@ -68,6 +68,7 @@ from hermadata.repositories.animal.models import (
     UpdateAnimalEntryModel,
     UpdateAnimalModel,
 )
+from hermadata.time_utils import get_now, get_today
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +150,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         code = self.generate_code(
             race_id=data.race_id,
             rescue_city_code=data.rescue_city_code,
-            rescue_date=datetime.now().date(),
+            rescue_date=get_today(),
         )
 
         # Determine if in_shelter_from should be set
@@ -159,7 +160,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             data.race_id == "G"
             or data.entry_type not in HEALTHCARE_STAGE_ENTRY_TYPES
         ):
-            in_shelter_from = datetime.now()
+            in_shelter_from = get_now()
 
         animal = Animal(
             code=code,
@@ -208,7 +209,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Adoption.animal_entry_id == last_entry_id,
                 Adoption.returned_at.is_(None),
             )
-            .values(returned_at=datetime.now().date())
+            .values(returned_at=get_today())
         )
         if adoptions_update.rowcount == 1:
             logger.info(
@@ -229,7 +230,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal.race_id == "G"
             or data.entry_type not in HEALTHCARE_STAGE_ENTRY_TYPES
         ):
-            animal.in_shelter_from = datetime.now()
+            animal.in_shelter_from = get_now()
 
         new_entry = AnimalEntry(
             animal_id=animal_id,
@@ -414,7 +415,7 @@ class SQLAnimalRepository(SQLBaseRepository):
     def generate_code(
         self, race_id: str, rescue_city_code: str, rescue_date: date = None
     ):
-        rescue_date = rescue_date or datetime.now().date()
+        rescue_date = rescue_date or get_today()
         current_animals = self.session.execute(
             select(func.count("*"))
             .select_from(Animal)
@@ -476,7 +477,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.execute(
             update(Animal)
             .where(Animal.id == animal_id)
-            .values(deleted_at=datetime.now())
+            .values(deleted_at=get_now())
         )
         self.session.flush()
 
@@ -1129,14 +1130,14 @@ class SQLAnimalRepository(SQLBaseRepository):
                 or_(
                     and_(
                         MedicalActivity.to_date.is_not(None),
-                        MedicalActivity.to_date >= datetime.now().date(),
+                        MedicalActivity.to_date >= get_today(),
                     ),
                     MedicalActivity.to_date.is_(None),
                 ),
                 or_(
                     and_(
                         MedicalActivity.from_date.is_not(None),
-                        MedicalActivity.from_date < datetime.now().date(),
+                        MedicalActivity.from_date < get_today(),
                     ),
                     MedicalActivity.from_date.is_(None),
                 ),

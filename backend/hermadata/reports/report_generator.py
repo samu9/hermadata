@@ -1,5 +1,5 @@
 import os
-from datetime import date, datetime
+from datetime import date
 from enum import Enum
 from io import BytesIO
 from typing import Annotated
@@ -35,6 +35,7 @@ from hermadata.repositories.animal.models import (
     AnimalExitsQuery,
     AnimalReportResult,
 )
+from hermadata.time_utils import get_today
 
 ReportDate = Annotated[
     date, PlainSerializer(lambda x: x.strftime("%d/%m/%Y"), return_type=str)
@@ -74,7 +75,7 @@ class BaseVariables(BaseModel):
 
 
 class ReportDefaultVariables(BaseVariables):
-    day: ReportDate = Field(default_factory=lambda: datetime.now().date())
+    day: ReportDate = Field(default_factory=lambda: get_today())
     title: str
 
     @field_serializer("day")
