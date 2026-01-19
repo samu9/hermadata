@@ -28,25 +28,23 @@ const ADOPTABILITY_FLAG_COLOR: { [key: number]: string } = {
     2: "#F59E0B", // amber-500
 }
 
-const NotPresentAlert = (props: Props) => {
+const NotPresentAlert = ({ data, bare }: { data: Animal; bare?: boolean }) => {
     const exitTypesMap = useExitTypesMap()
-    const exitDate = new Date(props.data.exit_date!)
+    const exitDate = new Date(data.exit_date!)
     const notPresent = exitDate < new Date()
 
     return (
         <div
-            className={classNames(
-                "px-4 py-3 rounded-lg border-l-4 shadow-sm max-w-sm",
-                {
-                    "bg-red-50 border-red-400": notPresent,
-                    "bg-amber-50 border-amber-400": !notPresent,
-                }
-            )}
+            className={classNames("max-w-sm", {
+                "px-4 py-3 rounded-lg border-l-4 shadow-sm": !bare,
+                "bg-surface-100 border-surface-400": !bare && notPresent,
+                "bg-amber-50 border-amber-400": !bare && !notPresent,
+            })}
         >
             <div className="flex items-start gap-3">
                 <div
                     className={classNames("flex-shrink-0 mt-0.5", {
-                        "text-red-500": notPresent,
+                        "text-surface-500": notPresent,
                         "text-amber-500": !notPresent,
                     })}
                 >
@@ -60,7 +58,7 @@ const NotPresentAlert = (props: Props) => {
                 <div className="flex-1 min-w-0">
                     <h3
                         className={classNames("text-sm font-semibold", {
-                            "text-red-800": notPresent,
+                            "text-surface-700": notPresent,
                             "text-amber-800": !notPresent,
                         })}
                     >
@@ -72,7 +70,10 @@ const NotPresentAlert = (props: Props) => {
                         <div className="flex items-center gap-2">
                             <FontAwesomeIcon
                                 icon={faCalendarAlt}
-                                className="w-3 h-3 text-surface-500"
+                                className={classNames("w-3 h-3", {
+                                    "text-surface-400": notPresent,
+                                    "text-surface-500": !notPresent,
+                                })}
                             />
                             <span className="text-surface-700">
                                 <span className="font-medium">
@@ -84,11 +85,14 @@ const NotPresentAlert = (props: Props) => {
                         <div className="flex items-center gap-2">
                             <FontAwesomeIcon
                                 icon={faSignOutAlt}
-                                className="w-3 h-3 text-surface-500"
+                                className={classNames("w-3 h-3", {
+                                    "text-surface-400": notPresent,
+                                    "text-surface-500": !notPresent,
+                                })}
                             />
                             <span className="text-surface-700">
                                 <span className="font-medium">Motivo:</span>{" "}
-                                {exitTypesMap?.[props.data.exit_type!]}
+                                {exitTypesMap?.[data.exit_type!]}
                             </span>
                         </div>
                     </div>
@@ -98,26 +102,24 @@ const NotPresentAlert = (props: Props) => {
     )
 }
 
-const StageInfo = (props: {
+const StageInfo = ({
+    healthcareStage,
+    inShelterFrom,
+    bare,
+}: {
     healthcareStage?: boolean
     inShelterFrom?: Date | null
+    bare?: boolean
 }) => {
-    const isInShelter = !props.healthcareStage
-    const inShelterFrom = props.inShelterFrom
-
-    if (!isInShelter && !props.healthcareStage) {
-        return null
-    }
+    const isInShelter = !healthcareStage
 
     return (
         <div
-            className={classNames(
-                "px-4 py-3 rounded-lg border-l-4 shadow-sm max-w-sm",
-                {
-                    "bg-green-50 border-green-400": isInShelter,
-                    "bg-red-50 border-red-400": !isInShelter,
-                }
-            )}
+            className={classNames("max-w-sm", {
+                "px-4 py-3 rounded-lg border-l-4 shadow-sm": !bare,
+                "bg-green-50 border-green-400": !bare && isInShelter,
+                "bg-red-50 border-red-400": !bare && !isInShelter,
+            })}
         >
             <div className="flex items-start gap-3">
                 <div
@@ -171,13 +173,29 @@ const AnimalRecordHeader = (props: Props) => {
         setImageUploadDialogVisible(true)
     }
 
+    const exitDate = props.data.exit_date
+        ? new Date(props.data.exit_date)
+        : null
+    const isNotPresent = exitDate && exitDate < new Date()
+    const isSanitary =
+        !isNotPresent && !props.data.exit_type && !!props.data.healthcare_stage
+
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6 mb-6">
+        <div
+            className={classNames("rounded-xl shadow-sm border p-6 mb-6", {
+                "bg-surface-100 border-surface-300": isNotPresent,
+                "bg-red-50 border-red-200": isSanitary,
+                "bg-white border-surface-200": !isNotPresent && !isSanitary,
+            })}
+        >
             <div className="flex gap-6 items-start">
                 {/* Animal Image */}
                 <div className="flex-shrink-0">
                     <div
-                        className="w-32 h-32 rounded-full border-4 border-surface-100 overflow-hidden bg-surface-50 flex items-center justify-center relative group cursor-pointer transition-all duration-200 hover:border-surface-300"
+                        className={classNames(
+                            "w-32 h-32 rounded-full border-4 border-surface-100 overflow-hidden bg-surface-50 flex items-center justify-center relative group cursor-pointer transition-all duration-200 hover:border-surface-300",
+                            { grayscale: isNotPresent }
+                        )}
                         onClick={handleImageClick}
                         title="Clicca per cambiare l'immagine"
                     >
@@ -275,7 +293,10 @@ const AnimalRecordHeader = (props: Props) => {
                         {/* Alert for Not Present Animals */}
                         {props.data.exit_type && props.data.exit_date && (
                             <div className="lg:flex-shrink-0">
-                                <NotPresentAlert data={props.data} />
+                                <NotPresentAlert
+                                    data={props.data}
+                                    bare={!!isNotPresent}
+                                />
                             </div>
                         )}
 
@@ -283,7 +304,9 @@ const AnimalRecordHeader = (props: Props) => {
                         {!props.data.exit_type && (
                             <div className="lg:flex-shrink-0">
                                 <StageInfo
-                                    healthcareStage={props.data.healthcare_stage}
+                                    healthcareStage={
+                                        props.data.healthcare_stage
+                                    }
                                     inShelterFrom={props.data.in_shelter_from}
                                 />
                             </div>
