@@ -49,6 +49,8 @@ export const createUserSchema = z.object({
     surname: z.string().optional(),
     email: z.string().email(),
     password: z.string().min(6),
+    role_name: z.string().optional(),
+    city_codes: z.array(z.string()).optional(),
     is_active: z.boolean().default(true),
     is_superuser: z.boolean().default(false),
 })
@@ -59,6 +61,7 @@ export const updateUserSchema = z.object({
     name: z.string().optional(),
     surname: z.string().optional(),
     email: z.string().email().optional(),
+    city_codes: z.array(z.string()).optional(),
     is_active: z.boolean().optional(),
     is_superuser: z.boolean().optional(),
 })
