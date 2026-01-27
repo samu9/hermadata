@@ -260,7 +260,11 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return check is not None
 
-    def get(self, query: AnimalQueryModel) -> AnimalModel:
+    def get(
+        self,
+        query: AnimalQueryModel,
+        allowed_city_codes: list[str] | None = None,
+    ) -> AnimalModel:
         where = []
         if query.id is not None:
             where.append(Animal.id == query.id)
@@ -273,6 +277,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             where.append(Animal.rescue_city_code == query.rescue_city_code)
 
         where.append(Animal.deleted_at.is_(None))
+
+        if allowed_city_codes:
+            where.append(AnimalEntry.origin_city_code.in_(allowed_city_codes))
 
         result = self.session.execute(
             select(
@@ -333,7 +340,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             return None
 
     def search(
-        self, query: AnimalSearchModel
+        self,
+        query: AnimalSearchModel,
+        allowed_city_codes: list[str] | None = None,
     ) -> PaginationResult[AnimalSearchResult]:
         """
         Return the minimum data set of a list of
@@ -341,6 +350,9 @@ class SQLAnimalRepository(SQLBaseRepository):
         """
 
         where = query.as_where_clause()
+
+        if allowed_city_codes:
+            where.append(AnimalEntry.origin_city_code.in_(allowed_city_codes))
 
         total = self.session.execute(
             select(func.count("*"))
