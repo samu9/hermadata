@@ -103,7 +103,11 @@ def search_animals(
             detail="Insufficient permissions to browse deleted animals",
         )
     # Here `Depends`is used to use a pydantic model as query params.
-    result = repo.search(query)
+    allowed_city_codes = None
+    if current_user.city_codes:
+        allowed_city_codes = current_user.city_codes
+
+    result = repo.search(query, allowed_city_codes=allowed_city_codes)
 
     return result
 
@@ -154,9 +158,17 @@ def serve_animal_exits_report(
 def get_animal(
     animal_id: int,
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
     try:
-        animal_data = repo.get(AnimalQueryModel(id=animal_id))
+        allowed_city_codes = None
+        if current_user.city_codes:
+            allowed_city_codes = current_user.city_codes
+
+        animal_data = repo.get(
+            AnimalQueryModel(id=animal_id),
+            allowed_city_codes=allowed_city_codes,
+        )
     except NoResultFound as e:
         raise HTTPException(status_code=404, detail="No animal found") from e
 
