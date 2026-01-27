@@ -10,10 +10,19 @@ export const breedNameValidator = z
     })
     .regex(/^(.*[a-zA-Z]){2,}.*$/)
 
-export const dateFromString = z.preprocess(
-    (arg) => (typeof arg == "string" ? new Date(arg) : arg),
-    z.date().nullable()
-)
+export const dateFromString = z.preprocess((arg) => {
+    if (typeof arg == "string") {
+        const date = new Date(arg)
+        if (isNaN(date.getTime())) {
+            return null
+        }
+        if (/^\d{4}-\d{2}-\d{2}$/.test(arg)) {
+            return new Date(arg + "T00:00:00")
+        }
+        return date
+    }
+    return arg
+}, z.date().nullable())
 export const dateOnly = dateFromString.transform((d: Date | null) => {
     // prime-react calendar returns a date at 0 hour at local time.
     // this results at an UTC date for the previous day at 23 hour.
