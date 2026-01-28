@@ -37,6 +37,7 @@ export const managementUserSchema = z.object({
     is_active: z.boolean(),
     is_superuser: z.boolean(),
     role_name: z.string().optional(),
+    city_codes: z.array(z.string()).optional(),
     created_at: z.string(),
     updated_at: z.string().optional(),
     last_login: z.string().optional(),
