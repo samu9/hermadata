@@ -9,12 +9,13 @@ import { confirmDialog, ConfirmDialog } from "primereact/confirmdialog"
 import { useRef } from "react"
 import { useMutation, useQuery, useQueryClient } from "react-query"
 import { apiService } from "../../main"
-import { ManagementUser, UpdateUser } from "../../models/user.schema"
+import { ComuneSchema } from "../../models/city.schema"
+import { ManagementUser } from "../../models/user.schema"
 import EditUserForm from "./EditUserForm"
 
 const UserList: React.FC = () => {
     const [selectedUser, setSelectedUser] = useState<ManagementUser | null>(
-        null
+        null,
     )
     const [showEditDialog, setShowEditDialog] = useState(false)
     const toast = useRef<Toast>(null)
@@ -42,7 +43,7 @@ const UserList: React.FC = () => {
                     detail: "Errore durante l'eliminazione dell'utente",
                 })
             },
-        }
+        },
     )
 
     const toggleUserStatusMutation = useMutation(
@@ -57,7 +58,7 @@ const UserList: React.FC = () => {
                     detail: "Status utente aggiornato",
                 })
             },
-        }
+        },
     )
 
     const statusBodyTemplate = (user: ManagementUser) => {
@@ -101,6 +102,47 @@ const UserList: React.FC = () => {
                     className="text-sm"
                 />
             )
+        )
+    }
+
+    const getCityName = (code: string) => {
+        const queries = queryClient.getQueriesData<ComuneSchema[]>(["comuni"])
+        for (const [key, data] of queries) {
+            const city = data?.find((c) => c.id === code)
+            if (city) return city.name
+        }
+        return code
+    }
+
+    const cityCodesBodyTemplate = (user: ManagementUser) => {
+        if (!user.city_codes || user.city_codes.length === 0) {
+            return "-"
+        }
+
+        const maxDisplay = 2
+        const displayCodes = user.city_codes.slice(0, maxDisplay)
+        const remaining = user.city_codes.length - maxDisplay
+
+        return (
+            <div className="flex gap-1 flex-wrap item-center">
+                {displayCodes.map((code) => (
+                    <Tag
+                        key={code}
+                        value={getCityName(code)}
+                        className="!text-xs !bg-surface-200 !text-surface-700 !font-mono"
+                    />
+                ))}
+                {remaining > 0 && (
+                    <Tag
+                        value={`+${remaining}`}
+                        className="!text-xs !bg-surface-100 !text-surface-600"
+                        title={user.city_codes
+                            .slice(maxDisplay)
+                            .map(getCityName)
+                            .join(", ")}
+                    />
+                )}
+            </div>
         )
     }
 
@@ -237,6 +279,11 @@ const UserList: React.FC = () => {
                         header="Ruolo"
                         body={roleBodyTemplate}
                         style={{ width: "120px" }}
+                    />
+                    <Column
+                        header="Comuni"
+                        body={cityCodesBodyTemplate}
+                        style={{ width: "150px" }}
                     />
                     <Column
                         field="created_at"
