@@ -3,6 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
 import { Checkbox } from "primereact/checkbox"
 import { InputText } from "primereact/inputtext"
+import { Dropdown } from "primereact/dropdown"
+import { MultiSelect } from "primereact/multiselect"
 import { Password } from "primereact/password"
 import { Toast } from "primereact/toast"
 import { Divider } from "primereact/divider"
@@ -12,11 +14,13 @@ import { z } from "zod"
 import { apiService } from "../../main"
 import { ManagementUser } from "../../models/user.schema"
 import { useAuth } from "../../contexts/AuthContext"
+import { useComuniQuery, useProvinceQuery } from "../../queries"
 
 const editUserSchema = z.object({
     name: z.string().optional(),
     surname: z.string().optional(),
     email: z.string().email("Email non valida"),
+    city_codes: z.array(z.string()).optional(),
     is_superuser: z.boolean(),
     is_active: z.boolean(),
 })
@@ -50,6 +54,10 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
     const [showPasswordForm, setShowPasswordForm] = useState(false)
     const toast = useRef<Toast>(null)
     const { user: currentUser } = useAuth()
+    const [selectedProvince, setSelectedProvince] = useState<string>("")
+    const { data: provinces, isLoading: provincesLoading } = useProvinceQuery()
+    const { data: comuni, isLoading: comuniLoading } =
+        useComuniQuery(selectedProvince)
 
     const userForm = useForm<EditUserFormData>({
         resolver: zodResolver(editUserSchema),
@@ -57,6 +65,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
             name: user.name || "",
             surname: user.surname || "",
             email: user.email,
+            city_codes: user.city_codes || [],
             is_superuser: user.is_superuser,
             is_active: user.is_active,
         },
@@ -90,14 +99,17 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                         "Errore durante l'aggiornamento dell'utente",
                 })
             },
-        }
+        },
     )
 
     const changePasswordMutation = useMutation(
         (data: { newPassword: string }) => {
             // Use admin method if current user is superuser, otherwise use regular method
             if (currentUser?.is_superuser) {
-                return apiService.changeUserPasswordAsAdmin(user.id, data.newPassword)
+                return apiService.changeUserPasswordAsAdmin(
+                    user.id,
+                    data.newPassword,
+                )
             } else {
                 // This case shouldn't happen as non-superusers shouldn't be able to edit other users
                 throw new Error("Non autorizzato a cambiare questa password")
@@ -121,7 +133,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                         error.message || "Errore durante il cambio password",
                 })
             },
-        }
+        },
     )
 
     const onSubmitUser = (data: EditUserFormData) => {
@@ -255,6 +267,74 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                                 )}
                             </div>
 
+                            {/* City Codes Selection */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium text-surface-700">
+                                    Comuni di competenza
+                                </label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="flex flex-col gap-2">
+                                        <label
+                                            htmlFor="province-select"
+                                            className="text-xs text-surface-500"
+                                        >
+                                            Filtra per Provincia
+                                        </label>
+                                        <Dropdown
+                                            id="province-select"
+                                            value={selectedProvince}
+                                            options={provinces || []}
+                                            optionLabel="name"
+                                            optionValue="id"
+                                            onChange={(e) =>
+                                                setSelectedProvince(e.value)
+                                            }
+                                            placeholder="Seleziona Provincia"
+                                            filter
+                                            className="w-full"
+                                            disabled={provincesLoading}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label
+                                            htmlFor="city-multiselect"
+                                            className="text-xs text-surface-500"
+                                        >
+                                            Seleziona Comuni
+                                        </label>
+                                        <Controller
+                                            name="city_codes"
+                                            control={userForm.control}
+                                            render={({ field }) => (
+                                                <MultiSelect
+                                                    id="city-multiselect"
+                                                    value={field.value}
+                                                    options={comuni || []}
+                                                    optionLabel="name"
+                                                    optionValue="id"
+                                                    onChange={(e) =>
+                                                        field.onChange(e.value)
+                                                    }
+                                                    placeholder="Seleziona Comuni"
+                                                    filter
+                                                    className="w-full"
+                                                    display="chip"
+                                                    disabled={
+                                                        !selectedProvince ||
+                                                        comuniLoading
+                                                    }
+                                                />
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+                                <small className="text-surface-500">
+                                    Seleziona una provincia per vedere i comuni
+                                    disponibili. È possibile aggiungere comuni
+                                    da province diverse ripetendo la selezione.
+                                </small>
+                            </div>
+
                             {/* Autorizzazioni */}
                             <div className="field">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -272,7 +352,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                                                     checked={field.value}
                                                     onChange={(e) =>
                                                         field.onChange(
-                                                            e.checked
+                                                            e.checked,
                                                         )
                                                     }
                                                     className="mr-2"
@@ -297,7 +377,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                                                     checked={field.value}
                                                     onChange={(e) =>
                                                         field.onChange(
-                                                            e.checked
+                                                            e.checked,
                                                         )
                                                     }
                                                     className="mr-2"
@@ -351,7 +431,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                         <FormProvider {...passwordForm}>
                             <form
                                 onSubmit={passwordForm.handleSubmit(
-                                    onSubmitPassword
+                                    onSubmitPassword,
                                 )}
                                 className="space-y-4"
                             >
