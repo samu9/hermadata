@@ -226,6 +226,7 @@ class SQLUserRepository(SQLBaseRepository):
                 email=user.email,
                 permissions=permissions,
                 role_name=role_name,
+                city_codes=user.city_codes,
                 is_active=user.is_active,
                 is_superuser=user.is_superuser,
                 created_at=user.created_at,
