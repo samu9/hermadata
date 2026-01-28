@@ -82,7 +82,7 @@ class ApiService {
                 }
                 return config
             },
-            (error) => Promise.reject(error)
+            (error) => Promise.reject(error),
         )
 
         this.inst.interceptors.response.use(
@@ -96,7 +96,7 @@ class ApiService {
                 }
                 this.handleError(error)
                 return Promise.reject(error)
-            }
+            },
         )
     }
 
@@ -148,7 +148,7 @@ class ApiService {
 
     private async get<T>(
         endpoint: string,
-        params: { [key: string]: any } = {}
+        params: { [key: string]: any } = {},
     ): Promise<T> {
         const res = await this.inst.get<T>(endpoint, { params })
         return res.data
@@ -157,7 +157,7 @@ class ApiService {
     private async post<T>(
         endpoint: string,
         data: object,
-        headers = {}
+        headers = {},
     ): Promise<T> {
         const res = await this.inst.post<T>(endpoint, data, { headers })
         return res.data
@@ -166,7 +166,7 @@ class ApiService {
     private async put<T>(
         endpoint: string,
         data: object,
-        headers = {}
+        headers = {},
     ): Promise<T> {
         const res = await this.inst.put<T>(endpoint, data, { headers })
         return res.data
@@ -186,7 +186,7 @@ class ApiService {
     }
     async getProvince(): Promise<ProvinciaSchema[]> {
         const data = await this.get<ProvinciaSchema[]>(
-            ApiEndpoints.util.getProvince
+            ApiEndpoints.util.getProvince,
         )
         const result = data.map((d) => provinciaSchema.parse(d))
 
@@ -196,7 +196,7 @@ class ApiService {
     async getComuni(provincia: string): Promise<ComuneSchema[]> {
         const data = await this.get<ComuneSchema[]>(
             ApiEndpoints.util.getComuni,
-            { provincia }
+            { provincia },
         )
         const result = data.map((d) => comuneSchema.parse(d))
 
@@ -223,7 +223,7 @@ class ApiService {
 
     async getExitTypes(): Promise<{ id: string; label: string }[]> {
         const data = await this.get<{ id: string; label: string }[]>(
-            ApiEndpoints.util.getExitTypes
+            ApiEndpoints.util.getExitTypes,
         )
 
         return data
@@ -241,7 +241,7 @@ class ApiService {
     }
 
     async searchAnimals(
-        query: AnimalSearchQuery
+        query: AnimalSearchQuery,
     ): Promise<PaginatedAnimalSearchResult> {
         const result = await this.get(ApiEndpoints.animal.search, query)
 
@@ -250,11 +250,11 @@ class ApiService {
 
     async updateAnimal(
         id: string,
-        data: AnimalEdit
+        data: AnimalEdit,
     ): Promise<boolean | ApiError> {
         const result = await this.post<boolean | ApiError>(
             ApiEndpoints.animal.update(id),
-            data
+            data,
         )
 
         return result
@@ -266,11 +266,11 @@ class ApiService {
 
     async completeAnimalEntry(
         id: string,
-        data: AnimalCompleteEntry
+        data: AnimalCompleteEntry,
     ): Promise<boolean> {
         const result = await this.post<boolean>(
             ApiEndpoints.animal.completeEntry(id),
-            data
+            data,
         )
 
         return result
@@ -279,7 +279,7 @@ class ApiService {
     async updateAnimalEntry(
         animalId: string,
         entryId: number,
-        data: UpdateAnimalEntry
+        data: UpdateAnimalEntry,
     ): Promise<{ message: string; updated_rows: number }> {
         const result = await this.put<{
             message: string
@@ -291,7 +291,7 @@ class ApiService {
 
     async getAnimalEntries(animalId: string): Promise<AnimalEntry[]> {
         const result = await this.get<AnimalEntry[]>(
-            ApiEndpoints.animal.getEntries(animalId)
+            ApiEndpoints.animal.getEntries(animalId),
         )
 
         return result
@@ -300,7 +300,7 @@ class ApiService {
     async moveAnimalToShelter(animalId: string, date: Date): Promise<number> {
         const result = await this.post<number>(
             ApiEndpoints.animal.moveToShelter(animalId),
-            { date: date.toISOString() }
+            { date: date.toISOString() },
         )
 
         return result
@@ -329,7 +329,7 @@ class ApiService {
     async addNewDocKind(data: NewDocKind): Promise<DocKind> {
         const result = await this.post<DocKind>(
             ApiEndpoints.doc.createKind,
-            data
+            data,
         )
 
         return result
@@ -353,7 +353,7 @@ class ApiService {
             formData,
             {
                 "Content-Type": "multipart/form-data",
-            }
+            },
         )
 
         return result
@@ -361,11 +361,11 @@ class ApiService {
 
     async updateAnimalImage(
         animalId: string,
-        data: { image_id: number }
+        data: { image_id: number },
     ): Promise<void> {
         const result = await this.put<void>(
             ApiEndpoints.animal.updateImage(animalId),
-            data
+            data,
         )
 
         return result
@@ -378,11 +378,11 @@ class ApiService {
 
     async newAnimalDocument(
         animal_id: number,
-        data: AnimalDocUpload
+        data: AnimalDocUpload,
     ): Promise<AnimalDocument> {
         const result = await this.post<AnimalDocument>(
             ApiEndpoints.animal.newDocument(animal_id),
-            data
+            data,
         )
 
         return animalDocumentSchema.parse(result)
@@ -390,7 +390,7 @@ class ApiService {
 
     async getAnimalDocuments(animal_id: number): Promise<AnimalDocument[]> {
         const result = await this.get<AnimalDocument[]>(
-            ApiEndpoints.animal.documents(animal_id)
+            ApiEndpoints.animal.documents(animal_id),
         )
 
         const parsed = result.map((r) => animalDocumentSchema.parse(r))
@@ -403,14 +403,14 @@ class ApiService {
 
     async getAnimalSizes() {
         const data = await this.get<IntUtilItem[]>(
-            ApiEndpoints.util.getAnimalSizes
+            ApiEndpoints.util.getAnimalSizes,
         )
         return data
     }
 
     async getAnimalFurTypes() {
         const data = await this.get<IntUtilItem[]>(
-            ApiEndpoints.util.getAnimalFurTypes
+            ApiEndpoints.util.getAnimalFurTypes,
         )
 
         return data
@@ -425,7 +425,7 @@ class ApiService {
     async addAnimalFurColor(data: { name: string }): Promise<IntUtilItem> {
         const result = await this.post<IntUtilItem>(
             ApiEndpoints.util.furColor,
-            data
+            data,
         )
 
         return result
@@ -434,18 +434,18 @@ class ApiService {
     async newAdopter(data: NewAdopter): Promise<Adopter> {
         const result = await this.post<Adopter>(
             ApiEndpoints.adopter.create,
-            data
+            data,
         )
 
         return result
     }
 
     async searchAdopter(
-        query: AdopterSearch
+        query: AdopterSearch,
     ): Promise<PaginatedAdopterSearchResult> {
         const result = await this.get<PaginatedAdopterSearchResult>(
             ApiEndpoints.adopter.search,
-            query
+            query,
         )
 
         return result
@@ -454,7 +454,7 @@ class ApiService {
     async newAnimalAdoption(data: NewAnimalAdoption) {
         const result = await this.post<number>(
             ApiEndpoints.adoption.create,
-            data
+            data,
         )
         return result
     }
@@ -462,7 +462,7 @@ class ApiService {
     async animalExit(data: AnimalExit) {
         const result = await this.post<void>(
             ApiEndpoints.animal.exit(data.animal_id),
-            data
+            data,
         )
 
         return result
@@ -470,7 +470,7 @@ class ApiService {
 
     async checkAnimalExit(id: number): Promise<ExitCheckResult> {
         const result = await this.get<ExitCheckResult>(
-            ApiEndpoints.animal.checkExit(id)
+            ApiEndpoints.animal.checkExit(id),
         )
 
         return exitCheckResultSchema.parse(result)
@@ -485,7 +485,7 @@ class ApiService {
         const filename = result.headers["x-filename"].toString()
         const filetype = result.headers["content-type"]?.toString()
         const url = window.URL.createObjectURL(
-            new Blob([result.data], { type: filetype })
+            new Blob([result.data], { type: filetype }),
         )
         return { url, filename }
     }
@@ -499,7 +499,7 @@ class ApiService {
         const filename = result.headers["x-filename"].toString()
         const filetype = result.headers["content-type"]?.toString()
         const url = window.URL.createObjectURL(
-            new Blob([result.data], { type: filetype })
+            new Blob([result.data], { type: filetype }),
         )
         return { url, filename }
     }
@@ -513,7 +513,7 @@ class ApiService {
         const filename = result.headers["x-filename"].toString()
         const filetype = result.headers["content-type"]?.toString()
         const url = window.URL.createObjectURL(
-            new Blob([result.data], { type: filetype })
+            new Blob([result.data], { type: filetype }),
         )
         return { url, filename }
     }
@@ -521,7 +521,7 @@ class ApiService {
     async searchVet(query: VetSearch): Promise<PaginatedVetSearchResult> {
         const result = await this.get<PaginatedVetSearchResult>(
             ApiEndpoints.vet.search,
-            query
+            query,
         )
 
         return result
@@ -540,7 +540,7 @@ class ApiService {
             data,
             {
                 "Content-Type": "application/x-www-form-urlencoded",
-            }
+            },
         )
 
         localStorage.setItem("accessToken", result.access_token)
@@ -557,7 +557,7 @@ class ApiService {
 
     // User Management methods
     async getAllUsers(
-        query?: PaginationQuery
+        query?: PaginationQuery,
     ): Promise<{ total: number; items: ManagementUser[] }> {
         const result = await this.get<{
             total: number
@@ -574,7 +574,7 @@ class ApiService {
     async updateUser(userId: number, data: UpdateUser): Promise<any> {
         const result = await this.put<any>(
             ApiEndpoints.user.update(userId),
-            data
+            data,
         )
         return result
     }
@@ -586,7 +586,7 @@ class ApiService {
     async changeUserPassword(
         userId: number,
         currentPassword: string,
-        newPassword: string
+        newPassword: string,
     ): Promise<void> {
         await this.post(ApiEndpoints.user.changePassword(userId), {
             current_password: currentPassword,
@@ -596,7 +596,7 @@ class ApiService {
 
     async changeUserPasswordAsAdmin(
         userId: number,
-        newPassword: string
+        newPassword: string,
     ): Promise<void> {
         await this.post(ApiEndpoints.user.changePassword(userId), {
             new_password: newPassword,
@@ -610,7 +610,7 @@ class ApiService {
 
     async getCurrentUser(): Promise<ManagementUser> {
         const result = await this.get<ManagementUser>(
-            ApiEndpoints.user.getCurrentUser
+            ApiEndpoints.user.getCurrentUser,
         )
         return result
     }
@@ -622,7 +622,7 @@ class ApiService {
 
     async getPermissions(): Promise<Permission[]> {
         const result = await this.get<Permission[]>(
-            ApiEndpoints.user.permissions
+            ApiEndpoints.user.permissions,
         )
         return result.map((permission) => permissionSchema.parse(permission))
     }
