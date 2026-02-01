@@ -142,6 +142,9 @@ class UserService:
 
         return user
 
+    def delete_user(self, user_id: int):
+        self.user_repository.delete(user_id)
+
     def get_user_details(self, email: str) -> UserModel:
         """Get user details by email for login response"""
         user_data = self.user_repository.get_by_email(email)
