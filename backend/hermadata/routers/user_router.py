@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
+from hermadata.constants import Permission
 from hermadata.initializations import (
     get_current_user,
     get_user_repository,
@@ -160,3 +161,28 @@ def change_password(
         )
 
     return {"message": "Password changed successfully"}
+
+
+@router.delete("/{user_id}")
+def delete_user(
+    user_id: int,
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    service: Annotated[UserService, Depends(get_user_service)],
+):
+    """Delete a user (soft delete). Requires MANAGE_USERS permission."""
+    if not current_user.is_superuser:
+        if Permission.MANAGE_USERS not in current_user.permissions:
+            raise HTTPException(
+                status_code=403,
+                detail="Not enough permissions",
+            )
+
+    # Prevent deleting yourself
+    if user_id == current_user.user_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete yourself",
+        )
+
+    service.delete_user(user_id)
+    return True

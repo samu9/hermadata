@@ -89,14 +89,16 @@ class SQLUserRepository(SQLBaseRepository):
 
     def get_for_login(self, email: EmailStr) -> str:
         return self.session.execute(
-            select(User.hashed_password).where(User.email == email)
+            select(User.hashed_password).where(
+                User.email == email, User.deleted_at.is_(None)
+            )
         ).scalar_one()
 
     def get_by_email(self, email: EmailStr) -> UserModel:
         result = self.session.execute(
             select(User, UserRole.name.label("role_name"))
             .outerjoin(UserRole, User.role_id == UserRole.id)
-            .where(User.email == email)
+            .where(User.email == email, User.deleted_at.is_(None))
         ).first()
 
         if result is None:
@@ -126,7 +128,7 @@ class SQLUserRepository(SQLBaseRepository):
         result = self.session.execute(
             select(User, UserRole.name.label("role_name"))
             .outerjoin(UserRole, User.role_id == UserRole.id)
-            .where(User.id == id)
+            .where(User.id == id, User.deleted_at.is_(None))
         ).first()
 
         if result is None:
@@ -174,7 +176,7 @@ class SQLUserRepository(SQLBaseRepository):
         self.session.execute(
             update(User)
             .values(data.model_dump(exclude_none=True))
-            .where(User.id == user_id)
+            .where(User.id == user_id, User.deleted_at.is_(None))
         )
 
     def update_password(self, user_id: int, hashed_password: str):
@@ -182,18 +184,32 @@ class SQLUserRepository(SQLBaseRepository):
         self.session.execute(
             update(User)
             .values(hashed_password=hashed_password)
+            .where(User.id == user_id, User.deleted_at.is_(None))
+        )
+
+    def delete(self, user_id: int):
+        """Soft delete user by setting deleted_at"""
+        self.session.execute(
+            update(User)
+            .values(deleted_at=datetime.now())
             .where(User.id == user_id)
         )
 
     def get_all(self, query: UserListQuery) -> PaginationResult[UserModel]:
         """Get all users with pagination"""
         # Base query for users with role information
-        base_query = select(User, UserRole.name.label("role_name")).outerjoin(
-            UserRole, User.role_id == UserRole.id
+        base_query = (
+            select(User, UserRole.name.label("role_name"))
+            .outerjoin(UserRole, User.role_id == UserRole.id)
+            .where(User.deleted_at.is_(None))
         )
 
         # Count total users
-        count_query = select(func.count()).select_from(User)
+        count_query = (
+            select(func.count())
+            .select_from(User)
+            .where(User.deleted_at.is_(None))
+        )
         total = self.session.execute(count_query).scalar_one()
 
         # Apply pagination
