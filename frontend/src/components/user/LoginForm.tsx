@@ -100,7 +100,7 @@ const LoginForm = () => {
                                 type="submit"
                                 disabled={!isValid || loginMutation.isLoading}
                                 loading={loginMutation.isLoading}
-                                className="w-full !bg-primary-600 !border-primary-600 hover:!bg-primary-700 py-3 font-semibold text-lg shadow-md transition-all duration-200"
+                                className="w-full !bg-primary-600 !border-primary-600 hover:!bg-primary-700 py-3 font-semibold text-lg flex items-center justify-center shadow-md transition-all duration-200"
                                 size="large"
                             >
                                 {loginMutation.isLoading ? (

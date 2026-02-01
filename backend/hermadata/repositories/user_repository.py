@@ -17,6 +17,7 @@ class CreateUserModel(BaseModel):
     role_name: str | None = None
     name: str | None = None
     surname: str | None = None
+    city_codes: list[str] | None = None
     is_active: bool = True
 
 
@@ -24,6 +25,7 @@ class UpdateUserModel(BaseModel):
     name: str | None = None
     surname: str | None = None
     email: EmailStr | None = None
+    city_codes: list[str] | None = None
     is_active: bool | None = None
     is_superuser: bool | None = None
 
@@ -36,6 +38,7 @@ class UserModel(BaseModel):
     is_active: bool
     is_superuser: bool
     role_name: str | None = None
+    city_codes: list[str] | None = None
     created_at: datetime
     updated_at: datetime | None = None
     permissions: list[Permission] = []
@@ -112,6 +115,7 @@ class SQLUserRepository(SQLBaseRepository):
             email=user_data.email,
             permissions=permissions,
             role_name=role_name,
+            city_codes=user_data.city_codes,
             is_active=user_data.is_active,
             is_superuser=user_data.is_superuser,
             created_at=user_data.created_at,
@@ -133,6 +137,8 @@ class SQLUserRepository(SQLBaseRepository):
         user, role_name = result
         # Add role_name as attribute to user object
         user.role_name = role_name
+        # user.city_codes is already populated by SQLAlchemy
+        # because it's in the model
 
         # Get permissions for this user's role
         permissions = self.get_user_permissions(user.role_id)
@@ -236,6 +242,7 @@ class SQLUserRepository(SQLBaseRepository):
                 email=user.email,
                 permissions=permissions,
                 role_name=role_name,
+                city_codes=user.city_codes,
                 is_active=user.is_active,
                 is_superuser=user.is_superuser,
                 created_at=user.created_at,

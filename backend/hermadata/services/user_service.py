@@ -23,6 +23,7 @@ class RegisterUserModel(BaseModel):
     role_name: str | None = None
     name: str | None = None
     surname: str | None = None
+    city_codes: list[str] | None = None
     is_active: bool = True
 
 
@@ -37,6 +38,7 @@ class TokenData(BaseModel):
     is_active: bool = False
     is_superuser: bool = False
     role: str | None = None
+    city_codes: list[str] | None = None
     permissions: list[str] = []
 
 
@@ -71,6 +73,7 @@ class UserService:
                 hashed_password=hashed_password,
                 name=data.name,
                 surname=data.surname,
+                city_codes=data.city_codes,
                 is_active=data.is_active,
             )
         )
@@ -82,6 +85,7 @@ class UserService:
             is_superuser=False,
             name=data.name,
             surname=data.surname,
+            city_codes=data.city_codes,
             created_at=datetime.now(timezone.utc),
         )
         return user
@@ -128,6 +132,7 @@ class UserService:
             is_superuser=user_data.is_superuser,
             is_active=user_data.is_active,
             role=user_data.role_name,
+            city_codes=user_data.city_codes,
             permissions=user_data.permissions,
         )
 

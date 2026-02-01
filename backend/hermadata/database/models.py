@@ -302,6 +302,8 @@ class User(Base):
         ForeignKey("user_roles.id"), nullable=True
     )
 
+    city_codes: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )
