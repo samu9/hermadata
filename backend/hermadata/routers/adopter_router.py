@@ -2,14 +2,20 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from hermadata.initializations import (get_adopter_repository,
-                                       get_adopter_service)
+from hermadata.initializations import (
+    get_adopter_repository,
+    get_adopter_service,
+)
 from hermadata.models import PaginationResult
-from hermadata.repositories.adopter_repository import (AdopterModel,
-                                                       AdopterSearchQuery,
-                                                       SQLAdopterRepository)
-from hermadata.services.adopter_service import (AdopterService,
-                                                NewAdopterRequest)
+from hermadata.repositories.adopter_repository import (
+    AdopterModel,
+    AdopterSearchQuery,
+    SQLAdopterRepository,
+)
+from hermadata.services.adopter_service import (
+    AdopterService,
+    NewAdopterRequest,
+)
 
 router = APIRouter(prefix="/adopter")
 

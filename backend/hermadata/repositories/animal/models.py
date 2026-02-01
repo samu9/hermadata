@@ -19,6 +19,7 @@ from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 from hermadata.constants import EntryType, ExitType, RecurrenceType
 from hermadata.database.models import Animal, AnimalEntry
 from hermadata.models import PaginationQuery, Sex
+from hermadata.time_utils import get_today
 
 rescue_city_code_PATTERN = r"[A-Z]\d{3}"
 
@@ -129,7 +130,7 @@ class AnimalSearchModel(PaginationQuery):
             lambda v: (
                 or_(
                     AnimalEntry.exit_date.is_(None),
-                    AnimalEntry.exit_date > datetime.now().date(),
+                    AnimalEntry.exit_date > get_today(),
                 )
                 if v
                 else None
@@ -141,7 +142,7 @@ class AnimalSearchModel(PaginationQuery):
             lambda v: (
                 and_(
                     AnimalEntry.exit_date.is_not(None),
-                    AnimalEntry.exit_date <= datetime.now().date(),
+                    AnimalEntry.exit_date <= get_today(),
                 )
                 if v
                 else None

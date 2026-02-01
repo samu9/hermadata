@@ -36,6 +36,7 @@ class AuthSettings(BaseSettings):
 class AppSettings(BaseSettings):
     preferred_provinces: list[str] | None = None
     preferred_cities: list[str] | None = None
+    timezone: str = "UTC"
 
 
 class Settings(BaseSettings):
