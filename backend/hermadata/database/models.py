@@ -125,6 +125,13 @@ class FurColor(Base):
     )
 
 
+class AnimalEventType(Base):
+    __tablename__ = "animal_event_type"
+    code: Mapped[str] = mapped_column(String(10), primary_key=True)
+    description: Mapped[str] = mapped_column(String(255))
+    category: Mapped[str] = mapped_column(String(50))
+
+
 class AnimalLog(Base):
     __tablename__ = "animal_log"
 
@@ -136,7 +143,8 @@ class AnimalLog(Base):
         ForeignKey("users.id"), nullable=True
     )
 
-    event: Mapped[str] = mapped_column(String(10))
+    event: Mapped[str] = mapped_column(ForeignKey("animal_event_type.code"))
+    event_type: Mapped[AnimalEventType] = relationship()
 
     data: Mapped[dict] = mapped_column(JSON, nullable=True)
 
