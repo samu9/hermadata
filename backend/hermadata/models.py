@@ -46,6 +46,12 @@ class PaginationResult(BaseModel, Generic[T]):
     items: list[T] = []
 
 
+class AnimalEventTypeModel(BaseModel):
+    code: str
+    description: str
+    category: str
+
+
 class UtilElement(BaseModel):
     id: str | int
     label: str
