@@ -254,3 +254,15 @@ export const exitCheckResultSchema = z.object({
 })
 export type ExitCheckResult = z.infer<typeof exitCheckResultSchema>
 
+
+export const animalLogSchema = z.object({
+    id: z.number(),
+    animal_id: z.number(),
+    event: z.string(),
+    data: z.record(z.any()).nullable(),
+    user_id: z.number().nullable(),
+    created_at: z.string(), // DateTime string
+})
+
+export type AnimalLog = z.infer<typeof animalLogSchema>
+
