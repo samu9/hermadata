@@ -51,6 +51,7 @@ from hermadata.repositories.animal.models import (
     AnimalExitsItem,
     AnimalExitsQuery,
     AnimalGetQuery,
+    AnimalLogModel,
     AnimalModel,
     AnimalQueryModel,
     AnimalReportResult,
@@ -63,6 +64,7 @@ from hermadata.repositories.animal.models import (
     MedicalActivityModel,
     NewAdoption,
     NewAnimalDocument,
+    NewAnimalLogModel,
     NewAnimalModel,
     NewEntryModel,
     UpdateAnimalEntryModel,
@@ -136,6 +138,34 @@ class SQLAnimalRepository(SQLBaseRepository):
         text("year"), Animal.birth_date, func.current_date()
     )
 
+    def add_log(
+        self, animal_id: int, data: NewAnimalLogModel
+    ) -> AnimalLogModel:
+        """Add a manual log entry for an animal"""
+        log = AnimalLog(
+            animal_id=animal_id,
+            event=data.event,
+            data=data.data,
+            user_id=data.user_id,
+        )
+        self.session.add(log)
+        self.session.flush()
+        return AnimalLogModel.model_validate(log)
+
+    def get_logs(self, animal_id: int) -> list[AnimalLogModel]:
+        """Get all logs for an animal"""
+        logs = (
+            self.session.execute(
+                select(AnimalLog)
+                .where(AnimalLog.animal_id == animal_id)
+                .order_by(AnimalLog.created_at.desc())
+            )
+            .scalars()
+            .all()
+        )
+
+        return [AnimalLogModel.model_validate(log) for log in logs]
+
     def save(self, model: AnimalModel):
         result = self.session.execute(
             insert(Animal).values(
@@ -146,7 +176,9 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.flush()
         return result
 
-    def new_animal(self, data: NewAnimalModel) -> str:
+    def new_animal(
+        self, data: NewAnimalModel, user_id: int | None = None
+    ) -> str:
         code = self.generate_code(
             race_id=data.race_id,
             rescue_city_code=data.rescue_city_code,
@@ -176,6 +208,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal=animal,
             event=AnimalEvent.create.value,
             data=data.model_dump(),
+            user_id=user_id,
         )
         self.session.add(animal)
         self.session.add(animal_entry)
@@ -183,7 +216,9 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.flush()
         return code
 
-    def add_entry(self, animal_id: int, data: NewEntryModel) -> int:
+    def add_entry(
+        self, animal_id: int, data: NewEntryModel, user_id: int | None = None
+    ) -> int:
         animal = self.session.execute(
             select(Animal).where(
                 Animal.id == animal_id, Animal.deleted_at.is_(None)
@@ -244,6 +279,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_id=animal_id,
             event=AnimalEvent.new_entry.value,
             data=data.model_dump(),
+            user_id=user_id,
         )
         self.session.add(event_log)
         self.session.flush()
@@ -454,7 +490,12 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return code
 
-    def complete_entry(self, animal_id: str, data: CompleteEntryModel) -> int:
+    def complete_entry(
+        self,
+        animal_id: str,
+        data: CompleteEntryModel,
+        user_id: int | None = None,
+    ) -> int:
         entry_id = self.session.execute(
             select(AnimalEntry.id)
             .join(Animal, Animal.id == AnimalEntry.animal_id)
@@ -479,6 +520,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_id=animal_id,
             event=AnimalEvent.entry_complete.value,
             data=json.loads(data.model_dump_json()),
+            user_id=user_id,
         )
         self.session.add(event_log)
         self.session.flush()
@@ -612,7 +654,9 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return result.rowcount
 
-    def update(self, id: str, updates: UpdateAnimalModel) -> int:
+    def update(
+        self, id: str, updates: UpdateAnimalModel, user_id: int | None = None
+    ) -> int:
         """Return updated rowcound"""
         values = updates.model_dump(exclude_none=True)
         if updates.chip_code:
@@ -626,6 +670,16 @@ class SQLAnimalRepository(SQLBaseRepository):
                 logger.info("chip code already set for animal id %s", id)
                 updates.chip_code = None
             values["chip_code_set"] = True
+
+            # Log chip assignment separately if it's being set
+            if updates.chip_code and not is_set:
+                chip_log = AnimalLog(
+                    animal_id=id,
+                    event=AnimalEvent.chip_assigned.value,
+                    data={"chip_code": updates.chip_code},
+                    user_id=user_id,
+                )
+                self.session.add(chip_log)
 
         try:
             result = self.session.execute(
@@ -651,12 +705,15 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_id=id,
             event=AnimalEvent.data_update.value,
             data=json.loads(updates.model_dump_json()),
+            user_id=user_id,
         )
         self.session.add(event_log)
         self.session.flush()
         return result.rowcount
 
-    def move_to_shelter(self, animal_id: int, date: datetime) -> int:
+    def move_to_shelter(
+        self, animal_id: int, date: datetime, user_id: int | None = None
+    ) -> int:
         """
         Set in_shelter_from to specified datetime for the specified animal
         """
@@ -681,6 +738,17 @@ class SQLAnimalRepository(SQLBaseRepository):
             .where(Animal.id == animal_id, Animal.deleted_at.is_(None))
             .values(in_shelter_from=date)
         )
+
+        if result.rowcount > 0:
+            self.session.add(
+                AnimalLog(
+                    animal_id=animal_id,
+                    event=AnimalEvent.moved_to_shelter.value,
+                    data={"date": date.isoformat()},
+                    user_id=user_id,
+                )
+            )
+
         self.session.flush()
         return result.rowcount
 
@@ -786,7 +854,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             missing_fields=missing_fields,
         )
 
-    def exit(self, animal_id: int, data: AnimalExit):
+    def exit(
+        self, animal_id: int, data: AnimalExit, user_id: int | None = None
+    ):
         check = self.session.execute(
             select(
                 Animal.race_id,
@@ -834,7 +904,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_id=animal_id,
             data=json.loads(data.model_dump_json()),
             event=AnimalEvent.exit_.value,
-            # user_id=user_id #TODO: add user
+            user_id=user_id,
         )
         self.session.add(animal_log)
         self.session.execute(

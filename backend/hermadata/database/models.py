@@ -132,13 +132,13 @@ class AnimalLog(Base):
     animal: Mapped[Animal] = relationship(back_populates="logs")
 
     animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
 
     event: Mapped[str] = mapped_column(String(10))
 
     data: Mapped[dict] = mapped_column(JSON, nullable=True)
-
-    # user_id: Mapped[int] = mapped_column(ForeignKey("users.id"),
-    #  nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
