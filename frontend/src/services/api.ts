@@ -29,6 +29,8 @@ import {
     animalSchema,
     exitCheckResultSchema,
     paginatedAnimalSearchResultSchema,
+    AnimalLog,
+    animalLogSchema,
 } from "../models/animal.schema"
 import { ApiError } from "../models/api.schema"
 import { Breed, NewBreed } from "../models/breed.schema"
@@ -259,6 +261,14 @@ class ApiService {
         )
 
         return result
+    }
+
+    async getAnimalLogs(id: string | number): Promise<AnimalLog[]> {
+        const result = await this.get<AnimalLog[]>(
+            ApiEndpoints.animal.getLogs(id.toString()),
+        )
+
+        return result.map((d) => animalLogSchema.parse(d))
     }
 
     async deleteAnimal(id: number): Promise<void> {
