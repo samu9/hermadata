@@ -1,0 +1,23 @@
+code,description,category
+CR,Creazione animale,automatic
+EX,Uscita,automatic
+NE,Nuovo ingresso,automatic
+EC,Completamento ingresso,automatic
+DU,Aggiornamento dati,automatic
+CA,Assegnazione chip,automatic
+AC,Adozione creata,automatic
+AD,Adozione completata,automatic
+AR,Rientro da adozione,automatic
+DU_DOC,Documento caricato,automatic
+DD_DOC,Documento eliminato,automatic
+HR,Cartella sanitaria aggiornata,automatic
+VS,Servizio veterinario aggiunto,automatic
+MS,Spostamento in rifugio,automatic
+SC,Cambio di fase,automatic
+MN,Nota manuale,manual
+ME,Evento manuale,manual
+BN,Nota comportamentale,manual
+FN,Nota alimentazione,manual
+TN,Nota addestramento,manual
+SN,Socializzazione,manual
+EM,Emergenza,manual
