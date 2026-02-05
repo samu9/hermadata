@@ -21,6 +21,23 @@ from hermadata.database.models import Animal, AnimalEntry
 from hermadata.models import PaginationQuery, Sex
 from hermadata.time_utils import get_today
 
+
+class NewAnimalLogModel(BaseModel):
+    event: str
+    data: dict[str, Any]
+    user_id: int | None = None
+
+
+class AnimalLogModel(BaseModel):
+    id: int
+    animal_id: int
+    event: str
+    data: dict[str, Any] | None
+    user_id: int | None
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
 rescue_city_code_PATTERN = r"[A-Z]\d{3}"
 
 T = TypeVar("T")
