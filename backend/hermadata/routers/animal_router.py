@@ -29,6 +29,7 @@ from hermadata.repositories.animal.models import (
     AnimalEntryModel,
     AnimalExit,
     AnimalExitsQuery,
+    AnimalLogModel,
     AnimalModel,
     AnimalQueryModel,
     AnimalSearchModel,
@@ -37,6 +38,7 @@ from hermadata.repositories.animal.models import (
     ExitCheckResult,
     MoveToShelterRequest,
     NewAnimalDocument,
+    NewAnimalLogModel,
     NewAnimalModel,
     NewEntryModel,
     UpdateAnimalEntryModel,
@@ -57,7 +59,7 @@ def new_animal_entry(
         TokenData, Depends(require_permission(Permission.CREATE_ANIMAL))
     ],
 ) -> str:
-    animal_code = repo.new_animal(data)
+    animal_code = repo.new_animal(data, user_id=current_user.user_id)
 
     return animal_code
 
@@ -185,7 +187,7 @@ def update_animal(
     ],
 ) -> int | ApiError:
     try:
-        result = service.update(animal_id, data)
+        result = service.update(animal_id, data, user_id=current_user.user_id)
     except ExistingChipCodeException as e:
         return ApiError(
             code=ApiErrorCode.existing_chip_code,
@@ -202,6 +204,38 @@ def delete_animal(
 ):
     service.soft_delete(animal_id)
     return Response(content=None, status_code=204)
+
+
+@router.get("/{animal_id}/logs", response_model=list[AnimalLogModel])
+def get_animal_logs(
+    animal_id: int,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+):
+    if not check_permission(current_user, Permission.EDIT_ANIMAL):
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to view animal logs",
+        )
+    return service.get_logs(animal_id)
+
+
+@router.post("/{animal_id}/logs", response_model=AnimalLogModel)
+def add_animal_log(
+    animal_id: int,
+    data: NewAnimalLogModel,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+):
+    if not check_permission(current_user, Permission.EDIT_ANIMAL):
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to add animal logs",
+        )
+
+    # Force the user_id to be the current user
+    data.user_id = current_user.user_id
+    return service.add_log(animal_id, data)
 
 
 @router.get("/{animal_id}/document", response_model=list[AnimalDocumentModel])
@@ -248,7 +282,7 @@ def animal_exit(
         TokenData, Depends(require_permission(Permission.MAKE_ADOPTION))
     ],
 ):
-    service.exit(animal_id, data)
+    service.exit(animal_id, data, user_id=current_user.user_id)
 
     return True
 
@@ -267,8 +301,9 @@ def complete_entry(
     animal_id: int,
     data: CompleteEntryModel,
     service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
-    service.complete_entry(animal_id, data)
+    service.complete_entry(animal_id, data, user_id=current_user.user_id)
 
     return True
 
@@ -278,8 +313,9 @@ def add_entry(
     animal_id: int,
     data: NewEntryModel,
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
-    result = repo.add_entry(animal_id, data)
+    result = repo.add_entry(animal_id, data, user_id=current_user.user_id)
 
     return result
 
@@ -351,7 +387,9 @@ def move_to_shelter(
                 status_code=400, detail="La data non può essere nel futuro"
             )
 
-        updated_rows = repo.move_to_shelter(animal_id, data.date)
+        updated_rows = repo.move_to_shelter(
+            animal_id, data.date, user_id=current_user.user_id
+        )
         if updated_rows == 0:
             raise HTTPException(
                 status_code=404, detail=f"Animal {animal_id} not found"
