@@ -134,11 +134,16 @@ ENTRY_RESULT_LABELS = {
 
 
 class AnimalEvent(Enum):
-    create = "CR"
-    exit_ = "EX"
-    new_entry = "NE"
-    entry_complete = "EC"
-    data_update = "DU"
+    """Event types for animal activity logging"""
+
+    # Automatic events
+    create = "CR"  # Animal creation
+    exit_ = "EX"  # Animal exit (adoption, death, etc.)
+    new_entry = "NE"  # New animal entry (re-entry)
+    entry_complete = "EC"  # Entry completion with entry date
+    data_update = "DU"  # Animal data update
+    chip_assigned = "CA"  # Chip code assignment
+    moved_to_shelter = "MS"  # Moved from hospital to shelter
 
 
 class ApiErrorCode(Enum):
