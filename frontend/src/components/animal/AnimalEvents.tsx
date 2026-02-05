@@ -1,7 +1,6 @@
 import { useParams } from "react-router-dom"
 import { useQuery } from "react-query"
 import { apiService } from "../../main"
-import { ANIMAL_EVENT_LABELS } from "../../constants"
 import { format } from "date-fns"
 import { it } from "date-fns/locale"
 import Loader from "../Loader"
@@ -44,7 +43,7 @@ const AnimalEvents = () => {
                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2">
                                     <div>
                                         <h3 className="text-lg font-semibold text-surface-900">
-                                            {ANIMAL_EVENT_LABELS[event.event] ||
+                                            {event.event_description ||
                                                 event.event}
                                         </h3>
                                         <div className="text-sm text-surface-500 mt-1">
