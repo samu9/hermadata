@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from sqlalchemy import select
 
 from hermadata.constants import (
     ANIMAL_STAGE_LABELS,
@@ -12,11 +13,16 @@ from hermadata.constants import (
     HEALTHCARE_STAGE_ENTRY_TYPES,
     SIZE_LABELS,
 )
+from hermadata.database.models import AnimalEventType
 from hermadata.initializations import (
     get_animal_repository,
     get_city_repository,
 )
-from hermadata.models import EntryTypeElement, UtilElement
+from hermadata.models import (
+    AnimalEventTypeModel,
+    EntryTypeElement,
+    UtilElement,
+)
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import FurColorName
 from hermadata.repositories.city_repository import (
@@ -26,6 +32,15 @@ from hermadata.repositories.city_repository import (
 )
 
 router = APIRouter(prefix="/util")
+
+
+@router.get("/events", response_model=list[AnimalEventTypeModel])
+def get_animal_event_types(
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+):
+    stmt = select(AnimalEventType)
+    result = repo.session.execute(stmt).scalars().all()
+    return result
 
 
 @router.get("/province", response_model=list[ProvinciaModel])
