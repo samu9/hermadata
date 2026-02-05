@@ -15,8 +15,10 @@ from hermadata.repositories.animal.models import (
     AnimalEntriesQuery,
     AnimalExit,
     AnimalExitsQuery,
+    AnimalLogModel,
     CompleteEntryModel,
     NewAnimalDocument,
+    NewAnimalLogModel,
     UpdateAnimalModel,
 )
 from hermadata.repositories.document_repository import (
@@ -52,19 +54,37 @@ class AnimalService:
             if d.code in DocKindCode:
                 self.document_kind_ids[DocKindCode(d.code)] = d.id
 
-    def update(self, animal_id: int, data: UpdateAnimalModel):
-        affected = self.animal_repository.update(animal_id, data)
+    def update(
+        self,
+        animal_id: int,
+        data: UpdateAnimalModel,
+        user_id: int | None = None,
+    ):
+        affected = self.animal_repository.update(animal_id, data, user_id)
 
         if not affected:
             raise Exception(f"no animals affected by update, {animal_id=}")
 
         return affected
 
+    def add_log(
+        self, animal_id: int, data: NewAnimalLogModel
+    ) -> AnimalLogModel:
+        return self.animal_repository.add_log(animal_id, data)
+
+    def get_logs(self, animal_id: int) -> list[AnimalLogModel]:
+        return self.animal_repository.get_logs(animal_id)
+
     def soft_delete(self, animal_id: int):
         self.animal_repository.soft_delete_animal(animal_id)
 
-    def complete_entry(self, animal_id: int, data: CompleteEntryModel):
-        self.animal_repository.complete_entry(animal_id, data)
+    def complete_entry(
+        self,
+        animal_id: int,
+        data: CompleteEntryModel,
+        user_id: int | None = None,
+    ):
+        self.animal_repository.complete_entry(animal_id, data, user_id)
 
     def generate_entry_report(self, entry_id: int):
         entry = self.animal_repository.get_animal_entry(entry_id)
@@ -99,8 +119,10 @@ class AnimalService:
             ),
         )
 
-    def exit(self, animal_id: int, data: AnimalExit):
-        self.animal_repository.exit(animal_id, data)
+    def exit(
+        self, animal_id: int, data: AnimalExit, user_id: int | None = None
+    ):
+        self.animal_repository.exit(animal_id, data, user_id)
 
         if data.exit_type in (ExitType.adoption, ExitType.custody):
             self.generate_adoption_report(animal_id)
