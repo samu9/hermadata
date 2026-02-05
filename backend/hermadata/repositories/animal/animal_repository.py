@@ -18,6 +18,7 @@ from hermadata.database.models import (
     Animal,
     AnimalDocument,
     AnimalEntry,
+    AnimalEventType,
     AnimalLog,
     Breed,
     Comune,
@@ -154,17 +155,28 @@ class SQLAnimalRepository(SQLBaseRepository):
 
     def get_logs(self, animal_id: int) -> list[AnimalLogModel]:
         """Get all logs for an animal"""
-        logs = (
+        results = (
             self.session.execute(
-                select(AnimalLog)
+                select(AnimalLog, AnimalEventType.description)
+                .join(AnimalEventType, AnimalLog.event == AnimalEventType.code)
                 .where(AnimalLog.animal_id == animal_id)
                 .order_by(AnimalLog.created_at.desc())
             )
-            .scalars()
             .all()
         )
 
-        return [AnimalLogModel.model_validate(log) for log in logs]
+        return [
+            AnimalLogModel(
+                id=log.id,
+                animal_id=log.animal_id,
+                event=log.event,
+                event_description=description,
+                data=log.data,
+                user_id=log.user_id,
+                created_at=log.created_at,
+            )
+            for log, description in results
+        ]
 
     def save(self, model: AnimalModel):
         result = self.session.execute(
