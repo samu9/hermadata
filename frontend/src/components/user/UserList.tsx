@@ -7,10 +7,11 @@ import { Dialog } from "primereact/dialog"
 import { Toast } from "primereact/toast"
 import { confirmDialog, ConfirmDialog } from "primereact/confirmdialog"
 import { useRef } from "react"
-import { useMutation, useQuery, useQueryClient } from "react-query"
+import { useMutation, useQueries, useQuery, useQueryClient } from "react-query"
 import { apiService } from "../../main"
 import { ComuneSchema } from "../../models/city.schema"
 import { ManagementUser } from "../../models/user.schema"
+import { useProvinceQuery } from "../../queries"
 import EditUserForm from "./EditUserForm"
 
 const UserList: React.FC = () => {
@@ -24,6 +25,17 @@ const UserList: React.FC = () => {
     const usersQuery = useQuery("users", () => apiService.getAllUsers(), {
         staleTime: 30000, // 30 seconds
     })
+
+    const provinceQuery = useProvinceQuery()
+    const provinces = provinceQuery.data || []
+
+    const cityQueries = useQueries(
+        provinces.map((prov) => ({
+            queryKey: ["comuni", prov.id],
+            queryFn: () => apiService.getComuni(prov.id),
+            staleTime: Infinity,
+        })),
+    )
 
     const deleteUserMutation = useMutation(
         (userId: number) => apiService.deleteUser(userId),
@@ -106,6 +118,17 @@ const UserList: React.FC = () => {
     }
 
     const getCityName = (code: string) => {
+        // Search in current queries results
+        for (const query of cityQueries) {
+            if (query.data) {
+                const city = (query.data as ComuneSchema[]).find(
+                    (c) => c.id === code,
+                )
+                if (city) return city.name
+            }
+        }
+
+        // Fallback to cache for pre-loaded data (e.g. from specific usage of useComuniQuery)
         const queries = queryClient.getQueriesData<ComuneSchema[]>(["comuni"])
         for (const [key, data] of queries) {
             const city = data?.find((c) => c.id === code)
