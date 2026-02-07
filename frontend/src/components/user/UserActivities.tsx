@@ -1,222 +1,269 @@
-import React from "react"
-import { DataTable } from "primereact/datatable"
+import React, { useState } from "react"
+import { DataTable, DataTablePageEvent } from "primereact/datatable"
 import { Column } from "primereact/column"
-import { Tag } from "primereact/tag"
 import { Button } from "primereact/button"
+import { Dropdown } from "primereact/dropdown"
+import { Calendar } from "primereact/calendar"
 import { useQuery } from "react-query"
 import { apiService } from "../../main"
-import { UserActivity } from "../../models/user.schema"
+import { Activity, ActivityFilterQuery } from "../../models/activity.schema"
+import { format } from "date-fns"
+import { ManagementUser } from "../../models/user.schema"
 
 const UserActivities: React.FC = () => {
+    // State for pagination
+    const [first, setFirst] = useState(0)
+    const [rows, setRows] = useState(15)
+
+    // State for filters
+    const [selectedUser, setSelectedUser] = useState<ManagementUser | null>(
+        null,
+    )
+    const [dateRange, setDateRange] = useState<(Date | null)[] | null>(null)
+
+    // Prepare query filters
+    const queryFilters: ActivityFilterQuery = {
+        from_index: first,
+        to_index: first + rows - 1,
+        user_id: selectedUser?.id,
+        start_date:
+            dateRange && dateRange[0]
+                ? format(dateRange[0], "yyyy-MM-dd")
+                : undefined,
+        end_date:
+            dateRange && dateRange[1]
+                ? format(dateRange[1], "yyyy-MM-dd")
+                : undefined,
+        sort_field: "created_at",
+        sort_order: -1,
+    }
+
+    // Fetch activities
     const activitiesQuery = useQuery(
-        "user-activities",
-        () => apiService.getUserActivities(),
+        ["user-activities", queryFilters],
+        () => apiService.getUserActivities(queryFilters),
         {
-            staleTime: 30000, // 30 seconds
-            refetchInterval: 60000, // Refresh every minute
-        }
+            keepPreviousData: true,
+            staleTime: 5000,
+        },
     )
 
-    const actionBodyTemplate = (activity: UserActivity) => {
-        const getSeverity = (
-            action: string
-        ): "success" | "info" | "warning" | "danger" => {
-            switch (action.toLowerCase()) {
-                case "login":
-                    return "success"
-                case "logout":
-                    return "info"
-                case "create":
-                    return "info"
-                case "update":
-                    return "warning"
-                case "delete":
-                    return "danger"
-                default:
-                    return "info"
-            }
-        }
+    // Fetch users for filter dropdown
+    const usersQuery = useQuery(
+        "users-list-filter",
+        () => apiService.getAllUsers({ from_index: 0, to_index: 1000 }),
+        {
+            staleTime: 60000,
+        },
+    )
 
-        return (
-            <Tag
-                value={activity.action}
-                severity={getSeverity(activity.action)}
-                className="text-sm"
-            />
-        )
+    const onPage = (event: DataTablePageEvent) => {
+        setFirst(event.first)
+        setRows(event.rows)
     }
 
-    const timestampBodyTemplate = (activity: UserActivity) => {
-        const date = new Date(activity.timestamp)
+    const resetFilters = () => {
+        setSelectedUser(null)
+        setDateRange(null)
+        setFirst(0)
+    }
+
+    // Templates
+    const dateBodyTemplate = (rowData: Activity) => {
+        const date = new Date(rowData.created_at)
         return (
-            <div className="text-sm">
-                <div>{date.toLocaleDateString("it-IT")}</div>
-                <div className="text-gray-500">
-                    {date.toLocaleTimeString("it-IT")}
-                </div>
+            <div className="flex flex-col">
+                <span className="font-medium">
+                    {date.toLocaleDateString("it-IT")}
+                </span>
+                <span className="text-sm text-surface-500">
+                    {date.toLocaleTimeString("it-IT", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    })}
+                </span>
             </div>
         )
     }
 
-    const userBodyTemplate = (activity: UserActivity) => {
+    const userBodyTemplate = (rowData: Activity) => {
         return (
-            <div className="text-sm">
-                <div className="font-medium">{activity.user_name}</div>
-                <div className="text-gray-500">{activity.user_email}</div>
+            <div className="flex flex-col">
+                <span className="font-medium">
+                    {rowData.user_name || "Sistema / Sconosciuto"}
+                </span>
+                <span className="text-xs text-surface-500">
+                    ID: {rowData.user_id || "-"}
+                </span>
             </div>
         )
     }
 
-    const descriptionBodyTemplate = (activity: UserActivity) => {
+    const descriptionBodyTemplate = (rowData: Activity) => {
         return (
-            <div className="text-sm max-w-md">
-                <div className="truncate" title={activity.description}>
-                    {activity.description}
-                </div>
-                {activity.ip_address && (
-                    <div className="text-gray-500 text-xs mt-1">
-                        IP: {activity.ip_address}
+            <div className="flex flex-col gap-1">
+                <span className="font-medium">
+                    {rowData.event_description || "Attività generica"}
+                </span>
+                {rowData.data && (
+                    <div className="text-xs bg-surface-50 p-1 rounded border border-surface-200 font-mono text-surface-600 truncate max-w-xs">
+                        {JSON.stringify(rowData.data)}
                     </div>
                 )}
             </div>
         )
     }
 
-    if (activitiesQuery.isLoading) {
+    const dataBodyTemplate = (rowData: Activity) => {
+        if (!rowData.data) return <span className="text-surface-400">-</span>
         return (
-            <div className="flex justify-center items-center p-8">
-                <div className="text-center">
-                    <i className="pi pi-spin pi-spinner text-2xl text-gray-400 mb-2"></i>
-                    <div className="text-gray-600">Caricamento attività...</div>
-                </div>
-            </div>
-        )
-    }
-
-    if (activitiesQuery.error) {
-        return (
-            <div className="text-center p-8">
-                <div className="text-red-600 mb-2">
-                    <i className="pi pi-exclamation-triangle text-2xl"></i>
-                </div>
-                <div className="text-red-600">
-                    Errore nel caricamento delle attività
-                </div>
-                <Button
-                    label="Riprova"
-                    className="p-button-outlined mt-3"
-                    onClick={() => activitiesQuery.refetch()}
-                />
-            </div>
+            <Button
+                icon="pi pi-code"
+                className="p-button-text p-button-sm !w-8 !h-8"
+                tooltip={JSON.stringify(rowData.data, null, 2)}
+                tooltipOptions={{ showDelay: 300, className: "max-w-md" }}
+                onClick={() => {
+                    // Could open a dialog with full JSON
+                    console.log(rowData.data)
+                }}
+            />
         )
     }
 
     return (
-        <div className="bg-white">
-            <div className="mb-6 flex justify-between items-center">
-                <div>
-                    <h2 className="text-xl font-semibold text-surface-900">
-                        Attività Recenti
-                    </h2>
-                    <p className="text-surface-600 text-sm mt-1">
-                        Monitora le azioni degli utenti nel sistema
-                    </p>
+        <div className="space-y-4">
+            {/* Filters Section */}
+            <div className="flex flex-wrap items-end gap-4 p-4 bg-surface-50 rounded-lg border border-surface-200">
+                <div className="flex flex-col gap-2 flex-grow md:flex-grow-0 md:w-64">
+                    <label
+                        htmlFor="user-filter"
+                        className="text-sm font-medium text-surface-700"
+                    >
+                        Utente
+                    </label>
+                    <Dropdown
+                        id="user-filter"
+                        value={selectedUser}
+                        onChange={(e) => {
+                            setSelectedUser(e.value)
+                            setFirst(0)
+                        }}
+                        options={usersQuery.data?.items || []}
+                        optionLabel="email"
+                        itemTemplate={(option: ManagementUser) => (
+                            <div>
+                                {option.name && option.surname
+                                    ? `${option.name} ${option.surname} (${option.email})`
+                                    : option.email}
+                            </div>
+                        )}
+                        valueTemplate={(option: ManagementUser) => {
+                            if (!option) return "Tutti gli utenti"
+                            return option.name && option.surname
+                                ? `${option.name} ${option.surname}`
+                                : option.email
+                        }}
+                        placeholder="Seleziona un utente"
+                        className="w-full"
+                        showClear
+                        filter
+                    />
                 </div>
-                <div className="flex gap-2">
+
+                <div className="flex flex-col gap-2 flex-grow md:flex-grow-0 md:w-64">
+                    <label
+                        htmlFor="date-range"
+                        className="text-sm font-medium text-surface-700"
+                    >
+                        Periodo
+                    </label>
+                    <Calendar
+                        id="date-range"
+                        value={dateRange}
+                        onChange={(e) => {
+                            setDateRange(e.value as (Date | null)[])
+                            setFirst(0)
+                        }}
+                        selectionMode="range"
+                        readOnlyInput
+                        hideOnRangeSelection
+                        showIcon
+                        placeholder="Intervallo date"
+                        dateFormat="dd/mm/yy"
+                        className="w-full"
+                    />
+                </div>
+
+                <div className="flex gap-2 ml-auto">
                     <Button
-                        label="Aggiorna"
+                        label="Reset Filtri"
+                        icon="pi pi-filter-slash"
+                        className="p-button-outlined p-button-secondary"
+                        onClick={resetFilters}
+                        disabled={!selectedUser && !dateRange}
+                    />
+                    <Button
                         icon="pi pi-refresh"
                         className="!bg-white !text-surface-700 !border-surface-300 hover:!bg-surface-50"
                         onClick={() => activitiesQuery.refetch()}
                         loading={activitiesQuery.isRefetching}
+                        tooltip="Aggiorna lista"
                     />
                 </div>
             </div>
 
+            {/* Error Message */}
+            {activitiesQuery.isError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+                    <i className="pi pi-exclamation-triangle mr-2"></i>
+                    Si è verificato un errore nel caricamento delle attività.
+                    Riprova più tardi.
+                </div>
+            )}
+
+            {/* Data Table */}
             <DataTable
-                value={activitiesQuery.data || []}
+                value={activitiesQuery.data?.items || []}
                 paginator
-                rows={15}
-                rowsPerPageOptions={[10, 15, 25, 50]}
-                className="p-datatable-sm"
-                emptyMessage="Nessuna attività trovata"
-                sortField="timestamp"
-                sortOrder={-1}
+                lazy
+                first={first}
+                rows={rows}
+                totalRecords={activitiesQuery.data?.total || 0}
+                onPage={onPage}
+                rowsPerPageOptions={[10, 15, 25, 50, 100]}
                 loading={activitiesQuery.isLoading}
+                emptyMessage="Nessuna attività trovata con i filtri selezionati"
+                className="p-datatable-sm"
                 pt={{
                     headerRow: { className: "bg-surface-50 text-surface-700" },
-                    thead: { className: "bg-surface-50" },
                 }}
             >
                 <Column
-                    field="timestamp"
-                    header="Data/Ora"
-                    body={timestampBodyTemplate}
-                    sortable
-                    style={{ width: "140px" }}
+                    field="created_at"
+                    header="Data"
+                    body={dateBodyTemplate}
+                    style={{ width: "15%" }}
                 />
                 <Column
-                    field="user_name"
                     header="Utente"
                     body={userBodyTemplate}
-                    sortable
-                    style={{ width: "200px" }}
+                    style={{ width: "20%" }}
                 />
                 <Column
-                    field="action"
-                    header="Azione"
-                    body={actionBodyTemplate}
-                    style={{ width: "120px" }}
-                />
-                <Column
-                    field="description"
-                    header="Descrizione"
+                    header="Descrizione Evento"
                     body={descriptionBodyTemplate}
+                    style={{ width: "55%" }}
+                />
+                <Column
+                    header="Dati"
+                    body={dataBodyTemplate}
+                    style={{ width: "10%", textAlign: "center" }}
                 />
             </DataTable>
 
-            {/* Statistics Summary */}
-            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-700">
-                        {activitiesQuery.data?.filter(
-                            (a: UserActivity) =>
-                                a.action.toLowerCase() === "login"
-                        ).length || 0}
-                    </div>
-                    <div className="text-sm text-blue-600">Login oggi</div>
-                </div>
-
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-green-700">
-                        {new Set(
-                            activitiesQuery.data?.map(
-                                (a: UserActivity) => a.user_id
-                            )
-                        ).size || 0}
-                    </div>
-                    <div className="text-sm text-green-600">Utenti attivi</div>
-                </div>
-
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-yellow-700">
-                        {activitiesQuery.data?.filter(
-                            (a: UserActivity) =>
-                                a.action.toLowerCase() === "update"
-                        ).length || 0}
-                    </div>
-                    <div className="text-sm text-yellow-600">Modifiche</div>
-                </div>
-
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-red-700">
-                        {activitiesQuery.data?.filter(
-                            (a: UserActivity) =>
-                                a.action.toLowerCase() === "delete"
-                        ).length || 0}
-                    </div>
-                    <div className="text-sm text-red-600">Eliminazioni</div>
-                </div>
+            {/* Summary Footer */}
+            <div className="text-sm text-surface-500 text-right">
+                Totale attività: {activitiesQuery.data?.total || 0}
             </div>
         </div>
     )
