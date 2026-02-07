@@ -55,7 +55,7 @@ const ApiEndpoints = {
         delete: (id: number) => `/user/${id}`,
         changePassword: (id: number) => `/user/${id}/password`,
         getCurrentUser: "/user/me",
-        activities: "/user/activities",
+        activity: "/user/activity",
         roles: "/user/roles",
         permissions: "/user/permissions",
     },

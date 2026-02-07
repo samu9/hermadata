@@ -1,6 +1,11 @@
 import axios, { AxiosError, AxiosInstance } from "axios"
 import { dateOnly } from "../models/validators"
 import {
+    ActivityFilterQuery,
+    PaginatedActivityResult,
+    paginatedActivitySchema,
+} from "../models/activity.schema"
+import {
     Adopter,
     adopterSchema,
     AdopterSearch,
@@ -622,9 +627,14 @@ class ApiService {
         })
     }
 
-    async getUserActivities(): Promise<any[]> {
-        const result = await this.get<any[]>(ApiEndpoints.user.activities)
-        return result
+    async getUserActivities(
+        query: ActivityFilterQuery
+    ): Promise<PaginatedActivityResult> {
+        const result = await this.get<PaginatedActivityResult>(
+            ApiEndpoints.user.activity,
+            query
+        )
+        return paginatedActivitySchema.parse(result)
     }
 
     async getCurrentUser(): Promise<ManagementUser> {
