@@ -7,12 +7,24 @@ import { Dialog } from "primereact/dialog"
 import { Toast } from "primereact/toast"
 import { confirmDialog, ConfirmDialog } from "primereact/confirmdialog"
 import { useRef } from "react"
-import { useMutation, useQueries, useQuery, useQueryClient } from "react-query"
+import { useMutation, useQuery, useQueryClient } from "react-query"
 import { apiService } from "../../main"
-import { ComuneSchema } from "../../models/city.schema"
 import { ManagementUser } from "../../models/user.schema"
-import { useProvinceQuery } from "../../queries"
+import { useComuneQuery } from "../../queries"
 import EditUserForm from "./EditUserForm"
+
+// Component to fetch and display city name
+const CityNameTag: React.FC<{ code: string }> = ({ code }) => {
+    const { data: city, isLoading } = useComuneQuery(code)
+
+    return (
+        <Tag
+            value={isLoading ? "..." : city?.name || code}
+            className="!text-xs !bg-surface-200 !text-surface-700 !font-mono"
+            title={code}
+        />
+    )
+}
 
 const UserList: React.FC = () => {
     const [selectedUser, setSelectedUser] = useState<ManagementUser | null>(
@@ -25,17 +37,6 @@ const UserList: React.FC = () => {
     const usersQuery = useQuery("users", () => apiService.getAllUsers(), {
         staleTime: 30000, // 30 seconds
     })
-
-    const provinceQuery = useProvinceQuery()
-    const provinces = provinceQuery.data || []
-
-    const cityQueries = useQueries(
-        provinces.map((prov) => ({
-            queryKey: ["comuni", prov.id],
-            queryFn: () => apiService.getComuni(prov.id),
-            staleTime: Infinity,
-        })),
-    )
 
     const deleteUserMutation = useMutation(
         (userId: number) => apiService.deleteUser(userId),
@@ -117,26 +118,6 @@ const UserList: React.FC = () => {
         )
     }
 
-    const getCityName = (code: string) => {
-        // Search in current queries results
-        for (const query of cityQueries) {
-            if (query.data) {
-                const city = (query.data as ComuneSchema[]).find(
-                    (c) => c.id === code,
-                )
-                if (city) return city.name
-            }
-        }
-
-        // Fallback to cache for pre-loaded data (e.g. from specific usage of useComuniQuery)
-        const queries = queryClient.getQueriesData<ComuneSchema[]>(["comuni"])
-        for (const [key, data] of queries) {
-            const city = data?.find((c) => c.id === code)
-            if (city) return city.name
-        }
-        return code
-    }
-
     const cityCodesBodyTemplate = (user: ManagementUser) => {
         if (!user.city_codes || user.city_codes.length === 0) {
             return "-"
@@ -149,20 +130,14 @@ const UserList: React.FC = () => {
         return (
             <div className="flex gap-1 flex-wrap item-center">
                 {displayCodes.map((code) => (
-                    <Tag
-                        key={code}
-                        value={getCityName(code)}
-                        className="!text-xs !bg-surface-200 !text-surface-700 !font-mono"
-                    />
+                    <CityNameTag key={code} code={code} />
                 ))}
                 {remaining > 0 && (
                     <Tag
                         value={`+${remaining}`}
                         className="!text-xs !bg-surface-100 !text-surface-600"
-                        title={user.city_codes
-                            .slice(maxDisplay)
-                            .map(getCityName)
-                            .join(", ")}
+                        // Since we can't easily get names for tooltip without fetching, we show codes or simplified text
+                        title={user.city_codes.slice(maxDisplay).join(", ")}
                     />
                 )}
             </div>
