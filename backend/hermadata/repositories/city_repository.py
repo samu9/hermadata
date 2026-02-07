@@ -65,3 +65,13 @@ class SQLCityRepository(SQLBaseRepository):
             select(Comune).where(Comune.id == city_code)
         ).first()
         return result is not None
+
+    def get_comune(self, code: str) -> ComuneModel | None:
+        result = self.session.execute(
+            select(Comune).where(Comune.id == code)
+        ).scalar_one_or_none()
+
+        if result:
+            return ComuneModel.model_validate(result)
+        return None
+

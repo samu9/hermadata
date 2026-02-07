@@ -60,6 +60,14 @@ def get_comuni(
     return comuni
 
 
+@router.get("/comune/{code}", response_model=ComuneModel | None)
+def get_comune(
+    code: str,
+    repo: Annotated[SQLCityRepository, Depends(get_city_repository)],
+):
+    return repo.get_comune(code)
+
+
 @router.get("/entry-types", response_model=list[EntryTypeElement])
 def get_entry_types():
     result = [

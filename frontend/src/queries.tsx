@@ -54,6 +54,16 @@ export const useComuniQuery = (provincia?: string) =>
         }
     )
 
+export const useComuneQuery = (code?: string) =>
+    useQuery(
+        ["comune", code],
+        () => (code ? apiService.getComune(code) : null),
+        {
+            enabled: !!code,
+            staleTime: Infinity,
+        }
+    )
+
 export const useDocKindsQuery = () =>
     useQuery("doc-kinds", () => apiService.getAllDocKinds(), {
         staleTime: Infinity,

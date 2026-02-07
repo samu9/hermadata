@@ -62,6 +62,7 @@ const ApiEndpoints = {
     util: {
         getProvince: "/util/province",
         getComuni: "/util/comuni",
+        getComune: (code: string) => `/util/comune/${code}`,
         getEntryTypes: "/util/entry-types",
         getExitTypes: "/util/exit-types",
         getAnimalSizes: "/util/animal-size",

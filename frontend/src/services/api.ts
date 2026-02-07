@@ -206,6 +206,14 @@ class ApiService {
         return result
     }
 
+    async getComune(code: string): Promise<ComuneSchema | null> {
+        const data = await this.get<ComuneSchema>(
+            ApiEndpoints.util.getComune(code),
+        )
+        if (!data) return null
+        return comuneSchema.parse(data)
+    }
+
     async getRaces(): Promise<Race[]> {
         const data = await this.get<Race[]>(ApiEndpoints.race.getAll)
 
