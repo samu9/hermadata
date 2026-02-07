@@ -5,11 +5,17 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from hermadata.constants import Permission
 from hermadata.initializations import (
+    get_activity_repository,
     get_current_user,
     get_user_repository,
     get_user_service,
 )
 from hermadata.models import PaginationResult
+from hermadata.repositories.activity_repository import (
+    ActivityFilterQuery,
+    ActivityModel,
+    SQLActivityRepository,
+)
 from hermadata.repositories.user_repository import (
     PermissionModel,
     RoleModel,
@@ -47,6 +53,16 @@ def get_all_users(
 ):
     """Get all users with pagination. Requires authentication."""
     return service.get_all_users(query)
+
+
+@router.get("/activity", response_model=PaginationResult[ActivityModel])
+def get_user_activity(
+    query: Annotated[ActivityFilterQuery, Depends()],
+    repo: Annotated[SQLActivityRepository, Depends(get_activity_repository)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+):
+    """Get animal logs activity for all users."""
+    return repo.get_activities(query)
 
 
 @router.get("/me", response_model=UserModel)

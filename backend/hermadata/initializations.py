@@ -13,6 +13,7 @@ from hermadata.dependancies import (
 )
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.adopter_repository import SQLAdopterRepository
+from hermadata.repositories.activity_repository import SQLActivityRepository
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
@@ -83,6 +84,12 @@ def get_user_repository(
     session: Annotated[Session, Depends(get_db_session)],
 ) -> SQLUserRepository:
     return SQLUserRepository()(session)
+
+
+def get_activity_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> SQLActivityRepository:
+    return SQLActivityRepository()(session)
 
 
 # Keep global instances for non-session dependent objects
