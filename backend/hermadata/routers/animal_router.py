@@ -227,7 +227,7 @@ def add_animal_log(
     service: Annotated[AnimalService, Depends(get_animal_service)],
     current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
-    if not check_permission(current_user, Permission.EDIT_ANIMAL):
+    if not check_permission(current_user, Permission.ADD_ANIMAL_EVENT):
         raise HTTPException(
             status_code=403,
             detail="Insufficient permissions to add animal logs",
