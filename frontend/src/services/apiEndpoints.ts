@@ -68,6 +68,7 @@ const ApiEndpoints = {
         getAnimalSizes: "/util/animal-size",
         getAnimalFurTypes: "/util/animal-fur",
         furColor: "/util/fur-color",
+        events: "/util/events",
     },
     vet: {
         create: "/vet",

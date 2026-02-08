@@ -6,3 +6,11 @@ export const intUtilItemSchema = z.object({
 })
 
 export type IntUtilItem = z.infer<typeof intUtilItemSchema>
+
+export const animalEventTypeSchema = z.object({
+    code: z.string(),
+    description: z.string(),
+    category: z.string(),
+})
+
+export type AnimalEventType = z.infer<typeof animalEventTypeSchema>

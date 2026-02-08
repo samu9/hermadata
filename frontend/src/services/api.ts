@@ -446,6 +446,12 @@ class ApiService {
         return data
     }
 
+    async getAnimalEventTypes(): Promise<AnimalEventType[]> {
+        const data = await this.get<AnimalEventType[]>(ApiEndpoints.util.events)
+
+        return data.map((d) => animalEventTypeSchema.parse(d))
+    }
+
     async addAnimalFurColor(data: { name: string }): Promise<IntUtilItem> {
         const result = await this.post<IntUtilItem>(
             ApiEndpoints.util.furColor,
