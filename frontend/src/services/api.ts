@@ -36,6 +36,7 @@ import {
     paginatedAnimalSearchResultSchema,
     AnimalLog,
     animalLogSchema,
+    NewAnimalLog,
 } from "../models/animal.schema"
 import { ApiError } from "../models/api.schema"
 import { Breed, NewBreed } from "../models/breed.schema"
@@ -49,7 +50,11 @@ import { DocKind, NewDocKind } from "../models/docs.schema"
 import { Race, raceSchema } from "../models/race.schema"
 import { Role, roleSchema } from "../models/role.schema"
 import { Permission, permissionSchema } from "../models/permission.schema"
-import { IntUtilItem } from "../models/util.schema"
+import {
+    AnimalEventType,
+    IntUtilItem,
+    animalEventTypeSchema,
+} from "../models/util.schema"
 import ApiEndpoints from "./apiEndpoints"
 import {
     NewVet,
@@ -282,6 +287,17 @@ class ApiService {
         )
 
         return result.map((d) => animalLogSchema.parse(d))
+    }
+
+    async addAnimalLog(
+        id: string | number,
+        data: NewAnimalLog,
+    ): Promise<AnimalLog> {
+        const result = await this.post<AnimalLog>(
+            ApiEndpoints.animal.getLogs(id.toString()),
+            data,
+        )
+        return animalLogSchema.parse(result)
     }
 
     async deleteAnimal(id: number): Promise<void> {

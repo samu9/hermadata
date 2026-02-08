@@ -267,3 +267,11 @@ export const animalLogSchema = z.object({
 
 export type AnimalLog = z.infer<typeof animalLogSchema>
 
+export const newAnimalLogSchema = z.object({
+    event: z.string(),
+    data: z.record(z.any()),
+    user_id: z.number().nullish(),
+})
+
+export type NewAnimalLog = z.infer<typeof newAnimalLogSchema>
+
