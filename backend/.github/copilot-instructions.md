@@ -69,9 +69,11 @@ Uses `pydantic-settings` with nested config via double underscore delimiter:
 
 ### Setup & Running
 1. **Environment**: `source .venv/bin/activate` (use `uv` for package management)
-2. **Database**: Create `hermadata` MySQL database, run `alembic upgrade head`
-3. **Start server**: `uvicorn hermadata.main:app --log-config=hermadata/log-configs.json`
-4. **Report CSS**: Watch mode for Tailwind CSS in reports: `npx tailwindcss build -i hermadata/reports/static/base.css -o hermadata/reports/static/tailwind.css --watch`
+2. **Scripts**: When running standalone scripts (e.g., in `scripts/`), ALWAYS set `ENV_PATH` to ensure settings are loaded:
+   `ENV_PATH=.dev.env python scripts/my_script.py`
+3. **Database**: Create `hermadata` MySQL database, run `alembic upgrade head`
+4. **Start server**: `uvicorn hermadata.main:app --log-config=hermadata/log-configs.json`
+5. **Report CSS**: Watch mode for Tailwind CSS in reports: `npx tailwindcss build -i hermadata/reports/static/base.css -o hermadata/reports/static/tailwind.css --watch`
 
 ### Testing
 - Test database: `hermadata-test` with separate Alembic config in `tests/alembic.ini`
