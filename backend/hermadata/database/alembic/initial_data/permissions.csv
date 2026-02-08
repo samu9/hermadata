@@ -13,3 +13,4 @@ DS,download_summary,Download summary reports
 SDP,set_document_permission,Set document permissions
 MU,manage_users,Manage user accounts and roles
 BDA,browse_deleted_animals,Browse deleted animal records
+AAE,add_animal_event,Aggiungi evento animal
