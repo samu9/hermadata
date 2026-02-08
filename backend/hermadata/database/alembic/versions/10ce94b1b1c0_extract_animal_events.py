@@ -32,7 +32,8 @@ def upgrade() -> None:
 
     # Populate animal_event_type
     csv_path = os.path.join(
-        os.path.dirname(__file__), "../../initial_data/animal_events.csv"
+        os.path.dirname(__file__),
+        "../../alembic/initial_data/animal_events.csv",
     )
     data = []
     if os.path.exists(csv_path):
