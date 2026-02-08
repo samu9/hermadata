@@ -32,6 +32,7 @@ dependencies = [
 ]
 [project.scripts]
 import-doc-kinds = "hermadata.database.alembic.import_initial_data:import_doc_kinds"
+sync-initial-data = "hermadata.database.alembic.import_initial_data:sync_all"
 
 
 [tool.ruff]
