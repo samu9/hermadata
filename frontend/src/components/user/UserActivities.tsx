@@ -186,7 +186,6 @@ const UserActivities: React.FC = () => {
                         }}
                         selectionMode="range"
                         readOnlyInput
-                        hideOnRangeSelection
                         showIcon
                         placeholder="Intervallo date"
                         dateFormat="dd/mm/yy"
