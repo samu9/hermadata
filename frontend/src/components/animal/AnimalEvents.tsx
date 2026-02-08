@@ -25,7 +25,7 @@ type FormValues = z.infer<typeof formSchema>
 
 const AnimalEvents = () => {
     const { id } = useParams()
-    const { isSuperUser } = useAuth()
+    const { isSuperUser, can } = useAuth()
     const [visible, setVisible] = useState(false)
     const queryClient = useQueryClient()
 
@@ -81,12 +81,14 @@ const AnimalEvents = () => {
                 <h2 className="text-2xl font-bold text-surface-900">
                     Storia Eventi
                 </h2>
-                <Button
-                    label="Aggiungi Evento"
-                    icon="pi pi-plus"
-                    className="p-button-sm"
-                    onClick={() => setVisible(true)}
-                />
+                {can("AAE") && (
+                    <Button
+                        label="Aggiungi Evento"
+                        icon="pi pi-plus"
+                        className="p-button-sm"
+                        onClick={() => setVisible(true)}
+                    />
+                )}
             </div>
 
             <Dialog
