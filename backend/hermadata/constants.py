@@ -18,6 +18,7 @@ class Permission(str, Enum):
     SET_DOCUMENT_PERMISSION = "SDP"
     MANAGE_USERS = "MU"
     BROWSE_DELETED_ANIMALS = "BDA"
+    ADD_ANIMAL_EVENT = "AAE"
 
 
 class StorageType(Enum):
