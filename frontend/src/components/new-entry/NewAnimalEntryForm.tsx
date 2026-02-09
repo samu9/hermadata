@@ -48,11 +48,12 @@ const NewAnimalForm = (props: Props) => {
     useEffect(() => {
         if (selectedEntryType && entryTypesQuery.data) {
             const entryType = entryTypesQuery.data.find(
-                (et) => et.id === selectedEntryType
+                (et) => et.id === selectedEntryType,
             )
             if (entryType) {
                 // Never set healthcare_stage to true if race is cat (G)
-                const shouldBeHealthcare = entryType.healthcare_stage && selectedRaceId !== "G"
+                const shouldBeHealthcare =
+                    entryType.healthcare_stage && selectedRaceId !== "G"
                 setValue("healthcare_stage", shouldBeHealthcare)
             }
         }
@@ -82,7 +83,7 @@ const NewAnimalForm = (props: Props) => {
                         entry_date: null,
                         exit_date: null,
                         exit_type: null,
-                    })
+                    }),
                 )
             }
             props.onSuccess?.(data)
@@ -210,6 +211,30 @@ const NewAnimalForm = (props: Props) => {
                                         className="text-sm cursor-pointer"
                                     >
                                         Sanitario
+                                    </label>
+                                </>
+                            )}
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Controller
+                            name="without_chip"
+                            control={form.control}
+                            render={({ field }) => (
+                                <>
+                                    <Checkbox
+                                        inputId="without_chip"
+                                        checked={field.value || false}
+                                        onChange={(e) =>
+                                            field.onChange(e.checked)
+                                        }
+                                    />
+                                    <label
+                                        htmlFor="without_chip"
+                                        className="text-sm cursor-pointer"
+                                    >
+                                        Senza chip
                                     </label>
                                 </>
                             )}
