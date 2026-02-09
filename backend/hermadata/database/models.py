@@ -101,6 +101,10 @@ class AnimalEntry(Base):
     entry_notes: Mapped[str] = mapped_column(Text, nullable=True)
     exit_notes: Mapped[str] = mapped_column(Text, nullable=True)
 
+    without_chip: Mapped[bool] = mapped_column(
+        server_default=expression.false(), default=False
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )
