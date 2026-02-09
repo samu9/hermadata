@@ -1,12 +1,9 @@
 name: Backend deployment
 on:
   push:
-    branches-ignore:
-     - '*'
     tags:
      - deploy_test*
      - deploy_prod*
-  workflow_dispatch: # Keeps manual triggering option
 
 jobs:
   build:
@@ -36,9 +33,9 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}  # Use the correct secret here
 
-    - name: Upload tar.gz to remote server
+    - name: Upload tar.gz and alembic.ini to remote server
       run: |
-        scp -o StrictHostKeyChecking=no backend/dist/*.tar.gz ${{secrets.REMOTE_USER}}@${{secrets.REMOTE_HOST}}:/opt/hermadata
+        scp -o StrictHostKeyChecking=no backend/dist/*.tar.gz backend/alembic.ini ${{secrets.REMOTE_USER}}@${{secrets.REMOTE_HOST}}:/opt/hermadata
       env:
         REMOTE_USER: ${{ secrets.REMOTE_USER }}
         REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
@@ -50,6 +47,10 @@ jobs:
         source .venv/bin/activate
         pip install *.tar.gz --force-reinstall
         rm *.tar.gz
+        
+        # Run database migrations
+        alembic upgrade head
+        
         export NVM_DIR=~/.nvm
         pm2 restart hermadata-backend
         EOF
