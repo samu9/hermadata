@@ -124,6 +124,12 @@ const AnimalEntriesList = ({ animalId }: Props) => {
                         sortable
                     />
                     <Column
+                        header="Senza chip"
+                        body={(entry: AnimalEntry) =>
+                            entry.without_chip ? "Sì" : "No"
+                        }
+                    />
+                    <Column
                         field="entry_notes"
                         header="Note Ingresso"
                         style={{ maxWidth: "200px" }}
