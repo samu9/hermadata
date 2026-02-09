@@ -70,7 +70,7 @@ const SwitchFilter = (props: SwitchFilterProps) => {
                         props.checked,
                     "bg-surface-0 border-surface-200 text-surface-600 hover:bg-surface-50":
                         !props.checked,
-                }
+                },
             )}
         >
             <label
@@ -152,7 +152,7 @@ const AnimalList = () => {
     const navigate = useNavigate()
 
     const comuneFilterTemplate = (
-        options: ColumnFilterElementTemplateOptions
+        options: ColumnFilterElementTemplateOptions,
     ) => {
         return (
             <div className="flex flex-col gap-2 p-2">
@@ -174,7 +174,7 @@ const AnimalList = () => {
     }
 
     const raceFilterTemplate = (
-        options: ColumnFilterElementTemplateOptions
+        options: ColumnFilterElementTemplateOptions,
     ) => {
         return (
             <div className="p-2">
@@ -188,7 +188,7 @@ const AnimalList = () => {
     }
     const selectFilterTemplate = (
         options: { id: string; label: string }[],
-        templateOptions: ColumnFilterElementTemplateOptions
+        templateOptions: ColumnFilterElementTemplateOptions,
     ) => {
         return (
             <Dropdown
@@ -204,7 +204,7 @@ const AnimalList = () => {
     }
 
     const textFilterTemplate = (
-        templateOptions: ColumnFilterElementTemplateOptions
+        templateOptions: ColumnFilterElementTemplateOptions,
     ) => (
         <InputText
             value={templateOptions.value || ""}
@@ -394,7 +394,7 @@ const AnimalList = () => {
                                 "bg-surface-50 text-surface-500":
                                     rowData.exit_date &&
                                     rowData.exit_date < new Date(),
-                            }
+                            },
                         )
                     }
                     pt={{
@@ -445,6 +445,15 @@ const AnimalList = () => {
                         field="chip_code"
                         header="Chip"
                         className="font-mono text-sm"
+                        body={(animal: AnimalSearchResult) =>
+                            animal.without_chip ? (
+                                <span className="text-red-500 italic">
+                                    Senza chip
+                                </span>
+                            ) : (
+                                animal.chip_code
+                            )
+                        }
                     />
                     <Column
                         className="max-w-[200px]"
@@ -482,7 +491,7 @@ const AnimalList = () => {
                         filterElement={(templateOptions) =>
                             selectFilterTemplate(
                                 entryTypesQuery.data || [],
-                                templateOptions
+                                templateOptions,
                             )
                         }
                         filterField="entry_type"
@@ -510,7 +519,7 @@ const AnimalList = () => {
                             filterElement={(templateOptions) =>
                                 selectFilterTemplate(
                                     exitTypesQuery.data || [],
-                                    templateOptions
+                                    templateOptions,
                                 )
                             }
                             filterField="exit_type"
