@@ -19,6 +19,7 @@ export const newAnimalEntrySchema = z.object({
 
     entry_type: z.string(),
     healthcare_stage: z.boolean().optional(),
+    without_chip: z.boolean().optional(),
 })
 
 export type NewAnimalEntry = z.infer<typeof newAnimalEntrySchema>
@@ -31,6 +32,7 @@ export const animalEntrySchema = z.object({
     exit_type: z.string().nullish(),
     entry_notes: z.string().nullish(),
     exit_notes: z.string().nullish(),
+    without_chip: z.boolean().optional(),
 })
 
 export type AnimalEntry = z.infer<typeof animalEntrySchema>
@@ -62,6 +64,7 @@ export const animalSchema = z.object({
     color: z.number().nullish(),
     in_shelter_from: dateFromString.nullish(),
     healthcare_stage: z.boolean().optional(),
+    without_chip: z.boolean().optional(),
     entries: z.array(animalEntrySchema).optional(),
 })
 
@@ -71,7 +74,7 @@ export const animalEditSchema = z.object({
     name: z.string().nullable().optional(),
     chip_code: z.preprocess(
         (arg) => (arg === "" ? null : arg),
-        chipCodeValidator.nullish()
+        chipCodeValidator.nullish(),
     ),
     chip_code_set: z.boolean(),
 
@@ -114,6 +117,7 @@ export const updateAnimalEntrySchema = z.object({
     exit_type: z.string().nullish(),
     entry_notes: z.string().nullish(),
     exit_notes: z.string().nullish(),
+    without_chip: z.boolean().optional(),
 })
 export type UpdateAnimalEntry = z.infer<typeof updateAnimalEntrySchema>
 
@@ -141,12 +145,13 @@ export const animalSearchResultSchema = z.object({
         .nullish()
         .transform((str) => (str && new Date(str)) || null),
     healthcare_stage: z.boolean().optional(),
+    without_chip: z.boolean().optional(),
 })
 
 export type AnimalSearchResult = z.infer<typeof animalSearchResultSchema>
 
 export const paginatedAnimalSearchResultSchema = createPaginatedResponseSchema(
-    animalSearchResultSchema
+    animalSearchResultSchema,
 )
 
 export type PaginatedAnimalSearchResult = z.infer<
@@ -254,7 +259,6 @@ export const exitCheckResultSchema = z.object({
 })
 export type ExitCheckResult = z.infer<typeof exitCheckResultSchema>
 
-
 export const animalLogSchema = z.object({
     id: z.number(),
     animal_id: z.number(),
@@ -274,4 +278,3 @@ export const newAnimalLogSchema = z.object({
 })
 
 export type NewAnimalLog = z.infer<typeof newAnimalLogSchema>
-
