@@ -11,6 +11,7 @@ import {
 import ControlledInputDate from "../forms/ControlledInputDate"
 import ControlledDropdown from "../forms/ControlledDropdown"
 import ControlledTextarea from "../forms/ControlledTextarea"
+import ControlledCheckbox from "../forms/ControlledCheckbox"
 import { useLoader } from "../../contexts/Loader"
 import { useEntryTypesQuery, useExitTypesQuery } from "../../queries"
 import { useEffect } from "react"
@@ -34,6 +35,7 @@ const UpdateAnimalEntryForm = (props: Props) => {
             exit_type: entry.exit_type,
             entry_notes: entry.entry_notes,
             exit_notes: entry.exit_notes,
+            without_chip: entry.without_chip,
         },
     })
 
@@ -86,6 +88,9 @@ const UpdateAnimalEntryForm = (props: Props) => {
         }
         if (data.exit_notes !== entry.exit_notes) {
             changes.exit_notes = data.exit_notes
+        }
+        if (data.without_chip !== entry.without_chip) {
+            changes.without_chip = data.without_chip
         }
 
         // Only submit if there are actual changes
@@ -144,6 +149,11 @@ const UpdateAnimalEntryForm = (props: Props) => {
                                 optionLabel="label"
                                 options={entryTypesQuery.data || []}
                                 className="w-full"
+                            />
+
+                            <ControlledCheckbox<UpdateAnimalEntry>
+                                fieldName="without_chip"
+                                label="Senza chip"
                             />
 
                             <ControlledTextarea<UpdateAnimalEntry>
