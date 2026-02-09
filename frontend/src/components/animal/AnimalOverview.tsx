@@ -80,6 +80,13 @@ const AnimalOverview = () => {
             ),
         },
         {
+            label: "Senza chip",
+            value: animal.without_chip ? "Sì" : "No",
+            icon: (
+                <FontAwesomeIcon icon={faIdCard} className="text-red-400 w-4" />
+            ),
+        },
+        {
             label: "Sesso",
             value: formatSex(animal.sex),
             icon: (

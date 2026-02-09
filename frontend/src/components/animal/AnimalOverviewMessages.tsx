@@ -53,18 +53,40 @@ const AnimalOverviewMessages = (props: Props) => {
     const missingChipMessage: MessagesMessage = {
         sticky: true,
         severity: "warn",
-        summary: "Chip mancante",
-        // detail: "Completare l'ingresso",
+        summary: "Dati chip mancanti",
+        detail: "L'animale ha un chip ma il codice non è stato inserito",
         closable: false,
     }
+
+    const withoutChipMessage: MessagesMessage = {
+        sticky: true,
+        severity: "info",
+        summary: "Senza chip",
+        detail: "L'animale è stato registrato come sprovvisto di microchip",
+        closable: false,
+    }
+
     useEffect(() => {
         if (!msgs.current) return
         msgs.current.clear()
 
-        !animalQuery.data?.entry_date &&
-            msgs.current.show([completeEntryMessage])
+        const messages: MessagesMessage[] = []
 
-        !animalQuery.data?.chip_code && msgs.current.show([missingChipMessage])
+        if (!animalQuery.data?.entry_date) {
+            messages.push(completeEntryMessage)
+        }
+
+        if (!animalQuery.data?.chip_code) {
+            if (animalQuery.data?.without_chip) {
+                messages.push(withoutChipMessage)
+            } else {
+                messages.push(missingChipMessage)
+            }
+        }
+
+        if (messages.length > 0) {
+            msgs.current.show(messages)
+        }
     }, [animalQuery.data])
     return (
         <div>
