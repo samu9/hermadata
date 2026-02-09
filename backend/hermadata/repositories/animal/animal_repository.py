@@ -215,6 +215,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal=animal,
             entry_type=data.entry_type,
             origin_city_code=data.rescue_city_code,
+            without_chip=data.without_chip,
         )
         event_log = AnimalLog(
             animal=animal,
@@ -283,6 +284,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_id=animal_id,
             entry_type=data.entry_type,
             origin_city_code=data.rescue_city_code,
+            without_chip=data.without_chip,
         )
 
         self.session.add(new_entry)
@@ -356,6 +358,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                     (Animal.in_shelter_from.is_not(None), False),
                     else_=True,
                 ).label("healthcare_stage"),
+                AnimalEntry.without_chip,
             )
             .where(*where)
             .join(
@@ -434,6 +437,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                     (Animal.in_shelter_from.is_not(None), False),
                     else_=True,
                 ).label("healthcare_stage"),
+                AnimalEntry.without_chip,
             )
             .select_from(Animal)
             .join(
@@ -633,6 +637,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 animal_race_id=animal_race_id,
                 entry_notes=animal_entry.entry_notes,
                 exit_notes=animal_entry.exit_notes,
+                without_chip=animal_entry.without_chip,
             )
             results.append(result)
 

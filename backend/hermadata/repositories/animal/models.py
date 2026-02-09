@@ -71,6 +71,7 @@ class NewAnimalModel(BaseModel):
     rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
     entry_type: str
     healthcare_stage: bool = False
+    without_chip: bool = False
 
 
 class CompleteEntryModel(BaseModel):
@@ -81,6 +82,7 @@ class NewEntryModel(BaseModel):
     rescue_city_code: str = Field(pattern=rescue_city_code_PATTERN)
     entry_type: str
     healthcare_stage: bool = False
+    without_chip: bool = False
 
 
 class AnimalSearchSortField(str, Enum):
@@ -287,6 +289,7 @@ class AnimalModel(BaseModel):
     exit_type: ExitType | None = None
     in_shelter_from: datetime | None = None
     healthcare_stage: bool = False
+    without_chip: bool = False
 
     model_config = ConfigDict(extra="ignore")
 
@@ -334,6 +337,7 @@ class AnimalSearchResult(BaseModel):
     exit_type: str | None = None
     in_shelter_from: datetime | None = None
     healthcare_stage: bool = False
+    without_chip: bool = False
 
 
 AnimalSearchResultQuery = namedtuple(
@@ -445,6 +449,7 @@ class AnimalEntryModel(BaseModel):
     animal_race_id: str
     entry_notes: str | None = None
     exit_notes: str | None = None
+    without_chip: bool
 
 
 class UpdateAnimalEntryModel(BaseModel):
@@ -454,6 +459,7 @@ class UpdateAnimalEntryModel(BaseModel):
     exit_type: ExitType | None = None
     entry_notes: str | None = None
     exit_notes: str | None = None
+    without_chip: bool | None = None
 
 
 class NewAdoption(BaseModel):
