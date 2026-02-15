@@ -183,9 +183,9 @@ const AnimalOverview = () => {
     const notesItems = animal.notes
         ? [
               {
-                  label: null,
+                  label: "",
                   value: animal.notes,
-                  icon: null,
+                  icon: undefined,
               },
           ]
         : []
