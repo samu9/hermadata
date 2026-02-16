@@ -1,5 +1,8 @@
 # IMPROVEMENTS:
 
+-   implement soft delete for animals
+-   validate adoption readiness and report missing requirements immediately
+-   persist animal exit form data in frontend memory
 -   add size and birth_date in variation report
 -   add users management, roles and permissions
 -   healthcare/shelter stage mechanism
@@ -10,6 +13,7 @@
 
 # FIXES:
 
+-   fix adopter creation bug
 -   ensure `/users/` listing route matches FastAPI expectations
 -   pin `bcrypt` to 4.3.0 to avoid upstream regressions
 
