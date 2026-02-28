@@ -27,6 +27,13 @@ jobs:
               run: |
                   cd backend
                   uv sync --group dev
+            - name: Wait for MySQL
+              run: |
+                  for i in $(seq 1 30); do
+                    mysqladmin ping -h 127.0.0.1 -u root -pdev --silent && break
+                    echo "Waiting for MySQL... ($i)"
+                    sleep 2
+                  done
             - name: Database migrations
               run: |
                   cd backend
