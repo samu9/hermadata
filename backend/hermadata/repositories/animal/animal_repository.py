@@ -151,7 +151,22 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
         self.session.add(log)
         self.session.flush()
-        return AnimalLogModel.model_validate(log)
+
+        description = self.session.execute(
+            select(AnimalEventType.description).where(
+                AnimalEventType.code == log.event
+            )
+        ).scalar_one_or_none()
+
+        return AnimalLogModel(
+            id=log.id,
+            animal_id=log.animal_id,
+            event=log.event,
+            event_description=description or log.event,
+            data=log.data,
+            user_id=log.user_id,
+            created_at=log.created_at,
+        )
 
     def get_logs(self, animal_id: int) -> list[AnimalLogModel]:
         """Get all logs for an animal"""

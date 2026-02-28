@@ -609,3 +609,202 @@ def test_new_fur_color(
             FurColor.id == result.id, FurColor.name == result.label
         )
     ).scalar_one()
+
+
+def test_get_animal(
+    db_session: Session,
+    animal_repository: SQLAnimalRepository,
+    make_animal,
+):
+    from hermadata.repositories.animal.animal_repository import AnimalNotPresentException
+    from hermadata.repositories.animal.models import AnimalQueryModel
+
+    animal_id = make_animal()
+
+    animal = animal_repository.get(AnimalQueryModel(id=animal_id))
+
+    assert animal.race_id == "C"
+    assert animal.rescue_city_code == "H501"
+
+
+def test_soft_delete_animal(
+    db_session: Session,
+    animal_repository: SQLAnimalRepository,
+    make_animal,
+):
+    animal_id = make_animal()
+
+    animal_repository.soft_delete_animal(animal_id)
+
+    animal = db_session.execute(
+        select(Animal).where(Animal.id == animal_id)
+    ).scalar_one()
+
+    assert animal.deleted_at is not None
+
+
+def test_add_and_get_logs(
+    animal_repository: SQLAnimalRepository,
+    make_animal,
+):
+    from hermadata.repositories.animal.models import NewAnimalLogModel
+
+    animal_id = make_animal()
+
+    log = animal_repository.add_log(
+        animal_id,
+        NewAnimalLogModel(event="CS", data={"note": "test log"}),
+    )
+
+    assert log.animal_id == animal_id
+    assert log.event == "CS"
+
+    logs = animal_repository.get_logs(animal_id)
+
+    assert len(logs) >= 1
+    assert any(l.event == "CS" for l in logs)
+
+
+def test_get_animal_entries(
+    db_session: Session,
+    animal_repository: SQLAnimalRepository,
+    make_animal,
+):
+    animal_id = make_animal()
+
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
+
+    entries = animal_repository.get_animal_entries(animal_id)
+
+    assert len(entries) >= 1
+    assert entries[0].animal_id == animal_id
+
+
+def test_check_exit_requirements_missing_fields(
+    animal_repository: SQLAnimalRepository,
+    make_animal,
+):
+    animal_id = make_animal()
+
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
+
+    result = animal_repository.check_exit_requirements(animal_id)
+
+    assert result.can_exit is False
+    assert len(result.missing_fields) > 0
+
+
+def test_check_exit_requirements_can_exit(
+    animal_repository: SQLAnimalRepository,
+    make_animal,
+    complete_animal_data,
+):
+    animal_id = make_animal()
+
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
+    complete_animal_data(animal_id)
+
+    result = animal_repository.check_exit_requirements(animal_id)
+
+    assert result.can_exit is True
+    assert result.missing_fields == []
+
+
+def test_get_documents(
+    animal_repository: SQLAnimalRepository,
+    make_animal,
+):
+    animal_id = make_animal()
+
+    docs = animal_repository.get_documents(animal_id)
+
+    assert isinstance(docs, list)
+
+
+def test_move_to_shelter(
+    db_session: Session,
+    animal_repository: SQLAnimalRepository,
+    make_animal,
+):
+    from datetime import datetime, timezone
+
+    animal_id = make_animal()
+
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
+
+    now = datetime.now(timezone.utc)
+    rows = animal_repository.move_to_shelter(animal_id, now)
+
+    assert rows >= 1
+
+    animal = db_session.execute(
+        select(Animal).where(Animal.id == animal_id)
+    ).scalar_one()
+
+    assert animal.in_shelter_from is not None
+
+
+@pytest.mark.parametrize(
+    "entry_type",
+    [EntryType.rescue, EntryType.confiscation, EntryType.private_surrender],
+)
+def test_new_animal_various_entry_types(
+    animal_repository: SQLAnimalRepository, entry_type: EntryType
+):
+    code = animal_repository.new_animal(
+        NewAnimalModel(
+            race_id="C",
+            rescue_city_code="H501",
+            entry_type=entry_type,
+        )
+    )
+
+    assert code is not None
+    assert len(code) > 0
+
+
+def test_generate_code(animal_repository: SQLAnimalRepository):
+    code1 = animal_repository.generate_code(
+        race_id="C", rescue_city_code="H501"
+    )
+    code2 = animal_repository.generate_code(
+        race_id="C", rescue_city_code="H501"
+    )
+
+    assert code1 is not None
+    assert code2 is not None
+    assert isinstance(code1, str)
+
+
+def test_count_animal_entries(
+    empty_db,
+    animal_repository: SQLAnimalRepository,
+    make_animal,
+    complete_animal_data,
+):
+    from hermadata.repositories.animal.models import AnimalEntriesQuery
+
+    animal_id = make_animal()
+
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 1, 2))
+    )
+
+    query = AnimalEntriesQuery(
+        from_date=date(2024, 1, 1),
+        to_date=date(2024, 12, 31),
+        entry_type=EntryType.rescue,
+        city_code="H501",
+    )
+
+    result = animal_repository.count_animal_entries(query)
+
+    assert result.total >= 1
