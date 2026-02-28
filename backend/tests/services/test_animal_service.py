@@ -136,3 +136,87 @@ def test_variation_report_death(
             DocumentKind.code == DocKindCode.variazione.value,
         )
     ).scalar_one()
+
+
+def test_generate_entry_report(
+    make_animal: Callable[[NewAnimalModel], int],
+    animal_service: AnimalService,
+    complete_animal_data,
+):
+    from hermadata.repositories.animal.models import AnimalEntriesQuery
+    from hermadata.constants import EntryType
+    from datetime import date
+
+    animal_id = make_animal()
+
+    animal_service.complete_entry(
+        animal_id,
+        data=CompleteEntryModel(entry_date=datetime.now().date()),
+    )
+
+    entries = animal_service.animal_repository.get_animal_entries(animal_id)
+    assert len(entries) >= 1
+    entry_id = entries[0].id
+
+    animal_service.generate_entry_report(entry_id)
+
+
+def test_days_report(
+    animal_service: AnimalService,
+):
+    from datetime import date
+    from hermadata.repositories.animal.models import AnimalDaysQuery
+
+    query = AnimalDaysQuery(
+        from_date=date(2024, 1, 1),
+        to_date=date(2024, 12, 31),
+        city_code="H501",
+    )
+
+    filename, report = animal_service.days_report(query)
+
+    assert filename is not None
+    assert report is not None
+    assert isinstance(report, bytes)
+
+
+def test_entries_report(
+    animal_service: AnimalService,
+):
+    from datetime import date
+    from hermadata.constants import EntryType
+    from hermadata.repositories.animal.models import AnimalEntriesQuery
+
+    query = AnimalEntriesQuery(
+        from_date=date(2024, 1, 1),
+        to_date=date(2024, 12, 31),
+        entry_type=EntryType.rescue,
+        city_code="H501",
+    )
+
+    filename, report = animal_service.entries_report(query)
+
+    assert filename is not None
+    assert report is not None
+    assert isinstance(report, bytes)
+
+
+def test_exits_report(
+    animal_service: AnimalService,
+):
+    from datetime import date
+    from hermadata.constants import ExitType
+    from hermadata.repositories.animal.models import AnimalExitsQuery
+
+    query = AnimalExitsQuery(
+        from_date=date(2024, 1, 1),
+        to_date=date(2024, 12, 31),
+        exit_type=ExitType.adoption,
+        city_code="H501",
+    )
+
+    filename, report = animal_service.exits_report(query)
+
+    assert filename is not None
+    assert report is not None
+    assert isinstance(report, bytes)

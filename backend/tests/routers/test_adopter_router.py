@@ -1,5 +1,4 @@
 import json
-from datetime import date
 
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
@@ -11,22 +10,20 @@ from hermadata.models import PaginationResult
 from hermadata.repositories.adopter_repository import (
     AdopterModel,
     IDDocumentType,
-    NewAdopter,
 )
+from hermadata.services.adopter_service import NewAdopterRequest
 
 
 def test_new_adopter(
     app: TestClient,
     db_session: Session,
 ):
-    data = NewAdopter(
-        name="Gino",
-        surname="Bianchi",
-        fiscal_code="bncgni80a12b123a",
+    data = NewAdopterRequest(
+        name="Mario",
+        surname="Rossi",
+        fiscal_code="RSSMRA80A01H501U",
         document_type=IDDocumentType.identity_card,
-        document_number="aa12345bb",
-        birth_date=date(1980, 1, 1),
-        birth_city_code="H501",
+        document_number="AA12345BB",
         residence_city_code="H501",
         phone="123456789",
     )

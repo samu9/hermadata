@@ -52,21 +52,23 @@ def test_search_adopters(
     assert result.items[0].name == "MARIO"
 
 
-def test_create_adopter_invalid_birth_city(adopter_service: AdopterService):
-    """Test that creating an adopter with invalid birth city raises error."""
+def test_create_adopter_invalid_fiscal_code(adopter_service: AdopterService):
+    """Test that creating an adopter with invalid fiscal code raises error."""
     import pytest
-    
+
+    from hermadata.errors import InvalidFiscalCodeException
+
     new_adopter_data = NewAdopterRequest(
         name="Mario",
         surname="Rossi",
-        fiscal_code="RSSMRA80A01ZZZZU",  # Invalid city code ZZZZ
+        fiscal_code="RSSMRA80A01ZZZZU",  # Invalid fiscal code (ZZZZ not a valid birthplace)
         residence_city_code="H501",
         phone="3331234567",
         document_type="id",
         document_number="AR1234567",
     )
 
-    with pytest.raises(ValueError, match="wrong birthplace code"):
+    with pytest.raises(InvalidFiscalCodeException):
         adopter_service.create(new_adopter_data)
 
 
@@ -75,7 +77,7 @@ def test_create_adopter_invalid_residence_city(
 ):
     """Test creating adopter with invalid residence city raises error."""
     import pytest
-    
+
     new_adopter_data = NewAdopterRequest(
         name="Mario",
         surname="Rossi",

@@ -51,6 +51,7 @@ from hermadata.repositories.user_repository import (
     SQLUserRepository,
 )
 from hermadata.repositories.vet_repository import SQLVetRepository, VetModel
+from hermadata.repositories.activity_repository import SQLActivityRepository
 from hermadata.services.adopter_service import AdopterService
 from hermadata.services.animal_service import AnimalService
 from hermadata.services.user_service import RegisterUserModel, UserService
@@ -251,6 +252,14 @@ def user_repository(
 
 
 @pytest.fixture(scope="function")
+def activity_repository(
+    db_session: Session,
+) -> SQLActivityRepository:
+    repo = SQLActivityRepository()
+    return repo(db_session)
+
+
+@pytest.fixture(scope="function")
 def animal_service(
     animal_repository,
     document_repository,
@@ -398,9 +407,9 @@ def make_user(
                 name="Fixture",
                 surname="User",
             )
-        user_id = user_service.register(data=data)
+        user = user_service.register(data=data)
 
-        return user_id
+        return user.id
 
     return make
 
@@ -410,12 +419,25 @@ def app(db_session):
     def get_db_session_override():
         yield db_session
 
+    from hermadata.constants import Permission
     from hermadata.dependancies import get_db_session
+    from hermadata.initializations import get_current_user
     from hermadata.main import build_app
+    from hermadata.services.user_service import TokenData
+
+    def get_current_user_override():
+        return TokenData(
+            user_id=1,
+            email="test@test.it",
+            is_active=True,
+            is_superuser=True,
+            permissions=[p.value for p in Permission],
+        )
 
     app = build_app()
 
     app.dependency_overrides[get_db_session] = get_db_session_override
+    app.dependency_overrides[get_current_user] = get_current_user_override
 
     test_app = TestClient(app)
 

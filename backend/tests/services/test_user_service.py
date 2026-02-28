@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from hermadata.database.models import User
+from hermadata.repositories.user_repository import UserListQuery
 from hermadata.services.user_service import RegisterUserModel, UserService
 
 
@@ -73,3 +74,58 @@ def test_register_duplicate_email(user_service: UserService):
 
     assert exc.value.status_code == 400
     assert exc.value.detail == "Email già registrata"
+
+
+def test_get_user_by_id(user_service: UserService, make_user):
+    user_id = make_user()
+
+    user = user_service.get_user_by_id(user_id)
+
+    assert user.id == user_id
+    assert user.name == "Fixture"
+    assert user.surname == "User"
+
+
+def test_get_all_users(user_service: UserService, make_user):
+    make_user()
+
+    result = user_service.get_all_users(UserListQuery())
+
+    assert result.total >= 1
+    assert len(result.items) >= 1
+
+
+def test_delete_user(user_service: UserService, make_user, db_session: Session):
+    user_id = make_user()
+
+    user_service.delete_user(user_id)
+
+    user = db_session.execute(
+        select(User).where(User.id == user_id)
+    ).scalar_one()
+
+    assert user.deleted_at is not None
+
+
+def test_change_password(user_service: UserService, make_user):
+    user_id = make_user()
+
+    success = user_service.change_password(user_id, None, "new_password_123")
+
+    assert success is True
+
+
+def test_change_password_wrong_current(user_service: UserService, make_user):
+    user_id = make_user()
+
+    success = user_service.change_password(
+        user_id, "wrong_current_password", "new_password_123"
+    )
+
+    assert success is False
+
+
+def test_change_password_nonexistent_user(user_service: UserService):
+    success = user_service.change_password(999999, None, "new_password_123")
+
+    assert success is False
