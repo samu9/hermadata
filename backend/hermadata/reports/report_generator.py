@@ -46,7 +46,9 @@ NullableString = Annotated[
 ]
 
 NullableInt = Annotated[
-    int | None, Field(default=""), AfterValidator(lambda x: x or "")
+    int | None,
+    Field(default=""),
+    AfterValidator(lambda x: "" if x is None else x),
 ]
 
 NullableDate = Annotated[
