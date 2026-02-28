@@ -11,8 +11,6 @@ export function createTestQueryClient() {
     defaultOptions: {
       queries: {
         retry: false,
-        staleTime: 0,
-        cacheTime: 0,
       },
       mutations: {
         retry: false,

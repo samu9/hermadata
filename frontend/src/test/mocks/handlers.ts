@@ -74,11 +74,19 @@ export const handlers = [
       return HttpResponse.json({ detail: 'Not found' }, { status: 404 })
     }
     return HttpResponse.json({
-      ...animal,
+      code: 'C0012345678AB',
+      name: animal.name,
+      race_id: animal.race_id,
+      breed_id: null,
       sterilized: null,
+      entry_date: animal.entry_date,
+      entry_type: animal.entry_type,
+      exit_date: animal.exit_date,
+      exit_type: animal.exit_type,
       birth_date: null,
       stage: null,
       adoptability_index: 0,
+      chip_code: animal.chip_code,
       chip_code_set: false,
       img_path: null,
       sex: null,
@@ -88,6 +96,7 @@ export const handlers = [
       color: null,
       in_shelter_from: null,
       healthcare_stage: false,
+      without_chip: animal.without_chip,
     })
   }),
 
