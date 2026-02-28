@@ -1,14 +1,14 @@
 name: Test
 
-on: 
-  push:
-      paths:
-          - 'backend/*'
-          - '.github/workflows/test.yml'
-      branches:
-          - 'main'
-      tags-ignore:
-          - '**'
+on:
+    push:
+        paths:
+            - "backend/*"
+            - ".github/workflows/test.yml"
+        branches:
+            - "main"
+        tags-ignore:
+            - "**"
 jobs:
     build-and-test:
         runs-on: ubuntu-latest
@@ -39,13 +39,13 @@ jobs:
             - name: Database migrations
               run: |
                   cd backend
-                  alembic -c tests/alembic.ini upgrade head
+                  ENV_PATH=tests/.env alembic -c tests/alembic.ini upgrade head
             - name: Run tests
               run: |
-                cd backend
-                mkdir tests/storage
-                pytest --cov=hermadata --cov-report json
-                mv coverage.json ../
+                  cd backend
+                  mkdir tests/storage
+                  pytest --cov=hermadata --cov-report json
+                  mv coverage.json ../
             - name: Update Coverage Badge
               # GitHub actions: default branch variable
               # https://stackoverflow.com/questions/64781462/github-actions-default-branch-variable
