@@ -398,9 +398,9 @@ def make_user(
                 name="Fixture",
                 surname="User",
             )
-        user_id = user_service.register(data=data)
+        user = user_service.register(data=data)
 
-        return user_id
+        return user.id
 
     return make
 
@@ -410,12 +410,25 @@ def app(db_session):
     def get_db_session_override():
         yield db_session
 
+    from hermadata.constants import Permission
     from hermadata.dependancies import get_db_session
+    from hermadata.initializations import get_current_user
     from hermadata.main import build_app
+    from hermadata.services.user_service import TokenData
+
+    def get_current_user_override():
+        return TokenData(
+            user_id=1,
+            email="test@test.it",
+            is_active=True,
+            is_superuser=True,
+            permissions=[p.value for p in Permission],
+        )
 
     app = build_app()
 
     app.dependency_overrides[get_db_session] = get_db_session_override
+    app.dependency_overrides[get_current_user] = get_current_user_override
 
     test_app = TestClient(app)
 
