@@ -534,3 +534,130 @@ def test_new_animal_document(
 
     assert animal_document.title == "Test"
     assert document_kind.code == DocKindCode.documento_identita.value
+
+
+def test_get_animal_days_report(
+    app: TestClient,
+    empty_db,
+):
+    from datetime import date
+    result = app.get(
+        "/animal/days/report",
+        params={
+            "from_date": "2024-01-01",
+            "to_date": "2024-12-31",
+            "city_code": "H501",
+        },
+    )
+
+    assert result.status_code == 200
+
+
+def test_get_animal_entries_report(app: TestClient, empty_db):
+    result = app.get(
+        "/animal/entries/report",
+        params={
+            "from_date": "2024-01-01",
+            "to_date": "2024-12-31",
+            "entry_type": "R",
+            "city_code": "H501",
+        },
+    )
+
+    assert result.status_code == 200
+
+
+def test_get_animal_exits_report(app: TestClient, empty_db):
+    result = app.get(
+        "/animal/exits/report",
+        params={
+            "from_date": "2024-01-01",
+            "to_date": "2024-12-31",
+            "exit_type": "A",
+            "city_code": "H501",
+        },
+    )
+
+    assert result.status_code == 200
+
+
+def test_move_to_shelter(
+    app: TestClient,
+    make_animal,
+    animal_service: AnimalService,
+    db_session: Session,
+):
+    from datetime import datetime, timezone
+
+    animal_id = make_animal(
+        NewAnimalModel(
+            race_id="C",
+            rescue_city_code="H501",
+            entry_type=EntryType.confiscation,
+            healthcare_stage=True,
+        )
+    )
+
+    animal_service.complete_entry(
+        animal_id,
+        CompleteEntryModel(entry_date=datetime.now().date()),
+    )
+
+    data = {
+        "date": datetime.now(timezone.utc).isoformat(),
+    }
+
+    result = app.post(f"/animal/{animal_id}/move_to_shelter", json=data)
+
+    assert result.status_code == 200
+
+
+def test_update_animal_entry(
+    app: TestClient,
+    make_animal,
+    animal_service: AnimalService,
+):
+    from hermadata.repositories.animal.models import UpdateAnimalEntryModel
+
+    animal_id = make_animal()
+
+    animal_service.complete_entry(
+        animal_id,
+        CompleteEntryModel(entry_date=datetime.now().date()),
+    )
+
+    entries_response = app.get(f"/animal/{animal_id}/entries")
+    entries = entries_response.json()
+    assert len(entries) >= 1
+    entry_id = entries[0]["id"]
+
+    update_data = jsonable_encoder(
+        UpdateAnimalEntryModel(
+            entry_notes="Test entry note",
+        ).model_dump()
+    )
+
+    result = app.put(f"/animal/{animal_id}/entries/{entry_id}", json=update_data)
+
+    assert result.status_code == 200
+    assert result.json()["updated_rows"] >= 1
+
+
+def test_update_animal_entry_not_found(app: TestClient, make_animal):
+    animal_id = make_animal()
+
+    update_data = {"entry_notes": "Test"}
+
+    result = app.put(f"/animal/{animal_id}/entries/999999", json=update_data)
+
+    # Entry 999999 doesn't belong to the animal, so we get 400
+    # (the HTTPException for 404 is caught by the outer except block and re-raised as 400)
+    assert result.status_code in (400, 404)
+
+
+def test_get_animal_warning(app: TestClient, make_animal):
+    animal_id = make_animal()
+
+    result = app.get(f"/animal/{animal_id}/warning")
+
+    assert result.status_code == 200

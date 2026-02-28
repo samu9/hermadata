@@ -51,6 +51,7 @@ from hermadata.repositories.user_repository import (
     SQLUserRepository,
 )
 from hermadata.repositories.vet_repository import SQLVetRepository, VetModel
+from hermadata.repositories.activity_repository import SQLActivityRepository
 from hermadata.services.adopter_service import AdopterService
 from hermadata.services.animal_service import AnimalService
 from hermadata.services.user_service import RegisterUserModel, UserService
@@ -247,6 +248,14 @@ def user_repository(
     db_session: Session,
 ) -> Generator[SQLUserRepository, SQLUserRepository, None]:
     repo = SQLUserRepository()
+    return repo(db_session)
+
+
+@pytest.fixture(scope="function")
+def activity_repository(
+    db_session: Session,
+) -> SQLActivityRepository:
+    repo = SQLActivityRepository()
     return repo(db_session)
 
 

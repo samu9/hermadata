@@ -605,6 +605,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_race_id=animal_race_id,
             entry_notes=animal_entry.entry_notes,
             exit_notes=animal_entry.exit_notes,
+            without_chip=animal_entry.without_chip,
         )
 
         return result
