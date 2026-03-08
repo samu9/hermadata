@@ -1,7 +1,7 @@
 """add temporary adoption event types
 
 Revision ID: a1b2c3d4e5f6
-Revises: fceb0e2f434a
+Revises: 45abcad6b93d
 Create Date: 2026-03-08 12:00:00.000000
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "a1b2c3d4e5f6"
-down_revision: Union[str, None] = "fceb0e2f434a"
+down_revision: Union[str, None] = "45abcad6b93d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
