@@ -1551,6 +1551,13 @@ class SQLAnimalRepository(SQLBaseRepository):
             user_id=user_id,
         )
 
+        # Set entry_date to today so the rientro is immediately dated
+        self.complete_entry(
+            animal_id,
+            CompleteEntryModel(entry_date=get_today()),
+            user_id=user_id,
+        )
+
         return new_entry_id
 
     def get_fur_colors(self) -> list[UtilElement]:

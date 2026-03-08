@@ -1011,6 +1011,8 @@ def test_undo_temporary_adoption(
     assert new_entry.entry_type == EntryType.rientro
     assert new_entry.origin_city_code == "H501"
     assert new_entry.current is True
+    # Entry date should be set to today
+    assert new_entry.entry_date == date.today()
 
     # Old adoption should be closed
     adoption = db_session.execute(
