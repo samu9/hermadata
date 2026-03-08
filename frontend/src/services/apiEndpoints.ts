@@ -32,6 +32,10 @@ const ApiEndpoints = {
         exit: (id: number) => `/animal/${id}/exit`,
         checkExit: (id: number) => `/animal/${id}/exit-check`,
         moveToShelter: (id: string) => `/animal/${id}/move_to_shelter`,
+        confirmTemporaryAdoption: (id: number) =>
+            `/animal/${id}/confirm-temporary-adoption`,
+        undoTemporaryAdoption: (id: number) =>
+            `/animal/${id}/undo-temporary-adoption`,
         getLogs: (id: string | number) => `/animal/${id}/logs`,
         daysReport: `/animal/days/report`,
         entriesReport: `/animal/entries/report`,

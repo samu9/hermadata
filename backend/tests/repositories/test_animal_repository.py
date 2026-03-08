@@ -808,3 +808,214 @@ def test_count_animal_entries(
     result = animal_repository.count_animal_entries(query)
 
     assert result.total >= 1
+
+
+def test_temporary_adoption_exit(
+    db_session: Session,
+    animal_repository: SQLAnimalRepository,
+    complete_animal_data,
+):
+    """Test that an animal can exit with temporary adoption exit type."""
+    from hermadata.repositories.adopter_repository import (
+        NewAdopter,
+        IDDocumentType,
+        SQLAdopterRepository,
+    )
+
+    data = NewAnimalModel(
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+    )
+    code = animal_repository.new_animal(data)
+    animal_id = get_animal_id_by_code(db_session, code)
+
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
+    complete_animal_data(animal_id)
+
+    # Create an adopter
+    adopter_repo = SQLAdopterRepository()(db_session)
+    adopter = adopter_repo.create(
+        NewAdopter(
+            fiscal_code="RSSMRO11A22B123Z",
+            name="Test",
+            surname="Adopter",
+            birth_city_code="H501",
+            birth_date=date(1970, 1, 1),
+            phone="1234567890",
+            residence_city_code="H501",
+            document_type=IDDocumentType.identity_card,
+            document_number="AA99999XX",
+        )
+    )
+
+    # Exit with temporary adoption
+    animal_repository.exit(
+        animal_id,
+        AnimalExit(
+            exit_date=date(2024, 1, 10),
+            exit_type=ExitType.temporary_adoption,
+            adopter_id=adopter.id,
+            location_address="Via Test 1",
+            location_city_code="H501",
+        ),
+    )
+
+    # Verify exit was recorded
+    entry = db_session.execute(
+        select(AnimalEntry).where(
+            AnimalEntry.animal_id == animal_id,
+            AnimalEntry.current.is_(True),
+        )
+    ).scalar_one()
+
+    assert entry.exit_type == ExitType.temporary_adoption
+    assert entry.exit_date == date(2024, 1, 10)
+
+
+def test_confirm_temporary_adoption(
+    db_session: Session,
+    animal_repository: SQLAnimalRepository,
+    complete_animal_data,
+):
+    """Test confirming a temporary adoption updates exit_type to adoption."""
+    from hermadata.repositories.adopter_repository import (
+        NewAdopter,
+        IDDocumentType,
+        SQLAdopterRepository,
+    )
+
+    data = NewAnimalModel(
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+    )
+    code = animal_repository.new_animal(data)
+    animal_id = get_animal_id_by_code(db_session, code)
+
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 2, 1))
+    )
+    complete_animal_data(animal_id)
+
+    adopter_repo = SQLAdopterRepository()(db_session)
+    adopter = adopter_repo.create(
+        NewAdopter(
+            fiscal_code="RSSMRO22B33C234A",
+            name="Confirm",
+            surname="Adopter",
+            birth_city_code="H501",
+            birth_date=date(1975, 5, 5),
+            phone="9876543210",
+            residence_city_code="H501",
+            document_type=IDDocumentType.identity_card,
+            document_number="BB88888YY",
+        )
+    )
+
+    # Exit with temporary adoption
+    animal_repository.exit(
+        animal_id,
+        AnimalExit(
+            exit_date=date(2024, 2, 10),
+            exit_type=ExitType.temporary_adoption,
+            adopter_id=adopter.id,
+            location_address="Via Confirm 1",
+            location_city_code="H501",
+        ),
+    )
+
+    # Confirm the temporary adoption
+    animal_repository.confirm_temporary_adoption(
+        animal_id, date(2024, 3, 1)
+    )
+
+    # Verify exit_type changed to adoption
+    entry = db_session.execute(
+        select(AnimalEntry).where(
+            AnimalEntry.animal_id == animal_id,
+            AnimalEntry.current.is_(True),
+        )
+    ).scalar_one()
+
+    assert entry.exit_type == ExitType.adoption
+    assert entry.exit_date == date(2024, 3, 1)
+
+
+def test_undo_temporary_adoption(
+    db_session: Session,
+    animal_repository: SQLAnimalRepository,
+    complete_animal_data,
+):
+    """Test undoing a temporary adoption adds a rientro entry."""
+    from hermadata.repositories.adopter_repository import (
+        NewAdopter,
+        IDDocumentType,
+        SQLAdopterRepository,
+    )
+    from hermadata.database.models import Adoption
+
+    data = NewAnimalModel(
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+    )
+    code = animal_repository.new_animal(data)
+    animal_id = get_animal_id_by_code(db_session, code)
+
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 3, 1))
+    )
+    complete_animal_data(animal_id)
+
+    adopter_repo = SQLAdopterRepository()(db_session)
+    adopter = adopter_repo.create(
+        NewAdopter(
+            fiscal_code="RSSMRO33C44D345B",
+            name="Undo",
+            surname="Adopter",
+            birth_city_code="H501",
+            birth_date=date(1980, 6, 6),
+            phone="1111111111",
+            residence_city_code="H501",
+            document_type=IDDocumentType.identity_card,
+            document_number="CC77777ZZ",
+        )
+    )
+
+    # Exit with temporary adoption
+    animal_repository.exit(
+        animal_id,
+        AnimalExit(
+            exit_date=date(2024, 3, 10),
+            exit_type=ExitType.temporary_adoption,
+            adopter_id=adopter.id,
+            location_address="Via Undo 1",
+            location_city_code="H501",
+        ),
+    )
+
+    # Undo the temporary adoption
+    animal_repository.undo_temporary_adoption(animal_id)
+
+    # Verify a new rientro entry was added
+    entries = (
+        db_session.execute(
+            select(AnimalEntry)
+            .where(AnimalEntry.animal_id == animal_id)
+            .order_by(AnimalEntry.created_at.asc())
+        )
+        .scalars()
+        .all()
+    )
+
+    assert len(entries) == 2
+    # New entry should have rientro type and previous origin city
+    new_entry = entries[1]
+    assert new_entry.entry_type == EntryType.rientro
+    assert new_entry.origin_city_code == "H501"
+    assert new_entry.current is True
+
+    # Old adoption should be closed
+    adoption = db_session.execute(
+        select(Adoption).where(
+            Adoption.animal_id == animal_id,
+        )
+    ).scalar_one()
+    assert adoption.returned_at is not None
