@@ -992,6 +992,7 @@ def test_undo_temporary_adoption(
     )
 
     # Undo the temporary adoption
+    today = date.today()
     animal_repository.undo_temporary_adoption(animal_id)
 
     # Verify a new rientro entry was added
@@ -1012,7 +1013,7 @@ def test_undo_temporary_adoption(
     assert new_entry.origin_city_code == "H501"
     assert new_entry.current is True
     # Entry date should be set to today
-    assert new_entry.entry_date == date.today()
+    assert new_entry.entry_date == today
 
     # Old adoption should be closed
     adoption = db_session.execute(
