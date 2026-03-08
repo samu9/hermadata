@@ -1552,6 +1552,8 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
 
         return new_entry_id
+
+    def get_fur_colors(self) -> list[UtilElement]:
         data = self.session.execute(
             select(FurColor.id, FurColor.name.label("label"))
         ).all()
