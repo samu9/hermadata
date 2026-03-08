@@ -214,7 +214,7 @@ export const animalExitSchema = z
         notes: z.string().nullish(),
     })
     .refine((data) => {
-        if (["A", "R"].includes(data.exit_type)) {
+        if (["A", "T", "R"].includes(data.exit_type)) {
             return (
                 data.adopter_id &&
                 data.location_address &&

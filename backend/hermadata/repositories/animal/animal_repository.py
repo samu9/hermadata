@@ -10,6 +10,7 @@ from sqlalchemy.orm import aliased
 from hermadata.constants import (
     HEALTHCARE_STAGE_ENTRY_TYPES,
     AnimalEvent,
+    EntryType,
     ExitType,
 )
 from hermadata.database.models import (
@@ -75,7 +76,7 @@ from hermadata.time_utils import get_now, get_today
 
 logger = logging.getLogger(__name__)
 
-ADOPTER_EXIT_TYPES: list[ExitType] = [ExitType.adoption, ExitType.custody]
+ADOPTER_EXIT_TYPES: list[ExitType] = [ExitType.adoption, ExitType.temporary_adoption, ExitType.custody]
 
 EXIT_REQUIRED_DATA: dict[str, tuple] = {
     "C": [
@@ -924,7 +925,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         if data.exit_date < entry_date:
             raise ExitNotValidException()
 
-        if data.exit_type == ExitType.adoption:
+        if data.exit_type in (ExitType.adoption, ExitType.temporary_adoption):
             adoption_data = NewAdoption(
                 animal_id=animal_id,
                 adopter_id=data.adopter_id,
@@ -1451,6 +1452,113 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
 
         return variables
+
+    def confirm_temporary_adoption(
+        self, animal_id: int, confirmation_date: date, user_id: int | None = None
+    ) -> ReportAdoptionVariables:
+        """Confirm a temporary adoption as final. Updates exit_type to 'A' and exit_date."""
+        # Verify animal has a temporary adoption exit
+        current_entry = self.session.execute(
+            select(AnimalEntry)
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+                AnimalEntry.exit_type == ExitType.temporary_adoption,
+                Animal.deleted_at.is_(None),
+            )
+        ).scalar_one_or_none()
+
+        if not current_entry:
+            raise Exception(
+                f"Animal {animal_id} does not have a temporary adoption exit"
+            )
+
+        # Update exit_type to adoption and update exit_date
+        self.session.execute(
+            update(AnimalEntry)
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
+            .values(
+                exit_type=ExitType.adoption,
+                exit_date=confirmation_date,
+            )
+        )
+
+        # Also update the adoption completed_at to confirmation_date
+        self.session.execute(
+            update(Adoption)
+            .where(
+                Adoption.animal_id == animal_id,
+                Adoption.animal_entry_id == current_entry.id,
+                Adoption.returned_at.is_(None),
+            )
+            .values(completed_at=datetime.combine(confirmation_date, datetime.min.time()))
+        )
+
+        event_log = AnimalLog(
+            animal_id=animal_id,
+            event=AnimalEvent.temp_adoption_confirmed.value,
+            data={"confirmation_date": confirmation_date.isoformat()},
+            user_id=user_id,
+        )
+        self.session.add(event_log)
+        self.session.flush()
+
+        return self.get_adoption_report_variables(animal_id)
+
+    def undo_temporary_adoption(
+        self, animal_id: int, user_id: int | None = None
+    ) -> int:
+        """Undo a temporary adoption by adding a new entry (rientro) for the animal."""
+        # Get origin_city from the current (temporary adoption) entry
+        current_entry = self.session.execute(
+            select(AnimalEntry)
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+                AnimalEntry.exit_type == ExitType.temporary_adoption,
+                Animal.deleted_at.is_(None),
+            )
+        ).scalar_one_or_none()
+
+        if not current_entry:
+            raise Exception(
+                f"Animal {animal_id} does not have a temporary adoption exit"
+            )
+
+        origin_city_code = current_entry.origin_city_code
+
+        event_log = AnimalLog(
+            animal_id=animal_id,
+            event=AnimalEvent.temp_adoption_undone.value,
+            data={"origin_city_code": origin_city_code},
+            user_id=user_id,
+        )
+        self.session.add(event_log)
+        self.session.flush()
+
+        # Add a new entry (rientro) - this also closes the existing adoption
+        new_entry_id = self.add_entry(
+            animal_id,
+            NewEntryModel(
+                rescue_city_code=origin_city_code,
+                entry_type=EntryType.rientro,
+            ),
+            user_id=user_id,
+        )
+
+        # Set entry_date to today so the rientro is immediately dated
+        self.complete_entry(
+            animal_id,
+            CompleteEntryModel(entry_date=get_today()),
+            user_id=user_id,
+        )
+
+        return new_entry_id
 
     def get_fur_colors(self) -> list[UtilElement]:
         data = self.session.execute(

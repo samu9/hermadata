@@ -8,6 +8,8 @@ import {
     faPencil,
     faTrash,
     faHouseCircleCheck,
+    faCheckCircle,
+    faRotateLeft,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { MenuItem } from "primereact/menuitem"
@@ -128,6 +130,14 @@ const AnimalRecord = (props: Props) => {
     )
     const [isMovingToShelter, setIsMovingToShelter] = useState(false)
 
+    // Temporary adoption states
+    const [confirmAdoptionDialogVisible, setConfirmAdoptionDialogVisible] =
+        useState(false)
+    const [confirmAdoptionDate, setConfirmAdoptionDate] = useState<Date | null>(
+        new Date()
+    )
+    const [isConfirmingAdoption, setIsConfirmingAdoption] = useState(false)
+
     const { addButton, removeButton } = useToolbar()
 
     const confirmDelete = async () => {
@@ -165,6 +175,47 @@ const AnimalRecord = (props: Props) => {
         }
     }
 
+    const confirmTemporaryAdoption = async () => {
+        if (!id || !confirmAdoptionDate) return
+
+        try {
+            setIsConfirmingAdoption(true)
+            await apiService.confirmTemporaryAdoption(
+                Number(id),
+                confirmAdoptionDate
+            )
+            const animalName = props.data.name || "L'animale"
+            apiService.showSuccess(
+                `Adozione di ${animalName} confermata`,
+                "Adozione confermata"
+            )
+            queryClient.invalidateQueries(["animal", id])
+            queryClient.invalidateQueries(["animal-search"])
+            setConfirmAdoptionDialogVisible(false)
+        } catch (error) {
+            console.error("Failed to confirm temporary adoption:", error)
+        } finally {
+            setIsConfirmingAdoption(false)
+        }
+    }
+
+    const undoTemporaryAdoption = async () => {
+        if (!id) return
+
+        try {
+            await apiService.undoTemporaryAdoption(Number(id))
+            const animalName = props.data.name || "L'animale"
+            apiService.showSuccess(
+                `${animalName} è rientrato in rifugio`,
+                "Adozione annullata"
+            )
+            queryClient.invalidateQueries(["animal", id])
+            queryClient.invalidateQueries(["animal-search"])
+        } catch (error) {
+            console.error("Failed to undo temporary adoption:", error)
+        }
+    }
+
     useEffect(() => {
         if (props.data.healthcare_stage && !props.data.exit_type) {
             addButton({
@@ -185,6 +236,34 @@ const AnimalRecord = (props: Props) => {
         addButton,
         removeButton,
     ])
+
+    // Temporary adoption action buttons
+    useEffect(() => {
+        if (props.data.exit_type === "T" && can(Permission.MAKE_ADOPTION)) {
+            addButton({
+                id: "confirm-temp-adoption",
+                buttonText: "Conferma adozione",
+                buttonIcon: faCheckCircle,
+                severity: "success",
+                onClick: () => {
+                    setConfirmAdoptionDate(new Date())
+                    setConfirmAdoptionDialogVisible(true)
+                },
+            })
+            addButton({
+                id: "undo-temp-adoption",
+                buttonText: "Annulla adozione",
+                buttonIcon: faRotateLeft,
+                severity: "warning",
+                onClick: undoTemporaryAdoption,
+            })
+        }
+        return () => {
+            removeButton("confirm-temp-adoption")
+            removeButton("undo-temp-adoption")
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [props.data.exit_type, can, addButton, removeButton])
 
     useEffect(() => {
         if (isSuperUser) {
@@ -364,6 +443,49 @@ const AnimalRecord = (props: Props) => {
                     <Calendar
                         value={moveToShelterDate}
                         onChange={(e) => setMoveToShelterDate(e.value as Date)}
+                        showIcon
+                        dateFormat="dd/mm/yy"
+                        className="w-full"
+                        maxDate={new Date()}
+                    />
+                </div>
+            </Dialog>
+
+            {/* Confirm Temporary Adoption Dialog */}
+            <Dialog
+                header="Conferma adozione"
+                visible={confirmAdoptionDialogVisible}
+                style={{ width: "400px" }}
+                onHide={() => setConfirmAdoptionDialogVisible(false)}
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            label="Annulla"
+                            icon="pi pi-times"
+                            onClick={() =>
+                                setConfirmAdoptionDialogVisible(false)
+                            }
+                            className="p-button-text"
+                        />
+                        <Button
+                            label="Conferma"
+                            icon="pi pi-check"
+                            onClick={confirmTemporaryAdoption}
+                            loading={isConfirmingAdoption}
+                            autoFocus
+                        />
+                    </div>
+                }
+            >
+                <div className="flex flex-col gap-4">
+                    <p className="m-0">
+                        Seleziona la data di conferma dell'adozione definitiva:
+                    </p>
+                    <Calendar
+                        value={confirmAdoptionDate}
+                        onChange={(e) =>
+                            setConfirmAdoptionDate(e.value as Date)
+                        }
                         showIcon
                         dateFormat="dd/mm/yy"
                         className="w-full"

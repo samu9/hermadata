@@ -10,6 +10,8 @@ AD,Adozione completata,automatic
 AR,Rientro da adozione,automatic
 DU_DOC,Documento caricato,automatic
 MS,Spostamento in rifugio,automatic
+TC,Adozione temporanea confermata,automatic
+TU,Adozione temporanea annullata,automatic
 CS,Castrazione-Sterilizzazione,manual
 C,Calore,manual
 MD,Morsicatura data,manual

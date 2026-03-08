@@ -220,3 +220,118 @@ def test_exits_report(
     assert filename is not None
     assert report is not None
     assert isinstance(report, bytes)
+
+
+def test_temporary_adoption_exit_generates_document(
+    make_animal,
+    make_adopter,
+    animal_service: AnimalService,
+    complete_animal_data,
+    db_session,
+):
+    """Test that exiting with temporary adoption generates a document with 'Temporanea' in title."""
+    from sqlalchemy import select
+    from hermadata.constants import DocKindCode
+    from hermadata.database.models import AnimalDocument, DocumentKind
+    from datetime import datetime, timedelta
+
+    animal_id = make_animal()
+    animal_service.complete_entry(
+        animal_id,
+        data=CompleteEntryModel(
+            entry_date=datetime.now().date() - timedelta(days=10)
+        ),
+    )
+    adopter_id = make_adopter()
+    complete_animal_data(animal_id)
+
+    animal_service.exit(
+        animal_id,
+        data=AnimalExit(
+            exit_date=datetime.now().date(),
+            exit_type=ExitType.temporary_adoption,
+            adopter_id=adopter_id,
+            notes="Test temporaneo",
+            location_address="Via test",
+            location_city_code="H501",
+        ),
+    )
+
+    # Verify a document was generated with the correct kind
+    doc = animal_service.animal_repository.session.execute(
+        select(AnimalDocument.title)
+        .join(DocumentKind, DocumentKind.id == AnimalDocument.document_kind_id)
+        .where(
+            AnimalDocument.animal_id == animal_id,
+            DocumentKind.code == DocKindCode.adozione.value,
+        )
+    ).scalar_one()
+
+    assert doc is not None
+    assert "Temporanea" in doc or "Adozione Temporanea" in doc
+
+
+def test_confirm_temporary_adoption_service(
+    make_animal,
+    make_adopter,
+    animal_service: AnimalService,
+    complete_animal_data,
+    db_session,
+):
+    """Test that confirming a temporary adoption via service generates a final adoption document."""
+    from sqlalchemy import select
+    from hermadata.constants import DocKindCode
+    from hermadata.database.models import AnimalDocument, AnimalEntry, DocumentKind
+    from datetime import datetime, timedelta, date
+
+    animal_id = make_animal()
+    animal_service.complete_entry(
+        animal_id,
+        data=CompleteEntryModel(
+            entry_date=datetime.now().date() - timedelta(days=20)
+        ),
+    )
+    adopter_id = make_adopter()
+    complete_animal_data(animal_id)
+
+    animal_service.exit(
+        animal_id,
+        data=AnimalExit(
+            exit_date=datetime.now().date() - timedelta(days=5),
+            exit_type=ExitType.temporary_adoption,
+            adopter_id=adopter_id,
+            notes="Test temporaneo",
+            location_address="Via test",
+            location_city_code="H501",
+        ),
+    )
+
+    confirmation_date = datetime.now().date()
+    animal_service.confirm_temporary_adoption(animal_id, confirmation_date)
+
+    # Verify exit type is now adoption
+    entry = animal_service.animal_repository.session.execute(
+        select(AnimalEntry).where(
+            AnimalEntry.animal_id == animal_id,
+            AnimalEntry.current.is_(True),
+        )
+    ).scalar_one()
+
+    assert entry.exit_type == ExitType.adoption
+    assert entry.exit_date == confirmation_date
+
+    # Verify a final adoption document was generated
+    docs = animal_service.animal_repository.session.execute(
+        select(AnimalDocument.title)
+        .join(DocumentKind, DocumentKind.id == AnimalDocument.document_kind_id)
+        .where(
+            AnimalDocument.animal_id == animal_id,
+            DocumentKind.code == DocKindCode.adozione.value,
+        )
+    ).scalars().all()
+
+    # There should be at least 2 documents: one for temp adoption, one for final
+    assert len(docs) >= 2
+    # The last one should NOT have "Temporanea" in title
+    final_doc = [d for d in docs if d and "Temporanea" not in d]
+    assert len(final_doc) >= 1
