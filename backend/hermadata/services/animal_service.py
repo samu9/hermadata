@@ -26,6 +26,7 @@ from hermadata.repositories.document_repository import (
     SQLDocumentRepository,
 )
 from hermadata.storage.base import StorageInterface
+from datetime import date
 
 
 class AnimalService:
@@ -124,7 +125,9 @@ class AnimalService:
     ):
         self.animal_repository.exit(animal_id, data, user_id)
 
-        if data.exit_type in (ExitType.adoption, ExitType.custody):
+        if data.exit_type == ExitType.temporary_adoption:
+            self.generate_adoption_report(animal_id, temporary=True)
+        elif data.exit_type in (ExitType.adoption, ExitType.custody):
             self.generate_adoption_report(animal_id)
 
         self.generate_variation_report(animal_id)
@@ -158,9 +161,47 @@ class AnimalService:
 
         return filename, report
 
-    def generate_adoption_report(self, animal_id: int):
+    def generate_adoption_report(self, animal_id: int, temporary: bool = False):
         variables = self.animal_repository.get_adoption_report_variables(
             animal_id
+        )
+
+        if temporary:
+            variables.title = "DOCUMENTO DI ADOZIONE TEMPORANEA"
+
+        pdf = self.report_generator.build_adoption_report(variables)
+
+        doc_title = (
+            f"Adozione Temporanea {variables.animal.chip_code}"
+            if temporary
+            else f"Adozione {variables.animal.chip_code}"
+        )
+
+        new_document_id = self.document_repository.new_document(
+            data=NewDocument(
+                storage_service=self.document_repository.selected_storage,
+                filename=f"adozione_{variables.animal.chip_code}.pdf",
+                data=pdf,
+                mimetype="application/pdf",
+                is_uploaded=False,
+            )
+        )
+
+        self.animal_repository.new_document(
+            animal_id=animal_id,
+            data=NewAnimalDocument(
+                document_id=new_document_id,
+                document_kind_code=DocKindCode.adozione,
+                title=doc_title,
+            ),
+        )
+
+    def confirm_temporary_adoption(
+        self, animal_id: int, confirmation_date: date, user_id: int | None = None
+    ):
+        """Confirm a temporary adoption: update exit_type to adoption and generate final document."""
+        variables = self.animal_repository.confirm_temporary_adoption(
+            animal_id, confirmation_date, user_id
         )
 
         pdf = self.report_generator.build_adoption_report(variables)
@@ -183,6 +224,14 @@ class AnimalService:
                 title=f"Adozione {variables.animal.chip_code}",
             ),
         )
+
+        self.generate_variation_report(animal_id)
+
+    def undo_temporary_adoption(
+        self, animal_id: int, user_id: int | None = None
+    ):
+        """Undo a temporary adoption: add rientro entry for the animal."""
+        self.animal_repository.undo_temporary_adoption(animal_id, user_id)
 
     def generate_variation_report(self, animal_id: int):
         variables = self.animal_repository.get_variation_report_variables(

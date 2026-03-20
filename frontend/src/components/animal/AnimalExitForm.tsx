@@ -7,6 +7,7 @@ import {
 import ControlledDropdown from "../forms/ControlledDropdown"
 import ControlledInputDate from "../forms/ControlledInputDate"
 import { Button } from "primereact/button"
+import { Checkbox } from "primereact/checkbox"
 import { useEffect, useRef, useState } from "react"
 import {
     useAnimalQuery,
@@ -49,9 +50,14 @@ const AnimalExitForm = () => {
     const [adopterAction, setAdopterAction] = useState<"add" | "search">(
         "search"
     )
+    const [isTemporary, setIsTemporary] = useState(false)
     const { startLoading, stopLoading } = useLoader()
 
     const exitTypesQuery = useExitTypesQuery()
+    // Filter out "temporary_adoption" (T) from the dropdown - it's handled via the checkbox
+    const exitTypesForDropdown = exitTypesQuery.data?.filter(
+        (t) => t.id !== "T"
+    )
     const form = useForm<AnimalExitFormState>({
         resolver: zodResolver(animalExitSchema),
         defaultValues: {
@@ -114,7 +120,12 @@ const AnimalExitForm = () => {
     const { clearStorage } = useFormPersist(`animal-exit-form-${id}`, form)
 
     const onSubmit = (data: AnimalExit) => {
-        animalExitMutation.mutate(data, {
+        // When adoption and temporary checkbox is checked, use "T" exit type
+        const submitData: AnimalExit = {
+            ...data,
+            exit_type: data.exit_type === "A" && isTemporary ? "T" : data.exit_type,
+        }
+        animalExitMutation.mutate(submitData, {
             onSuccess: () => {
                 clearStorage()
                 reset()
@@ -122,13 +133,18 @@ const AnimalExitForm = () => {
         })
     }
 
+    const [isAdoption, setIsAdoption] = useState(false)
     const [isDetention, setIsDetention] = useState(false)
     useEffect(() => {
         const values = getValues()
-        // console.log(values, isValid, errors)
+        const isAdoptionType = values.exit_type === "A"
+        setIsAdoption(isAdoptionType)
+        if (!isAdoptionType) {
+            setIsTemporary(false)
+        }
         setIsDetention(["A", "R"].includes(values.exit_type))
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [watch("exit_type")]) 
+    }, [watch("exit_type")])
     return (
         <div className="max-w-6xl mx-auto p-6">
             <FormProvider {...form}>
@@ -150,10 +166,33 @@ const AnimalExitForm = () => {
                                 label="Tipo uscita"
                                 optionValue="id"
                                 optionLabel="label"
-                                options={exitTypesQuery.data}
+                                options={exitTypesForDropdown}
                                 className="w-full"
                             />
                         </div>
+                        {isAdoption && (
+                            <div className="flex items-center gap-3 mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                                <Checkbox
+                                    inputId="temporary-adoption"
+                                    checked={isTemporary}
+                                    onChange={(e) =>
+                                        setIsTemporary(e.checked ?? false)
+                                    }
+                                />
+                                <label
+                                    htmlFor="temporary-adoption"
+                                    className="text-amber-800 font-medium cursor-pointer"
+                                >
+                                    Temporaneo
+                                </label>
+                                {isTemporary && (
+                                    <span className="text-xs text-amber-600 ml-2">
+                                        Verrà generato un documento di adozione
+                                        temporanea
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Detention Details - Only shown when exit type is detention */}

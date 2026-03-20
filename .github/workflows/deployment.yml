@@ -41,6 +41,7 @@ jobs:
                   set -e
                   cd /opt/hermadata
                   source .venv/bin/activate
+                  export ENV_PATH=.env
                   pip install *.tar.gz --force-reinstall
                   rm *.tar.gz
 
