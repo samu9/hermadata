@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from pydantic import BaseModel
 from sqlalchemy.exc import NoResultFound
 
 from hermadata.constants import EXCEL_MEDIA_TYPE, ApiErrorCode, Permission
@@ -49,6 +50,10 @@ from hermadata.services.animal_service import AnimalService
 from hermadata.services.user_service import TokenData
 
 router = APIRouter(prefix="/animal")
+
+
+class ConfirmTemporaryAdoptionRequest(BaseModel):
+    confirmation_date: date
 
 
 @router.post("")
@@ -401,6 +406,41 @@ def move_to_shelter(
             detail="Ingresso non completato. Imposta una data di uscita.",
         ) from e
 
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.post("/{animal_id}/confirm-temporary-adoption")
+def confirm_temporary_adoption(
+    animal_id: int,
+    data: ConfirmTemporaryAdoptionRequest,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.MAKE_ADOPTION))
+    ],
+):
+    """Confirm a temporary adoption, updating exit type to final adoption."""
+    try:
+        service.confirm_temporary_adoption(
+            animal_id, data.confirmation_date, user_id=current_user.user_id
+        )
+        return True
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.post("/{animal_id}/undo-temporary-adoption")
+def undo_temporary_adoption(
+    animal_id: int,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.MAKE_ADOPTION))
+    ],
+):
+    """Undo a temporary adoption, adding a rientro entry for the animal."""
+    try:
+        service.undo_temporary_adoption(animal_id, user_id=current_user.user_id)
+        return True
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 

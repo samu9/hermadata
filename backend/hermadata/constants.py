@@ -33,6 +33,7 @@ class EntryType(str, Enum):
     quitclaim = "Q"
     temporary_owner_surrender = "T"
     other_structure_surrender = "O"
+    rientro = "N"
 
 
 ENTRY_TYPE_LABELS = {
@@ -42,6 +43,7 @@ ENTRY_TYPE_LABELS = {
     EntryType.quitclaim: "Rinuncia di proprietà",
     EntryType.temporary_owner_surrender: "Conferimento temporaneo del padrone",
     EntryType.other_structure_surrender: "Cessione da altra struttura",
+    EntryType.rientro: "Rientro",
 }
 
 # Entry types that should set in_shelter_from date
@@ -55,6 +57,7 @@ HEALTHCARE_STAGE_ENTRY_TYPES = {
 
 class ExitType(str, Enum):
     adoption = "A"
+    temporary_adoption = "T"
     death = "D"
     return_ = "R"
     disappeared = "I"
@@ -63,6 +66,7 @@ class ExitType(str, Enum):
 
 EXIT_TYPE_LABELS = {
     ExitType.adoption: "Adozione",
+    ExitType.temporary_adoption: "Adozione Temporanea",
     ExitType.death: "Morte",
     ExitType.return_: "Restituzione",
     ExitType.disappeared: "Scomparsa",
@@ -145,6 +149,8 @@ class AnimalEvent(Enum):
     data_update = "DU"  # Animal data update
     chip_assigned = "CA"  # Chip code assignment
     moved_to_shelter = "MS"  # Moved from hospital to shelter
+    temp_adoption_confirmed = "TC"  # Temporary adoption confirmed as final
+    temp_adoption_undone = "TU"  # Temporary adoption undone (animal returned)
 
 
 class ApiErrorCode(Enum):

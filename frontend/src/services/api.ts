@@ -522,6 +522,20 @@ class ApiService {
         return exitCheckResultSchema.parse(result)
     }
 
+    async confirmTemporaryAdoption(
+        id: number,
+        confirmationDate: Date,
+    ): Promise<void> {
+        await this.post<void>(
+            ApiEndpoints.animal.confirmTemporaryAdoption(id),
+            { confirmation_date: confirmationDate.toISOString().split("T")[0] },
+        )
+    }
+
+    async undoTemporaryAdoption(id: number): Promise<void> {
+        await this.post<void>(ApiEndpoints.animal.undoTemporaryAdoption(id), {})
+    }
+
     async animalDaysReport(data: AnimalDaysRequest) {
         const result = await this.inst.get(ApiEndpoints.animal.daysReport, {
             params: data,
