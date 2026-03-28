@@ -39,6 +39,9 @@ class CompleteNewAdopter(NewAdopterRequest):
 
 
 class AdopterService:
+    FOREIGN_PROVINCE_CODE = "EE"
+    FOREIGN_CITY_NAME = "STATO ESTERO"
+
     def __init__(
         self,
         adopter_repository: SQLAdopterRepository,
@@ -55,6 +58,10 @@ class AdopterService:
     def _validate_birth_city_code(self, city_code: str) -> str:
         """Validate that the birth city code exists in the database.
 
+        For foreign-born individuals, the codice fiscale encodes the country
+        with a code starting with 'Z'. If the code is not yet in the database,
+        it is automatically created under province 'EE' (STATO ESTERO).
+
         Args:
             city_code: The city code to validate
 
@@ -68,9 +75,16 @@ class AdopterService:
             raise ValueError("Birth city code cannot be empty")
 
         if not self.city_repository.city_exists(city_code):
-            raise ValueError(
-                f"Birth city code '{city_code}' not found in database"
-            )
+            if city_code.startswith("Z"):
+                self.city_repository.create_comune(
+                    code=city_code,
+                    name=self.FOREIGN_CITY_NAME,
+                    provincia=self.FOREIGN_PROVINCE_CODE,
+                )
+            else:
+                raise ValueError(
+                    f"Birth city code '{city_code}' not found in database"
+                )
 
         return city_code
 
