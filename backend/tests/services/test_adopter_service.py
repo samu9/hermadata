@@ -90,3 +90,33 @@ def test_create_adopter_invalid_residence_city(
 
     with pytest.raises(ValueError, match="Residence city code 'ZZZZ'"):
         adopter_service.create(new_adopter_data)
+
+
+def test_create_adopter_foreign_born(adopter_service: AdopterService):
+    """Test creating an adopter born abroad (foreign birthplace code starting with Z)."""
+    # RSSMRA80A01Z100A is a valid codice fiscale for someone born in Albania (Z100)
+    new_adopter_data = NewAdopterRequest(
+        name="Mario",
+        surname="Rossi",
+        fiscal_code="RSSMRA80A01Z100A",
+        residence_city_code="H501",
+        phone="3331234567",
+        document_type="id",
+        document_number="AR1234567",
+    )
+
+    result = adopter_service.create(new_adopter_data)
+
+    assert result.name == "MARIO"
+    assert result.surname == "ROSSI"
+    assert result.fiscal_code == "RSSMRA80A01Z100A"
+    assert result.birth_city_code == "Z100"
+    assert result.birth_date == date(1980, 1, 1)
+
+    # Verify the foreign city was stored in the database
+    from hermadata.repositories.city_repository import SQLCityRepository
+
+    city = adopter_service.city_repository.get_comune("Z100")
+    assert city is not None
+    assert city.name == "STATO ESTERO"
+    assert city.provincia == "EE"
