@@ -575,6 +575,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_race_id,
             animal_race,
             origin_city_name,
+            adopter_id,
+            location_address,
+            location_city_code,
         ) = self.session.execute(
             select(
                 AnimalEntry,
@@ -582,11 +585,21 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Animal.race_id,
                 Race.name,
                 Comune.name,
+                Adoption.adopter_id,
+                Adoption.location_address,
+                Adoption.location_city_code,
             )
             .select_from(AnimalEntry)
             .join(Animal, AnimalEntry.animal_id == Animal.id)
             .join(Race, Animal.race_id == Race.id)
             .join(Comune, Comune.id == AnimalEntry.origin_city_code)
+            .outerjoin(
+                Adoption,
+                and_(
+                    Adoption.animal_entry_id == AnimalEntry.id,
+                    Adoption.returned_at.is_(None),
+                ),
+            )
             .where(
                 AnimalEntry.id == entry_id,
                 Animal.deleted_at.is_(None),
@@ -608,6 +621,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             entry_notes=animal_entry.entry_notes,
             exit_notes=animal_entry.exit_notes,
             without_chip=animal_entry.without_chip,
+            adopter_id=adopter_id,
+            location_address=location_address,
+            location_city_code=location_city_code,
         )
 
         return result
@@ -620,11 +636,21 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Animal.race_id,
                 Race.name,
                 Comune.name,
+                Adoption.adopter_id,
+                Adoption.location_address,
+                Adoption.location_city_code,
             )
             .select_from(AnimalEntry)
             .join(Animal, AnimalEntry.animal_id == Animal.id)
             .join(Race, Animal.race_id == Race.id)
             .join(Comune, Comune.id == AnimalEntry.origin_city_code)
+            .outerjoin(
+                Adoption,
+                and_(
+                    Adoption.animal_entry_id == AnimalEntry.id,
+                    Adoption.returned_at.is_(None),
+                ),
+            )
             .where(
                 AnimalEntry.animal_id == animal_id,
                 Animal.deleted_at.is_(None),
@@ -639,6 +665,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_race_id,
             animal_race,
             origin_city_name,
+            adopter_id,
+            location_address,
+            location_city_code,
         ) in entries_data:
             animal_entry: AnimalEntry
             result = AnimalEntryModel(
@@ -656,25 +685,56 @@ class SQLAnimalRepository(SQLBaseRepository):
                 entry_notes=animal_entry.entry_notes,
                 exit_notes=animal_entry.exit_notes,
                 without_chip=animal_entry.without_chip,
+                adopter_id=adopter_id,
+                location_address=location_address,
+                location_city_code=location_city_code,
             )
             results.append(result)
 
         return results
 
+    def update_adoption_by_entry(
+        self,
+        entry_id: int,
+        adopter_id: int,
+        location_address: str | None,
+        location_city_code: str | None,
+    ) -> bool:
+        """Update the active adoption linked to an entry.
+        Returns True if a row was updated."""
+        result = self.session.execute(
+            update(Adoption)
+            .where(
+                Adoption.animal_entry_id == entry_id,
+                Adoption.returned_at.is_(None),
+            )
+            .values(
+                adopter_id=adopter_id,
+                location_address=location_address,
+                location_city_code=location_city_code,
+            )
+        )
+        self.session.flush()
+        return result.rowcount > 0
+
     def update_animal_entry(
         self, entry_id: int, updates: UpdateAnimalEntryModel
     ) -> int:
         """Update an animal entry and return the number of updated rows"""
-        values = updates.model_dump(exclude_none=True)
-
-        if not values:
-            return 0
-
-        result = self.session.execute(
-            update(AnimalEntry)
-            .where(AnimalEntry.id == entry_id)
-            .values(**values)
+        # Exclude adoption-specific fields that live on the Adoption table
+        values = updates.model_dump(
+            exclude_none=True,
+            exclude={"adopter_id", "location_address", "location_city_code"},
         )
+
+        rowcount = 0
+        if values:
+            result = self.session.execute(
+                update(AnimalEntry)
+                .where(AnimalEntry.id == entry_id)
+                .values(**values)
+            )
+            rowcount = result.rowcount
 
         # Add event log for tracking changes
         event_log = AnimalLog(
@@ -687,7 +747,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.add(event_log)
         self.session.flush()
 
-        return result.rowcount
+        return rowcount
 
     def update(
         self, id: str, updates: UpdateAnimalModel, user_id: int | None = None
