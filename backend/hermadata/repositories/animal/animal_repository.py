@@ -76,7 +76,11 @@ from hermadata.time_utils import get_now, get_today
 
 logger = logging.getLogger(__name__)
 
-ADOPTER_EXIT_TYPES: list[ExitType] = [ExitType.adoption, ExitType.temporary_adoption, ExitType.custody]
+ADOPTER_EXIT_TYPES: list[ExitType] = [
+    ExitType.adoption,
+    ExitType.temporary_adoption,
+    ExitType.custody,
+]
 
 EXIT_REQUIRED_DATA: dict[str, tuple] = {
     "C": [
@@ -171,15 +175,12 @@ class SQLAnimalRepository(SQLBaseRepository):
 
     def get_logs(self, animal_id: int) -> list[AnimalLogModel]:
         """Get all logs for an animal"""
-        results = (
-            self.session.execute(
-                select(AnimalLog, AnimalEventType.description)
-                .join(AnimalEventType, AnimalLog.event == AnimalEventType.code)
-                .where(AnimalLog.animal_id == animal_id)
-                .order_by(AnimalLog.created_at.desc())
-            )
-            .all()
-        )
+        results = self.session.execute(
+            select(AnimalLog, AnimalEventType.description)
+            .join(AnimalEventType, AnimalLog.event == AnimalEventType.code)
+            .where(AnimalLog.animal_id == animal_id)
+            .order_by(AnimalLog.created_at.desc())
+        ).all()
 
         return [
             AnimalLogModel(
@@ -1454,7 +1455,10 @@ class SQLAnimalRepository(SQLBaseRepository):
         return variables
 
     def confirm_temporary_adoption(
-        self, animal_id: int, confirmation_date: date, user_id: int | None = None
+        self,
+        animal_id: int,
+        confirmation_date: date,
+        user_id: int | None = None,
     ) -> ReportAdoptionVariables:
         """Confirm a temporary adoption as final. Updates exit_type to 'A' and exit_date."""
         # Verify animal has a temporary adoption exit
@@ -1495,7 +1499,11 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Adoption.animal_entry_id == current_entry.id,
                 Adoption.returned_at.is_(None),
             )
-            .values(completed_at=datetime.combine(confirmation_date, datetime.min.time()))
+            .values(
+                completed_at=datetime.combine(
+                    confirmation_date, datetime.min.time()
+                )
+            )
         )
 
         event_log = AnimalLog(
