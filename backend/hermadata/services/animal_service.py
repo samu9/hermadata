@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import Depends
@@ -19,6 +20,7 @@ from hermadata.repositories.animal.models import (
     CompleteEntryModel,
     NewAnimalDocument,
     NewAnimalLogModel,
+    UpdateAnimalEntryModel,
     UpdateAnimalModel,
 )
 from hermadata.repositories.document_repository import (
@@ -26,7 +28,6 @@ from hermadata.repositories.document_repository import (
     SQLDocumentRepository,
 )
 from hermadata.storage.base import StorageInterface
-from datetime import date
 
 
 class AnimalService:
@@ -86,6 +87,35 @@ class AnimalService:
         user_id: int | None = None,
     ):
         self.animal_repository.complete_entry(animal_id, data, user_id)
+
+    def update_animal_entry(
+        self,
+        animal_id: int,
+        entry_id: int,
+        data: UpdateAnimalEntryModel,
+    ) -> int:
+        entry = self.animal_repository.get_animal_entry(entry_id)
+        if entry.animal_id != animal_id:
+            raise Exception("Entry does not belong to animal")
+
+        updated_rows = self.animal_repository.update_animal_entry(
+            entry_id, data
+        )
+
+        if data.adopter_id is not None:
+            updated = self.animal_repository.update_adoption_by_entry(
+                entry_id,
+                data.adopter_id,
+                data.location_address,
+                data.location_city_code,
+            )
+            if updated and entry.exit_type:
+                if entry.exit_type == ExitType.temporary_adoption:
+                    self.generate_adoption_report(animal_id, temporary=True)
+                elif entry.exit_type in (ExitType.adoption, ExitType.custody):
+                    self.generate_adoption_report(animal_id, temporary=False)
+
+        return updated_rows
 
     def generate_entry_report(self, entry_id: int):
         entry = self.animal_repository.get_animal_entry(entry_id)
@@ -161,7 +191,9 @@ class AnimalService:
 
         return filename, report
 
-    def generate_adoption_report(self, animal_id: int, temporary: bool = False):
+    def generate_adoption_report(
+        self, animal_id: int, temporary: bool = False
+    ):
         variables = self.animal_repository.get_adoption_report_variables(
             animal_id
         )
@@ -197,7 +229,10 @@ class AnimalService:
         )
 
     def confirm_temporary_adoption(
-        self, animal_id: int, confirmation_date: date, user_id: int | None = None
+        self,
+        animal_id: int,
+        confirmation_date: date,
+        user_id: int | None = None,
     ):
         """Confirm a temporary adoption: update exit_type to adoption and generate final document."""
         variables = self.animal_repository.confirm_temporary_adoption(
