@@ -450,6 +450,9 @@ class AnimalEntryModel(BaseModel):
     entry_notes: str | None = None
     exit_notes: str | None = None
     without_chip: bool
+    adopter_id: int | None = None
+    location_address: str | None = None
+    location_city_code: str | None = None
 
 
 class UpdateAnimalEntryModel(BaseModel):
@@ -460,6 +463,9 @@ class UpdateAnimalEntryModel(BaseModel):
     entry_notes: str | None = None
     exit_notes: str | None = None
     without_chip: bool | None = None
+    adopter_id: int | None = None
+    location_address: str | None = None
+    location_city_code: str | None = None
 
 
 class NewAdoption(BaseModel):
