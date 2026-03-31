@@ -341,6 +341,7 @@ def update_animal_entry(
     entry_id: int,
     data: UpdateAnimalEntryModel,
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    service: Annotated[AnimalService, Depends(get_animal_service)],
 ):
     """Update an animal entry"""
     try:
@@ -352,11 +353,7 @@ def update_animal_entry(
                 detail=f"Entry {entry_id} not found for animal {animal_id}",
             )
 
-        updated_rows = repo.update_animal_entry(entry_id, data)
-        if updated_rows == 0:
-            raise HTTPException(
-                status_code=404, detail=f"Entry {entry_id} not found"
-            )
+        updated_rows = service.update_animal_entry(animal_id, entry_id, data)
 
         return {
             "message": "Entry updated successfully",
@@ -439,7 +436,9 @@ def undo_temporary_adoption(
 ):
     """Undo a temporary adoption, adding a rientro entry for the animal."""
     try:
-        service.undo_temporary_adoption(animal_id, user_id=current_user.user_id)
+        service.undo_temporary_adoption(
+            animal_id, user_id=current_user.user_id
+        )
         return True
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
