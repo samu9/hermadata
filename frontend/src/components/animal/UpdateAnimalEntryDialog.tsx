@@ -21,7 +21,7 @@ const UpdateAnimalEntryDialog = ({
         <Dialog
             header="Modifica Ingresso/Uscita"
             visible={visible}
-            style={{ width: "90vw", maxWidth: "800px" }}
+            style={{ width: "75vw" }}
             onHide={onHide}
             modal
             resizable={false}
