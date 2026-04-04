@@ -60,6 +60,7 @@ const SearchAdopter = (props: SearchAdopterProps) => {
                         />
                     </div>
                     <Button
+                        type="button"
                         onClick={handleSearch}
                         disabled={!fiscalCode || fiscalCode.length < 3}
                         loading={searchQuery.isLoading}
