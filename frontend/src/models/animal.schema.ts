@@ -33,6 +33,9 @@ export const animalEntrySchema = z.object({
     entry_notes: z.string().nullish(),
     exit_notes: z.string().nullish(),
     without_chip: z.boolean().optional(),
+    adopter_id: z.number().nullish(),
+    location_address: z.string().nullish(),
+    location_city_code: z.string().nullish(),
 })
 
 export type AnimalEntry = z.infer<typeof animalEntrySchema>
@@ -118,6 +121,9 @@ export const updateAnimalEntrySchema = z.object({
     entry_notes: z.string().nullish(),
     exit_notes: z.string().nullish(),
     without_chip: z.boolean().optional(),
+    adopter_id: z.number().nullish(),
+    location_address: z.string().nullish(),
+    location_city_code: z.string().nullish(),
 })
 export type UpdateAnimalEntry = z.infer<typeof updateAnimalEntrySchema>
 

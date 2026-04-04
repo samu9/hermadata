@@ -10,6 +10,7 @@ export type ProvinciaSchema = z.infer<typeof provinciaSchema>
 export const comuneSchema = z.object({
     id: z.string().regex(/[A-Z]\d{3}/),
     name: z.string(),
+    provincia: z.string().optional(),
 })
 
 export type ComuneSchema = z.infer<typeof comuneSchema>
