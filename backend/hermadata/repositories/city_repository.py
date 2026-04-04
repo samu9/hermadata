@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, constr
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from hermadata.database.models import Comune, Provincia
 from hermadata.repositories import SQLBaseRepository
@@ -74,4 +75,22 @@ class SQLCityRepository(SQLBaseRepository):
         if result:
             return ComuneModel.model_validate(result)
         return None
+
+    def create_comune(self, code: str, name: str, provincia: str) -> ComuneModel:
+        """Create a new comune entry in the database.
+
+        If a concurrent request has already inserted the same code, the
+        existing record is returned instead of raising an error.
+        """
+        try:
+            comune = Comune(id=code, name=name, provincia=provincia)
+            self.session.add(comune)
+            self.session.flush()
+            return ComuneModel.model_validate(comune)
+        except IntegrityError:
+            self.session.rollback()
+            result = self.session.execute(
+                select(Comune).where(Comune.id == code)
+            ).scalar_one()
+            return ComuneModel.model_validate(result)
 
