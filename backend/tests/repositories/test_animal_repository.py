@@ -221,7 +221,7 @@ def test_add_entry(
     complete_animal_data,
 ):
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
         structure_id=1,
     )
     code = animal_repository.new_animal(data)
@@ -276,7 +276,7 @@ def test_count_days(
     complete_animal_data,
 ):
     new_animal = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value,
         structure_id=1,
     )
 
@@ -349,7 +349,7 @@ def test_count_days(
     assert result.total_days == 10
 
     new_animal = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value,
         structure_id=1,
     )
 
@@ -833,7 +833,7 @@ def test_temporary_adoption_exit(
     )
 
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
         structure_id=1,
     )
     code = animal_repository.new_animal(data)
@@ -897,7 +897,7 @@ def test_confirm_temporary_adoption(
     )
 
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
         structure_id=1,
     )
     code = animal_repository.new_animal(data)
@@ -966,7 +966,7 @@ def test_undo_temporary_adoption(
     from hermadata.database.models import Adoption
 
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
         structure_id=1,
     )
     code = animal_repository.new_animal(data)

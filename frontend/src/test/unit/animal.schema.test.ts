@@ -75,6 +75,7 @@ describe('animalSearchResultSchema', () => {
       in_shelter_from: null,
       healthcare_stage: false,
       without_chip: false,
+      structure_id: 1,
     }
     const result = animalSearchResultSchema.parse(raw)
     expect(result.id).toBe(1)
@@ -94,6 +95,7 @@ describe('animalSearchResultSchema', () => {
       rescue_province: 'RM',
       entry_date: null,
       entry_type: 'R',
+      structure_id: 1,
     }
     const result = animalSearchResultSchema.parse(raw)
     expect(result.entry_date).toBeNull()
@@ -115,6 +117,7 @@ describe('paginatedAnimalSearchResultSchema', () => {
           rescue_province: 'RM',
           entry_date: '2024-01-15',
           entry_type: 'R',
+          structure_id: 1,
         },
       ],
     }
@@ -130,6 +133,7 @@ describe('newAnimalEntrySchema', () => {
       rescue_city_code: 'H501',
       entry_type: 'R',
       race_id: 'C',
+      structure_id: 1,
     }
     const result = newAnimalEntrySchema.parse(raw)
     expect(result.entry_type).toBe('R')
