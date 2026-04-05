@@ -13,6 +13,7 @@ from hermadata.routers import (
     breed_router,
     document_router,
     race_router,
+    structure_router,
     user_router,
     util_router,
     vet_router,
@@ -45,6 +46,7 @@ def build_app():
     app.include_router(adopter_router.router)
     app.include_router(vet_router.router)
     app.include_router(user_router.router)
+    app.include_router(structure_router.router)
 
     app.add_exception_handler(APIException, api_error_exception_handler)
 

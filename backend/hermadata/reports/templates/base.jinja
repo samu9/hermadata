@@ -14,12 +14,12 @@
         <div class="flex flex-col" style="min-height: 100vh;">
             <div class="text-center">
                 <div class="font-bold">
-                    <h3>CANILE HERMADA</h3>
+                    <h3>{% if structure %}{{ structure.name | upper }}{% else %}CANILE HERMADA{% endif %}</h3>
                     <h3>ASSOCIAZIONE AMICI DEGLI ANIMALI</h3>
                 </div>
                 <p class="text-sm">
-                    Registro Regionale delle Organizzazioni del Volontariato
-                    L.R. 29/1996 - Decr. Pres.le N.60 - 22.02.97 PT
+                    {% if structure and structure.address %}{{ structure.address }}{% endif %}
+                    {% if structure and structure.city %} - {{ structure.city | upper }}{% endif %}
                 </p>
             </div>
             <div class="text-center">

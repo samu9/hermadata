@@ -166,3 +166,9 @@ export const useRecentAnimalsQuery = (limit: number = 5) =>
             refetchOnWindowFocus: false,
         }
     )
+
+export const useStructuresQuery = () =>
+    useQuery("structures", () => apiService.getStructures(), {
+        placeholderData: [],
+        staleTime: Infinity,
+    })

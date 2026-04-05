@@ -28,6 +28,7 @@ from hermadata.database.models import (
     MedicalActivity,
     MedicalActivityRecord,
     Race,
+    Structure,
     VetServiceRecord,
 )
 from hermadata.errors import APIException
@@ -37,6 +38,7 @@ from hermadata.reports.report_generator import (
     AnimalVariables,
     ReportAdoptionVariables,
     ReportVariationVariables,
+    StructureVariables,
 )
 from hermadata.repositories import SQLBaseRepository
 from hermadata.repositories.animal.models import (
@@ -226,6 +228,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             code=code,
             race_id=data.race_id,
             in_shelter_from=in_shelter_from,
+            structure_id=data.structure_id,
         )
         animal_entry = AnimalEntry(
             animal=animal,
@@ -454,6 +457,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                     else_=True,
                 ).label("healthcare_stage"),
                 AnimalEntry.without_chip,
+                Animal.structure_id,
             )
             .select_from(Animal)
             .join(
@@ -565,6 +569,33 @@ class SQLAnimalRepository(SQLBaseRepository):
             .where(Animal.id == animal_id)
             .values(deleted_at=get_now())
         )
+        self.session.flush()
+
+    def move_to_structure(
+        self,
+        animal_id: int,
+        structure_id: int,
+        user_id: int | None = None,
+    ) -> None:
+        animal = self.session.execute(
+            select(Animal).where(
+                Animal.id == animal_id, Animal.deleted_at.is_(None)
+            )
+        ).scalar_one()
+
+        old_structure_id = animal.structure_id
+        animal.structure_id = structure_id
+
+        event_log = AnimalLog(
+            animal_id=animal_id,
+            event=AnimalEvent.move_structure.value,
+            data={
+                "from_structure_id": old_structure_id,
+                "to_structure_id": structure_id,
+            },
+            user_id=user_id,
+        )
+        self.session.add(event_log)
         self.session.flush()
 
     def get_animal_entry(self, entry_id: int) -> AnimalEntryModel:
@@ -1274,6 +1305,35 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return result
 
+    def _get_structure_report_variables(
+        self, animal_id: int
+    ) -> StructureVariables | None:
+        structure_comune = aliased(Comune)
+        data = self.session.execute(
+            select(
+                Structure.name,
+                Structure.address,
+                structure_comune.name.label("city"),
+            )
+            .select_from(Animal)
+            .join(Structure, Animal.structure_id == Structure.id)
+            .join(
+                structure_comune,
+                Structure.city_id == structure_comune.id,
+                isouter=True,
+            )
+            .where(Animal.id == animal_id)
+        ).one_or_none()
+
+        if data is None:
+            return None
+
+        return StructureVariables(
+            name=data.name,
+            address=data.address,
+            city=data.city,
+        )
+
     def _get_animal_data_report_variables(
         self, animal_id: int
     ) -> AnimalVariables:
@@ -1385,6 +1445,7 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         adopter = self._get_adopter_data_report_variables(adopter_id)
         animal_variables = self._get_animal_data_report_variables(animal_id)
+        structure_variables = self._get_structure_report_variables(animal_id)
 
         variables = ReportAdoptionVariables(
             animal=animal_variables,
@@ -1394,6 +1455,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             location_address=location_address,
             location_city=location_city,
             location_province=location_province,
+            structure=structure_variables,
         )
 
         return variables
@@ -1439,6 +1501,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
 
         animal_variables = self._get_animal_data_report_variables(animal_id)
+        structure_variables = self._get_structure_report_variables(animal_id)
 
         variables = ReportVariationVariables(
             variation_type=variation_type,
@@ -1449,6 +1512,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             location_address=location_address,
             location_city=location_city,
             location_province=location_province,
+            structure=structure_variables,
         )
 
         return variables

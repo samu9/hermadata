@@ -5,6 +5,7 @@ import { MemoryRouter, MemoryRouterProps } from 'react-router-dom'
 import { PrimeReactProvider } from 'primereact/api'
 import { AuthProvider } from '../contexts/AuthContext'
 import { LoaderProvider } from '../contexts/Loader'
+import { StructureProvider } from '../contexts/StructureContext'
 
 export function createTestQueryClient() {
   return new QueryClient({
@@ -38,7 +39,9 @@ function AllProviders({
       <PrimeReactProvider value={{}}>
         <MemoryRouter {...routerProps}>
           <AuthProvider>
-            <LoaderProvider>{children}</LoaderProvider>
+            <StructureProvider>
+              <LoaderProvider>{children}</LoaderProvider>
+            </StructureProvider>
           </AuthProvider>
         </MemoryRouter>
       </PrimeReactProvider>

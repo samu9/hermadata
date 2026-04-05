@@ -20,6 +20,7 @@ export const newAnimalEntrySchema = z.object({
     entry_type: z.string(),
     healthcare_stage: z.boolean().optional(),
     without_chip: z.boolean().optional(),
+    structure_id: z.number(),
 })
 
 export type NewAnimalEntry = z.infer<typeof newAnimalEntrySchema>
@@ -146,6 +147,7 @@ export const animalSearchResultSchema = z.object({
         .transform((str) => (str && new Date(str)) || null),
     healthcare_stage: z.boolean().optional(),
     without_chip: z.boolean().optional(),
+    structure_id: z.number(),
 })
 
 export type AnimalSearchResult = z.infer<typeof animalSearchResultSchema>
@@ -190,6 +192,7 @@ export const animalSearchQuerySchema = paginationQuerySchema.extend({
     sort_order: z.number().nullish(),
     cats: z.boolean().nullish(),
     dogs: z.boolean().nullish(),
+    structure_id: z.number().nullish(),
 })
 
 export type AnimalSearchQuery = z.infer<typeof animalSearchQuerySchema>

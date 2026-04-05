@@ -72,6 +72,7 @@ class NewAnimalModel(BaseModel):
     entry_type: str
     healthcare_stage: bool = False
     without_chip: bool = False
+    structure_id: int
 
 
 class CompleteEntryModel(BaseModel):
@@ -122,6 +123,7 @@ class AnimalSearchModel(PaginationQuery):
     cats: bool | None = None
     dogs: bool | None = None
     deleted: bool | None = False
+    structure_id: int | None = None
 
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
@@ -204,6 +206,9 @@ class AnimalSearchModel(PaginationQuery):
                 if v
                 else Animal.deleted_at.is_(None)
             )
+        ),
+        "structure_id": WhereClauseMapItem(
+            lambda v: Animal.structure_id == v
         ),
     }
 
@@ -338,6 +343,7 @@ class AnimalSearchResult(BaseModel):
     in_shelter_from: datetime | None = None
     healthcare_stage: bool = False
     without_chip: bool = False
+    structure_id: int
 
 
 AnimalSearchResultQuery = namedtuple(

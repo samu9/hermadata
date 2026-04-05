@@ -445,6 +445,29 @@ def undo_temporary_adoption(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
+class MoveStructureRequest(BaseModel):
+    structure_id: int
+
+
+@router.post("/{animal_id}/move-structure")
+def move_animal_to_structure(
+    animal_id: int,
+    data: MoveStructureRequest,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.EDIT_ANIMAL))
+    ],
+):
+    """Move an animal to another structure. Generates a movement event."""
+    try:
+        repo.move_to_structure(
+            animal_id, data.structure_id, user_id=current_user.user_id
+        )
+        return True
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
 # TODO: Add animal image upload endpoints here
 # See TODO_ANIMAL_IMAGE_UPLOAD.md for implementation details
 # @router.post("/{animal_id}/image", response_model=int)

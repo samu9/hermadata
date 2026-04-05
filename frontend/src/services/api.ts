@@ -69,6 +69,7 @@ import {
     UpdateUser,
 } from "../models/user.schema"
 import { PaginationQuery } from "../models/pagination.schema"
+import { Structure } from "../models/structure.schema"
 
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 
@@ -728,6 +729,24 @@ class ApiService {
             sort_order: -1, // descending
         })
         return result.items
+    }
+
+    async getStructures(): Promise<Structure[]> {
+        const response = await this.client.get<Structure[]>(
+            ApiEndpoints.structure.getAll
+        )
+        return response.data
+    }
+
+    async moveAnimalToStructure(
+        animalId: number,
+        structureId: number
+    ): Promise<boolean> {
+        const response = await this.client.post<boolean>(
+            ApiEndpoints.structure.moveAnimal(animalId),
+            { structure_id: structureId }
+        )
+        return response.data
     }
 
     isAuthenticated(): boolean {
