@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
-import { useQuery } from "react-query"
-import { apiService } from "../main"
 import { Structure } from "../models/structure.schema"
+import { useStructuresQuery } from "../queries"
 
 interface StructureContextType {
     structures: Structure[]
@@ -22,35 +21,30 @@ export const StructureProvider: React.FC<{ children: React.ReactNode }> = ({
     const [currentStructure, setCurrentStructureState] =
         useState<Structure | null>(null)
 
-    const { data: structures = [], isLoading } = useQuery(
-        "structures",
-        () => apiService.getStructures(),
-        {
-            staleTime: Infinity,
-            onSuccess: (data: Structure[]) => {
-                if (data.length > 0 && !currentStructure) {
-                    const stored = localStorage.getItem(STRUCTURE_STORAGE_KEY)
-                    if (stored) {
-                        try {
-                            const parsed = JSON.parse(stored) as Structure
-                            const found = data.find((s) => s.id === parsed.id)
-                            if (found) {
-                                setCurrentStructureState(found)
-                                return
-                            }
-                        } catch {
-                            // ignore parse errors
-                        }
+    const { data: structures = [], isLoading } = useStructuresQuery()
+
+    useEffect(() => {
+        if (structures.length > 0 && !currentStructure) {
+            const stored = localStorage.getItem(STRUCTURE_STORAGE_KEY)
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored) as Structure
+                    const found = structures.find((s) => s.id === parsed.id)
+                    if (found) {
+                        setCurrentStructureState(found)
+                        return
                     }
-                    setCurrentStructureState(data[0])
-                    localStorage.setItem(
-                        STRUCTURE_STORAGE_KEY,
-                        JSON.stringify(data[0])
-                    )
+                } catch {
+                    // ignore parse errors
                 }
-            },
+            }
+            setCurrentStructureState(structures[0])
+            localStorage.setItem(
+                STRUCTURE_STORAGE_KEY,
+                JSON.stringify(structures[0])
+            )
         }
-    )
+    }, [structures])
 
     const setCurrentStructure = (structure: Structure) => {
         setCurrentStructureState(structure)
