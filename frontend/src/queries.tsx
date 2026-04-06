@@ -29,14 +29,11 @@ export const useRacesQuery = () =>
     })
 
 export const useBreedsQuery = (raceId?: string) =>
-    useQuery(
-        ["breeds", raceId],
-        () => (raceId && apiService.getBreeds(raceId)) || [],
-        {
-            placeholderData: [],
-            staleTime: Infinity,
-        }
-    )
+    useQuery(["breeds", raceId], () => apiService.getBreeds(raceId!), {
+        placeholderData: [],
+        staleTime: Infinity,
+        enabled: !!raceId,
+    })
 
 export const useProvinceQuery = () =>
     useQuery("province", () => apiService.getProvince(), {
