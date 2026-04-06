@@ -665,11 +665,11 @@ class ApiService {
     }
 
     async getUserActivities(
-        query: ActivityFilterQuery
+        query: ActivityFilterQuery,
     ): Promise<PaginatedActivityResult> {
         const result = await this.get<PaginatedActivityResult>(
             ApiEndpoints.user.activity,
-            query
+            query,
         )
         return paginatedActivitySchema.parse(result)
     }
@@ -732,19 +732,19 @@ class ApiService {
     }
 
     async getStructures(): Promise<Structure[]> {
-        const response = await this.client.get<Structure[]>(
-            ApiEndpoints.structure.getAll
+        const response = await this.inst.get<Structure[]>(
+            ApiEndpoints.structure.getAll,
         )
         return response.data
     }
 
     async moveAnimalToStructure(
         animalId: number,
-        structureId: number
+        structureId: number,
     ): Promise<boolean> {
-        const response = await this.client.post<boolean>(
+        const response = await this.inst.post<boolean>(
             ApiEndpoints.structure.moveAnimal(animalId),
-            { structure_id: structureId }
+            { structure_id: structureId },
         )
         return response.data
     }
