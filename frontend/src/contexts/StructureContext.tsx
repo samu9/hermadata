@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { Structure } from "../models/structure.schema"
 import { useStructuresQuery } from "../queries"
+import { useAuth } from "./AuthContext"
 
 interface StructureContextType {
     structures: Structure[]
@@ -10,7 +11,7 @@ interface StructureContextType {
 }
 
 const StructureContext = createContext<StructureContextType | undefined>(
-    undefined
+    undefined,
 )
 
 const STRUCTURE_STORAGE_KEY = "currentStructure"
@@ -43,17 +44,14 @@ export const StructureProvider: React.FC<{ children: React.ReactNode }> = ({
             setCurrentStructureState(structures[0])
             localStorage.setItem(
                 STRUCTURE_STORAGE_KEY,
-                JSON.stringify(structures[0])
+                JSON.stringify(structures[0]),
             )
         }
     }, [structures])
 
     const setCurrentStructure = (structure: Structure) => {
         setCurrentStructureState(structure)
-        localStorage.setItem(
-            STRUCTURE_STORAGE_KEY,
-            JSON.stringify(structure)
-        )
+        localStorage.setItem(STRUCTURE_STORAGE_KEY, JSON.stringify(structure))
     }
 
     return (
@@ -73,9 +71,7 @@ export const StructureProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useStructure = (): StructureContextType => {
     const context = useContext(StructureContext)
     if (context === undefined) {
-        throw new Error(
-            "useStructure must be used within a StructureProvider"
-        )
+        throw new Error("useStructure must be used within a StructureProvider")
     }
     return context
 }

@@ -48,7 +48,7 @@ export const useComuniQuery = (provincia?: string) =>
         {
             placeholderData: [],
             staleTime: Infinity,
-        }
+        },
     )
 
 export const useComuneQuery = (code?: string) =>
@@ -58,7 +58,7 @@ export const useComuneQuery = (code?: string) =>
         {
             enabled: !!code,
             staleTime: Infinity,
-        }
+        },
     )
 
 export const useDocKindsQuery = () =>
@@ -161,7 +161,7 @@ export const useRecentAnimalsQuery = (limit: number = 5) =>
         {
             staleTime: 2 * 60 * 1000, // 2 minutes
             refetchOnWindowFocus: false,
-        }
+        },
     )
 
 export const useStructuresQuery = (enabled: boolean = true) =>
