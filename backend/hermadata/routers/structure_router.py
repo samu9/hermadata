@@ -2,7 +2,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from hermadata.initializations import get_current_user, get_structure_repository
+from hermadata.initializations import (
+    get_current_user,
+    get_structure_repository,
+)
 from hermadata.repositories.structure_repository import (
     SQLStructureRepository,
     StructureModel,
