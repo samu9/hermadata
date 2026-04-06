@@ -206,7 +206,9 @@ export const animalExitSchema = z
     .object({
         animal_id: z.number(),
         exit_type: z.string(),
-        exit_date: dateOnly,
+        exit_date: dateOnly.refine((val): val is string => val !== null, {
+            message: "La data di uscita è obbligatoria",
+        }),
         exit_data: z.record(z.string(), z.any()).nullish(),
         adopter_id: z.number().nullish(),
         location_address: z.string().nullish(),

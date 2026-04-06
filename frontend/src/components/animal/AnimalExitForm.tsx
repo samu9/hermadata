@@ -48,7 +48,7 @@ const AnimalExitForm = () => {
     const [selectedAdopter, setSelectedAdopter] = useState<Adopter | null>(null)
     const [dialogVisibile, setDialogVisible] = useState(false)
     const [adopterAction, setAdopterAction] = useState<"add" | "search">(
-        "search"
+        "search",
     )
     const [isTemporary, setIsTemporary] = useState(false)
     const { startLoading, stopLoading } = useLoader()
@@ -56,7 +56,7 @@ const AnimalExitForm = () => {
     const exitTypesQuery = useExitTypesQuery()
     // Filter out "temporary_adoption" (T) from the dropdown - it's handled via the checkbox
     const exitTypesForDropdown = exitTypesQuery.data?.filter(
-        (t) => t.id !== "T"
+        (t) => t.id !== "T",
     )
     const form = useForm<AnimalExitFormState>({
         resolver: zodResolver(animalExitSchema),
@@ -123,7 +123,8 @@ const AnimalExitForm = () => {
         // When adoption and temporary checkbox is checked, use "T" exit type
         const submitData: AnimalExit = {
             ...data,
-            exit_type: data.exit_type === "A" && isTemporary ? "T" : data.exit_type,
+            exit_type:
+                data.exit_type === "A" && isTemporary ? "T" : data.exit_type,
         }
         animalExitMutation.mutate(submitData, {
             onSuccess: () => {
@@ -158,7 +159,6 @@ const AnimalExitForm = () => {
                             <ControlledInputDate<AnimalExit>
                                 fieldName="exit_date"
                                 label="Data uscita"
-                                disabled={true}
                                 className="w-full"
                             />
                             <ControlledDropdown
@@ -215,7 +215,7 @@ const AnimalExitForm = () => {
                                         onChange={(value) =>
                                             setValue(
                                                 "_provincia_detenzione",
-                                                value
+                                                value,
                                             )
                                         }
                                         value={provinciaDetenzione}
@@ -252,7 +252,7 @@ const AnimalExitForm = () => {
                                                     setSelectedAdopter(null)
                                                     setValue(
                                                         "adopter_id",
-                                                        undefined
+                                                        undefined,
                                                     )
                                                 }}
                                                 text
@@ -263,8 +263,8 @@ const AnimalExitForm = () => {
                                                 Cambia
                                             </Button>
                                         </div>
-                                        <AdopterCard 
-                                            data={selectedAdopter} 
+                                        <AdopterCard
+                                            data={selectedAdopter}
                                             variant="selected"
                                         />
                                     </div>
@@ -321,11 +321,9 @@ const AnimalExitForm = () => {
                                                             "adopter_id",
                                                             a.id,
                                                             {
-                                                                shouldDirty:
-                                                                    true,
-                                                                shouldValidate:
-                                                                    true,
-                                                            }
+                                                                shouldDirty: true,
+                                                                shouldValidate: true,
+                                                            },
                                                         )
                                                         setSelectedAdopter(a)
                                                     }}
