@@ -21,7 +21,9 @@ export const StructureProvider: React.FC<{ children: React.ReactNode }> = ({
     const [currentStructure, setCurrentStructureState] =
         useState<Structure | null>(null)
 
-    const { data: structures = [], isLoading } = useStructuresQuery()
+    const { isAuthenticated } = useAuth()
+    const { data: structures = [], isLoading } =
+        useStructuresQuery(isAuthenticated)
 
     useEffect(() => {
         if (structures.length > 0 && !currentStructure) {

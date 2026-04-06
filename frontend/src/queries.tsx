@@ -167,8 +167,9 @@ export const useRecentAnimalsQuery = (limit: number = 5) =>
         }
     )
 
-export const useStructuresQuery = () =>
+export const useStructuresQuery = (enabled: boolean = true) =>
     useQuery("structures", () => apiService.getStructures(), {
         placeholderData: [],
         staleTime: Infinity,
+        enabled,
     })
