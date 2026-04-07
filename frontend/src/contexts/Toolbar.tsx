@@ -12,6 +12,9 @@ type ToolbarButton = {
     buttonText: string
     buttonIcon: any // Use the appropriate FontAwesomeIcon type
     severity?: SeverityType
+    order?: number
+    disabled?: boolean
+    loading?: boolean
     FormComponent?: React.ComponentType<{ onSuccess: (data: any) => void }>
     onSuccessAction?: (data: any) => void
     formProps?: Record<string, any>
