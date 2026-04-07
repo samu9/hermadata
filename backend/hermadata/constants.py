@@ -107,6 +107,7 @@ class AnimalFur(IntEnum):
     hard = auto()
     frangiato = auto()
     cordato = auto()
+    medio = auto()
 
 
 FUR_LABELS = {
@@ -120,6 +121,7 @@ FUR_LABELS = {
     AnimalFur.cordato: "Cordato",
     AnimalFur.curly_long: "Lungo riccio",
     AnimalFur.straight_long: "Lungo liscio",
+    AnimalFur.medio: "Medio",
 }
 
 ANIMAL_STAGE_LABELS = {
