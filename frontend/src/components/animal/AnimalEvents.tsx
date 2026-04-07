@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "react-query"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { apiService } from "../../main"
+import { toastService } from "../../services/toast"
 import { format } from "date-fns"
 import { it } from "date-fns/locale"
 import Loader from "../Loader"
@@ -52,7 +53,7 @@ const AnimalEvents = () => {
                 queryClient.invalidateQueries(["animalLogs", id])
                 setVisible(false)
                 form.reset()
-                apiService.showSuccess(
+                toastService.showSuccess(
                     "L'evento è stato registrato con successo",
                     "Evento aggiunto",
                 )

@@ -34,6 +34,8 @@ import { Dialog } from "primereact/dialog"
 import { Calendar } from "primereact/calendar"
 import { Button } from "primereact/button"
 import { apiService } from "../../main"
+import { toastService } from "../../services/toast"
+
 import { useQueryClient } from "react-query"
 
 type Props = {
@@ -144,7 +146,7 @@ const AnimalRecord = (props: Props) => {
         try {
             await apiService.deleteAnimal(Number(id))
             await queryClient.invalidateQueries(["animal-search"])
-            apiService.showSuccess("Animale eliminato correttamente")
+            toastService.showSuccess("Animale eliminato correttamente")
             navigate("/")
         } catch (error) {
             console.error("Failed to delete animal", error)
@@ -160,7 +162,7 @@ const AnimalRecord = (props: Props) => {
 
             // Show success message
             const animalName = props.data.name || "L'animale"
-            apiService.showSuccess(
+            toastService.showSuccess(
                 `${animalName} è stato spostato in rifugio`,
                 "Spostamento completato"
             )
@@ -185,7 +187,7 @@ const AnimalRecord = (props: Props) => {
                 confirmAdoptionDate
             )
             const animalName = props.data.name || "L'animale"
-            apiService.showSuccess(
+            toastService.showSuccess(
                 `Adozione di ${animalName} confermata`,
                 "Adozione confermata"
             )
@@ -205,7 +207,7 @@ const AnimalRecord = (props: Props) => {
         try {
             await apiService.undoTemporaryAdoption(Number(id))
             const animalName = props.data.name || "L'animale"
-            apiService.showSuccess(
+            toastService.showSuccess(
                 `${animalName} è rientrato in rifugio`,
                 "Adozione annullata"
             )
@@ -326,7 +328,7 @@ const AnimalRecord = (props: Props) => {
                                 Number(id)
                             )
                             if (!check.can_exit) {
-                                apiService.showError(
+                                toastService.showError(
                                     <div>
                                         <p>
                                             Alcuni dati necessari per l'uscita

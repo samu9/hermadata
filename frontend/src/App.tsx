@@ -5,11 +5,11 @@ import PageWrapper from "./components/layout/PageWrapper"
 import AppBreadCrumbs from "./AppBreadCrumbs"
 import { useRef } from "react"
 import { Toast } from "primereact/toast"
-import { apiService } from "./main"
+import { toastService } from "./services/toast"
 
 function App() {
     const toast = useRef<Toast>(null)
-    apiService.setToastRef(toast)
+    toastService.setToastRef(toast)
     return (
         <div className="h-screen relative">
             <div className="h-full w-full flex">

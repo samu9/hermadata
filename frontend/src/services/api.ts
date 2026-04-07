@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosInstance } from "axios"
+import { toastService } from "./toast"
 import { dateOnly } from "../models/validators"
 import {
     ActivityFilterQuery,
@@ -76,7 +77,6 @@ const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 class ApiService {
     inst: AxiosInstance
     baseURL: string
-    private toastRef: React.RefObject<any> | null = null // Reference to Toast
 
     constructor(baseURL: string) {
         this.baseURL = baseURL
@@ -114,32 +114,6 @@ class ApiService {
         )
     }
 
-    setToastRef(toastRef: React.RefObject<any>) {
-        this.toastRef = toastRef
-    }
-
-    showSuccess(message: string, summary: string = "Successo") {
-        if (this.toastRef?.current) {
-            this.toastRef.current.show({
-                severity: "success",
-                summary: summary,
-                detail: message,
-                life: 3000,
-            })
-        }
-    }
-
-    showError(message: string | React.ReactNode, summary: string = "Errore") {
-        if (this.toastRef?.current) {
-            this.toastRef.current.show({
-                severity: "error",
-                summary: summary,
-                detail: message,
-                life: 5000,
-            })
-        }
-    }
-
     private handleError(error: AxiosError): void {
         let message = DEFAULT_ERROR_MESSAGE
 
@@ -150,14 +124,7 @@ class ApiService {
                 message = errorMessage.detail
             }
         }
-        if (this.toastRef?.current) {
-            this.toastRef.current.show({
-                severity: "error", // Customize based on your Toast component
-                summary: "Errore",
-                detail: message,
-                life: 5000, // Duration of the toast
-            })
-        }
+        toastService.showError(message)
     }
 
     private async get<T>(
