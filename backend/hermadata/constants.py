@@ -34,6 +34,7 @@ class EntryType(str, Enum):
     temporary_owner_surrender = "T"
     other_structure_surrender = "O"
     rientro = "N"
+    left_at_clinic = "L"
 
 
 ENTRY_TYPE_LABELS = {
@@ -44,6 +45,7 @@ ENTRY_TYPE_LABELS = {
     EntryType.temporary_owner_surrender: "Conferimento temporaneo del padrone",
     EntryType.other_structure_surrender: "Cessione da altra struttura",
     EntryType.rientro: "Rientro",
+    EntryType.left_at_clinic: "Lasciato in clinica",
 }
 
 # Entry types that should set in_shelter_from date
@@ -52,6 +54,7 @@ HEALTHCARE_STAGE_ENTRY_TYPES = {
     EntryType.confiscation,
     EntryType.private_surrender,
     EntryType.quitclaim,
+    EntryType.left_at_clinic,
 }
 
 
