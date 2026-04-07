@@ -17,19 +17,45 @@ const LoggedUserCard = () => {
     return (
         <div className="flex flex-col gap-2">
             {structures.length > 0 && (
-                <div className="flex items-center gap-2 px-1">
-                    <i className="pi pi-building text-surface-400 text-xs" />
+                <div className="rounded-xl bg-surface-800 border border-surface-700 px-3 py-2.5">
+                    <div className="text-[10px] font-semibold text-surface-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <i className="pi pi-building text-[10px]" />
+                        Struttura attiva
+                    </div>
                     <Dropdown
                         value={currentStructure}
                         options={structures}
                         optionLabel="name"
                         onChange={(e) => setCurrentStructure(e.value)}
-                        placeholder="Struttura"
-                        className="flex-1 text-xs [&_.p-dropdown-label]:text-xs [&_.p-dropdown-label]:py-1"
+                        placeholder="Seleziona struttura"
+                        className="w-full [&_.p-dropdown]:bg-surface-700 [&_.p-dropdown]:border-surface-600 [&_.p-dropdown-label]:text-surface-100 [&_.p-dropdown-label]:text-sm [&_.p-dropdown-label]:py-2 [&_.p-dropdown-trigger]:text-surface-400"
+                        pt={{
+                            root: {
+                                className:
+                                    "bg-surface-700 border border-surface-600 rounded-lg hover:border-surface-500 transition-colors",
+                            },
+                            input: {
+                                className: "text-sm text-surface-100 py-2 px-3",
+                            },
+                            trigger: {
+                                className: "text-surface-400 px-3",
+                            },
+                            panel: {
+                                className:
+                                    "bg-surface-800 border border-surface-600 shadow-xl rounded-lg mt-1",
+                            },
+                            list: { className: "py-1" },
+                            item: {
+                                className:
+                                    "text-surface-200 hover:bg-surface-700 px-3 py-2 rounded-md mx-1 cursor-pointer transition-colors",
+                            },
+                        }}
                         itemTemplate={(option) => (
-                            <div className="text-xs">
-                                <div className="font-medium">{option.name}</div>
-                                <div className="text-surface-400">
+                            <div>
+                                <div className="text-sm font-medium text-surface-100">
+                                    {option.name}
+                                </div>
+                                <div className="text-xs text-surface-400 mt-0.5">
                                     {STRUCTURE_TYPE_LABELS[option.structure_type]}
                                 </div>
                             </div>
