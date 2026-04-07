@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from "primereact/button"
-import { Divider } from "primereact/divider"
+import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons"
 import { Toast } from "primereact/toast"
 import { Card } from "primereact/card"
 import { useEffect, useRef } from "react"
@@ -8,6 +7,7 @@ import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 import { Link, useParams } from "react-router-dom"
 import { ApiErrorCode } from "../../constants"
+import { useToolbar } from "../../contexts/Toolbar"
 import { apiService } from "../../main"
 import { AnimalEdit, animalEditSchema } from "../../models/animal.schema"
 import { ApiError, apiErrorSchema } from "../../models/api.schema"
@@ -31,6 +31,7 @@ const AnimalEditForm = () => {
     const animalQuery = useAnimalQuery(id!)
     const animalSizesQuery = useAnimalSizesQuery()
     const animalFurTypesQuery = useAnimalFurTypesQuery()
+    const { addButton, removeButton } = useToolbar()
     const form = useForm<AnimalEdit>({
         resolver: zodResolver(animalEditSchema),
         defaultValues: {
@@ -122,6 +123,20 @@ const AnimalEditForm = () => {
         }
     }, [animalQuery.data, reset])
 
+    useEffect(() => {
+        addButton({
+            id: "save-animal",
+            buttonText: "Salva",
+            buttonIcon: faFloppyDisk,
+            disabled: !isDirty || updateAnimalMutation.isLoading,
+            loading: updateAnimalMutation.isLoading,
+            order: 100,
+            onClick: () => handleSubmit(onSubmit)(),
+        })
+        return () => removeButton("save-animal")
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isDirty, updateAnimalMutation.isLoading, addButton, removeButton])
+
     return (
         <div className="max-w-6xl">
             <FormProvider {...form}>
@@ -210,27 +225,6 @@ const AnimalEditForm = () => {
                         />
                     </Card>
 
-                    <Divider />
-
-                    {/* Action Buttons */}
-                    <div className="flex justify-between items-center pt-4">
-                        <div className="text-sm text-gray-600">
-                            {isDirty
-                                ? "Ci sono modifiche non salvate"
-                                : "Nessuna modifica"}
-                        </div>
-                        <Button
-                            disabled={
-                                !isDirty || updateAnimalMutation.isLoading
-                            }
-                            loading={updateAnimalMutation.isLoading}
-                            type="submit"
-                            size="large"
-                        >
-                            <i className="pi pi-save mr-2"></i>
-                            Salva
-                        </Button>
-                    </div>
                 </form>
             </FormProvider>
             <Toast ref={toast} position="bottom-right" />
