@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react"
 import { Structure } from "../models/structure.schema"
 import { useStructuresQuery } from "../queries"
 import { useAuth } from "./AuthContext"
+import { toastService } from "../services/toast"
 
 interface StructureContextType {
     structures: Structure[]
@@ -52,6 +53,7 @@ export const StructureProvider: React.FC<{ children: React.ReactNode }> = ({
     const setCurrentStructure = (structure: Structure) => {
         setCurrentStructureState(structure)
         localStorage.setItem(STRUCTURE_STORAGE_KEY, JSON.stringify(structure))
+        toastService.showSuccess(`Struttura cambiata in "${structure.name}"`)
     }
 
     return (
