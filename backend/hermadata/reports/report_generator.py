@@ -89,7 +89,7 @@ class ReportDefaultVariables(BaseVariables):
 
     @field_serializer("day")
     def serialize_day(self, day: date):
-        return day.strftime("%Y-%m-%d")
+        return day.strftime("%d/%m/%Y")
 
 
 class ReportAnimalEntryVariables(ReportDefaultVariables):
