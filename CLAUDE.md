@@ -105,6 +105,21 @@ src/
 - `useStructuresQuery` uses `staleTime: Infinity` — structures are cached for the session and never re-fetched. Use this cached data to resolve structure names from IDs rather than embedding names in other responses.
 - Zod schemas validate API responses at runtime. Always update the schema when adding fields to a backend model.
 
+### Toast notifications
+
+All toasts go through `toastService` (`src/services/toast.ts`), a singleton wired to PrimeReact's `<Toast>` in `App.tsx`. Import and call it directly — do **not** add toast methods to `ApiService`.
+
+```ts
+import { toastService } from "../services/toast"
+
+toastService.showSuccess("Done")
+toastService.showError("Something went wrong")
+toastService.showWarn(<ReactNode />, "Title", 8000)
+toastService.clear()
+```
+
+`ApiService` calls `toastService.showError` internally in its error interceptor, so HTTP errors are toasted automatically without extra code in components.
+
 ### Structure context
 
 `StructureContext` tracks the user's currently active structure (stored in `localStorage`). The animal list is automatically filtered by `currentStructure.id`. New animal entries are pre-populated with it.
