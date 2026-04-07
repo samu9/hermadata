@@ -1,53 +1,17 @@
-<div class="my-4" style="display: flex; gap: 4rem; page-break-inside: avoid;">
-    <!-- Left Column -->
-    <table style="flex: 1;">
-        <tr class="border-b my-2">
-            <td class="m-2" style="font-weight: bold; padding-right: 1rem;">Nome</td>
-            <td>{{ animal.name }}</td>
-        </tr>
-        <tr class="border-b">
-            <td style="font-weight: bold; padding-right: 1rem;">Razza</td>
-            <td>{{ animal.breed }}</td>
-        </tr>
-        <tr class="border-b">
-            <td style="font-weight: bold; padding-right: 1rem;">Sesso</td>
-            <td>{{ animal.sex }}</td>
-        </tr>
-        <tr class="border-b">
-            <td style="font-weight: bold; padding-right: 1rem;">Età</td>
-            <td>{{ animal.age }}</td>
-        </tr>
-        <tr class="border-b">
-            <td style="font-weight: bold; padding-right: 1rem;">Data di nascita</td>
-            <td>{{ animal.birth_date }}</td>
-        </tr>
-        <tr class="border-b">
-            <td style="font-weight: bold; padding-right: 1rem;">Codice chip</td>
-            <td>{{ animal.chip_code }}</td>
-        </tr>
+<div style="position: relative; height: 160px; margin: 16px 0 24px 0; page-break-inside: avoid;">
+    <table style="position: absolute; left: 5%; width: 42%;">
+        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Nome</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.name }}</td></tr>
+        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Razza</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.breed }}</td></tr>
+        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Sesso</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.sex }}</td></tr>
+        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Età</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.age }}</td></tr>
+        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Data di nascita</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.birth_date }}</td></tr>
+        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Codice chip</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.chip_code }}</td></tr>
     </table>
-    
-    <!-- Right Column -->
-    <table style="flex: 1;">
-        <tr class="border-b my-2">
-            <td class="m-2" style="font-weight: bold; padding-right: 1rem;">Manto</td>
-            <td>{{ animal.fur_type }}</td>
-        </tr>
-        <tr class="border-b">
-            <td style="font-weight: bold; padding-right: 1rem;">Colore</td>
-            <td>{{ animal.fur_color }}</td>
-        </tr>
-        <tr class="border-b">
-            <td style="font-weight: bold; padding-right: 1rem;">Arrivato da</td>
-            <td>{{ animal.origin_city }}</td>
-        </tr>
-        <tr class="border-b">
-            <td style="font-weight: bold; padding-right: 1rem;">Arrivato il</td>
-            <td>{{ animal.entry_date }}</td>
-        </tr>
-        <tr class="border-b">
-            <td style="font-weight: bold; padding-right: 1rem;">Taglia</td>
-            <td>{{ animal.size }}</td>
-        </tr>
+    <table style="position: absolute; right: 5%; width: 42%;">
+        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Manto</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.fur_type }}</td></tr>
+        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Colore</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.fur_color }}</td></tr>
+        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Arrivato da</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.origin_city }}</td></tr>
+        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Arrivato il</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.entry_date }}</td></tr>
+        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Taglia</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.size }}</td></tr>
     </table>
 </div>
