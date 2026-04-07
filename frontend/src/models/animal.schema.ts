@@ -66,6 +66,7 @@ export const animalSchema = z.object({
     in_shelter_from: dateFromString.nullish(),
     healthcare_stage: z.boolean().optional(),
     without_chip: z.boolean().optional(),
+    structure_id: z.number().nullish(),
     entries: z.array(animalEntrySchema).optional(),
 })
 
