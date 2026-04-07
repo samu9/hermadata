@@ -11,7 +11,7 @@ function App() {
     const toast = useRef<Toast>(null)
     toastService.setToastRef(toast)
     return (
-        <div className="h-screen relative">
+        <div className="h-screen overflow-hidden relative">
             <div className="h-full w-full flex">
                 <SideMenu />
                 <div className="grow overflow-auto">
