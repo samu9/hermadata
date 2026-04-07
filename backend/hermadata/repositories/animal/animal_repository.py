@@ -7,73 +7,51 @@ from sqlalchemy import and_, case, func, insert, or_, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
-from hermadata.constants import (
-    HEALTHCARE_STAGE_ENTRY_TYPES,
-    AnimalEvent,
-    EntryType,
-    ExitType,
-)
-from hermadata.database.models import (
-    Adopter,
-    Adoption,
-    Animal,
-    AnimalDocument,
-    AnimalEntry,
-    AnimalEventType,
-    AnimalLog,
-    Breed,
-    Comune,
-    DocumentKind,
-    FurColor,
-    MedicalActivity,
-    MedicalActivityRecord,
-    Race,
-    Structure,
-    VetServiceRecord,
-)
+from hermadata.constants import (HEALTHCARE_STAGE_ENTRY_TYPES, AnimalEvent,
+                                 EntryType, ExitType)
+from hermadata.database.models import (Adopter, Adoption, Animal,
+                                       AnimalDocument, AnimalEntry,
+                                       AnimalEventType, AnimalLog, Breed,
+                                       Comune, DocumentKind, FurColor,
+                                       MedicalActivity, MedicalActivityRecord,
+                                       Race, Structure, VetServiceRecord)
 from hermadata.errors import APIException
 from hermadata.models import PaginationResult, UtilElement
-from hermadata.reports.report_generator import (
-    AdopterVariables,
-    AnimalVariables,
-    ReportAdoptionVariables,
-    ReportVariationVariables,
-    StructureVariables,
-)
+from hermadata.reports.report_generator import (AdopterVariables,
+                                                AnimalVariables,
+                                                ReportAdoptionVariables,
+                                                ReportVariationVariables,
+                                                StructureVariables)
 from hermadata.repositories import SQLBaseRepository
-from hermadata.repositories.animal.models import (
-    AddMedicalRecordModel,
-    AdoptionModel,
-    AnimalDaysItem,
-    AnimalDaysQuery,
-    AnimalDaysResult,
-    AnimalDocumentModel,
-    AnimalEntriesItem,
-    AnimalEntriesQuery,
-    AnimalEntryModel,
-    AnimalExit,
-    AnimalExitsItem,
-    AnimalExitsQuery,
-    AnimalGetQuery,
-    AnimalLogModel,
-    AnimalModel,
-    AnimalQueryModel,
-    AnimalReportResult,
-    AnimalSearchModel,
-    AnimalSearchResult,
-    AnimalSearchResultQuery,
-    CompleteEntryModel,
-    ExitCheckResult,
-    FurColorName,
-    MedicalActivityModel,
-    NewAdoption,
-    NewAnimalDocument,
-    NewAnimalLogModel,
-    NewAnimalModel,
-    NewEntryModel,
-    UpdateAnimalEntryModel,
-    UpdateAnimalModel,
-)
+from hermadata.repositories.animal.models import (AddMedicalRecordModel,
+                                                  AdoptionModel,
+                                                  AnimalDaysItem,
+                                                  AnimalDaysQuery,
+                                                  AnimalDaysResult,
+                                                  AnimalDocumentModel,
+                                                  AnimalEntriesItem,
+                                                  AnimalEntriesQuery,
+                                                  AnimalEntryModel, AnimalExit,
+                                                  AnimalExitsItem,
+                                                  AnimalExitsQuery,
+                                                  AnimalGetQuery,
+                                                  AnimalLogModel, AnimalModel,
+                                                  AnimalQueryModel,
+                                                  AnimalReportResult,
+                                                  AnimalSearchModel,
+                                                  AnimalSearchResult,
+                                                  AnimalSearchResultQuery,
+                                                  CompleteEntryModel,
+                                                  ExitCheckResult,
+                                                  FurColorName,
+                                                  MedicalActivityModel,
+                                                  NewAdoption,
+                                                  NewAnimalDocument,
+                                                  NewAnimalLogModel,
+                                                  NewAnimalModel,
+                                                  NewEntryModel,
+                                                  UpdateAnimalEntryModel,
+                                                  UpdateAnimalModel)
 from hermadata.time_utils import get_now, get_today
 
 logger = logging.getLogger(__name__)
@@ -378,6 +356,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                     else_=True,
                 ).label("healthcare_stage"),
                 AnimalEntry.without_chip,
+                Animal.structure_id,
             )
             .where(*where)
             .join(

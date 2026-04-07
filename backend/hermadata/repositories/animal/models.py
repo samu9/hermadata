@@ -295,6 +295,7 @@ class AnimalModel(BaseModel):
     in_shelter_from: datetime | None = None
     healthcare_stage: bool = False
     without_chip: bool = False
+    structure_id: int | None = None
 
     model_config = ConfigDict(extra="ignore")
 
