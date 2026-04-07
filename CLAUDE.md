@@ -124,6 +124,8 @@ toastService.clear()
 
 `StructureContext` tracks the user's currently active structure (stored in `localStorage`). The animal list is automatically filtered by `currentStructure.id`. New animal entries are pre-populated with it.
 
+`setCurrentStructure` is the single point of change — it persists to localStorage and fires a success toast automatically. Always use it instead of any internal state setter.
+
 ### Auth & permissions
 
 `useAuth()` exposes `can(permissionCode)` and `isSuperUser`. Route guards use `ProtectedRoute` / `RoleProtectedRoute`. Permission codes are defined in `backend/hermadata/constants.py` and mirrored in `frontend/src/constants.ts`.
