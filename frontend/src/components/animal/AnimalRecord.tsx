@@ -225,6 +225,7 @@ const AnimalRecord = (props: Props) => {
                 buttonText: "Sposta in rifugio",
                 buttonIcon: faHouseCircleCheck,
                 severity: "success",
+                order: 20,
                 onClick: () => {
                     setMoveToShelterDate(new Date())
                     setMoveToShelterDialogVisible(true)
@@ -247,6 +248,7 @@ const AnimalRecord = (props: Props) => {
                 buttonText: "Conferma adozione",
                 buttonIcon: faCheckCircle,
                 severity: "success",
+                order: 40,
                 onClick: () => {
                     setConfirmAdoptionDate(new Date())
                     setConfirmAdoptionDialogVisible(true)
@@ -257,6 +259,7 @@ const AnimalRecord = (props: Props) => {
                 buttonText: "Annulla adozione",
                 buttonIcon: faRotateLeft,
                 severity: "warning",
+                order: 20,
                 onClick: undoTemporaryAdoption,
             })
         }
@@ -274,6 +277,7 @@ const AnimalRecord = (props: Props) => {
                 buttonText: "",
                 buttonIcon: faTrash,
                 severity: "danger",
+                order: 10,
                 onClick: () => setDeleteDialogVisible(true),
             })
         }
@@ -289,6 +293,7 @@ const AnimalRecord = (props: Props) => {
                 buttonText: "Nuovo ingresso",
                 buttonIcon: faArrowUpFromBracket,
                 severity: "success",
+                order: 30,
                 FormComponent: NewAnimalForm,
                 formProps: { animalId: id },
                 onSuccessAction: (data) => {
