@@ -76,9 +76,16 @@ class BaseVariables(BaseModel):
     pass
 
 
+class StructureVariables(BaseModel):
+    name: str
+    address: NullableString
+    city: NullableString
+
+
 class ReportDefaultVariables(BaseVariables):
     day: ReportDate = Field(default_factory=lambda: get_today())
     title: str
+    structure: StructureVariables | None = None
 
     @field_serializer("day")
     def serialize_day(self, day: date):

@@ -28,6 +28,7 @@ from hermadata.database.models import (
     FurColor,
     MedicalActivity,
     MedicalActivityRecord,
+    Structure,
 )
 from hermadata.reports.report_generator import ReportGenerator
 from hermadata.repositories.adopter_repository import (
@@ -51,6 +52,7 @@ from hermadata.repositories.user_repository import (
     SQLUserRepository,
 )
 from hermadata.repositories.vet_repository import SQLVetRepository, VetModel
+from hermadata.repositories.structure_repository import SQLStructureRepository
 from hermadata.repositories.activity_repository import SQLActivityRepository
 from hermadata.services.adopter_service import AdopterService
 from hermadata.services.animal_service import AnimalService
@@ -72,6 +74,7 @@ TABLES = [
     "breed",
     "fur_color",
     "animal",
+    "structure",
 ]
 
 
@@ -88,6 +91,15 @@ def insert_initial_data(session: Session):
         insert(Breed).values({Breed.name: "gatto_1", Breed.race_id: "G"})
     )
     session.execute(insert(FurColor).values({FurColor.name: "fur_color_1"}))
+    session.execute(
+        insert(Structure).values(
+            {
+                Structure.id: 1,
+                Structure.name: "Canile Rifugio Hermada",
+                Structure.structure_type: "R",
+            }
+        )
+    )
 
 
 def pytest_sessionstart():
@@ -260,6 +272,14 @@ def activity_repository(
 
 
 @pytest.fixture(scope="function")
+def structure_repository(
+    db_session: Session,
+) -> SQLStructureRepository:
+    repo = SQLStructureRepository()
+    return repo(db_session)
+
+
+@pytest.fixture(scope="function")
 def animal_service(
     animal_repository,
     document_repository,
@@ -314,6 +334,7 @@ def make_animal(
                 race_id="C",
                 rescue_city_code="H501",
                 entry_type=EntryType.rescue,
+                structure_id=1,
             )
         code = animal_repository.new_animal(data=data)
 

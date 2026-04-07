@@ -78,5 +78,10 @@ const ApiEndpoints = {
         create: "/vet",
         search: "/vet/search",
     },
+    structure: {
+        getAll: "/structure",
+        moveAnimal: (animalId: number) =>
+            `/animal/${animalId}/move-structure`,
+    },
 }
 export default ApiEndpoints

@@ -37,6 +37,7 @@ def test_create_animal(app: TestClient, db_session: Session):
             race_id="C",
             rescue_city_code="H501",
             entry_type=EntryType.confiscation.value,
+            structure_id=1,
         ).model_dump()
     )
 
@@ -59,6 +60,7 @@ def test_update_animal(app: TestClient, make_animal, db_session):
             race_id="C",
             rescue_city_code="H501",
             entry_type=EntryType.confiscation.value,
+            structure_id=1,
         )
     )
     chip_code = random_chip_code()
@@ -226,7 +228,7 @@ def test_search_animals(app: TestClient, make_animal):
 
 
 def test_search_animals_by_race(app: TestClient, make_animal):
-    make_animal(NewAnimalModel(race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue))
+    make_animal(NewAnimalModel(race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue, structure_id=1))
 
     result = app.get("/animal/search", params={"race_id": "C"})
 
@@ -358,6 +360,7 @@ def test_create_animal_various_entry_types(
             race_id="C",
             rescue_city_code="H501",
             entry_type=entry_type.value,
+            structure_id=1,
         ).model_dump()
     )
 
@@ -376,6 +379,7 @@ def test_create_animal(app: TestClient, db_session: Session):
             race_id="C",
             rescue_city_code="H501",
             entry_type=EntryType.confiscation.value,
+            structure_id=1,
         ).model_dump()
     )
 
@@ -398,6 +402,7 @@ def test_update_animal(app: TestClient, make_animal, db_session):
             race_id="C",
             rescue_city_code="H501",
             entry_type=EntryType.confiscation.value,
+            structure_id=1,
         )
     )
     chip_code = random_chip_code()
@@ -595,6 +600,7 @@ def test_move_to_shelter(
             rescue_city_code="H501",
             entry_type=EntryType.confiscation,
             healthcare_stage=True,
+            structure_id=1,
         )
     )
 
@@ -661,3 +667,4 @@ def test_get_animal_warning(app: TestClient, make_animal):
     result = app.get(f"/animal/{animal_id}/warning")
 
     assert result.status_code == 200
+

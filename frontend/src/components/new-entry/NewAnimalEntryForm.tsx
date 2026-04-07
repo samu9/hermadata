@@ -19,6 +19,7 @@ import {
     useProvinceQuery,
     useRacesQuery,
 } from "../../queries"
+import { useStructure } from "../../contexts/StructureContext"
 
 type Props = {
     // first entry must also specify race
@@ -39,6 +40,14 @@ const NewAnimalForm = (props: Props) => {
     const racesQuery = useRacesQuery()
     const comuniQuery = useComuniQuery(provincia)
     const entryTypesQuery = useEntryTypesQuery()
+    const { currentStructure } = useStructure()
+
+    // Set structure_id from current structure context
+    useEffect(() => {
+        if (currentStructure) {
+            setValue("structure_id", currentStructure.id)
+        }
+    }, [currentStructure, setValue])
 
     // Watch the entry_type and race_id fields
     const selectedEntryType = watch("entry_type")

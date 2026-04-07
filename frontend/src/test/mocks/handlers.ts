@@ -13,6 +13,7 @@ import {
   mockComuni,
   mockPaginatedUsers,
   mockAnimalSearchResults,
+  mockStructures,
 } from './data'
 
 const BASE_URL = 'http://localhost:8000'
@@ -174,5 +175,14 @@ export const handlers = [
   // User activity
   http.get(`${BASE_URL}/user/activity`, () => {
     return HttpResponse.json({ total: 0, items: [] })
+  }),
+
+  // Structures
+  http.get(`${BASE_URL}/structure`, () => {
+    return HttpResponse.json(mockStructures)
+  }),
+
+  http.post(`${BASE_URL}/animal/:animalId/move-structure`, () => {
+    return HttpResponse.json(true)
   }),
 ]

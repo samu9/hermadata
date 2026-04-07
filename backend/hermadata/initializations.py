@@ -19,6 +19,7 @@ from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
 from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.repositories.race_repository import SQLRaceRepository
+from hermadata.repositories.structure_repository import SQLStructureRepository
 from hermadata.repositories.user_repository import SQLUserRepository
 from hermadata.repositories.vet_repository import SQLVetRepository
 from hermadata.services.adopter_service import AdopterService
@@ -90,6 +91,12 @@ def get_activity_repository(
     session: Annotated[Session, Depends(get_db_session)],
 ) -> SQLActivityRepository:
     return SQLActivityRepository()(session)
+
+
+def get_structure_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> SQLStructureRepository:
+    return SQLStructureRepository()(session)
 
 
 # Keep global instances for non-session dependent objects

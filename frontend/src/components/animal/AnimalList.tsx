@@ -37,6 +37,7 @@ import { InputText } from "primereact/inputtext"
 import { useEntryTypesMap, useExitTypesMap } from "../../hooks/useMaps"
 import UncontrolledRacesDropdown from "../forms/uncontrolled/UncontrolledRacesDropdown"
 import { useAuth } from "../../contexts/AuthContext"
+import { useStructure } from "../../contexts/StructureContext"
 import { Permission } from "../../constants"
 import { Tooltip } from "primereact/tooltip"
 
@@ -126,6 +127,7 @@ const AnimalList = () => {
         },
     })
     const { can } = useAuth()
+    const { currentStructure } = useStructure()
     const canBrowseNotPresentOnly =
         can(Permission.BROWSE_NOT_PRESENT_ANIMALS) &&
         !can(Permission.BROWSE_PRESENT_ANIMALS)
@@ -139,7 +141,16 @@ const AnimalList = () => {
         shelter_stage: true,
         cats: true,
         dogs: true,
+        structure_id: currentStructure?.id,
     })
+
+    useEffect(() => {
+        setQueryData((prev) => ({
+            ...prev,
+            structure_id: currentStructure?.id,
+        }))
+    }, [currentStructure])
+
     const animalQuery = useAnimalSearchQuery(queryData)
     const entryTypesQuery = useEntryTypesQuery()
     const exitTypesQuery = useExitTypesQuery()

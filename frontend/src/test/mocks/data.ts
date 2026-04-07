@@ -39,6 +39,7 @@ export const mockAnimalSearchResults: AnimalSearchResult[] = [
     in_shelter_from: new Date('2024-01-15'),
     healthcare_stage: false,
     without_chip: false,
+    structure_id: 1,
   },
   {
     id: 2,
@@ -56,6 +57,7 @@ export const mockAnimalSearchResults: AnimalSearchResult[] = [
     in_shelter_from: null,
     healthcare_stage: true,
     without_chip: true,
+    structure_id: 1,
   },
 ]
 
@@ -157,3 +159,20 @@ export const mockDashboardStats = {
   recentEntries: 10,
   recentExits: 5,
 }
+
+export const mockStructures = [
+  {
+    id: 1,
+    name: "Canile Rifugio Hermada",
+    city_id: null,
+    address: null,
+    structure_type: "R",
+  },
+  {
+    id: 2,
+    name: "Canile Sanitario Chiodo",
+    city_id: null,
+    address: null,
+    structure_type: "S",
+  },
+]

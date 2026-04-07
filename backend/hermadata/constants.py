@@ -138,6 +138,11 @@ ENTRY_RESULT_LABELS = {
 }
 
 
+class StructureType(str, Enum):
+    sanitary = "S"
+    shelter = "R"
+
+
 class AnimalEvent(Enum):
     """Event types for animal activity logging"""
 
@@ -151,6 +156,7 @@ class AnimalEvent(Enum):
     moved_to_shelter = "MS"  # Moved from hospital to shelter
     temp_adoption_confirmed = "TC"  # Temporary adoption confirmed as final
     temp_adoption_undone = "TU"  # Temporary adoption undone (animal returned)
+    move_structure = "MV"  # Animal moved to another structure
 
 
 class ApiErrorCode(Enum):

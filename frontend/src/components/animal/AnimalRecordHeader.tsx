@@ -6,6 +6,7 @@ import {
     faCalendarAlt,
     faSignOutAlt,
     faCamera,
+    faBuilding,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
@@ -17,6 +18,7 @@ import { useExitTypesMap } from "../../hooks/useMaps"
 import { Animal } from "../../models/animal.schema"
 import { ChipCodeBadge } from "./misc"
 import AnimalImageUploadDialog from "./AnimalImageUploadDialog"
+import { useStructuresQuery } from "../../queries"
 
 type Props = {
     data: Animal
@@ -168,6 +170,10 @@ const StageInfo = ({
 const AnimalRecordHeader = (props: Props) => {
     const [imageUploadDialogVisible, setImageUploadDialogVisible] =
         useState(false)
+    const structuresQuery = useStructuresQuery()
+    const structureName = structuresQuery.data?.find(
+        (s) => s.id === props.data.structure_id
+    )?.name
 
     const handleImageClick = () => {
         setImageUploadDialogVisible(true)
@@ -287,6 +293,15 @@ const AnimalRecordHeader = (props: Props) => {
                                     <span className="font-medium">Codice:</span>{" "}
                                     {props.data.code}
                                 </div>
+                                {structureName && (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                        <FontAwesomeIcon
+                                            icon={faBuilding}
+                                            className="w-3 h-3"
+                                        />
+                                        {structureName}
+                                    </span>
+                                )}
                             </div>
                         </div>
 

@@ -51,6 +51,7 @@ def test_new_animal(animal_repository: SQLAnimalRepository):
             race_id="C",
             rescue_city_code="H501",
             entry_type=EntryType.rescue.value,
+            structure_id=1,
         )
     )
 
@@ -62,6 +63,7 @@ def test_exit(db_session: Session, animal_repository: SQLAnimalRepository):
         race_id="C",
         rescue_city_code="H501",
         entry_type=EntryType.rescue.value,
+        structure_id=1,
     )
 
     code = animal_repository.new_animal(new_entry)
@@ -148,16 +150,19 @@ def test_search(animal_repository: SQLAnimalRepository, make_animal):
             entry_type="R",
             rescue_city_code="A074",
             race_id="C",
+            structure_id=1,
         ),
         NewAnimalModel(
             entry_type="R",
             rescue_city_code="A117",
             race_id="C",
+            structure_id=1,
         ),
         NewAnimalModel(
             entry_type="R",
             rescue_city_code="A109",
             race_id="G",
+            structure_id=1,
         ),
     ]
     for t in test_values:
@@ -175,6 +180,7 @@ def test_update(db_session: Session, animal_repository: SQLAnimalRepository):
         entry_type="R",
         rescue_city_code="A117",
         race_id="C",
+        structure_id=1,
     )
 
     code = animal_repository.new_animal(new_entry_data)
@@ -215,7 +221,8 @@ def test_add_entry(
     complete_animal_data,
 ):
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
+        structure_id=1,
     )
     code = animal_repository.new_animal(data)
 
@@ -269,7 +276,8 @@ def test_count_days(
     complete_animal_data,
 ):
     new_animal = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value,
+        structure_id=1,
     )
 
     code = animal_repository.new_animal(new_animal)
@@ -341,7 +349,8 @@ def test_count_days(
     assert result.total_days == 10
 
     new_animal = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value,
+        structure_id=1,
     )
 
     code = animal_repository.new_animal(new_animal)
@@ -764,6 +773,7 @@ def test_new_animal_various_entry_types(
             race_id="C",
             rescue_city_code="H501",
             entry_type=entry_type,
+            structure_id=1,
         )
     )
 
@@ -823,7 +833,8 @@ def test_temporary_adoption_exit(
     )
 
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
+        structure_id=1,
     )
     code = animal_repository.new_animal(data)
     animal_id = get_animal_id_by_code(db_session, code)
@@ -886,7 +897,8 @@ def test_confirm_temporary_adoption(
     )
 
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
+        structure_id=1,
     )
     code = animal_repository.new_animal(data)
     animal_id = get_animal_id_by_code(db_session, code)
@@ -954,7 +966,8 @@ def test_undo_temporary_adoption(
     from hermadata.database.models import Adoption
 
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue
+        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
+        structure_id=1,
     )
     code = animal_repository.new_animal(data)
     animal_id = get_animal_id_by_code(db_session, code)

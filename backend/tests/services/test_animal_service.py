@@ -28,6 +28,7 @@ def test_new_entry(
             race_id="C",
             rescue_city_code="H501",
             entry_type=EntryType.confiscation.value,
+            structure_id=1,
         )
     )
 

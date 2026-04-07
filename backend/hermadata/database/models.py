@@ -22,11 +22,33 @@ from hermadata.constants import (
     AnimalStage,
     EntryType,
     ExitType,
+    StructureType,
 )
 
 
 class Base(DeclarativeBase):
     pass
+
+
+class Structure(Base):
+    __tablename__ = "structure"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    city_id: Mapped[str | None] = mapped_column(
+        ForeignKey("comune.id"), nullable=True
+    )
+    address: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    structure_type: Mapped[StructureType] = mapped_column(
+        String(1), nullable=False
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
 
 
 class Animal(Base):
@@ -74,6 +96,10 @@ class Animal(Base):
 
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
     img_path: Mapped[str] = mapped_column(String(100), nullable=True)
+
+    structure_id: Mapped[int] = mapped_column(
+        ForeignKey("structure.id"), nullable=False
+    )
 
     entries: Mapped[list["AnimalEntry"]] = relationship(
         back_populates="animal"
