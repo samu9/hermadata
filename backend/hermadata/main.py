@@ -9,6 +9,7 @@ from hermadata.error_handlers import api_error_exception_handler
 from hermadata.errors import APIException
 from hermadata.routers import (
     adopter_router,
+    adoption_router,
     animal_router,
     breed_router,
     document_router,
@@ -39,6 +40,7 @@ def build_app():
         expose_headers=["X-filename"],
     )
     app.include_router(animal_router.router)
+    app.include_router(adoption_router.router)
     app.include_router(util_router.router)
     app.include_router(race_router.router)
     app.include_router(breed_router.router)
