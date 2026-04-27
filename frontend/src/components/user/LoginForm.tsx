@@ -7,7 +7,6 @@ import { useMutation } from "react-query"
 import { Login, loginSchema } from "../../models/user.schema"
 import ControlledInputText from "../forms/ControlledInputText"
 import ControlledInputPassword from "../forms/ControlledInputPassword"
-import { useEffect } from "react"
 import { useAuth } from "../../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
 // import HermaDataLogo from "../HermaDataLogo"
@@ -21,13 +20,8 @@ const LoginForm = () => {
 
     const {
         handleSubmit,
-        formState: { isValid, errors },
-        watch,
+        formState: { isValid },
     } = form
-
-    useEffect(() => {
-        console.log(errors, isValid)
-    }, [watch()])
 
     // React Query Mutation for API call
     const loginMutation = useMutation({
@@ -39,7 +33,6 @@ const LoginForm = () => {
             return success
         },
         onSuccess: () => {
-            console.log("logged")
             navigate("/")
         },
         mutationKey: "login",
