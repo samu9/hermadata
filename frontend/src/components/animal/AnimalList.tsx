@@ -55,6 +55,26 @@ const RACE_ICON_MAP: { [key: string]: IconDefinition } = {
     C: faDog,
 }
 
+const ENTRY_TYPE_BADGE: Record<string, string> = {
+    R: "bg-amber-100 text-amber-800",
+    C: "bg-red-100 text-red-800",
+    P: "bg-blue-100 text-blue-800",
+    Q: "bg-orange-100 text-orange-800",
+    T: "bg-yellow-100 text-yellow-800",
+    O: "bg-purple-100 text-purple-800",
+    N: "bg-primary-100 text-primary-800",
+    L: "bg-rose-100 text-rose-800",
+}
+
+const EXIT_TYPE_BADGE: Record<string, string> = {
+    A: "bg-green-100 text-green-800",
+    T: "bg-teal-100 text-teal-800",
+    D: "bg-surface-200 text-surface-600",
+    R: "bg-orange-100 text-orange-800",
+    I: "bg-yellow-100 text-yellow-800",
+    C: "bg-blue-100 text-blue-800",
+}
+
 type SwitchFilterProps = {
     label: string
     checked: boolean
@@ -458,11 +478,11 @@ const AnimalList = () => {
                         className="font-mono text-sm"
                         body={(animal: AnimalSearchResult) =>
                             animal.without_chip ? (
-                                <span className="text-red-500 italic">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
                                     Senza chip
                                 </span>
                             ) : (
-                                animal.chip_code
+                                <span className="font-mono text-sm">{animal.chip_code}</span>
                             )
                         }
                     />
@@ -507,7 +527,7 @@ const AnimalList = () => {
                         }
                         filterField="entry_type"
                         body={(animal: AnimalSearchResult) => (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-100 text-surface-800">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ENTRY_TYPE_BADGE[animal.entry_type] ?? "bg-surface-100 text-surface-800"}`}>
                                 {entryTypesMap?.[animal.entry_type]}
                             </span>
                         )}
@@ -536,7 +556,7 @@ const AnimalList = () => {
                             filterField="exit_type"
                             body={(animal: AnimalSearchResult) =>
                                 animal.exit_type && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-100 text-surface-800">
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${EXIT_TYPE_BADGE[animal.exit_type] ?? "bg-surface-100 text-surface-800"}`}>
                                         {exitTypesMap?.[animal.exit_type]}
                                     </span>
                                 )
