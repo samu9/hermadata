@@ -1,31 +1,49 @@
-import { BreadCrumb } from "primereact/breadcrumb"
-import { MenuItem } from "primereact/menuitem"
 import { useMatches, useNavigate } from "react-router-dom"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faChevronRight, faHouse } from "@fortawesome/free-solid-svg-icons"
 
 const AppBreadCrumbs = () => {
-    // const [crumbs, setCrumbs] = useState<MenuItem[]>([])
     const matches = useMatches()
     const navigate = useNavigate()
     const crumbs = matches
-        // first get rid of any matches that don't have handle and crumb
-        .filter((match) => Boolean(match.handle?.crumb))
-        // now map them into an array of elements, passing the loader
-        // data to each one
-        .map(
-            (match) =>
-                ({
-                    label: match.handle.crumb(match),
-                    command: () => navigate(match.pathname),
-                } as MenuItem)
-        )
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .filter((match) => Boolean((match.handle as any)?.crumb))
+        .map((match) => ({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            label: (match.handle as any).crumb(match) as string,
+            path: match.pathname,
+        }))
 
     return (
-        <BreadCrumb
-            className="border-0 mb-2"
-            model={crumbs}
-            home={{ label: "Bacheca", command: () => navigate("/") }}
-        />
-        // <div>{crumbs.map((crumb) => crumb)}</div>
+        <nav className="flex items-center gap-1.5 text-sm mb-4 text-surface-500">
+            <button
+                onClick={() => navigate("/")}
+                className="flex items-center gap-1.5 hover:text-surface-700 transition-colors"
+            >
+                <FontAwesomeIcon icon={faHouse} className="w-3 h-3" />
+                <span>Bacheca</span>
+            </button>
+            {crumbs.map((crumb, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                    <FontAwesomeIcon
+                        icon={faChevronRight}
+                        className="w-2 h-2 text-surface-300"
+                    />
+                    {i < crumbs.length - 1 ? (
+                        <button
+                            onClick={() => navigate(crumb.path)}
+                            className="hover:text-surface-700 transition-colors"
+                        >
+                            {crumb.label}
+                        </button>
+                    ) : (
+                        <span className="text-surface-700 font-medium">
+                            {crumb.label}
+                        </span>
+                    )}
+                </div>
+            ))}
+        </nav>
     )
 }
 
