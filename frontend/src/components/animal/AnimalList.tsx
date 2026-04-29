@@ -55,6 +55,15 @@ const RACE_ICON_MAP: { [key: string]: IconDefinition } = {
     C: faDog,
 }
 
+const INITIAL_FILTERS: DataTableFilterMeta = {
+    race_id: { matchMode: FilterMatchMode.EQUALS, value: null },
+    chip_code: { matchMode: FilterMatchMode.EQUALS, value: null },
+    name: { matchMode: FilterMatchMode.EQUALS, value: null },
+    comune: { matchMode: FilterMatchMode.EQUALS, value: null },
+    entry_type: { matchMode: FilterMatchMode.EQUALS, value: null },
+    exit_type: { matchMode: FilterMatchMode.EQUALS, value: null },
+}
+
 const ENTRY_TYPE_BADGE: Record<string, string> = {
     R: "bg-amber-100 text-amber-800",
     C: "bg-red-100 text-red-800",
@@ -119,32 +128,7 @@ const AnimalList = () => {
         first: 0,
         rows: 10,
         page: 1,
-        filters: {
-            race_id: {
-                matchMode: FilterMatchMode.EQUALS,
-                value: null,
-            },
-            chip_code: {
-                matchMode: FilterMatchMode.EQUALS,
-                value: null,
-            },
-            name: {
-                matchMode: FilterMatchMode.EQUALS,
-                value: null,
-            },
-            comune: {
-                matchMode: FilterMatchMode.EQUALS,
-                value: null,
-            },
-            entry_type: {
-                matchMode: FilterMatchMode.EQUALS,
-                value: null,
-            },
-            exit_type: {
-                matchMode: FilterMatchMode.EQUALS,
-                value: null,
-            },
-        },
+        filters: INITIAL_FILTERS,
     })
     const { can } = useAuth()
     const { currentStructure } = useStructure()
@@ -163,6 +147,15 @@ const AnimalList = () => {
         dogs: true,
         structure_id: currentStructure?.id,
     })
+
+    const hasActiveFilters = Object.values(lazyState.filters).some(
+        (f) => (f as DataTableFilterMetaData).value !== null,
+    )
+
+    const resetFilters = () => {
+        setLazyState((prev) => ({ ...prev, filters: INITIAL_FILTERS }))
+        setProvinciaProvenienzaFilter(undefined)
+    }
 
     useEffect(() => {
         setQueryData((prev) => ({
@@ -396,6 +389,18 @@ const AnimalList = () => {
                         }
                     }}
                 />
+                {hasActiveFilters && (
+                    <>
+                        <div className="w-px h-8 bg-surface-200 mx-1" />
+                        <button
+                            onClick={resetFilters}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-surface-500 hover:text-surface-700 hover:bg-surface-100 rounded-lg transition-all"
+                        >
+                            <i className="pi pi-times text-xs" />
+                            Azzera filtri
+                        </button>
+                    </>
+                )}
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
@@ -417,6 +422,7 @@ const AnimalList = () => {
                     sortOrder={lazyState.sortOrder as SortOrder}
                     totalRecords={totalRecords}
                     lazy
+                    loading={animalQuery.isLoading}
                     emptyMessage="Nessun risultato trovato"
                     rowClassName={(rowData) =>
                         classNames(
