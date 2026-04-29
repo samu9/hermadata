@@ -4,6 +4,7 @@ import {
     faDog,
     faHospital,
     faHome,
+    faPrint,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
@@ -21,6 +22,7 @@ import { Dropdown } from "primereact/dropdown"
 import { InputSwitch, InputSwitchChangeEvent } from "primereact/inputswitch"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useMutation } from "react-query"
 import {
     AnimalSearchQuery,
     AnimalSearchResult,
@@ -40,6 +42,8 @@ import { useAuth } from "../../contexts/AuthContext"
 import { useStructure } from "../../contexts/StructureContext"
 import { Permission } from "../../constants"
 import { Tooltip } from "primereact/tooltip"
+import { Button } from "primereact/button"
+import { apiService } from "../../main"
 
 type LazyTableState = {
     first: number
@@ -174,6 +178,19 @@ const AnimalList = () => {
         animalQuery.data && setTotalRecords(animalQuery.data.total)
     }, [animalQuery.data])
     const navigate = useNavigate()
+
+    const printReport = useMutation({
+        mutationFn: (query: AnimalSearchQuery) =>
+            apiService.animalSearchReport(query),
+        onSuccess: (result: { url: string; filename: string }) => {
+            const link = document.createElement("a")
+            link.href = result.url
+            link.setAttribute("download", result.filename)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+        },
+    })
 
     const comuneFilterTemplate = (
         options: ColumnFilterElementTemplateOptions,
@@ -401,6 +418,18 @@ const AnimalList = () => {
                         </button>
                     </>
                 )}
+                <div className="ml-auto">
+                    <Button
+                        icon={<FontAwesomeIcon icon={faPrint} className="mr-2" />}
+                        label="Stampa"
+                        className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
+                        onClick={() => {
+                            const { from_index, to_index, ...filters } = queryData
+                            printReport.mutate(filters as AnimalSearchQuery)
+                        }}
+                        loading={printReport.isLoading}
+                    />
+                </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
