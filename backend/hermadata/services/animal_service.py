@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import Depends
@@ -7,6 +8,7 @@ from hermadata.constants import DocKindCode, ExitType
 from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import (
     ReportAnimalEntryVariables,
+    ReportAnimalListVariables,
     ReportGenerator,
 )
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
@@ -16,6 +18,7 @@ from hermadata.repositories.animal.models import (
     AnimalExit,
     AnimalExitsQuery,
     AnimalLogModel,
+    AnimalSearchModel,
     CompleteEntryModel,
     NewAnimalDocument,
     NewAnimalLogModel,
@@ -26,7 +29,6 @@ from hermadata.repositories.document_repository import (
     SQLDocumentRepository,
 )
 from hermadata.storage.base import StorageInterface
-from datetime import date
 
 
 class AnimalService:
@@ -141,6 +143,21 @@ class AnimalService:
         )
         return filename, report
 
+    def animal_list_report(
+        self,
+        query: AnimalSearchModel,
+        allowed_city_codes: list[str] | None = None,
+    ):
+        items = self.animal_repository.search_for_list_report(
+            query, allowed_city_codes
+        )
+        variables = ReportAnimalListVariables(
+            items=items,
+            total=len(items),
+        )
+        pdf = self.report_generator.build_animal_list_report(variables)
+        return "elenco_animali.pdf", pdf
+
     def entries_report(self, query: AnimalEntriesQuery):
         entries = self.animal_repository.count_animal_entries(query)
 
@@ -161,7 +178,9 @@ class AnimalService:
 
         return filename, report
 
-    def generate_adoption_report(self, animal_id: int, temporary: bool = False):
+    def generate_adoption_report(
+        self, animal_id: int, temporary: bool = False
+    ):
         variables = self.animal_repository.get_adoption_report_variables(
             animal_id
         )
@@ -197,9 +216,13 @@ class AnimalService:
         )
 
     def confirm_temporary_adoption(
-        self, animal_id: int, confirmation_date: date, user_id: int | None = None
+        self,
+        animal_id: int,
+        confirmation_date: date,
+        user_id: int | None = None,
     ):
-        """Confirm a temporary adoption: update exit_type to adoption and generate final document."""
+        """Confirm a temporary adoption: update exit_type to adoption
+        and generate final document."""
         variables = self.animal_repository.confirm_temporary_adoption(
             animal_id, confirmation_date, user_id
         )
