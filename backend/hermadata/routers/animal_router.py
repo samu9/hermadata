@@ -119,6 +119,48 @@ def search_animals(
     return result
 
 
+@router.get("/search/report")
+def serve_animal_list_report(
+    query: Annotated[AnimalSearchModel, Depends(use_cache=False)],
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+):
+    if (
+        query.present
+        and check_permission(current_user, Permission.BROWSE_PRESENT_ANIMALS)
+        is False
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to browse present animals",
+        )
+    if (
+        query.not_present
+        and check_permission(
+            current_user, Permission.BROWSE_NOT_PRESENT_ANIMALS
+        )
+        is False
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to browse non-present animals",
+        )
+
+    allowed_city_codes = None
+    if current_user.city_codes:
+        allowed_city_codes = current_user.city_codes
+
+    filename, report = service.animal_list_report(
+        query, allowed_city_codes=allowed_city_codes
+    )
+
+    return Response(
+        content=report,
+        media_type="application/pdf",
+        headers={"X-filename": filename},
+    )
+
+
 @router.get("/days/report")
 def serve_animal_days_report(
     query: Annotated[AnimalDaysQuery, Depends()],
