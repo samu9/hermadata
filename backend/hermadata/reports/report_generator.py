@@ -33,6 +33,7 @@ from hermadata.repositories.animal.models import (
     AnimalEntriesQuery,
     AnimalExitsItem,
     AnimalExitsQuery,
+    AnimalListReportItem,
     AnimalReportResult,
 )
 from hermadata.time_utils import get_today
@@ -182,6 +183,12 @@ class ReportCustodyVariables(ReportDefaultVariables):
     exit_date: ReportDate
 
 
+class ReportAnimalListVariables(ReportDefaultVariables):
+    title: str = "ELENCO ANIMALI"
+    items: list[AnimalListReportItem]
+    total: int
+
+
 class ReportGenerator:
     def __init__(self, jinja_env: Environment) -> None:
         self.jinja_env = jinja_env
@@ -212,6 +219,11 @@ class ReportGenerator:
         self, variables: ReportAnimalEntryVariables
     ) -> bytes:
         return self._build_template("animal_entry.jinja", variables)
+
+    def build_animal_list_report(
+        self, variables: ReportAnimalListVariables
+    ) -> bytes:
+        return self._build_template("animal_list.jinja", variables)
 
     def build_chip_assignment_report(
         self, variables: ReportChipAssignmentVariables
