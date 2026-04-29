@@ -274,7 +274,7 @@ const AnimalRecord = (props: Props) => {
         if (isSuperUser) {
             addButton({
                 id: "delete-animal",
-                buttonText: "",
+                buttonText: "Elimina",
                 buttonIcon: faTrash,
                 severity: "danger",
                 order: 10,
