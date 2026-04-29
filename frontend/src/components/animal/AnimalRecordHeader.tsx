@@ -212,11 +212,10 @@ const AnimalRecordHeader = (props: Props) => {
                             }
                             alt="Animal"
                             className={classNames(
-                                "w-full h-full object-cover transition-all duration-200 group-hover:brightness-75",
-                                {
-                                    "w-12 h-12 object-cover":
-                                        !props.data.img_path,
-                                }
+                                "transition-all duration-200 group-hover:brightness-75",
+                                props.data.img_path
+                                    ? "w-full h-full object-cover"
+                                    : "w-20 h-20 object-contain opacity-40"
                             )}
                         />
                         {/* Overlay with camera icon on hover */}
