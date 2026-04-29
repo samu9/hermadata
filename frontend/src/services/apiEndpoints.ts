@@ -40,6 +40,7 @@ const ApiEndpoints = {
         daysReport: `/animal/days/report`,
         entriesReport: `/animal/entries/report`,
         exitsReport: `/animal/exits/report`,
+        searchReport: `/animal/search/report`,
     },
     adopter: {
         create: "/adopter",
