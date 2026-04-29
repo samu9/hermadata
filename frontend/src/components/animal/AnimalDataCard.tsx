@@ -1,5 +1,4 @@
 import React from "react"
-import { Card } from "primereact/card"
 import { classNames } from "primereact/utils"
 
 interface DataItem {
@@ -22,18 +21,21 @@ const AnimalDataCard: React.FC<AnimalDataCardProps> = ({
     icon,
 }) => {
     return (
-        <Card
-            className={classNames("h-fit", className)}
-            title={
-                <div className="flex items-center gap-2">
-                    {icon}
-                    <span className="text-lg font-semibold text-gray-800">
-                        {title}
-                    </span>
-                </div>
-            }
+        <div
+            className={classNames(
+                "bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden h-fit",
+                className,
+            )}
         >
-            <div className="space-y-3">
+            <div className="px-5 py-3.5 border-b border-surface-100 flex items-center gap-2 bg-surface-50">
+                {icon && (
+                    <span className="text-surface-500">{icon}</span>
+                )}
+                <span className="text-xs font-semibold text-surface-600 uppercase tracking-wider">
+                    {title}
+                </span>
+            </div>
+            <div className="p-5 grid grid-cols-2 gap-x-6 gap-y-5">
                 {items.map((item, index) => (
                     <DataRow
                         key={index}
@@ -43,7 +45,7 @@ const AnimalDataCard: React.FC<AnimalDataCardProps> = ({
                     />
                 ))}
             </div>
-        </Card>
+        </div>
     )
 }
 
@@ -54,18 +56,24 @@ interface DataRowProps {
 }
 
 const DataRow: React.FC<DataRowProps> = ({ label, value, icon }) => {
-    return (
-        <div className="flex justify-between items-start">
-            <div className="flex items-center gap-2">
-                {icon}
-                {label ? (
-                    <span className="text-sm font-medium text-gray-600">
-                        {label}:
-                    </span>
-                ) : null}
-            </div>
-            <div className="text-sm text-gray-900 font-semibold text-right flex-1 ml-4">
+    if (!label) {
+        return (
+            <div className="col-span-2 text-sm text-surface-700 leading-relaxed">
                 {value}
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+                {icon && <span className="flex-shrink-0">{icon}</span>}
+                <span className="text-xs font-medium text-surface-500 uppercase tracking-wide truncate">
+                    {label}
+                </span>
+            </div>
+            <div className="text-sm font-semibold text-surface-800 break-words">
+                {value ?? <span className="text-surface-300 font-normal">—</span>}
             </div>
         </div>
     )
