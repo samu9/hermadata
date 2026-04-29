@@ -546,6 +546,19 @@ class ApiService {
         return { url, filename }
     }
 
+    async animalSearchReport(data: AnimalSearchQuery) {
+        const result = await this.inst.get(ApiEndpoints.animal.searchReport, {
+            params: data,
+            responseType: "blob",
+        })
+        const filename = result.headers["x-filename"].toString()
+        const filetype = result.headers["content-type"]?.toString()
+        const url = window.URL.createObjectURL(
+            new Blob([result.data], { type: filetype }),
+        )
+        return { url, filename }
+    }
+
     async searchVet(query: VetSearch): Promise<PaginatedVetSearchResult> {
         const result = await this.get<PaginatedVetSearchResult>(
             ApiEndpoints.vet.search,
