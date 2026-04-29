@@ -354,6 +354,18 @@ AnimalSearchResultQuery = namedtuple(
 AnimalGetQuery = namedtuple("AnimalGetQuery", AnimalModel.model_fields.keys())
 
 
+class AnimalListReportItem(BaseModel):
+    name: str | None = None
+    chip_code: str | None = None
+    origin_city: str
+    sex: str | None = None
+
+
+AnimalListReportItemQuery = namedtuple(
+    "AnimalListReportItemQuery", AnimalListReportItem.model_fields.keys()
+)
+
+
 class NewAnimalDocument(BaseModel):
     document_id: int
     document_kind_code: str
