@@ -1,0 +1,32 @@
+{% extends "base.jinja" %}
+{% block content %}
+<style>
+    @page {
+        size: A4 landscape;
+        margin: 1.5cm;
+    }
+</style>
+<table class="w-full border-collapse text-sm">
+    <thead>
+        <tr class="border-b-2 border-black">
+            <th class="text-left py-2 px-2">#</th>
+            <th class="text-left py-2 px-2">Nome</th>
+            <th class="text-left py-2 px-2">Chip</th>
+            <th class="text-left py-2 px-2">Provenienza</th>
+            <th class="text-left py-2 px-2">Sesso</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr class="border-b border-gray-300">
+            <td class="py-1 px-2">{{ loop.index }}</td>
+            <td class="py-1 px-2">{{ item.name or '' }}</td>
+            <td class="py-1 px-2 font-mono">{{ item.chip_code or '' }}</td>
+            <td class="py-1 px-2">{{ item.origin_city }}</td>
+            <td class="py-1 px-2">{{ item.sex or '' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p class="mt-4 text-sm font-bold">Totale: {{ total }}</p>
+{% endblock %}
