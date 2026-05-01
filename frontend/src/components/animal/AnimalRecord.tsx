@@ -4,6 +4,7 @@ import {
     faFile,
     faHome,
     faHospital,
+    faImages,
     faList,
     faPencil,
     faTrash,
@@ -68,6 +69,12 @@ const generateItems = (
             icon: <FontAwesomeIcon icon={faFile} fixedWidth className="px-1" />,
             path: "docs",
         })
+
+    items.push({
+        label: "Galleria",
+        icon: <FontAwesomeIcon icon={faImages} fixedWidth className="px-1" />,
+        path: "gallery",
+    })
 
     // Events tab - always visible for now (could add specific permission later)
     items.push({
