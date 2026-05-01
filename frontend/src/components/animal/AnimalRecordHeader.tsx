@@ -19,6 +19,8 @@ import { Animal } from "../../models/animal.schema"
 import { ChipCodeBadge } from "./misc"
 import AnimalImageUploadDialog from "./AnimalImageUploadDialog"
 import { useStructuresQuery } from "../../queries"
+import { apiService } from "../../main"
+import { useParams } from "react-router-dom"
 
 type Props = {
     data: Animal
@@ -149,12 +151,21 @@ const StageInfo = ({
 }
 
 const AnimalRecordHeader = (props: Props) => {
+    const { id: animalId } = useParams()
     const [imageUploadDialogVisible, setImageUploadDialogVisible] =
         useState(false)
     const structuresQuery = useStructuresQuery()
     const structureName = structuresQuery.data?.find(
         (s) => s.id === props.data.structure_id,
     )?.name
+
+    const profileImageUrl =
+        animalId && props.data.profile_image_id
+            ? apiService.getAnimalImageUrl(
+                  Number(animalId),
+                  props.data.profile_image_id,
+              )
+            : null
 
     const handleImageClick = () => {
         setImageUploadDialogVisible(true)
@@ -188,13 +199,13 @@ const AnimalRecordHeader = (props: Props) => {
                     >
                         <img
                             src={
-                                props.data.img_path ||
+                                profileImageUrl ||
                                 (props.data.race_id === "C" ? dog : cat)
                             }
                             alt="Animal"
                             className={classNames(
                                 "transition-all duration-200 group-hover:brightness-75",
-                                props.data.img_path
+                                profileImageUrl
                                     ? "w-full h-full object-cover"
                                     : "w-20 h-20 object-contain opacity-40",
                             )}
@@ -305,12 +316,14 @@ const AnimalRecordHeader = (props: Props) => {
             </div>
 
             {/* Image Upload Dialog */}
-            <AnimalImageUploadDialog
-                visible={imageUploadDialogVisible}
-                onHide={() => setImageUploadDialogVisible(false)}
-                animalId={props.data.code}
-                animalName={props.data.name || undefined}
-            />
+            {animalId && (
+                <AnimalImageUploadDialog
+                    visible={imageUploadDialogVisible}
+                    onHide={() => setImageUploadDialogVisible(false)}
+                    animalId={Number(animalId)}
+                    animalName={props.data.name || undefined}
+                />
+            )}
         </div>
     )
 }
