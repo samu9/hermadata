@@ -17,6 +17,8 @@ export enum Permission {
     SET_DOCUMENT_PERMISSION = "SDP",
     MANAGE_USERS = "MU",
     BROWSE_DELETED_ANIMALS = "BDA",
+    ADD_ANIMAL_EVENT = "AAE",
+    UPLOAD_ANIMAL_IMAGE = "UAI",
 }
 
 export type SeverityType =
