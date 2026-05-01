@@ -57,7 +57,7 @@ export const animalSchema = z.object({
     adoptability_index: z.number().optional(),
     chip_code: z.string().nullish(),
     chip_code_set: z.boolean(),
-    img_path: z.string().nullable(),
+    profile_image_id: z.number().nullable(),
     sex: z.number().nullable(),
     notes: z.string().nullish(),
     fur: z.number().nullish(),
@@ -94,14 +94,11 @@ export type AnimalEdit = z.infer<typeof animalEditSchema>
 
 // Extended schema for super users with additional administrative fields
 export const animalEditSuperUserSchema = animalEditSchema.extend({
-    // Administrative fields only accessible to super users
     stage: z.string().nullish(),
     adoptable: z.boolean().nullish(),
     adoptability_index: z.number().min(0).max(3).optional().nullable(),
-    img_path: z.string().nullish(),
     rescue_city_code: cityCodeValidator.nullish(),
     in_shelter_from: dateFromString.nullish(),
-    // Animal entries history
     entries: z.array(animalEntrySchema).optional(),
 })
 
@@ -284,3 +281,14 @@ export const newAnimalLogSchema = z.object({
 })
 
 export type NewAnimalLog = z.infer<typeof newAnimalLogSchema>
+
+export const animalImageSchema = z.object({
+    id: z.number(),
+    animal_id: z.number(),
+    filename: z.string(),
+    mimetype: z.string(),
+    is_profile: z.boolean(),
+    created_at: z.string(),
+})
+
+export type AnimalImage = z.infer<typeof animalImageSchema>
