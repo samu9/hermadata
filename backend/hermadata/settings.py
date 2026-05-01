@@ -24,6 +24,7 @@ class DiskStorageSettings(BaseSettings):
 class StorageSettings(BaseSettings):
     disk: DiskStorageSettings
     s3: S3StorageSettings
+    image_s3: S3StorageSettings | None = None
     selected: StorageType
 
 
