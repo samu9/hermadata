@@ -20,6 +20,7 @@ export const adopterSchema = newAdopterSchema.extend({
     id: z.number(),
     document_type: z.string().length(2).nullish(),
     document_number: z.string().nullish(),
+    city: z.string().nullish(),
 })
 
 export type Adopter = z.infer<typeof adopterSchema>
@@ -28,6 +29,8 @@ export const adopterSearchSchema = paginationQuerySchema.extend({
     name: z.string().nullish(),
     surname: z.string().nullish(),
     fiscal_code: z.string().nullish(),
+    phone: z.string().nullish(),
+    city: z.string().nullish(),
     sort_field: z.string().nullish(),
     sort_order: z.number().nullish(),
 })
