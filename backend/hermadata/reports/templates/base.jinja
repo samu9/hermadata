@@ -6,51 +6,57 @@
         <style>
             @page {
                 size: A4;
-                margin: 1.5cm;
+                margin: 1.5cm 1.5cm 2cm 1.5cm;
+
+                @bottom-left {
+                    content: element(footer-left);
+                    font-size: 0.7rem;
+                    font-family: Palatino, 'Times New Roman', Times, serif;
+                    vertical-align: middle;
+                }
+                @bottom-right {
+                    content: element(footer-right);
+                    font-size: 0.7rem;
+                    font-family: Palatino, 'Times New Roman', Times, serif;
+                    vertical-align: middle;
+                }
             }
             body {
                 font-family: Palatino, 'Times New Roman', Times, serif;
                 text-align: justify;
             }
+            thead {
+                display: table-header-group;
+            }
+            #footer-left {
+                position: running(footer-left);
+            }
+            #footer-right {
+                position: running(footer-right);
+            }
         </style>
+        {% block styles %}{% endblock %}
     </head>
     <body class="leading-normal text-sm">
-        <div class="flex flex-col" style="min-height: 100vh;">
-            <div class="text-center">
-                <div class="font-bold">
-                    <h3>{% if structure %}{{ structure.name | upper }}{% else %}CANILE HERMADA{% endif %}</h3>
-                    <h3>ASSOCIAZIONE AMICI DEGLI ANIMALI</h3>
-                </div>
-                <p class="text-sm">
-                    {% if structure and structure.address %}{{ structure.address }}{% endif %}
-                    {% if structure and structure.city %} - {{ structure.city | upper }}{% endif %}
-                </p>
+        <div id="footer-left">rendered with <strong>{{ software_name }} v{{ software_version }}</strong></div>
+        <div id="footer-right">{{ day }}</div>
+        <div class="text-center">
+            <div class="font-bold">
+                <h3>{% if structure %}{{ structure.name | upper }}{% else %}CANILE HERMADA{% endif %}</h3>
+                <h3>ASSOCIAZIONE AMICI DEGLI ANIMALI</h3>
             </div>
-            <div class="text-center">
-                <h1 class="font-bold py-[2rem] text-[1.5rem]">
-                    {{ title }}
-                </h1>
-            </div>
-            <div class="grow" style="height: 200px">
-                {% block content %} {% endblock %}
-            </div>
-            <div style="position: absolute; bottom: 0; width: 100%">
-                rendered with
-                <span class="font-bold"
-                    >{{ software_name }} v{{ software_version }}</span
-                >
-            </div>
-
-            <div
-                style="
-                    position: absolute;
-                    bottom: 0;
-                    right: 0;
-                    text-align: right;
-                "
-            >
-                <span class="">{{ day }}</span>
-            </div>
+            <p class="text-sm">
+                {% if structure and structure.address %}{{ structure.address }}{% endif %}
+                {% if structure and structure.city %} - {{ structure.city | upper }}{% endif %}
+            </p>
+        </div>
+        <div class="text-center">
+            <h1 class="font-bold py-[2rem] text-[1.5rem]">
+                {{ title }}
+            </h1>
+        </div>
+        <div>
+            {% block content %} {% endblock %}
         </div>
     </body>
 </html>
