@@ -1023,7 +1023,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         if data.exit_date < entry_date:
             raise ExitNotValidException()
 
-        if data.exit_type in (ExitType.adoption, ExitType.temporary_adoption):
+        if data.exit_type in ADOPTER_EXIT_TYPES:
             adoption_data = NewAdoption(
                 animal_id=animal_id,
                 adopter_id=data.adopter_id,
