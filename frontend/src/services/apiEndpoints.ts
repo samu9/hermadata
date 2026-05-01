@@ -27,8 +27,14 @@ const ApiEndpoints = {
             `/animal/${animalId}/entries/${entryId}`,
         documents: (id: number) => `/animal/${id}/document`,
         newDocument: (id: number) => `/animal/${id}/document`,
-        uploadImage: (id: string) => `/animal/${id}/image`,
-        updateImage: (id: string) => `/animal/${id}/image`,
+        uploadImage: (id: number) => `/animal/${id}/image`,
+        listImages: (id: number) => `/animal/${id}/images`,
+        serveImage: (animalId: number, imageId: number) =>
+            `/animal/${animalId}/image/${imageId}`,
+        setProfileImage: (animalId: number, imageId: number) =>
+            `/animal/${animalId}/image/${imageId}/profile`,
+        deleteImage: (animalId: number, imageId: number) =>
+            `/animal/${animalId}/image/${imageId}`,
         exit: (id: number) => `/animal/${id}/exit`,
         checkExit: (id: number) => `/animal/${id}/exit-check`,
         moveToShelter: (id: string) => `/animal/${id}/move_to_shelter`,
