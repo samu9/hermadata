@@ -15,6 +15,7 @@ from pydantic import (
     StringConstraints,
     field_serializer,
     field_validator,
+    model_validator,
 )
 from weasyprint import CSS, HTML
 
@@ -126,13 +127,50 @@ class AnimalVariables(BaseVariables):
     chip_code: NullableString
     breed: NullableString
     sex: NullableString
-    age: NullableInt
+    age: str = ""
     birth_date: ReportDate | None = None
     size: NullableString
     fur_type: NullableString
     fur_color: NullableString
     origin_city: str
     entry_date: ReportDate
+
+    @model_validator(mode="before")
+    @classmethod
+    def compute_age(cls, data):
+        birth_date = data.get("birth_date")
+        if birth_date is None:
+            return data
+        if isinstance(birth_date, str):
+            from datetime import datetime
+
+            birth_date = datetime.strptime(birth_date, "%Y-%m-%d").date()
+        today = date.today()
+        years = (
+            today.year
+            - birth_date.year
+            - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        )
+        if years >= 1:
+            data["age"] = f"{years} {'anno' if years == 1 else 'anni'}"
+        else:
+            months = (
+                (today.year - birth_date.year) * 12
+                + today.month
+                - birth_date.month
+            )
+            if today.day < birth_date.day:
+                months -= 1
+            if months > 0:
+                data["age"] = f"{months} {'mese' if months == 1 else 'mesi'}"
+            else:
+                days = (today - birth_date).days
+                data["age"] = (
+                    f"{days} {'giorno' if days == 1 else 'giorni'}"
+                    if days > 0
+                    else "Appena nato"
+                )
+        return data
 
     @field_validator("sex", mode="before")
     def validate_sex(value: int | str):
