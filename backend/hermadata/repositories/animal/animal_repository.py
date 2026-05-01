@@ -20,6 +20,7 @@ from hermadata.database.models import (
     AnimalDocument,
     AnimalEntry,
     AnimalEventType,
+    AnimalImage,
     AnimalLog,
     Breed,
     Comune,
@@ -55,6 +56,7 @@ from hermadata.repositories.animal.models import (
     AnimalExitsItem,
     AnimalExitsQuery,
     AnimalGetQuery,
+    AnimalImageModel,
     AnimalListReportItem,
     AnimalListReportItemQuery,
     AnimalLogModel,
@@ -370,7 +372,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Animal.sex,
                 Animal.sterilized,
                 Animal.notes,
-                Animal.img_path,
+                AnimalImage.id.label("profile_image_id"),
                 Animal.fur,
                 Animal.color,
                 Animal.size,
@@ -391,6 +393,14 @@ class SQLAnimalRepository(SQLBaseRepository):
                     Animal.id == AnimalEntry.animal_id,
                     AnimalEntry.current.is_(True),
                 ),
+            )
+            .join(
+                AnimalImage,
+                and_(
+                    AnimalImage.animal_id == Animal.id,
+                    AnimalImage.is_profile.is_(True),
+                ),
+                isouter=True,
             )
         ).one()
 
@@ -1700,6 +1710,67 @@ class SQLAnimalRepository(SQLBaseRepository):
         ]
 
         return result
+
+    def add_image(
+        self, animal_id: int, key: str, filename: str, mimetype: str
+    ) -> AnimalImageModel:
+        self.session.execute(
+            select(Animal.id).where(
+                Animal.id == animal_id, Animal.deleted_at.is_(None)
+            )
+        ).scalar_one()
+
+        image = AnimalImage(
+            animal_id=animal_id,
+            key=key,
+            filename=filename,
+            mimetype=mimetype,
+            is_profile=False,
+        )
+        self.session.add(image)
+        self.session.flush()
+        return AnimalImageModel.model_validate(image, from_attributes=True)
+
+    def get_images(self, animal_id: int) -> list[AnimalImageModel]:
+        results = self.session.execute(
+            select(AnimalImage)
+            .where(AnimalImage.animal_id == animal_id)
+            .order_by(AnimalImage.created_at.asc())
+        ).scalars().all()
+        return [
+            AnimalImageModel.model_validate(r, from_attributes=True)
+            for r in results
+        ]
+
+    def get_image(self, animal_id: int, image_id: int) -> AnimalImage:
+        return self.session.execute(
+            select(AnimalImage).where(
+                AnimalImage.id == image_id,
+                AnimalImage.animal_id == animal_id,
+            )
+        ).scalar_one()
+
+    def set_profile_image(self, animal_id: int, image_id: int) -> None:
+        self.session.execute(
+            update(AnimalImage)
+            .where(AnimalImage.animal_id == animal_id)
+            .values(is_profile=False)
+        )
+        self.session.execute(
+            update(AnimalImage)
+            .where(
+                AnimalImage.id == image_id,
+                AnimalImage.animal_id == animal_id,
+            )
+            .values(is_profile=True)
+        )
+        self.session.flush()
+
+    def delete_image(self, animal_id: int, image_id: int) -> AnimalImage:
+        image = self.get_image(animal_id, image_id)
+        self.session.delete(image)
+        self.session.flush()
+        return image
 
     @validate_call
     def add_fur_color(self, name: FurColorName) -> UtilElement:
