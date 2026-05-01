@@ -102,11 +102,10 @@ def get_structure_repository(
 
 # Keep global instances for non-session dependent objects
 s3_storage = S3Storage(settings.storage.s3.bucket)
+image_s3_storage = S3Storage(settings.storage.s3.images_bucket)
 disk_storage = DiskStorage(settings.storage.disk.base_path)
-image_s3_storage = (
-    S3Storage(settings.storage.image_s3.bucket)
-    if settings.storage.image_s3
-    else None
+image_disk_storage = DiskStorage(
+    f"{settings.storage.disk.base_path}/{settings.storage.disk.images_path}"
 )
 
 storage_map = {
@@ -114,15 +113,14 @@ storage_map = {
     StorageType.aws_s3: s3_storage,
 }
 
+image_storage_map = {
+    StorageType.disk: image_disk_storage,
+    StorageType.aws_s3: image_s3_storage,
+}
+
 
 def get_image_storage() -> StorageInterface:
-    if settings.storage.selected == StorageType.aws_s3:
-        if image_s3_storage is None:
-            raise RuntimeError(
-                "STORAGE__IMAGE_S3__BUCKET is required when storage is set to S3"
-            )
-        return image_s3_storage
-    return disk_storage
+    return image_storage_map[settings.storage.selected]
 
 
 report_generator = ReportGenerator(get_jinja_env())

@@ -15,16 +15,17 @@ class DBSettings(BaseSettings):
 
 class S3StorageSettings(BaseSettings):
     bucket: str
+    images_bucket: str
 
 
 class DiskStorageSettings(BaseSettings):
     base_path: str
+    images_path: str
 
 
 class StorageSettings(BaseSettings):
     disk: DiskStorageSettings
     s3: S3StorageSettings
-    image_s3: S3StorageSettings | None = None
     selected: StorageType
 
 
