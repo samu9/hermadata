@@ -21,6 +21,7 @@ import {
 import { Dropdown } from "primereact/dropdown"
 import { InputSwitch, InputSwitchChangeEvent } from "primereact/inputswitch"
 import { useEffect, useState } from "react"
+import { useSessionStorage } from "../../hooks/useSessionStorage"
 import { useNavigate } from "react-router-dom"
 import { useMutation } from "react-query"
 import {
@@ -126,31 +127,37 @@ const SwitchFilter = (props: SwitchFilterProps) => {
 const AnimalList = () => {
     const [totalRecords, setTotalRecords] = useState(0)
     const [provinciaProvenienzaFilter, setProvinciaProvenienzaFilter] =
-        useState<string | undefined>(undefined)
+        useSessionStorage<string | undefined>("animal-list:provincia-filter", undefined)
 
-    const [lazyState, setLazyState] = useState<LazyTableState>({
-        first: 0,
-        rows: 10,
-        page: 1,
-        filters: INITIAL_FILTERS,
-    })
+    const [lazyState, setLazyState] = useSessionStorage<LazyTableState>(
+        "animal-list:lazy-state",
+        {
+            first: 0,
+            rows: 10,
+            page: 1,
+            filters: INITIAL_FILTERS,
+        },
+    )
     const { can } = useAuth()
     const { currentStructure } = useStructure()
     const canBrowseNotPresentOnly =
         can(Permission.BROWSE_NOT_PRESENT_ANIMALS) &&
         !can(Permission.BROWSE_PRESENT_ANIMALS)
 
-    const [queryData, setQueryData] = useState<AnimalSearchQuery>({
-        from_index: lazyState.first,
-        to_index: lazyState.first + lazyState.rows,
-        present: canBrowseNotPresentOnly ? false : true,
-        not_present: canBrowseNotPresentOnly ? true : false,
-        healthcare_stage: true,
-        shelter_stage: true,
-        cats: true,
-        dogs: true,
-        structure_id: currentStructure?.id,
-    })
+    const [queryData, setQueryData] = useSessionStorage<AnimalSearchQuery>(
+        "animal-list:query-data",
+        {
+            from_index: lazyState.first,
+            to_index: lazyState.first + lazyState.rows,
+            present: canBrowseNotPresentOnly ? false : true,
+            not_present: canBrowseNotPresentOnly ? true : false,
+            healthcare_stage: true,
+            shelter_stage: true,
+            cats: true,
+            dogs: true,
+            structure_id: currentStructure?.id,
+        },
+    )
 
     const hasActiveFilters = Object.values(lazyState.filters).some(
         (f) => (f as DataTableFilterMetaData).value !== null,
