@@ -1,11 +1,13 @@
 {% extends "base.jinja" %}
-{% block content %}
+{% block styles %}
 <style>
     @page {
         size: A4 landscape;
-        margin: 1.5cm 1.5cm 2.5cm 1.5cm;
+        margin: 1.5cm 1.5cm 2cm 1.5cm;
     }
 </style>
+{% endblock %}
+{% block content %}
 <table class="w-full border-collapse text-sm">
     <thead>
         <tr class="border-b-2 border-black">
