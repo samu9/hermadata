@@ -4,7 +4,7 @@ import AnimalImageUploadForm from "./AnimalImageUploadForm"
 type Props = {
     visible: boolean
     onHide: () => void
-    animalId: string
+    animalId: number
     animalName?: string
 }
 
@@ -18,17 +18,13 @@ const AnimalImageUploadDialog = ({
         <Dialog
             header={`Carica immagine - ${animalName || "Animale"}`}
             visible={visible}
-            style={{ width: "90vw", maxWidth: "500px" }}
+            style={{ width: "90vw", maxWidth: "460px" }}
             onHide={onHide}
             modal
             resizable={false}
             draggable={false}
         >
-            <AnimalImageUploadForm
-                animalId={animalId}
-                onSuccess={onHide}
-                onComplete={onHide}
-            />
+            <AnimalImageUploadForm animalId={animalId} onComplete={onHide} />
         </Dialog>
     )
 }
