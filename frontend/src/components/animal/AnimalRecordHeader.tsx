@@ -38,65 +38,55 @@ const NotPresentAlert = ({ data, bare }: { data: Animal; bare?: boolean }) => {
     return (
         <div
             className={classNames("max-w-sm", {
-                "px-4 py-3 rounded-lg border-l-4 shadow-sm": !bare,
-                "bg-surface-100 border-surface-400": !bare && notPresent,
-                "bg-amber-50 border-amber-400": !bare && !notPresent,
+                "px-4 py-3 rounded-lg": !bare,
+                "bg-surface-100": !bare && notPresent,
+                "bg-amber-50": !bare && !notPresent,
             })}
         >
-            <div className="flex items-start gap-3">
-                <div
-                    className={classNames("flex-shrink-0 mt-0.5", {
-                        "text-surface-500": notPresent,
-                        "text-amber-500": !notPresent,
-                    })}
-                >
+            <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
                     <FontAwesomeIcon
-                        icon={
-                            notPresent ? faXmarkCircle : faTriangleExclamation
-                        }
-                        className="w-4 h-4"
+                        icon={notPresent ? faXmarkCircle : faTriangleExclamation}
+                        className={classNames("w-4 h-4 flex-shrink-0", {
+                            "text-surface-500": notPresent,
+                            "text-amber-500": !notPresent,
+                        })}
                     />
-                </div>
-                <div className="flex-1 min-w-0">
                     <h3
                         className={classNames("text-sm font-semibold", {
                             "text-surface-700": notPresent,
                             "text-amber-800": !notPresent,
                         })}
                     >
-                        {notPresent
-                            ? "Animale non presente"
-                            : "Animale in uscita"}
+                        {notPresent ? "Animale non presente" : "Animale in uscita"}
                     </h3>
-                    <div className="mt-2 space-y-1 text-xs">
-                        <div className="flex items-center gap-2">
-                            <FontAwesomeIcon
-                                icon={faCalendarAlt}
-                                className={classNames("w-3 h-3", {
-                                    "text-surface-400": notPresent,
-                                    "text-surface-500": !notPresent,
-                                })}
-                            />
-                            <span className="text-surface-700">
-                                <span className="font-medium">
-                                    Data uscita:
-                                </span>{" "}
-                                {format(exitDate, "dd/MM/yyyy")}
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <FontAwesomeIcon
-                                icon={faSignOutAlt}
-                                className={classNames("w-3 h-3", {
-                                    "text-surface-400": notPresent,
-                                    "text-surface-500": !notPresent,
-                                })}
-                            />
-                            <span className="text-surface-700">
-                                <span className="font-medium">Motivo:</span>{" "}
-                                {exitTypesMap?.[data.exit_type!]}
-                            </span>
-                        </div>
+                </div>
+                <div className="space-y-1 text-xs">
+                    <div className="flex items-center gap-2">
+                        <FontAwesomeIcon
+                            icon={faCalendarAlt}
+                            className={classNames("w-3 h-3", {
+                                "text-surface-400": notPresent,
+                                "text-surface-500": !notPresent,
+                            })}
+                        />
+                        <span className="text-surface-700">
+                            <span className="font-medium">Data uscita:</span>{" "}
+                            {format(exitDate, "dd/MM/yyyy")}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <FontAwesomeIcon
+                            icon={faSignOutAlt}
+                            className={classNames("w-3 h-3", {
+                                "text-surface-400": notPresent,
+                                "text-surface-500": !notPresent,
+                            })}
+                        />
+                        <span className="text-surface-700">
+                            <span className="font-medium">Motivo:</span>{" "}
+                            {exitTypesMap?.[data.exit_type!]}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -118,24 +108,20 @@ const StageInfo = ({
     return (
         <div
             className={classNames("max-w-sm", {
-                "px-4 py-3 rounded-lg border-l-4 shadow-sm": !bare,
-                "bg-green-50 border-green-400": !bare && isInShelter,
-                "bg-red-50 border-red-400": !bare && !isInShelter,
+                "px-4 py-3 rounded-lg": !bare,
+                "bg-green-50": !bare && isInShelter,
+                "bg-red-50": !bare && !isInShelter,
             })}
         >
-            <div className="flex items-start gap-3">
-                <div
-                    className={classNames("flex-shrink-0 mt-0.5", {
-                        "text-green-600": isInShelter,
-                        "text-red-600": !isInShelter,
-                    })}
-                >
+            <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
                     <FontAwesomeIcon
                         icon={isInShelter ? faTents : faKitMedical}
-                        className="w-4 h-4"
+                        className={classNames("w-4 h-4 flex-shrink-0", {
+                            "text-green-600": isInShelter,
+                            "text-red-600": !isInShelter,
+                        })}
                     />
-                </div>
-                <div className="flex-1 min-w-0">
                     <h3
                         className={classNames("text-sm font-semibold", {
                             "text-green-800": isInShelter,
@@ -144,24 +130,19 @@ const StageInfo = ({
                     >
                         {isInShelter ? "In rifugio" : "In sanitario"}
                     </h3>
-                    {isInShelter && inShelterFrom && (
-                        <div className="mt-2 space-y-1 text-xs">
-                            <div className="flex items-center gap-2">
-                                <FontAwesomeIcon
-                                    icon={faCalendarAlt}
-                                    className="w-3 h-3 text-surface-500"
-                                />
-                                <span className="text-surface-700">
-                                    <span className="font-medium">Dal:</span>{" "}
-                                    {format(
-                                        new Date(inShelterFrom),
-                                        "dd/MM/yyyy"
-                                    )}
-                                </span>
-                            </div>
-                        </div>
-                    )}
                 </div>
+                {isInShelter && inShelterFrom && (
+                    <div className="flex items-center gap-2 text-xs">
+                        <FontAwesomeIcon
+                            icon={faCalendarAlt}
+                            className="w-3 h-3 text-surface-500"
+                        />
+                        <span className="text-surface-700">
+                            <span className="font-medium">Dal:</span>{" "}
+                            {format(new Date(inShelterFrom), "dd/MM/yyyy")}
+                        </span>
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -172,7 +153,7 @@ const AnimalRecordHeader = (props: Props) => {
         useState(false)
     const structuresQuery = useStructuresQuery()
     const structureName = structuresQuery.data?.find(
-        (s) => s.id === props.data.structure_id
+        (s) => s.id === props.data.structure_id,
     )?.name
 
     const handleImageClick = () => {
@@ -200,7 +181,7 @@ const AnimalRecordHeader = (props: Props) => {
                     <div
                         className={classNames(
                             "w-32 h-32 rounded-full border-4 border-surface-100 overflow-hidden bg-surface-50 flex items-center justify-center relative group cursor-pointer transition-all duration-200 hover:border-surface-300",
-                            { grayscale: isNotPresent }
+                            { grayscale: isNotPresent },
                         )}
                         onClick={handleImageClick}
                         title="Clicca per cambiare l'immagine"
@@ -215,7 +196,7 @@ const AnimalRecordHeader = (props: Props) => {
                                 "transition-all duration-200 group-hover:brightness-75",
                                 props.data.img_path
                                     ? "w-full h-full object-cover"
-                                    : "w-20 h-20 object-contain opacity-40"
+                                    : "w-20 h-20 object-contain opacity-40",
                             )}
                         />
                         {/* Overlay with camera icon on hover */}
@@ -253,20 +234,14 @@ const AnimalRecordHeader = (props: Props) => {
 
                                 {/* Stage Badge */}
                                 {props.data.stage === "S" && (
-                                    <span className="text-xs px-2 py-1 border border-green-600 bg-green-50 text-green-700 rounded-md font-medium">
-                                        <FontAwesomeIcon
-                                            icon={faTents}
-                                            className="mr-1"
-                                        />
+                                    <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-800 font-medium">
+                                        <FontAwesomeIcon icon={faTents} />
                                         Rifugio
                                     </span>
                                 )}
                                 {props.data.stage === "H" && (
-                                    <span className="text-xs px-2 py-1 border border-red-500 bg-red-50 text-red-700 rounded-md font-medium">
-                                        <FontAwesomeIcon
-                                            icon={faKitMedical}
-                                            className="mr-1"
-                                        />
+                                    <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-red-100 text-red-800 font-medium">
+                                        <FontAwesomeIcon icon={faKitMedical} />
                                         Sanitario
                                     </span>
                                 )}
@@ -278,7 +253,7 @@ const AnimalRecordHeader = (props: Props) => {
                                     {
                                         "text-surface-900": props.data.name,
                                         "text-surface-400": !props.data.name,
-                                    }
+                                    },
                                 )}
                             >
                                 {props.data.name || "Nome non assegnato"}
