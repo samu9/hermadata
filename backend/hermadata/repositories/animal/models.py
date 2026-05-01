@@ -286,7 +286,7 @@ class AnimalModel(BaseModel):
     sex: int | None = None
     sterilized: bool | None = None
     notes: str | None = None
-    img_path: str | None = None
+    profile_image_id: int | None = None
     fur: int | None = None
     color: int | None = None
     size: int | None = None
@@ -508,3 +508,14 @@ class MedicalActivityModel(BaseModel):
 
 class MoveToShelterRequest(BaseModel):
     date: datetime
+
+
+class AnimalImageModel(BaseModel):
+    id: int
+    animal_id: int
+    filename: str
+    mimetype: str
+    is_profile: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
