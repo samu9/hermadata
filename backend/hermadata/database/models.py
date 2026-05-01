@@ -95,7 +95,6 @@ class Animal(Base):
     )
 
     notes: Mapped[str] = mapped_column(Text(), nullable=True)
-    img_path: Mapped[str] = mapped_column(String(100), nullable=True)
 
     structure_id: Mapped[int] = mapped_column(
         ForeignKey("structure.id"), nullable=False
@@ -558,6 +557,22 @@ class AnimalDocument(Base):
 #     updated_at: Mapped[datetime] = mapped_column(
 #         DateTime(), server_onupdate=func.now(), nullable=True
 #     )
+
+
+class AnimalImage(Base):
+    __tablename__ = "animal_image"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
+    key: Mapped[str] = mapped_column(String(40))
+    mimetype: Mapped[str] = mapped_column(String(50))
+    filename: Mapped[str] = mapped_column(String(255))
+    is_profile: Mapped[bool] = mapped_column(
+        Boolean, server_default=expression.false(), default=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
 
 
 class MedicalActivity(Base):
