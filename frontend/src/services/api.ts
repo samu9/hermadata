@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosInstance } from "axios"
+import { z } from "zod"
 import { toastService } from "./toast"
 import { dateOnly } from "../models/validators"
 import {
@@ -24,6 +25,7 @@ import {
     AnimalEntry,
     AnimalExit,
     AnimalExitsReportSchema,
+    AnimalImage,
     AnimalSearchQuery,
     AnimalSearchResult,
     ExitCheckResult,
@@ -32,6 +34,7 @@ import {
     PaginatedAnimalSearchResult,
     UpdateAnimalEntry,
     animalDocumentSchema,
+    animalImageSchema,
     animalSchema,
     exitCheckResultSchema,
     paginatedAnimalSearchResultSchema,
@@ -353,30 +356,39 @@ class ApiService {
         return result
     }
 
-    async uploadAnimalImage(animalId: string, file: File): Promise<number> {
+    async uploadAnimalImage(animalId: number, file: File): Promise<AnimalImage> {
         const formData = new FormData()
         formData.append("image", file)
-        const result = this.post<number>(
+        const result = await this.post<AnimalImage>(
             ApiEndpoints.animal.uploadImage(animalId),
             formData,
-            {
-                "Content-Type": "multipart/form-data",
-            },
+            { "Content-Type": "multipart/form-data" },
         )
-
-        return result
+        return animalImageSchema.parse(result)
     }
 
-    async updateAnimalImage(
-        animalId: string,
-        data: { image_id: number },
-    ): Promise<void> {
-        const result = await this.put<void>(
-            ApiEndpoints.animal.updateImage(animalId),
-            data,
+    async listAnimalImages(animalId: number): Promise<AnimalImage[]> {
+        const result = await this.get<AnimalImage[]>(
+            ApiEndpoints.animal.listImages(animalId),
         )
+        return z.array(animalImageSchema).parse(result)
+    }
 
-        return result
+    getAnimalImageUrl(animalId: number, imageId: number): string {
+        return `${this.baseURL}${ApiEndpoints.animal.serveImage(animalId, imageId)}`
+    }
+
+    async setProfileImage(animalId: number, imageId: number): Promise<void> {
+        await this.put<void>(
+            ApiEndpoints.animal.setProfileImage(animalId, imageId),
+            {},
+        )
+    }
+
+    async deleteAnimalImage(animalId: number, imageId: number): Promise<void> {
+        await this.inst.delete(
+            ApiEndpoints.animal.deleteImage(animalId, imageId),
+        )
     }
 
     async getAdopter(id: number): Promise<Adopter> {
