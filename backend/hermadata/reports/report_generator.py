@@ -185,9 +185,13 @@ class ReportCustodyVariables(ReportDefaultVariables):
 
 
 class ReportAnimalListVariables(ReportDefaultVariables):
-    title: str = "ELENCO ANIMALI"
+    title: str = ""
     items: list[AnimalListReportItem]
     total: int
+
+    def model_post_init(self, __context) -> None:
+        if not self.title:
+            self.title = f"ELENCO ANIMALI del {self.day.strftime('%d/%m/%Y')}"
 
 
 logging.getLogger("weasyprint").setLevel(logging.ERROR)
