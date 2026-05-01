@@ -19,6 +19,7 @@ class Permission(str, Enum):
     MANAGE_USERS = "MU"
     BROWSE_DELETED_ANIMALS = "BDA"
     ADD_ANIMAL_EVENT = "AAE"
+    UPLOAD_ANIMAL_IMAGE = "UAI"
 
 
 class StorageType(Enum):
