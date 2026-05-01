@@ -5,30 +5,45 @@
         size: A4 landscape;
         margin: 1.5cm 1.5cm 2cm 1.5cm;
     }
+    .animal-list-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+    }
+    .animal-list-table th,
+    .animal-list-table td {
+        border: 1px solid #000;
+        padding: 4px 8px;
+        text-align: left;
+    }
+    .animal-list-table thead th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+    }
 </style>
 {% endblock %}
 {% block content %}
-<table class="w-full border-collapse text-sm">
+<table class="animal-list-table">
     <thead>
-        <tr class="border-b-2 border-black">
-            <th class="text-left py-2 px-2">#</th>
-            <th class="text-left py-2 px-2">Nome</th>
-            <th class="text-left py-2 px-2">Chip</th>
-            <th class="text-left py-2 px-2">Provenienza</th>
-            <th class="text-left py-2 px-2">Sesso</th>
+        <tr>
+            <th>#</th>
+            <th>Nome</th>
+            <th>Chip</th>
+            <th>Provenienza</th>
+            <th>Sesso</th>
         </tr>
     </thead>
     <tbody>
         {% for item in items %}
-        <tr class="border-b border-gray-300">
-            <td class="py-1 px-2">{{ loop.index }}</td>
-            <td class="py-1 px-2">{{ item.name or '' }}</td>
-            <td class="py-1 px-2 font-mono">{{ item.chip_code or '' }}</td>
-            <td class="py-1 px-2">{{ item.origin_city }}</td>
-            <td class="py-1 px-2">{{ item.sex or '' }}</td>
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ item.name or '' }}</td>
+            <td>{{ item.chip_code or '' }}</td>
+            <td>{{ item.origin_city }}</td>
+            <td>{{ item.sex or '' }}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-<p class="mt-4 text-sm font-bold">Totale: {{ total }}</p>
+<p style="margin-top: 1rem; font-size: 0.875rem; font-weight: bold;">Totale: {{ total }}</p>
 {% endblock %}
