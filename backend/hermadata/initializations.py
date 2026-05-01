@@ -12,8 +12,8 @@ from hermadata.dependancies import (
     get_storage_map,
 )
 from hermadata.reports.report_generator import ReportGenerator
-from hermadata.repositories.adopter_repository import SQLAdopterRepository
 from hermadata.repositories.activity_repository import SQLActivityRepository
+from hermadata.repositories.adopter_repository import SQLAdopterRepository
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
@@ -26,6 +26,7 @@ from hermadata.services.adopter_service import AdopterService
 from hermadata.services.animal_service import AnimalService
 from hermadata.services.user_service import TokenData, UserService
 from hermadata.settings import settings
+from hermadata.storage.base import StorageInterface
 from hermadata.storage.disk_storage import DiskStorage
 from hermadata.storage.s3_storage import S3Storage
 
@@ -102,11 +103,27 @@ def get_structure_repository(
 # Keep global instances for non-session dependent objects
 s3_storage = S3Storage(settings.storage.s3.bucket)
 disk_storage = DiskStorage(settings.storage.disk.base_path)
+image_s3_storage = (
+    S3Storage(settings.storage.image_s3.bucket)
+    if settings.storage.image_s3
+    else None
+)
 
 storage_map = {
     StorageType.disk: disk_storage,
     StorageType.aws_s3: s3_storage,
 }
+
+
+def get_image_storage() -> StorageInterface:
+    if settings.storage.selected == StorageType.aws_s3:
+        if image_s3_storage is None:
+            raise RuntimeError(
+                "STORAGE__IMAGE_S3__BUCKET is required when storage is set to S3"
+            )
+        return image_s3_storage
+    return disk_storage
+
 
 report_generator = ReportGenerator(get_jinja_env())
 
