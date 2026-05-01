@@ -4,6 +4,7 @@ import AnimalDocs from "../components/animal/AnimalDocs"
 import AnimalEditFormWrapper from "../components/animal/AnimalEditFormWrapper"
 import AnimalEvents from "../components/animal/AnimalEvents"
 import AnimalExitForm from "../components/animal/AnimalExitForm"
+import AnimalGallery from "../components/animal/AnimalGallery"
 import AnimalOverview from "../components/animal/AnimalOverview"
 import ProtectedRoute from "../components/ProtectedRoute"
 import RoleProtectedRoute from "../components/RoleProtectedRoute"
@@ -61,6 +62,10 @@ const routes: RouteObject[] = [
                             {
                                 path: "edit",
                                 element: <AnimalEditFormWrapper />,
+                            },
+                            {
+                                path: "gallery",
+                                element: <AnimalGallery />,
                             },
                             {
                                 path: "health",
