@@ -1,17 +1,58 @@
-<div style="position: relative; height: 160px; margin: 16px 0 24px 0; page-break-inside: avoid;">
-    <table style="position: absolute; left: 5%; width: 42%;">
-        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Nome</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.name }}</td></tr>
-        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Razza</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.breed }}</td></tr>
-        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Sesso</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.sex }}</td></tr>
-        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Età</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.age }}</td></tr>
-        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Data di nascita</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.birth_date }}</td></tr>
-        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Codice chip</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.chip_code }}</td></tr>
-    </table>
-    <table style="position: absolute; right: 5%; width: 42%;">
-        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Manto</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.fur_type }}</td></tr>
-        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Colore</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.fur_color }}</td></tr>
-        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Arrivato da</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.origin_city }}</td></tr>
-        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Arrivato il</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.entry_date }}</td></tr>
-        <tr><td style="font-weight: bold; padding: 2px 8px 2px 0; border-bottom: 1px solid #000;">Taglia</td><td style="padding: 2px 0; border-bottom: 1px solid #000;">{{ animal.size }}</td></tr>
-    </table>
-</div>
+<style>
+    .animal-data {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        margin: 16px 0 24px 0;
+    }
+    .animal-data td {
+        padding: 4px 10px;
+        border-bottom: 1px solid #ccc;
+        vertical-align: top;
+    }
+    .animal-data .label {
+        font-weight: bold;
+        color: #444;
+        white-space: nowrap;
+        width: 18%;
+    }
+    .animal-data .value {
+        width: 32%;
+    }
+    .animal-data .divider {
+        width: 2%;
+        border-bottom: none;
+    }
+</style>
+<table class="animal-data" style="page-break-inside: avoid;">
+    <tr>
+        <td class="label">Nome</td><td class="value">{{ animal.name }}</td>
+        <td class="divider"></td>
+        <td class="label">Manto</td><td class="value">{{ animal.fur_type }}</td>
+    </tr>
+    <tr>
+        <td class="label">Razza</td><td class="value">{{ animal.breed }}</td>
+        <td class="divider"></td>
+        <td class="label">Colore</td><td class="value">{{ animal.fur_color }}</td>
+    </tr>
+    <tr>
+        <td class="label">Sesso</td><td class="value">{{ animal.sex }}</td>
+        <td class="divider"></td>
+        <td class="label">Taglia</td><td class="value">{{ animal.size }}</td>
+    </tr>
+    <tr>
+        <td class="label">Età</td><td class="value">{{ animal.age }}</td>
+        <td class="divider"></td>
+        <td class="label">Arrivato da</td><td class="value">{{ animal.origin_city }}</td>
+    </tr>
+    <tr>
+        <td class="label">Data di nascita</td><td class="value">{{ animal.birth_date }}</td>
+        <td class="divider"></td>
+        <td class="label">Arrivato il</td><td class="value">{{ animal.entry_date }}</td>
+    </tr>
+    <tr>
+        <td class="label">Codice chip</td><td class="value">{{ animal.chip_code }}</td>
+        <td class="divider"></td>
+        <td class="label"></td><td class="value"></td>
+    </tr>
+</table>
