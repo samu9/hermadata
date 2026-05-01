@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import date
 from enum import Enum
@@ -187,6 +188,9 @@ class ReportAnimalListVariables(ReportDefaultVariables):
     title: str = "ELENCO ANIMALI"
     items: list[AnimalListReportItem]
     total: int
+
+
+logging.getLogger("weasyprint").setLevel(logging.ERROR)
 
 
 class ReportGenerator:
