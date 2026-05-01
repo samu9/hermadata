@@ -1,97 +1,81 @@
-import { Messages, MessagesMessage } from "primereact/messages"
+import { faCircleInfo, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { useAnimalQuery } from "../../queries"
-import { useEffect, useRef } from "react"
 import AnimalCompleteEntryForm from "./AnimalCompleteEntryForm"
-import { Toast } from "primereact/toast"
-import { classNames } from "primereact/utils"
+import { toastService } from "../../services/toast"
+
+type BannerProps = {
+    variant: "warning" | "info"
+    title: string
+    detail?: string
+    children?: React.ReactNode
+}
+
+const Banner = ({ variant, title, detail, children }: BannerProps) => {
+    const isWarning = variant === "warning"
+    return (
+        <div
+            className={`flex gap-3 rounded-lg px-4 py-3 border ${
+                isWarning
+                    ? "bg-amber-50 border-amber-200 text-amber-900"
+                    : "bg-blue-50 border-blue-200 text-blue-900"
+            }`}
+        >
+            <FontAwesomeIcon
+                icon={isWarning ? faTriangleExclamation : faCircleInfo}
+                className={`mt-0.5 shrink-0 ${isWarning ? "text-amber-500" : "text-blue-500"}`}
+            />
+            <div className="flex flex-col gap-2 min-w-0 flex-1">
+                <span className="font-semibold text-sm">{title}</span>
+                {detail && <p className="text-sm opacity-80">{detail}</p>}
+                {children}
+            </div>
+        </div>
+    )
+}
 
 type Props = {
     animal_id: string
 }
-type TemplateProps = {
-    title: string
-    content: React.ReactNode
-    icon: string
-}
-const WarningTemplate = (props: TemplateProps) => (
-    <div>
-        <div className="flex gap-2 items-center mb-2">
-            <i className={classNames("pi text-[1.5rem]", props.icon)}></i>
-            <span className="p-message-summary">{props.title}</span>
-        </div>
-        {props.content}
-    </div>
-)
-const AnimalOverviewMessages = (props: Props) => {
-    const animalQuery = useAnimalQuery(props.animal_id)
-    const msgs = useRef<Messages>(null)
-    const toast = useRef<Toast>(null)
 
-    const completeEntryMessage: MessagesMessage = {
-        sticky: true,
-        severity: "warn",
-        closable: false,
-        content: (
-            <WarningTemplate
-                icon="pi-exclamation-triangle"
-                title="Completa l'ingresso"
-                content={
-                    <AnimalCompleteEntryForm
-                        onComplete={() =>
-                            toast.current?.show({
-                                severity: "success",
-                                summary: "Ingresso completato",
-                            })
-                        }
-                        animal_id={props.animal_id}
-                    />
-                }
-            />
-        ),
-    }
+const AnimalOverviewMessages = ({ animal_id }: Props) => {
+    const animalQuery = useAnimalQuery(animal_id)
+    const data = animalQuery.data
 
-    const missingChipMessage: MessagesMessage = {
-        sticky: true,
-        severity: "warn",
-        summary: "Dati chip mancanti",
-        detail: "L'animale ha un chip ma il codice non è stato inserito",
-        closable: false,
-    }
+    if (!data) return null
 
-    const withoutChipMessage: MessagesMessage = {
-        sticky: true,
-        severity: "info",
-        summary: "Senza chip",
-        detail: "L'animale è stato registrato come sprovvisto di microchip",
-        closable: false,
-    }
+    const showCompleteEntry = !data.entry_date
+    const showMissingChip = !data.chip_code && !data.without_chip
+    const showWithoutChip = !data.chip_code && data.without_chip
 
-    useEffect(() => {
-        if (!msgs.current) return
-        msgs.current.clear()
+    if (!showCompleteEntry && !showMissingChip && !showWithoutChip) return null
 
-        const messages: MessagesMessage[] = []
-
-        if (!animalQuery.data?.entry_date) {
-            messages.push(completeEntryMessage)
-        }
-
-        if (!animalQuery.data?.chip_code) {
-            if (animalQuery.data?.without_chip) {
-                messages.push(withoutChipMessage)
-            } else {
-                messages.push(missingChipMessage)
-            }
-        }
-
-        if (messages.length > 0) {
-            msgs.current.show(messages)
-        }
-    }, [animalQuery.data])
     return (
-        <div>
-            <Messages ref={msgs} />
-            <Toast ref={toast} position="bottom-right" />
+        <div className="flex flex-col gap-2">
+            {showCompleteEntry && (
+                <Banner variant="warning" title="Completa l'ingresso">
+                    <AnimalCompleteEntryForm
+                        animal_id={animal_id}
+                        onComplete={() =>
+                            toastService.showSuccess("Ingresso completato")
+                        }
+                    />
+                </Banner>
+            )}
+            {showMissingChip && (
+                <Banner
+                    variant="warning"
+                    title="Dati chip mancanti"
+                    detail="L'animale ha un chip ma il codice non è stato inserito"
+                />
+            )}
+            {showWithoutChip && (
+                <Banner
+                    variant="info"
+                    title="Senza chip"
+                    detail="L'animale è stato registrato come sprovvisto di microchip"
+                />
+            )}
         </div>
     )
 }
