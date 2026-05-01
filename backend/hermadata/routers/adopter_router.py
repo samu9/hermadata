@@ -10,6 +10,7 @@ from hermadata.models import PaginationResult
 from hermadata.repositories.adopter_repository import (
     AdopterModel,
     AdopterSearchQuery,
+    AdopterSearchResult,
     SQLAdopterRepository,
 )
 from hermadata.services.adopter_service import (
@@ -29,7 +30,7 @@ def create_adopter(
     return adopter
 
 
-@router.get("", response_model=PaginationResult[AdopterModel])
+@router.get("", response_model=PaginationResult[AdopterSearchResult])
 def get_adopter(
     query: Annotated[AdopterSearchQuery, Depends()],
     repo: Annotated[SQLAdopterRepository, Depends(get_adopter_repository)],
@@ -39,7 +40,7 @@ def get_adopter(
     return result
 
 
-@router.get("/search", response_model=PaginationResult[AdopterModel])
+@router.get("/search", response_model=PaginationResult[AdopterSearchResult])
 def search_adopter(
     query: Annotated[AdopterSearchQuery, Depends()],
     repo: Annotated[SQLAdopterRepository, Depends(get_adopter_repository)],
