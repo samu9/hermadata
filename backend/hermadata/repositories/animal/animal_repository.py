@@ -7,56 +7,85 @@ from sqlalchemy import and_, case, func, insert, or_, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
-from hermadata.constants import (HEALTHCARE_STAGE_ENTRY_TYPES, AnimalEvent,
-                                 EntryType, ExitType)
-from hermadata.database.models import (Adopter, Adoption, Animal,
-                                       AnimalDocument, AnimalEntry,
-                                       AnimalEventType, AnimalLog, Breed,
-                                       Comune, DocumentKind, FurColor,
-                                       MedicalActivity, MedicalActivityRecord,
-                                       Race, Structure, VetServiceRecord)
+from hermadata.constants import (
+    HEALTHCARE_STAGE_ENTRY_TYPES,
+    AnimalEvent,
+    EntryType,
+    ExitType,
+)
+from hermadata.database.models import (
+    Adopter,
+    Adoption,
+    Animal,
+    AnimalDocument,
+    AnimalEntry,
+    AnimalEventType,
+    AnimalLog,
+    Breed,
+    Comune,
+    DocumentKind,
+    FurColor,
+    MedicalActivity,
+    MedicalActivityRecord,
+    Race,
+    Structure,
+    VetServiceRecord,
+)
 from hermadata.errors import APIException
 from hermadata.models import PaginationResult, UtilElement
-from hermadata.reports.report_generator import (AdopterVariables,
-                                                AnimalVariables,
-                                                ReportAdoptionVariables,
-                                                ReportVariationVariables,
-                                                StructureVariables)
+from hermadata.reports.report_generator import (
+    AdopterVariables,
+    AnimalVariables,
+    ReportAdoptionVariables,
+    ReportVariationVariables,
+    StructureVariables,
+)
 from hermadata.repositories import SQLBaseRepository
-from hermadata.repositories.animal.models import (AddMedicalRecordModel,
-                                                  AdoptionModel,
-                                                  AnimalDaysItem,
-                                                  AnimalDaysQuery,
-                                                  AnimalDaysResult,
-                                                  AnimalDocumentModel,
-                                                  AnimalEntriesItem,
-                                                  AnimalEntriesQuery,
-                                                  AnimalEntryModel, AnimalExit,
-                                                  AnimalExitsItem,
-                                                  AnimalExitsQuery,
-                                                  AnimalGetQuery,
-                                                  AnimalLogModel, AnimalModel,
-                                                  AnimalQueryModel,
-                                                  AnimalReportResult,
-                                                  AnimalSearchModel,
-                                                  AnimalSearchResult,
-                                                  AnimalSearchResultQuery,
-                                                  CompleteEntryModel,
-                                                  ExitCheckResult,
-                                                  FurColorName,
-                                                  MedicalActivityModel,
-                                                  NewAdoption,
-                                                  NewAnimalDocument,
-                                                  NewAnimalLogModel,
-                                                  NewAnimalModel,
-                                                  NewEntryModel,
-                                                  UpdateAnimalEntryModel,
-                                                  UpdateAnimalModel)
+from hermadata.repositories.animal.models import (
+    AddMedicalRecordModel,
+    AdoptionModel,
+    AnimalDaysItem,
+    AnimalDaysQuery,
+    AnimalDaysResult,
+    AnimalDocumentModel,
+    AnimalEntriesItem,
+    AnimalEntriesQuery,
+    AnimalEntryModel,
+    AnimalExit,
+    AnimalExitsItem,
+    AnimalExitsQuery,
+    AnimalGetQuery,
+    AnimalListReportItem,
+    AnimalListReportItemQuery,
+    AnimalLogModel,
+    AnimalModel,
+    AnimalQueryModel,
+    AnimalReportResult,
+    AnimalSearchModel,
+    AnimalSearchResult,
+    AnimalSearchResultQuery,
+    CompleteEntryModel,
+    ExitCheckResult,
+    FurColorName,
+    MedicalActivityModel,
+    NewAdoption,
+    NewAnimalDocument,
+    NewAnimalLogModel,
+    NewAnimalModel,
+    NewEntryModel,
+    UpdateAnimalEntryModel,
+    UpdateAnimalModel,
+)
 from hermadata.time_utils import get_now, get_today
 
 logger = logging.getLogger(__name__)
 
-ADOPTER_EXIT_TYPES: list[ExitType] = [ExitType.adoption, ExitType.temporary_adoption, ExitType.custody]
+ADOPTER_EXIT_TYPES: list[ExitType] = [
+    ExitType.adoption,
+    ExitType.temporary_adoption,
+    ExitType.custody,
+    ExitType.return_,
+]
 
 EXIT_REQUIRED_DATA: dict[str, tuple] = {
     "C": [
@@ -151,15 +180,12 @@ class SQLAnimalRepository(SQLBaseRepository):
 
     def get_logs(self, animal_id: int) -> list[AnimalLogModel]:
         """Get all logs for an animal"""
-        results = (
-            self.session.execute(
-                select(AnimalLog, AnimalEventType.description)
-                .join(AnimalEventType, AnimalLog.event == AnimalEventType.code)
-                .where(AnimalLog.animal_id == animal_id)
-                .order_by(AnimalLog.created_at.desc())
-            )
-            .all()
-        )
+        results = self.session.execute(
+            select(AnimalLog, AnimalEventType.description)
+            .join(AnimalEventType, AnimalLog.event == AnimalEventType.code)
+            .where(AnimalLog.animal_id == animal_id)
+            .order_by(AnimalLog.created_at.desc())
+        ).all()
 
         return [
             AnimalLogModel(
@@ -474,6 +500,58 @@ class SQLAnimalRepository(SQLBaseRepository):
         ]
 
         return PaginationResult(items=response, total=total)
+
+    def search_for_list_report(
+        self,
+        query: AnimalSearchModel,
+        allowed_city_codes: list[str] | None = None,
+    ) -> list[AnimalListReportItem]:
+        where = query.as_where_clause()
+
+        if allowed_city_codes:
+            where.append(AnimalEntry.origin_city_code.in_(allowed_city_codes))
+
+        stmt = (
+            select(
+                Animal.name,
+                Animal.chip_code,
+                Comune.name,
+                case(
+                    (Animal.sex == 0, "M"),
+                    (Animal.sex == 1, "F"),
+                    else_=None,
+                ).label("sex"),
+            )
+            .select_from(Animal)
+            .join(
+                Adoption,
+                and_(
+                    Adoption.animal_id == Animal.id,
+                    Adoption.returned_at.is_(None),
+                ),
+                isouter=True,
+            )
+            .join(
+                AnimalEntry,
+                and_(
+                    Animal.id == AnimalEntry.animal_id,
+                    AnimalEntry.current.is_(True),
+                ),
+            )
+            .join(Comune, Comune.id == AnimalEntry.origin_city_code)
+            .where(*where)
+            .order_by(query.as_order_by_clause())
+        )
+
+        result = self.session.execute(stmt).all()
+
+        return [
+            AnimalListReportItem.model_validate(
+                AnimalListReportItemQuery(*r)._asdict(),
+                from_attributes=True,
+            )
+            for r in result
+        ]
 
     def generate_code(
         self, race_id: str, rescue_city_code: str, rescue_date: date = None
@@ -1497,9 +1575,13 @@ class SQLAnimalRepository(SQLBaseRepository):
         return variables
 
     def confirm_temporary_adoption(
-        self, animal_id: int, confirmation_date: date, user_id: int | None = None
+        self,
+        animal_id: int,
+        confirmation_date: date,
+        user_id: int | None = None,
     ) -> ReportAdoptionVariables:
-        """Confirm a temporary adoption as final. Updates exit_type to 'A' and exit_date."""
+        """Confirm a temporary adoption as final.
+        Updates exit_type to 'A' and exit_date."""
         # Verify animal has a temporary adoption exit
         current_entry = self.session.execute(
             select(AnimalEntry)
@@ -1538,7 +1620,11 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Adoption.animal_entry_id == current_entry.id,
                 Adoption.returned_at.is_(None),
             )
-            .values(completed_at=datetime.combine(confirmation_date, datetime.min.time()))
+            .values(
+                completed_at=datetime.combine(
+                    confirmation_date, datetime.min.time()
+                )
+            )
         )
 
         event_log = AnimalLog(
