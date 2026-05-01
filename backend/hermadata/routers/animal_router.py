@@ -1,7 +1,8 @@
 from datetime import date, datetime
 from typing import Annotated
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.exc import NoResultFound
 
@@ -11,6 +12,7 @@ from hermadata.initializations import (
     get_animal_service,
     get_current_user,
     get_document_repository,
+    get_image_storage,
 )
 from hermadata.models import ApiError, PaginationResult
 from hermadata.permissions import (
@@ -30,6 +32,7 @@ from hermadata.repositories.animal.models import (
     AnimalEntryModel,
     AnimalExit,
     AnimalExitsQuery,
+    AnimalImageModel,
     AnimalLogModel,
     AnimalModel,
     AnimalQueryModel,
@@ -48,6 +51,7 @@ from hermadata.repositories.animal.models import (
 from hermadata.repositories.document_repository import SQLDocumentRepository
 from hermadata.services.animal_service import AnimalService
 from hermadata.services.user_service import TokenData
+from hermadata.storage.base import StorageInterface
 
 router = APIRouter(prefix="/animal")
 
@@ -481,7 +485,9 @@ def undo_temporary_adoption(
 ):
     """Undo a temporary adoption, adding a rientro entry for the animal."""
     try:
-        service.undo_temporary_adoption(animal_id, user_id=current_user.user_id)
+        service.undo_temporary_adoption(
+            animal_id, user_id=current_user.user_id
+        )
         return True
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -510,7 +516,88 @@ def move_animal_to_structure(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-# TODO: Add animal image upload endpoints here
-# See TODO_ANIMAL_IMAGE_UPLOAD.md for implementation details
-# @router.post("/{animal_id}/image", response_model=int)
-# @router.put("/{animal_id}/image", response_model=None)
+@router.post("/{animal_id}/image", response_model=AnimalImageModel)
+def upload_animal_image(
+    animal_id: int,
+    image: UploadFile,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    storage: Annotated[StorageInterface, Depends(get_image_storage)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.UPLOAD_ANIMAL_IMAGE))
+    ],
+):
+    key = str(uuid4())
+    storage.store_file(key, image.file.read())
+    result = repo.add_image(
+        animal_id=animal_id,
+        key=key,
+        filename=image.filename or key,
+        mimetype=image.content_type or "application/octet-stream",
+    )
+    return result
+
+
+@router.get("/{animal_id}/images", response_model=list[AnimalImageModel])
+def list_animal_images(
+    animal_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+):
+    return repo.get_images(animal_id)
+
+
+@router.get("/{animal_id}/image/{image_id}", response_class=Response)
+def serve_animal_image(
+    animal_id: int,
+    image_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    storage: Annotated[StorageInterface, Depends(get_image_storage)],
+):
+    try:
+        image = repo.get_image(animal_id, image_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Image not found") from e
+    data = storage.retrieve_file(image.key)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Image data not found")
+    return Response(
+        content=data,
+        media_type=image.mimetype,
+        headers={
+            "Content-Disposition": f'inline; filename="{image.filename}"'
+        },
+    )
+
+
+@router.put("/{animal_id}/image/{image_id}/profile", response_model=None)
+def set_profile_image(
+    animal_id: int,
+    image_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.UPLOAD_ANIMAL_IMAGE))
+    ],
+):
+    try:
+        repo.set_profile_image(animal_id, image_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Image not found") from e
+    return Response(status_code=204)
+
+
+@router.delete("/{animal_id}/image/{image_id}", response_model=None)
+def delete_animal_image(
+    animal_id: int,
+    image_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    storage: Annotated[StorageInterface, Depends(get_image_storage)],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.UPLOAD_ANIMAL_IMAGE))
+    ],
+):
+    try:
+        image = repo.delete_image(animal_id, image_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="Image not found") from e
+    storage.delete_file(image.key)
+    return Response(status_code=204)
