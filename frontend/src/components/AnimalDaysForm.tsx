@@ -6,20 +6,31 @@ import { Dropdown } from "primereact/dropdown"
 import { useEffect, useState } from "react"
 import { Controller, FormProvider, useForm } from "react-hook-form"
 import { useMutation } from "react-query"
+import { useAuth } from "../contexts/AuthContext"
 import { apiService } from "../main"
 import {
     animalDaysRequestSchema,
     AnimalDaysRequestSchema,
 } from "../models/animal.schema"
-import { useComuniQuery, useProvinceQuery } from "../queries"
+import {
+    useComuniByCodesQuery,
+    useComuniQuery,
+    useProvinceQuery,
+} from "../queries"
 import ControlledInputDate from "./forms/ControlledInputDate"
 import { SubTitle } from "./typography"
 
 const AnimalDaysForm = () => {
+    const { user } = useAuth()
+    const restrictedCities = user?.city_codes ?? null
+
     const [provincia, setProvincia] = useState<string>()
 
     const provinceQuery = useProvinceQuery()
-    const comuniQuery = useComuniQuery(provincia)
+    const comuniQuery = useComuniQuery(restrictedCities ? undefined : provincia)
+    const allowedComuniData = useComuniByCodesQuery(restrictedCities ?? [])
+
+    const comuniOptions = restrictedCities ? allowedComuniData : comuniQuery.data
 
     const form = useForm<AnimalDaysRequestSchema>({
         resolver: zodResolver(animalDaysRequestSchema),
@@ -70,25 +81,27 @@ const AnimalDaysForm = () => {
                             fieldName="to_date"
                             label="Data fine"
                         />
-                        <div className="flex flex-col w-full">
-                            <label
-                                className="block text-sm font-medium mb-1 text-surface-700"
-                                htmlFor="provincia"
-                            >
-                                Provincia
-                            </label>
-                            <Dropdown
-                                value={provincia}
-                                onChange={(e) => {
-                                    setProvincia(e.target.value)
-                                }}
-                                options={provinceQuery.data}
-                                optionLabel="name"
-                                optionValue="id"
-                                placeholder="Seleziona"
-                                className="w-full"
-                            />
-                        </div>
+                        {!restrictedCities && (
+                            <div className="flex flex-col w-full">
+                                <label
+                                    className="block text-sm font-medium mb-1 text-surface-700"
+                                    htmlFor="provincia"
+                                >
+                                    Provincia
+                                </label>
+                                <Dropdown
+                                    value={provincia}
+                                    onChange={(e) => {
+                                        setProvincia(e.target.value)
+                                    }}
+                                    options={provinceQuery.data}
+                                    optionLabel="name"
+                                    optionValue="id"
+                                    placeholder="Seleziona"
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
 
                         <Controller
                             name="city_code"
@@ -103,7 +116,7 @@ const AnimalDaysForm = () => {
                                     </label>
                                     <Dropdown
                                         {...field}
-                                        options={comuniQuery.data}
+                                        options={comuniOptions}
                                         optionLabel="name"
                                         optionValue="id"
                                         placeholder="Seleziona"
