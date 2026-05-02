@@ -15,7 +15,6 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom"
 import Loader from "./components/Loader.tsx"
 import { LoaderProvider } from "./contexts/Loader.tsx"
 import { AuthProvider } from "./contexts/AuthContext.tsx"
-import { StructureProvider } from "./contexts/StructureContext.tsx"
 import routes from "./router/routes.tsx"
 
 addLocale("it", {
@@ -91,12 +90,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <QueryClientProvider client={queryClient}>
             <PrimeReactProvider value={{}}>
                 <AuthProvider>
-                    <StructureProvider>
-                        <LoaderProvider>
-                            <RouterProvider router={router} />
-                            <Loader />
-                        </LoaderProvider>
-                    </StructureProvider>
+                    <LoaderProvider>
+                        <RouterProvider router={router} />
+                        <Loader />
+                    </LoaderProvider>
                 </AuthProvider>
             </PrimeReactProvider>
         </QueryClientProvider>
