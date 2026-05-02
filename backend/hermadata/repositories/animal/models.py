@@ -488,6 +488,7 @@ class MedicalActivityModel(BaseModel):
 
 class MoveToShelterRequest(BaseModel):
     date: datetime
+    structure_id: int
 
 
 class AnimalImageModel(BaseModel):
