@@ -181,7 +181,16 @@ def serve_animal_list_report(
 def serve_animal_days_report(
     query: Annotated[AnimalDaysQuery, Depends()],
     service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
+    if (
+        current_user.city_codes
+        and query.city_code not in current_user.city_codes
+    ):
+        raise HTTPException(
+            status_code=403, detail="Accesso negato per questo comune"
+        )
+
     filename, report = service.days_report(query)
 
     return Response(
@@ -448,7 +457,10 @@ def move_to_shelter(
             )
 
         repo.move_to_shelter(
-            animal_id, data.date, data.structure_id, user_id=current_user.user_id
+            animal_id,
+            data.date,
+            data.structure_id,
+            user_id=current_user.user_id,
         )
         return True
     except EntryNotCompleteException as e:
