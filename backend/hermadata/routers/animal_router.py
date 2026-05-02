@@ -2,7 +2,14 @@ from datetime import date, datetime
 from typing import Annotated
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    Response,
+    UploadFile,
+)
 from pydantic import BaseModel
 from sqlalchemy.exc import NoResultFound
 
@@ -83,6 +90,7 @@ def search_animals(
     query: Annotated[AnimalSearchModel, Depends(use_cache=False)],
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
     current_user: Annotated[TokenData, Depends(get_current_user)],
+    structure_ids: Annotated[list[int] | None, Query()] = None,
 ):
     if (
         query.present
@@ -118,6 +126,7 @@ def search_animals(
     if current_user.city_codes:
         allowed_city_codes = current_user.city_codes
 
+    query.structure_ids = structure_ids
     result = repo.search(query, allowed_city_codes=allowed_city_codes)
 
     return result
@@ -128,6 +137,7 @@ def serve_animal_list_report(
     query: Annotated[AnimalSearchModel, Depends(use_cache=False)],
     service: Annotated[AnimalService, Depends(get_animal_service)],
     current_user: Annotated[TokenData, Depends(get_current_user)],
+    structure_ids: Annotated[list[int] | None, Query()] = None,
 ):
     if (
         query.present
@@ -154,6 +164,7 @@ def serve_animal_list_report(
     if current_user.city_codes:
         allowed_city_codes = current_user.city_codes
 
+    query.structure_ids = structure_ids
     filename, report = service.animal_list_report(
         query, allowed_city_codes=allowed_city_codes
     )
