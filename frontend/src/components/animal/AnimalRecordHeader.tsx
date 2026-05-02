@@ -11,7 +11,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
 import { classNames } from "primereact/utils"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import cat from "../../assets/cat.svg"
 import dog from "../../assets/dog.svg"
 import { useExitTypesMap } from "../../hooks/useMaps"
@@ -48,7 +48,9 @@ const NotPresentAlert = ({ data, bare }: { data: Animal; bare?: boolean }) => {
             <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
                     <FontAwesomeIcon
-                        icon={notPresent ? faXmarkCircle : faTriangleExclamation}
+                        icon={
+                            notPresent ? faXmarkCircle : faTriangleExclamation
+                        }
                         className={classNames("w-4 h-4 flex-shrink-0", {
                             "text-surface-500": notPresent,
                             "text-amber-500": !notPresent,
@@ -60,7 +62,9 @@ const NotPresentAlert = ({ data, bare }: { data: Animal; bare?: boolean }) => {
                             "text-amber-800": !notPresent,
                         })}
                     >
-                        {notPresent ? "Animale non presente" : "Animale in uscita"}
+                        {notPresent
+                            ? "Animale non presente"
+                            : "Animale in uscita"}
                     </h3>
                 </div>
                 <div className="space-y-1 text-xs">
@@ -167,6 +171,11 @@ const AnimalRecordHeader = (props: Props) => {
               )
             : null
 
+    const rotation = useMemo(() => {
+        const options = [-4, -3, -2, 2, 3, 4]
+        return options[Math.floor(Math.random() * options.length)]
+    }, [])
+
     const handleImageClick = () => {
         setImageUploadDialogVisible(true)
     }
@@ -179,24 +188,21 @@ const AnimalRecordHeader = (props: Props) => {
         !isNotPresent && !props.data.exit_type && !!props.data.healthcare_stage
 
     return (
-        <div
-            className={classNames("rounded-xl shadow-sm border p-6 mb-6", {
-                "bg-surface-100 border-surface-300": isNotPresent,
-                "bg-red-50 border-red-200": isSanitary,
-                "bg-white border-surface-200": !isNotPresent && !isSanitary,
-            })}
-        >
-            <div className="flex gap-6 items-start">
-                {/* Animal Image */}
-                <div className="flex-shrink-0">
-                    <div
-                        className={classNames(
-                            "w-32 h-32 rounded-full border-4 border-surface-100 overflow-hidden bg-surface-50 flex items-center justify-center relative group cursor-pointer transition-all duration-200 hover:border-surface-300",
-                            { grayscale: isNotPresent },
-                        )}
-                        onClick={handleImageClick}
-                        title="Clicca per cambiare l'immagine"
-                    >
+        <div className="relative mb-6 mt-4">
+            {/* Polaroid — top nearly flush with card top border */}
+            <div
+                className="absolute -top-1 left-6 z-10"
+                style={{ transform: `rotate(${rotation}deg)` }}
+            >
+                <div
+                    className={classNames(
+                        "bg-white p-1.5 pb-6 shadow-xl rounded-sm w-32 group cursor-pointer",
+                        { grayscale: isNotPresent },
+                    )}
+                    onClick={handleImageClick}
+                    title="Clicca per cambiare l'immagine"
+                >
+                    <div className="w-full aspect-square overflow-hidden bg-surface-100 flex items-center justify-center relative">
                         <img
                             src={
                                 profileImageUrl ||
@@ -207,10 +213,9 @@ const AnimalRecordHeader = (props: Props) => {
                                 "transition-all duration-200 group-hover:brightness-75",
                                 profileImageUrl
                                     ? "w-full h-full object-cover"
-                                    : "w-20 h-20 object-contain opacity-40",
+                                    : "w-16 h-16 object-contain opacity-30",
                             )}
                         />
-                        {/* Overlay with camera icon on hover */}
                         <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <FontAwesomeIcon
                                 icon={faCamera}
@@ -219,99 +224,106 @@ const AnimalRecordHeader = (props: Props) => {
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Main Content */}
-                <div className="flex-1 min-w-0">
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                        {/* Animal Info */}
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                {/* Adoptability Flag */}
-                                {props.data.adoptability_index !== null &&
-                                    props.data.adoptability_index !==
-                                        undefined && (
-                                        <div
-                                            className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-                                            style={{
-                                                backgroundColor:
-                                                    ADOPTABILITY_FLAG_COLOR[
-                                                        props.data
-                                                            .adoptability_index
-                                                    ] || "#gray",
-                                            }}
-                                            title={`Indice adottabilità: ${props.data.adoptability_index}`}
-                                        />
-                                    )}
+            {/* Card */}
+            <div
+                className={classNames(
+                    "rounded-xl shadow-sm border pt-6 pb-6 pr-6 pl-44",
+                    {
+                        "bg-surface-100 border-surface-300": isNotPresent,
+                        "bg-red-50 border-red-200": isSanitary,
+                        "bg-white border-surface-200":
+                            !isNotPresent && !isSanitary,
+                    },
+                )}
+            >
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    {/* Animal Info */}
+                    <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                            {/* Adoptability Flag */}
+                            {props.data.adoptability_index !== null &&
+                                props.data.adoptability_index !== undefined && (
+                                    <div
+                                        className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                                        style={{
+                                            backgroundColor:
+                                                ADOPTABILITY_FLAG_COLOR[
+                                                    props.data
+                                                        .adoptability_index
+                                                ] || "#gray",
+                                        }}
+                                        title={`Indice adottabilità: ${props.data.adoptability_index}`}
+                                    />
+                                )}
 
-                                {/* Stage Badge */}
-                                {props.data.stage === "S" && (
-                                    <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-800 font-medium">
-                                        <FontAwesomeIcon icon={faTents} />
-                                        Rifugio
-                                    </span>
-                                )}
-                                {props.data.stage === "H" && (
-                                    <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-red-100 text-red-800 font-medium">
-                                        <FontAwesomeIcon icon={faKitMedical} />
-                                        Sanitario
-                                    </span>
-                                )}
-                            </div>
-
-                            <h1
-                                className={classNames(
-                                    "text-3xl font-bold mb-3 leading-tight",
-                                    {
-                                        "text-surface-900": props.data.name,
-                                        "text-surface-400": !props.data.name,
-                                    },
-                                )}
-                            >
-                                {props.data.name || "Nome non assegnato"}
-                            </h1>
-
-                            <div className="flex flex-wrap items-center gap-4">
-                                <ChipCodeBadge
-                                    code={props.data.chip_code || undefined}
-                                />
-                                <div className="text-sm text-surface-600">
-                                    <span className="font-medium">Codice:</span>{" "}
-                                    {props.data.code}
-                                </div>
-                                {structureName && (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                                        <FontAwesomeIcon
-                                            icon={faBuilding}
-                                            className="w-3 h-3"
-                                        />
-                                        {structureName}
-                                    </span>
-                                )}
-                            </div>
+                            {/* Stage Badge */}
+                            {props.data.stage === "S" && (
+                                <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-800 font-medium">
+                                    <FontAwesomeIcon icon={faTents} />
+                                    Rifugio
+                                </span>
+                            )}
+                            {props.data.stage === "H" && (
+                                <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-red-100 text-red-800 font-medium">
+                                    <FontAwesomeIcon icon={faKitMedical} />
+                                    Sanitario
+                                </span>
+                            )}
                         </div>
 
-                        {/* Alert for Not Present Animals */}
-                        {props.data.exit_type && props.data.exit_date && (
-                            <div className="lg:flex-shrink-0">
-                                <NotPresentAlert
-                                    data={props.data}
-                                    bare={!!isNotPresent}
-                                />
-                            </div>
-                        )}
+                        <h1
+                            className={classNames(
+                                "text-3xl font-bold mb-3 leading-tight",
+                                {
+                                    "text-surface-900": props.data.name,
+                                    "text-surface-400": !props.data.name,
+                                },
+                            )}
+                        >
+                            {props.data.name || "Nome non assegnato"}
+                        </h1>
 
-                        {/* Stage Info - Show when animal is present */}
-                        {!props.data.exit_type && (
-                            <div className="lg:flex-shrink-0">
-                                <StageInfo
-                                    healthcareStage={
-                                        props.data.healthcare_stage
-                                    }
-                                    inShelterFrom={props.data.in_shelter_from}
-                                />
+                        <div className="flex flex-wrap items-center gap-4">
+                            <ChipCodeBadge
+                                code={props.data.chip_code || undefined}
+                            />
+                            <div className="text-sm text-surface-600">
+                                <span className="font-medium">Codice:</span>{" "}
+                                {props.data.code}
                             </div>
-                        )}
+                            {structureName && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                    <FontAwesomeIcon
+                                        icon={faBuilding}
+                                        className="w-3 h-3"
+                                    />
+                                    {structureName}
+                                </span>
+                            )}
+                        </div>
                     </div>
+
+                    {/* Alert for Not Present Animals */}
+                    {props.data.exit_type && props.data.exit_date && (
+                        <div className="lg:flex-shrink-0">
+                            <NotPresentAlert
+                                data={props.data}
+                                bare={!!isNotPresent}
+                            />
+                        </div>
+                    )}
+
+                    {/* Stage Info - Show when animal is present */}
+                    {!props.data.exit_type && (
+                        <div className="lg:flex-shrink-0">
+                            <StageInfo
+                                healthcareStage={props.data.healthcare_stage}
+                                inShelterFrom={props.data.in_shelter_from}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
 
