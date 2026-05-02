@@ -1,4 +1,4 @@
-import { useQuery } from "react-query"
+import { useQueries, useQuery } from "react-query"
 import { apiService } from "./main"
 import { AdopterSearch } from "./models/adopter.schema"
 import { AnimalSearchQuery } from "./models/animal.schema"
@@ -60,6 +60,17 @@ export const useComuneQuery = (code?: string) =>
             staleTime: Infinity,
         },
     )
+
+export const useComuniByCodesQuery = (codes: string[]) => {
+    const results = useQueries(
+        codes.map((code) => ({
+            queryKey: ["comune", code],
+            queryFn: () => apiService.getComune(code),
+            staleTime: Infinity,
+        })),
+    )
+    return results.map((r) => r.data).filter(Boolean)
+}
 
 export const useDocKindsQuery = () =>
     useQuery("doc-kinds", () => apiService.getAllDocKinds(), {
