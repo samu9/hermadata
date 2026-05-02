@@ -275,7 +275,7 @@ def get_animal_logs(
     service: Annotated[AnimalService, Depends(get_animal_service)],
     current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
-    if not check_permission(current_user, Permission.EDIT_ANIMAL):
+    if not check_permission(current_user, Permission.BROWSE_ANIMAL_EVENTS):
         raise HTTPException(
             status_code=403,
             detail="Insufficient permissions to view animal logs",
