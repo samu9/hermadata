@@ -750,15 +750,14 @@ def test_move_to_shelter(
     )
 
     now = datetime.now(timezone.utc)
-    rows = animal_repository.move_to_shelter(animal_id, now)
-
-    assert rows >= 1
+    animal_repository.move_to_shelter(animal_id, now, structure_id=1)
 
     animal = db_session.execute(
         select(Animal).where(Animal.id == animal_id)
     ).scalar_one()
 
     assert animal.in_shelter_from is not None
+    assert animal.structure_id == 1
 
 
 @pytest.mark.parametrize(

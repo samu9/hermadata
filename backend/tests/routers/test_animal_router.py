@@ -611,6 +611,7 @@ def test_move_to_shelter(
 
     data = {
         "date": datetime.now(timezone.utc).isoformat(),
+        "structure_id": 1,
     }
 
     result = app.post(f"/animal/{animal_id}/move_to_shelter", json=data)
