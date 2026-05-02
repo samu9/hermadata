@@ -18,6 +18,7 @@ export enum Permission {
     MANAGE_USERS = "MU",
     BROWSE_DELETED_ANIMALS = "BDA",
     ADD_ANIMAL_EVENT = "AAE",
+    BROWSE_ANIMAL_EVENTS = "BAE",
     UPLOAD_ANIMAL_IMAGE = "UAI",
 }
 
