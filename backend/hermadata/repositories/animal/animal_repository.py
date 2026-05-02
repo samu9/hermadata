@@ -380,8 +380,8 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.exit_type,
                 Animal.in_shelter_from,
                 case(
-                    (Animal.in_shelter_from.is_not(None), False),
-                    else_=True,
+                    (Structure.structure_type == "S", True),
+                    else_=False,
                 ).label("healthcare_stage"),
                 AnimalEntry.without_chip,
                 Animal.structure_id,
@@ -394,6 +394,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                     AnimalEntry.current.is_(True),
                 ),
             )
+            .join(Structure, Structure.id == Animal.structure_id)
             .join(
                 AnimalImage,
                 and_(
@@ -468,8 +469,8 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.exit_type,
                 Animal.in_shelter_from,
                 case(
-                    (Animal.in_shelter_from.is_not(None), False),
-                    else_=True,
+                    (Structure.structure_type == "S", True),
+                    else_=False,
                 ).label("healthcare_stage"),
                 AnimalEntry.without_chip,
                 Animal.structure_id,
@@ -491,6 +492,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 ),
             )
             .join(Comune, Comune.id == AnimalEntry.origin_city_code)
+            .join(Structure, Structure.id == Animal.structure_id)
             .where(*where)
             .order_by(query.as_order_by_clause())
         )
