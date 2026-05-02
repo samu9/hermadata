@@ -114,8 +114,7 @@ const StageInfo = ({
     return (
         <div
             className={classNames("max-w-sm", {
-                "px-4 py-3 rounded-lg": !bare,
-                "bg-green-50": !bare && isInShelter,
+                "px-4 py-3 rounded-lg": !bare && !isInShelter,
                 "bg-red-50": !bare && !isInShelter,
             })}
         >
@@ -124,13 +123,13 @@ const StageInfo = ({
                     <FontAwesomeIcon
                         icon={isInShelter ? faTents : faKitMedical}
                         className={classNames("w-4 h-4 flex-shrink-0", {
-                            "text-green-600": isInShelter,
+                            "text-primary-600": isInShelter,
                             "text-red-600": !isInShelter,
                         })}
                     />
                     <h3
                         className={classNames("text-sm font-semibold", {
-                            "text-green-800": isInShelter,
+                            "text-primary-700": isInShelter,
                             "text-red-800": !isInShelter,
                         })}
                     >
@@ -233,7 +232,7 @@ const AnimalRecordHeader = (props: Props) => {
                     {
                         "bg-surface-100 border-surface-300": isNotPresent,
                         "bg-red-50 border-red-200": isSanitary,
-                        "bg-white border-surface-200":
+                        "bg-primary-50 border-primary-200":
                             !isNotPresent && !isSanitary,
                     },
                 )}
