@@ -77,12 +77,12 @@ const generateItems = (
         path: "gallery",
     })
 
-    // Events tab - always visible for now (could add specific permission later)
-    items.push({
-        label: "Eventi",
-        icon: <FontAwesomeIcon icon={faList} fixedWidth className="px-1" />,
-        path: "events",
-    })
+    can(Permission.BROWSE_ANIMAL_EVENTS) &&
+        items.push({
+            label: "Eventi",
+            icon: <FontAwesomeIcon icon={faList} fixedWidth className="px-1" />,
+            path: "events",
+        })
 
     // Health data tab - always visible for now (could add specific permission later)
     items.push({
