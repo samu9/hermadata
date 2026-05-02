@@ -1,7 +1,7 @@
 import { Controller, useForm } from "react-hook-form"
 import { apiService } from "../../main"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQueryClient } from "react-query"
 import { Button } from "primereact/button"
 import { Checkbox } from "primereact/checkbox"
@@ -18,8 +18,8 @@ import {
     useEntryTypesQuery,
     useProvinceQuery,
     useRacesQuery,
+    useStructuresQuery,
 } from "../../queries"
-import { useStructure } from "../../contexts/StructureContext"
 
 type Props = {
     // first entry must also specify race
@@ -33,40 +33,49 @@ const NewAnimalForm = (props: Props) => {
         resolver: zodResolver(newAnimalEntrySchema),
     })
 
-    const { handleSubmit, watch, setValue } = form
+    const { handleSubmit, watch, setValue, resetField } = form
 
     const [provincia, setProvincia] = useState<string>()
     const provinceQuery = useProvinceQuery()
     const racesQuery = useRacesQuery()
     const comuniQuery = useComuniQuery(provincia)
     const entryTypesQuery = useEntryTypesQuery()
-    const { currentStructure } = useStructure()
+    const { data: structures = [] } = useStructuresQuery()
 
-    // Set structure_id from current structure context
-    useEffect(() => {
-        if (currentStructure) {
-            setValue("structure_id", currentStructure.id)
-        }
-    }, [currentStructure, setValue])
-
-    // Watch the entry_type and race_id fields
     const selectedEntryType = watch("entry_type")
     const selectedRaceId = watch("race_id")
+    const selectedStructureId = watch("structure_id")
 
-    // Automatically set healthcare_stage based on selected entry type
-    useEffect(() => {
-        if (selectedEntryType && entryTypesQuery.data) {
-            const entryType = entryTypesQuery.data.find(
-                (et) => et.id === selectedEntryType,
-            )
-            if (entryType) {
-                // Never set healthcare_stage to true if race is cat (G)
-                const shouldBeHealthcare =
-                    entryType.healthcare_stage && selectedRaceId !== "G"
-                setValue("healthcare_stage", shouldBeHealthcare)
-            }
+    const availableStructures = useMemo(() => {
+        if (!entryTypesQuery.data || structures.length === 0) return structures
+        const entryType = entryTypesQuery.data.find(
+            (et) => et.id === selectedEntryType,
+        )
+        if (entryType?.healthcare_stage && selectedRaceId !== "G") {
+            return structures.filter((s) => s.structure_type === "S")
         }
-    }, [selectedEntryType, entryTypesQuery.data, selectedRaceId, setValue])
+        return structures
+    }, [structures, selectedEntryType, selectedRaceId, entryTypesQuery.data])
+
+    // Clear structure if it's no longer in the available list
+    useEffect(() => {
+        if (!selectedStructureId || availableStructures.length === 0) return
+        const stillAvailable = availableStructures.some(
+            (s) => s.id === selectedStructureId,
+        )
+        if (!stillAvailable) {
+            resetField("structure_id")
+        }
+    }, [availableStructures])
+
+    // Derive healthcare_stage from selected structure type
+    useEffect(() => {
+        if (!selectedStructureId || structures.length === 0) return
+        const structure = structures.find((s) => s.id === selectedStructureId)
+        if (structure) {
+            setValue("healthcare_stage", structure.structure_type === "S")
+        }
+    }, [selectedStructureId, structures])
 
     const queryClient = useQueryClient()
     const newEntryMutation = useMutation({
@@ -201,30 +210,28 @@ const NewAnimalForm = (props: Props) => {
                         />
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <Controller
-                            name="healthcare_stage"
-                            control={form.control}
-                            render={({ field }) => (
-                                <>
-                                    <Checkbox
-                                        inputId="healthcare_stage"
-                                        checked={field.value || false}
-                                        onChange={(e) =>
-                                            field.onChange(e.checked)
-                                        }
-                                        disabled={selectedRaceId === "G"}
-                                    />
-                                    <label
-                                        htmlFor="healthcare_stage"
-                                        className="text-sm cursor-pointer"
-                                    >
-                                        Sanitario
-                                    </label>
-                                </>
-                            )}
-                        />
-                    </div>
+                    <Controller
+                        name="structure_id"
+                        control={form.control}
+                        render={({ field }) => (
+                            <div className="w-full">
+                                <label
+                                    className="text-xs text-gray-500"
+                                    htmlFor={field.name}
+                                >
+                                    Struttura
+                                </label>
+                                <Dropdown
+                                    {...field}
+                                    options={availableStructures}
+                                    optionLabel="name"
+                                    optionValue="id"
+                                    placeholder="Seleziona"
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
+                    />
 
                     <div className="flex items-center gap-2">
                         <Controller
