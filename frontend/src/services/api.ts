@@ -88,6 +88,18 @@ class ApiService {
             headers: {
                 "Content-Type": "application/json",
             },
+            paramsSerializer: (params) => {
+                const searchParams = new URLSearchParams()
+                for (const [key, value] of Object.entries(params)) {
+                    if (value === null || value === undefined) continue
+                    if (Array.isArray(value)) {
+                        value.forEach((v) => searchParams.append(key, String(v)))
+                    } else {
+                        searchParams.append(key, String(value))
+                    }
+                }
+                return searchParams.toString()
+            },
         })
 
         // Request interceptor to add auth token
