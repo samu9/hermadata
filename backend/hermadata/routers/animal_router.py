@@ -30,6 +30,7 @@ from hermadata.permissions import (
 from hermadata.repositories.animal.animal_repository import (
     EntryNotCompleteException,
     ExistingChipCodeException,
+    NotAShelterStructureException,
     SQLAnimalRepository,
 )
 from hermadata.repositories.animal.models import (
@@ -431,7 +432,7 @@ def get_warnings(
     return
 
 
-@router.post("/{animal_id}/move_to_shelter", response_model=int)
+@router.post("/{animal_id}/move_to_shelter")
 def move_to_shelter(
     animal_id: int,
     data: MoveToShelterRequest,
@@ -440,29 +441,26 @@ def move_to_shelter(
         TokenData, Depends(require_permission(Permission.EDIT_ANIMAL))
     ],
 ):
-    """
-    Move animal to shelter by setting in_shelter_from to specified datetime
-    """
     try:
         if data.date > datetime.now(data.date.tzinfo):
             raise HTTPException(
                 status_code=400, detail="La data non può essere nel futuro"
             )
 
-        updated_rows = repo.move_to_shelter(
-            animal_id, data.date, user_id=current_user.user_id
+        repo.move_to_shelter(
+            animal_id, data.date, data.structure_id, user_id=current_user.user_id
         )
-        if updated_rows == 0:
-            raise HTTPException(
-                status_code=404, detail=f"Animal {animal_id} not found"
-            )
-        return updated_rows
+        return True
     except EntryNotCompleteException as e:
         raise HTTPException(
             status_code=400,
             detail="Ingresso non completato. Imposta una data di uscita.",
         ) from e
-
+    except NotAShelterStructureException as e:
+        raise HTTPException(
+            status_code=400,
+            detail="La struttura selezionata non è un rifugio.",
+        ) from e
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
