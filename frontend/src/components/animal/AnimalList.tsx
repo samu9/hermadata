@@ -128,7 +128,10 @@ const SwitchFilter = (props: SwitchFilterProps) => {
 const AnimalList = () => {
     const [totalRecords, setTotalRecords] = useState(0)
     const [provinciaProvenienzaFilter, setProvinciaProvenienzaFilter] =
-        useSessionStorage<string | undefined>("animal-list:provincia-filter", undefined)
+        useSessionStorage<string | undefined>(
+            "animal-list:provincia-filter",
+            undefined,
+        )
 
     const [lazyState, setLazyState] = useSessionStorage<LazyTableState>(
         "animal-list:lazy-state",
@@ -141,7 +144,6 @@ const AnimalList = () => {
     )
     const { can } = useAuth()
     const { data: structures = [] } = useStructuresQuery()
-    const [selectedStructureIds, setSelectedStructureIds] = useState<number[]>([])
     const canBrowseNotPresentOnly =
         can(Permission.BROWSE_NOT_PRESENT_ANIMALS) &&
         !can(Permission.BROWSE_PRESENT_ANIMALS)
@@ -168,14 +170,17 @@ const AnimalList = () => {
     }
 
     useEffect(() => {
-        if (structures.length > 0 && selectedStructureIds.length === 0) {
-            setSelectedStructureIds(structures.map((s) => s.id))
+        if (structures.length > 0 && !queryData.structure_ids?.length) {
+            setQueryData((prev) => ({ ...prev, structure_ids: structures.map((s) => s.id) }))
         }
     }, [structures])
 
     const searchQuery: AnimalSearchQuery = {
         ...queryData,
-        structure_ids: selectedStructureIds.length > 0 ? selectedStructureIds : undefined,
+        structure_ids:
+            queryData.structure_ids && queryData.structure_ids.length > 0
+                ? queryData.structure_ids
+                : undefined,
     }
     const animalQuery = useAnimalSearchQuery(searchQuery)
     const entryTypesQuery = useEntryTypesQuery()
@@ -398,23 +403,39 @@ const AnimalList = () => {
                                 Struttura:
                             </label>
                             <MultiSelect
-                                value={selectedStructureIds}
+                                value={queryData.structure_ids ?? []}
                                 options={structures}
                                 optionLabel="name"
                                 optionValue="id"
-                                onChange={(e) => setSelectedStructureIds(e.value)}
+                                onChange={(e) =>
+                                    setQueryData((prev) => ({ ...prev, structure_ids: e.value }))
+                                }
                                 placeholder="Tutte le strutture"
                                 maxSelectedLabels={2}
+                                selectedItemsLabel="{0} selezionate"
                                 className="text-sm border border-surface-200 rounded-lg"
                                 pt={{
-                                    root: { className: "!border-surface-200 !rounded-lg !text-sm" },
-                                    label: { className: "!text-sm !py-1.5 !px-3" },
+                                    root: {
+                                        className:
+                                            "!border-surface-200 !rounded-lg !text-sm",
+                                    },
+                                    label: {
+                                        className: "!text-sm !py-1.5 !px-3",
+                                    },
                                 }}
                                 itemTemplate={(s) => (
                                     <div className="flex items-center gap-2">
                                         <FontAwesomeIcon
-                                            icon={s.structure_type === "S" ? faHospital : faHome}
-                                            className={s.structure_type === "S" ? "text-red-500" : "text-green-500"}
+                                            icon={
+                                                s.structure_type === "S"
+                                                    ? faHospital
+                                                    : faHome
+                                            }
+                                            className={
+                                                s.structure_type === "S"
+                                                    ? "text-red-500"
+                                                    : "text-green-500"
+                                            }
                                         />
                                         <span>{s.name}</span>
                                     </div>
@@ -425,14 +446,20 @@ const AnimalList = () => {
                 )}
                 <div className="ml-auto">
                     <Button
-                        icon={<FontAwesomeIcon icon={faPrint} className="mr-2" />}
+                        icon={
+                            <FontAwesomeIcon icon={faPrint} className="mr-2" />
+                        }
                         label="Stampa"
                         className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
                         onClick={() => {
-                            const { from_index, to_index, ...filters } = queryData
+                            const { from_index, to_index, ...filters } =
+                                queryData
                             printReport.mutate({
                                 ...filters,
-                                structure_ids: selectedStructureIds.length > 0 ? selectedStructureIds : undefined,
+                                structure_ids:
+                                    queryData.structure_ids?.length
+                                        ? queryData.structure_ids
+                                        : undefined,
                             } as AnimalSearchQuery)
                         }}
                         loading={printReport.isLoading}
@@ -525,7 +552,9 @@ const AnimalList = () => {
                                     Senza chip
                                 </span>
                             ) : (
-                                <span className="font-mono text-sm">{animal.chip_code}</span>
+                                <span className="font-mono text-sm">
+                                    {animal.chip_code}
+                                </span>
                             )
                         }
                     />
@@ -570,7 +599,9 @@ const AnimalList = () => {
                         }
                         filterField="entry_type"
                         body={(animal: AnimalSearchResult) => (
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ENTRY_TYPE_BADGE[animal.entry_type] ?? "bg-surface-100 text-surface-800"}`}>
+                            <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ENTRY_TYPE_BADGE[animal.entry_type] ?? "bg-surface-100 text-surface-800"}`}
+                            >
                                 {entryTypesMap?.[animal.entry_type]}
                             </span>
                         )}
@@ -599,7 +630,9 @@ const AnimalList = () => {
                             filterField="exit_type"
                             body={(animal: AnimalSearchResult) =>
                                 animal.exit_type && (
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${EXIT_TYPE_BADGE[animal.exit_type] ?? "bg-surface-100 text-surface-800"}`}>
+                                    <span
+                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${EXIT_TYPE_BADGE[animal.exit_type] ?? "bg-surface-100 text-surface-800"}`}
+                                    >
                                         {exitTypesMap?.[animal.exit_type]}
                                     </span>
                                 )
@@ -614,8 +647,16 @@ const AnimalList = () => {
                                 <Tooltip target={`.stato-icon-${animal.id}`} />
                                 <FontAwesomeIcon
                                     className={`stato-icon-${animal.id} text-lg ${animal.healthcare_stage ? "text-red-500" : "text-green-500"}`}
-                                    icon={animal.healthcare_stage ? faHospital : faHome}
-                                    data-pr-tooltip={animal.healthcare_stage ? "Sanitario" : "Rifugio"}
+                                    icon={
+                                        animal.healthcare_stage
+                                            ? faHospital
+                                            : faHome
+                                    }
+                                    data-pr-tooltip={
+                                        animal.healthcare_stage
+                                            ? "Sanitario"
+                                            : "Rifugio"
+                                    }
                                     data-pr-position="top"
                                 />
                             </div>
