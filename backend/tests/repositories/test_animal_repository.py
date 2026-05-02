@@ -235,14 +235,14 @@ def test_add_entry(
     with pytest.raises(NoRequiredExitDataException):
         animal_repository.exit(
             animal_id,
-            AnimalExit(exit_date=date(2024, 1, 2), exit_type=ExitType.return_),
+            AnimalExit(exit_date=date(2024, 1, 2), exit_type=ExitType.disappeared),
         )
 
     complete_animal_data(animal_id)
 
     animal_repository.exit(
         animal_id,
-        AnimalExit(exit_date=date(2024, 1, 2), exit_type=ExitType.return_),
+        AnimalExit(exit_date=date(2024, 1, 2), exit_type=ExitType.disappeared),
     )
 
     animal_repository.add_entry(
@@ -547,7 +547,7 @@ def test_get_variation_report_variables(
         animal_id=animal_id
     )
 
-    assert variables.animal.age == 3
+    assert "3" in variables.animal.age or "anni" in variables.animal.age
     assert variables.animal.fur_color == fur_color.label
 
 

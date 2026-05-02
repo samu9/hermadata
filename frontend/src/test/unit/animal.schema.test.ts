@@ -26,6 +26,7 @@ describe('animalSchema', () => {
       adoptability_index: 0,
       chip_code: null,
       chip_code_set: true,
+      profile_image_id: null,
       img_path: null,
       sex: 1,
       notes: null,
@@ -34,6 +35,7 @@ describe('animalSchema', () => {
       color: null,
       in_shelter_from: null,
       healthcare_stage: false,
+      structure_id: 1,
     }
     const result = animalSchema.parse(raw)
     expect(result.code).toBe('C0012345678AB')
@@ -49,6 +51,7 @@ describe('animalSchema', () => {
       entry_date: '2024-01-15',
       entry_type: 'R',
       chip_code_set: false,
+      profile_image_id: null,
       img_path: null,
       sex: null,
     }

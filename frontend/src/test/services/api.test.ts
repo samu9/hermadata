@@ -109,6 +109,7 @@ describe('ApiService', () => {
       const code = await api.createAnimal({
         rescue_city_code: 'H501',
         entry_type: 'R',
+        structure_id: 1,
       })
       expect(code).toBe('C999')
     })

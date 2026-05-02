@@ -333,7 +333,7 @@ def test_add_animal_entry(
 
     animal_service.animal_repository.exit(
         animal_id,
-        AnimalExit(exit_date=date(2024, 1, 10), exit_type=ExitType.return_),
+        AnimalExit(exit_date=date(2024, 1, 10), exit_type=ExitType.disappeared),
     )
 
     data = jsonable_encoder(

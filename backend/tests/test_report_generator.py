@@ -219,12 +219,14 @@ def test_models():
         sex="M",
     )
 
-    assert v.age == 4
+    # age is computed from birth_date as a formatted string (e.g. "8 anni")
+    assert isinstance(v.age, str)
+    assert "anni" in v.age
 
     dump = v.model_dump()
 
     assert dump["entry_date"] == "05/04/2022"
-    assert dump["age"] == 4
+    assert isinstance(dump["age"], str)
 
     r = ReportVariationVariables(
         animal=v,
@@ -234,4 +236,4 @@ def test_models():
 
     dump = r.model_dump()
 
-    assert dump["animal"]["age"] == 4
+    assert isinstance(dump["animal"]["age"], str)

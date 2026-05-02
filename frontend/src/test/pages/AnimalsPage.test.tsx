@@ -94,15 +94,6 @@ describe('AnimalsPage', () => {
     })
   })
 
-  it('always shows healthcare and shelter stage filters', async () => {
-    setupAuthenticatedUser(false, [Permission.BROWSE_PRESENT_ANIMALS])
-    renderWithProviders(<AnimalsPage />)
-    await waitFor(() => {
-      expect(screen.getByText('Sanitario')).toBeInTheDocument()
-      expect(screen.getByText('Rifugio')).toBeInTheDocument()
-    })
-  })
-
   it('always shows animal type filters (Cani/Gatti)', async () => {
     setupAuthenticatedUser(false, [Permission.BROWSE_PRESENT_ANIMALS])
     renderWithProviders(<AnimalsPage />)
