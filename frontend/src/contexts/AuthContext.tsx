@@ -65,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                         is_superuser: loginData.is_superuser,
                         role: loginData.role,
                         permissions: loginData.permissions || [],
+                        city_codes: loginData.city_codes,
                     }
                     setUser(userData)
                     localStorage.setItem("userData", JSON.stringify(userData))
