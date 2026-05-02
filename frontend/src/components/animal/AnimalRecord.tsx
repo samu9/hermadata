@@ -34,10 +34,11 @@ import { ConfirmDialog } from "primereact/confirmdialog"
 import { Dialog } from "primereact/dialog"
 import { Calendar } from "primereact/calendar"
 import { Button } from "primereact/button"
+import { Dropdown } from "primereact/dropdown"
 import { apiService } from "../../main"
 import { toastService } from "../../services/toast"
-
 import { useQueryClient } from "react-query"
+import { useStructuresQuery } from "../../queries"
 
 type Props = {
     data: Animal
@@ -137,7 +138,13 @@ const AnimalRecord = (props: Props) => {
     const [moveToShelterDate, setMoveToShelterDate] = useState<Date | null>(
         new Date()
     )
+    const [moveToShelterStructureId, setMoveToShelterStructureId] = useState<number | null>(null)
     const [isMovingToShelter, setIsMovingToShelter] = useState(false)
+    const { data: structures = [] } = useStructuresQuery()
+    const shelterStructures = useMemo(
+        () => structures.filter((s) => s.structure_type === "R"),
+        [structures],
+    )
 
     // Temporary adoption states
     const [confirmAdoptionDialogVisible, setConfirmAdoptionDialogVisible] =
@@ -161,23 +168,20 @@ const AnimalRecord = (props: Props) => {
     }
 
     const confirmMoveToShelter = async () => {
-        if (!id || !moveToShelterDate) return
+        if (!id || !moveToShelterDate || !moveToShelterStructureId) return
 
         try {
             setIsMovingToShelter(true)
-            await apiService.moveAnimalToShelter(id, moveToShelterDate)
+            await apiService.moveAnimalToShelter(id, moveToShelterDate, moveToShelterStructureId)
 
-            // Show success message
             const animalName = props.data.name || "L'animale"
             toastService.showSuccess(
                 `${animalName} è stato spostato in rifugio`,
                 "Spostamento completato"
             )
-            // Invalidate the query to refresh the data in the background
             queryClient.invalidateQueries(["animal", id])
             setMoveToShelterDialogVisible(false)
         } catch (error) {
-            // Error is already handled by API service
             console.error("Failed to move animal to shelter:", error)
         } finally {
             setIsMovingToShelter(false)
@@ -235,6 +239,7 @@ const AnimalRecord = (props: Props) => {
                 order: 20,
                 onClick: () => {
                     setMoveToShelterDate(new Date())
+                    setMoveToShelterStructureId(null)
                     setMoveToShelterDialogVisible(true)
                 },
             })
@@ -444,24 +449,36 @@ const AnimalRecord = (props: Props) => {
                             icon="pi pi-check"
                             onClick={confirmMoveToShelter}
                             loading={isMovingToShelter}
+                            disabled={!moveToShelterDate || !moveToShelterStructureId}
                             autoFocus
                         />
                     </div>
                 }
             >
                 <div className="flex flex-col gap-4">
-                    <p className="m-0">
-                        Seleziona la data in cui l'animale è stato spostato in
-                        rifugio:
-                    </p>
-                    <Calendar
-                        value={moveToShelterDate}
-                        onChange={(e) => setMoveToShelterDate(e.value as Date)}
-                        showIcon
-                        dateFormat="dd/mm/yy"
-                        className="w-full"
-                        maxDate={new Date()}
-                    />
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium">Rifugio di destinazione</label>
+                        <Dropdown
+                            value={moveToShelterStructureId}
+                            options={shelterStructures}
+                            optionLabel="name"
+                            optionValue="id"
+                            onChange={(e) => setMoveToShelterStructureId(e.value)}
+                            placeholder="Seleziona rifugio"
+                            className="w-full"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium">Data spostamento</label>
+                        <Calendar
+                            value={moveToShelterDate}
+                            onChange={(e) => setMoveToShelterDate(e.value as Date)}
+                            showIcon
+                            dateFormat="dd/mm/yy"
+                            className="w-full"
+                            maxDate={new Date()}
+                        />
+                    </div>
                 </div>
             </Dialog>
 
