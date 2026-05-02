@@ -105,6 +105,7 @@ def login(
         "username": user_details.email,
         "is_superuser": user_details.is_superuser,
         "permissions": user_details.permissions,
+        "city_codes": user_details.city_codes,
     }
 
 
