@@ -117,13 +117,11 @@ class AnimalSearchModel(PaginationQuery):
     exit_type: Optional[str] = None
     present: bool = True
     not_present: bool = False
-    healthcare_stage: bool | None = None
-    shelter_stage: bool | None = None
     chip_code: Optional[str] = None
     cats: bool | None = None
     dogs: bool | None = None
     deleted: bool | None = False
-    structure_id: int | None = None
+    structure_ids: list[int] | None = None
 
     _where_clause_map: dict[str, WhereClauseMapItem] = {
         "name": WhereClauseMapItem(lambda v: Animal.name.like(f"{v}%")),
@@ -172,24 +170,6 @@ class AnimalSearchModel(PaginationQuery):
             in_or=True,
             or_group="presence",
         ),
-        "healthcare_stage": WhereClauseMapItem(
-            lambda v: (
-                Animal.in_shelter_from.is_(None)
-                if v
-                else Animal.in_shelter_from.is_not(None)
-            ),
-            in_or=True,
-            or_group="stage",
-        ),
-        "shelter_stage": WhereClauseMapItem(
-            lambda v: (
-                Animal.in_shelter_from.is_not(None)
-                if v
-                else Animal.in_shelter_from.is_(None)
-            ),
-            in_or=True,
-            or_group="stage",
-        ),
         "cats": WhereClauseMapItem(
             lambda v: Animal.race_id == "G" if v else None,
             in_or=True,
@@ -207,8 +187,8 @@ class AnimalSearchModel(PaginationQuery):
                 else Animal.deleted_at.is_(None)
             )
         ),
-        "structure_id": WhereClauseMapItem(
-            lambda v: Animal.structure_id == v
+        "structure_ids": WhereClauseMapItem(
+            lambda v: Animal.structure_id.in_(v) if v else None
         ),
     }
 
