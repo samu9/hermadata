@@ -138,6 +138,10 @@ class ExistingChipCodeException(Exception):
         super().__init__(*args)
 
 
+class NotAShelterStructureException(APIException):
+    pass
+
+
 class ExitNotValidException(Exception):
     pass
 
@@ -846,11 +850,12 @@ class SQLAnimalRepository(SQLBaseRepository):
         return result.rowcount
 
     def move_to_shelter(
-        self, animal_id: int, date: datetime, user_id: int | None = None
+        self,
+        animal_id: int,
+        date: datetime,
+        structure_id: int,
+        user_id: int | None = None,
     ) -> int:
-        """
-        Set in_shelter_from to specified datetime for the specified animal
-        """
         current_entry = self.session.execute(
             select(AnimalEntry)
             .join(Animal, AnimalEntry.animal_id == Animal.id)
@@ -867,24 +872,33 @@ class SQLAnimalRepository(SQLBaseRepository):
         if date.date() < current_entry.entry_date:
             raise MoveBeforeEntryException
 
-        result = self.session.execute(
-            update(Animal)
-            .where(Animal.id == animal_id, Animal.deleted_at.is_(None))
-            .values(in_shelter_from=date)
+        animal = self.session.execute(
+            select(Animal).where(
+                Animal.id == animal_id, Animal.deleted_at.is_(None)
+            )
+        ).scalar_one()
+
+        structure = self.session.execute(
+            select(Structure).where(Structure.id == structure_id)
+        ).scalar_one_or_none()
+
+        if not structure or structure.structure_type != "R":
+            raise NotAShelterStructureException
+
+        animal.in_shelter_from = date
+        animal.structure_id = structure_id
+
+        self.session.add(
+            AnimalLog(
+                animal_id=animal_id,
+                event=AnimalEvent.moved_to_shelter.value,
+                data={"date": date.isoformat(), "structure_id": structure_id},
+                user_id=user_id,
+            )
         )
 
-        if result.rowcount > 0:
-            self.session.add(
-                AnimalLog(
-                    animal_id=animal_id,
-                    event=AnimalEvent.moved_to_shelter.value,
-                    data={"date": date.isoformat()},
-                    user_id=user_id,
-                )
-            )
-
         self.session.flush()
-        return result.rowcount
+        return 1
 
     def new_document(self, animal_id: int, data: NewAnimalDocument):
         # Verify animal exists and is not deleted
