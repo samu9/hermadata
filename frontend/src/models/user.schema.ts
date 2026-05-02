@@ -14,6 +14,7 @@ export const loginResponseSchema = z.object({
     is_superuser: z.boolean().optional(),
     role: z.string().optional(),
     permissions: z.array(z.string()).optional(),
+    city_codes: z.array(z.string()).optional(),
 })
 
 export type LoginResponse = z.infer<typeof loginResponseSchema>
@@ -24,6 +25,7 @@ export const userSchema = z.object({
     email: z.string().optional(),
     role: z.string().optional(),
     permissions: z.array(z.string()).default([]),
+    city_codes: z.array(z.string()).optional(),
 })
 
 export type User = z.infer<typeof userSchema>
