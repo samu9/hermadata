@@ -20,6 +20,7 @@ import {
 } from "primereact/datatable"
 import { Dropdown } from "primereact/dropdown"
 import { InputSwitch, InputSwitchChangeEvent } from "primereact/inputswitch"
+import { MultiSelect } from "primereact/multiselect"
 import { useEffect, useState } from "react"
 import { useSessionStorage } from "../../hooks/useSessionStorage"
 import { useNavigate } from "react-router-dom"
@@ -32,6 +33,7 @@ import {
     useAnimalSearchQuery,
     useEntryTypesQuery,
     useExitTypesQuery,
+    useStructuresQuery,
 } from "../../queries"
 import UncontrolledComuniDropdown from "../forms/uncontrolled/UncontrolledComuniDropdown"
 import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
@@ -40,7 +42,6 @@ import { InputText } from "primereact/inputtext"
 import { useEntryTypesMap, useExitTypesMap } from "../../hooks/useMaps"
 import UncontrolledRacesDropdown from "../forms/uncontrolled/UncontrolledRacesDropdown"
 import { useAuth } from "../../contexts/AuthContext"
-import { useStructure } from "../../contexts/StructureContext"
 import { Permission } from "../../constants"
 import { Tooltip } from "primereact/tooltip"
 import { Button } from "primereact/button"
@@ -139,7 +140,8 @@ const AnimalList = () => {
         },
     )
     const { can } = useAuth()
-    const { currentStructure } = useStructure()
+    const { data: structures = [] } = useStructuresQuery()
+    const [selectedStructureIds, setSelectedStructureIds] = useState<number[]>([])
     const canBrowseNotPresentOnly =
         can(Permission.BROWSE_NOT_PRESENT_ANIMALS) &&
         !can(Permission.BROWSE_PRESENT_ANIMALS)
@@ -151,11 +153,8 @@ const AnimalList = () => {
             to_index: lazyState.first + lazyState.rows,
             present: canBrowseNotPresentOnly ? false : true,
             not_present: canBrowseNotPresentOnly ? true : false,
-            healthcare_stage: true,
-            shelter_stage: true,
             cats: true,
             dogs: true,
-            structure_id: currentStructure?.id,
         },
     )
 
@@ -169,13 +168,16 @@ const AnimalList = () => {
     }
 
     useEffect(() => {
-        setQueryData((prev) => ({
-            ...prev,
-            structure_id: currentStructure?.id,
-        }))
-    }, [currentStructure])
+        if (structures.length > 0 && selectedStructureIds.length === 0) {
+            setSelectedStructureIds(structures.map((s) => s.id))
+        }
+    }, [structures])
 
-    const animalQuery = useAnimalSearchQuery(queryData)
+    const searchQuery: AnimalSearchQuery = {
+        ...queryData,
+        structure_ids: selectedStructureIds.length > 0 ? selectedStructureIds : undefined,
+    }
+    const animalQuery = useAnimalSearchQuery(searchQuery)
     const entryTypesQuery = useEntryTypesQuery()
     const exitTypesQuery = useExitTypesQuery()
     const entryTypesMap = useEntryTypesMap()
@@ -341,43 +343,6 @@ const AnimalList = () => {
                         </>
                     )}
                 <SwitchFilter
-                    label="Sanitario"
-                    checked={queryData.healthcare_stage || false}
-                    onChange={(e) => {
-                        if (!e.value && !queryData.shelter_stage) {
-                            setQueryData({
-                                ...queryData,
-                                healthcare_stage: false,
-                                shelter_stage: true,
-                            })
-                        } else {
-                            setQueryData({
-                                ...queryData,
-                                healthcare_stage: e.value,
-                            })
-                        }
-                    }}
-                />
-                <SwitchFilter
-                    label="Rifugio"
-                    checked={queryData.shelter_stage || false}
-                    onChange={(e) => {
-                        if (!e.value && !queryData.healthcare_stage) {
-                            setQueryData({
-                                ...queryData,
-                                shelter_stage: false,
-                                healthcare_stage: true,
-                            })
-                        } else {
-                            setQueryData({
-                                ...queryData,
-                                shelter_stage: e.value,
-                            })
-                        }
-                    }}
-                />
-                <div className="w-px h-8 bg-surface-200 mx-1"></div>
-                <SwitchFilter
                     label="Cani"
                     checked={queryData.dogs || false}
                     onChange={(e) => {
@@ -425,6 +390,39 @@ const AnimalList = () => {
                         </button>
                     </>
                 )}
+                {structures.length > 1 && (
+                    <>
+                        <div className="w-px h-8 bg-surface-200 mx-1"></div>
+                        <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium text-surface-600 whitespace-nowrap">
+                                Struttura:
+                            </label>
+                            <MultiSelect
+                                value={selectedStructureIds}
+                                options={structures}
+                                optionLabel="name"
+                                optionValue="id"
+                                onChange={(e) => setSelectedStructureIds(e.value)}
+                                placeholder="Tutte le strutture"
+                                maxSelectedLabels={2}
+                                className="text-sm border border-surface-200 rounded-lg"
+                                pt={{
+                                    root: { className: "!border-surface-200 !rounded-lg !text-sm" },
+                                    label: { className: "!text-sm !py-1.5 !px-3" },
+                                }}
+                                itemTemplate={(s) => (
+                                    <div className="flex items-center gap-2">
+                                        <FontAwesomeIcon
+                                            icon={s.structure_type === "S" ? faHospital : faHome}
+                                            className={s.structure_type === "S" ? "text-red-500" : "text-green-500"}
+                                        />
+                                        <span>{s.name}</span>
+                                    </div>
+                                )}
+                            />
+                        </div>
+                    </>
+                )}
                 <div className="ml-auto">
                     <Button
                         icon={<FontAwesomeIcon icon={faPrint} className="mr-2" />}
@@ -432,7 +430,10 @@ const AnimalList = () => {
                         className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
                         onClick={() => {
                             const { from_index, to_index, ...filters } = queryData
-                            printReport.mutate(filters as AnimalSearchQuery)
+                            printReport.mutate({
+                                ...filters,
+                                structure_ids: selectedStructureIds.length > 0 ? selectedStructureIds : undefined,
+                            } as AnimalSearchQuery)
                         }}
                         loading={printReport.isLoading}
                     />
@@ -612,23 +613,9 @@ const AnimalList = () => {
                             <div className="flex justify-center">
                                 <Tooltip target={`.stato-icon-${animal.id}`} />
                                 <FontAwesomeIcon
-                                    className={`stato-icon-${
-                                        animal.id
-                                    } text-lg ${
-                                        animal.healthcare_stage
-                                            ? "text-red-500"
-                                            : "text-green-500"
-                                    }`}
-                                    icon={
-                                        animal.healthcare_stage
-                                            ? faHospital
-                                            : faHome
-                                    }
-                                    data-pr-tooltip={
-                                        animal.healthcare_stage
-                                            ? "Sanitario"
-                                            : "Rifugio"
-                                    }
+                                    className={`stato-icon-${animal.id} text-lg ${animal.healthcare_stage ? "text-red-500" : "text-green-500"}`}
+                                    icon={animal.healthcare_stage ? faHospital : faHome}
+                                    data-pr-tooltip={animal.healthcare_stage ? "Sanitario" : "Rifugio"}
                                     data-pr-position="top"
                                 />
                             </div>
