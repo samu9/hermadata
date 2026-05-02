@@ -181,8 +181,6 @@ export const animalSearchQuerySchema = paginationQuerySchema.extend({
     exit_type: z.string().nullish(),
     present: z.boolean().nullish(),
     not_present: z.boolean().nullish(),
-    healthcare_stage: z.boolean().nullish(),
-    shelter_stage: z.boolean().nullish(),
     name: z.string().nullish(),
     chip_code: z.string().nullish(),
     race_id: z.string().nullish(),
@@ -190,7 +188,7 @@ export const animalSearchQuerySchema = paginationQuerySchema.extend({
     sort_order: z.number().nullish(),
     cats: z.boolean().nullish(),
     dogs: z.boolean().nullish(),
-    structure_id: z.number().nullish(),
+    structure_ids: z.array(z.number()).nullish(),
 })
 
 export type AnimalSearchQuery = z.infer<typeof animalSearchQuerySchema>
