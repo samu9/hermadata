@@ -320,13 +320,11 @@ class ApiService {
         return result
     }
 
-    async moveAnimalToShelter(animalId: string, date: Date): Promise<number> {
-        const result = await this.post<number>(
+    async moveAnimalToShelter(animalId: string, date: Date, structureId: number): Promise<void> {
+        await this.post<void>(
             ApiEndpoints.animal.moveToShelter(animalId),
-            { date: dateOnly.parse(date) },
+            { date: dateOnly.parse(date), structure_id: structureId },
         )
-
-        return result
     }
 
     async addBreed(data: NewBreed): Promise<Breed> {
