@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "react-query"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faCross } from "@fortawesome/free-solid-svg-icons"
 import { apiService } from "../../main"
 import { toastService } from "../../services/toast"
 import { format } from "date-fns"
@@ -13,9 +15,12 @@ import { Dialog } from "primereact/dialog"
 import { Button } from "primereact/button"
 import { Dropdown } from "primereact/dropdown"
 import { InputTextarea } from "primereact/inputtextarea"
+import { Tag } from "primereact/tag"
 import { classNames } from "primereact/utils"
-import { NewAnimalLog } from "../../models/animal.schema"
+import { AnimalLog, NewAnimalLog } from "../../models/animal.schema"
 import { z } from "zod"
+
+const isHealthEvent = (event: AnimalLog) => event.event_category === "health"
 
 const formSchema = z.object({
     event: z.string().min(1, "Seleziona un evento"),
@@ -184,21 +189,51 @@ const AnimalEvents = () => {
                 <div className="absolute left-[15px] top-0 bottom-0 w-[2px] bg-surface-200" />
 
                 <div className="space-y-8">
-                    {sortedEvents?.map((event) => (
+                    {sortedEvents?.map((event) => {
+                        const health = isHealthEvent(event)
+                        return (
                         <div
                             key={event.id}
-                            className="relative flex items-start gap-6"
+                            className={classNames(
+                                "relative flex items-start gap-6",
+                                health && "pl-1"
+                            )}
                         >
                             {/* Dot */}
-                            <div className="absolute left-0 mt-1.5 w-8 h-8 rounded-full bg-white border-4 border-primary-600 z-10" />
+                            <div
+                                className={classNames(
+                                    "absolute left-0 mt-1.5 w-8 h-8 rounded-full border-4 z-10 flex items-center justify-center",
+                                    health
+                                        ? "bg-green-50 border-green-500 text-green-600"
+                                        : "bg-white border-primary-600",
+                                )}
+                            >
+                                {health && (
+                                    <FontAwesomeIcon icon={faCross} className="text-xs" />
+                                )}
+                            </div>
 
-                            <div className="ml-10 flex-1">
+                            <div
+                                className={classNames(
+                                    "ml-10 flex-1 rounded-lg p-3",
+                                    health && "border border-green-200 bg-green-50",
+                                )}
+                            >
                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2">
                                     <div>
-                                        <h3 className="text-lg font-semibold text-surface-900">
-                                            {event.event_description ||
-                                                event.event}
-                                        </h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="text-lg font-semibold text-surface-900">
+                                                {event.event_description ||
+                                                    event.event}
+                                            </h3>
+                                            {health && (
+                                                <Tag
+                                                    value="sanitario"
+                                                    severity="success"
+                                                    className="text-xs"
+                                                />
+                                            )}
+                                        </div>
                                         <div className="text-sm text-surface-500 mt-1">
                                             {format(
                                                 new Date(event.created_at),
@@ -256,7 +291,7 @@ const AnimalEvents = () => {
                                     )}
                             </div>
                         </div>
-                    ))}
+                    )})}
 
                     {(!sortedEvents || sortedEvents.length === 0) && (
                         <div className="text-center text-surface-500 py-8">
