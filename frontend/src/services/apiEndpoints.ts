@@ -81,6 +81,10 @@ const ApiEndpoints = {
         furColor: "/util/fur-color",
         events: "/util/events",
     },
+    therapy: {
+        list: (animalId: number) => `/animal/${animalId}/therapies`,
+        create: (animalId: number) => `/animal/${animalId}/therapies`,
+    },
     vet: {
         create: "/vet",
         search: "/vet/search",

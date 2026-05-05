@@ -74,6 +74,7 @@ import {
 } from "../models/user.schema"
 import { PaginationQuery } from "../models/pagination.schema"
 import { Structure } from "../models/structure.schema"
+import { NewTherapy, Therapy } from "../models/therapy.schema"
 
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 
@@ -749,6 +750,14 @@ class ApiService {
             { structure_id: structureId },
         )
         return response.data
+    }
+
+    getTherapies(animalId: number): Promise<Therapy[]> {
+        return this.get<Therapy[]>(ApiEndpoints.therapy.list(animalId))
+    }
+
+    createTherapy(animalId: number, data: NewTherapy): Promise<Therapy> {
+        return this.post<Therapy>(ApiEndpoints.therapy.create(animalId), data)
     }
 
     isAuthenticated(): boolean {
