@@ -22,6 +22,7 @@ from hermadata.constants import (
     AnimalStage,
     EntryType,
     ExitType,
+    ReminderUnit,
     StructureType,
 )
 
@@ -617,6 +618,35 @@ class MedicalActivityRecord(Base):
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
+    )
+
+
+class Therapy(Base):
+    __tablename__ = "therapy"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
+    start_date: Mapped[date] = mapped_column(Date(), nullable=False)
+    end_date: Mapped[date | None] = mapped_column(Date(), nullable=True)
+    description: Mapped[str] = mapped_column(Text(), nullable=False)
+    reminder_value: Mapped[int | None] = mapped_column(Integer(), nullable=True)
+    reminder_unit: Mapped[ReminderUnit | None] = mapped_column(
+        String(10), nullable=True
+    )
+    prescription_document_id: Mapped[int | None] = mapped_column(
+        ForeignKey("document.id"), nullable=True
+    )
+    transport_document_id: Mapped[int | None] = mapped_column(
+        ForeignKey("document.id"), nullable=True
+    )
+    animal_log_id: Mapped[int | None] = mapped_column(
+        ForeignKey("animal_log.id"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
     )
 
 
