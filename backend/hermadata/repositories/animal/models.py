@@ -33,6 +33,7 @@ class AnimalLogModel(BaseModel):
     animal_id: int
     event: str
     event_description: str
+    event_category: str
     data: dict[str, Any] | None
     user_id: int | None
     created_at: datetime
