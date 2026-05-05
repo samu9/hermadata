@@ -1,7 +1,8 @@
-import { useQueries, useQuery } from "react-query"
+import { useMutation, useQueries, useQuery, useQueryClient } from "react-query"
 import { apiService } from "./main"
 import { AdopterSearch } from "./models/adopter.schema"
 import { AnimalSearchQuery } from "./models/animal.schema"
+import { NewTherapy } from "./models/therapy.schema"
 import { VetSearch } from "./models/vet.schema"
 
 export const useAnimalSearchQuery = (queryData: AnimalSearchQuery) =>
@@ -181,3 +182,21 @@ export const useStructuresQuery = (enabled: boolean = true) =>
         staleTime: Infinity,
         enabled,
     })
+
+export const useTherapiesQuery = (animalId: number) =>
+    useQuery(["therapies", animalId], () => apiService.getTherapies(animalId), {
+        staleTime: 0,
+    })
+
+export const useCreateTherapyMutation = (animalId: number) => {
+    const queryClient = useQueryClient()
+    return useMutation(
+        (data: NewTherapy) => apiService.createTherapy(animalId, data),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries(["therapies", animalId])
+                queryClient.invalidateQueries(["animalLogs", String(animalId)])
+            },
+        },
+    )
+}
