@@ -164,6 +164,14 @@ class AnimalEvent(Enum):
     temp_adoption_confirmed = "TC"  # Temporary adoption confirmed as final
     temp_adoption_undone = "TU"  # Temporary adoption undone (animal returned)
     move_structure = "MV"  # Animal moved to another structure
+    therapy = "TH"  # Therapy created
+
+
+class ReminderUnit(str, Enum):
+    day = "day"
+    week = "week"
+    month = "month"
+    year = "year"
 
 
 class ApiErrorCode(Enum):
