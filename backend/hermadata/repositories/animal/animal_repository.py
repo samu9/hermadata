@@ -168,17 +168,20 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.add(log)
         self.session.flush()
 
-        description = self.session.execute(
-            select(AnimalEventType.description).where(
-                AnimalEventType.code == log.event
-            )
-        ).scalar_one_or_none()
+        event_type = self.session.execute(
+            select(
+                AnimalEventType.description, AnimalEventType.category
+            ).where(AnimalEventType.code == log.event)
+        ).one_or_none()
 
         return AnimalLogModel(
             id=log.id,
             animal_id=log.animal_id,
             event=log.event,
-            event_description=description or log.event,
+            event_description=event_type.description
+            if event_type
+            else log.event,
+            event_category=event_type.category if event_type else "manual",
             data=log.data,
             user_id=log.user_id,
             created_at=log.created_at,
@@ -187,7 +190,11 @@ class SQLAnimalRepository(SQLBaseRepository):
     def get_logs(self, animal_id: int) -> list[AnimalLogModel]:
         """Get all logs for an animal"""
         results = self.session.execute(
-            select(AnimalLog, AnimalEventType.description)
+            select(
+                AnimalLog,
+                AnimalEventType.description,
+                AnimalEventType.category,
+            )
             .join(AnimalEventType, AnimalLog.event == AnimalEventType.code)
             .where(AnimalLog.animal_id == animal_id)
             .order_by(AnimalLog.created_at.desc())
@@ -199,11 +206,12 @@ class SQLAnimalRepository(SQLBaseRepository):
                 animal_id=log.animal_id,
                 event=log.event,
                 event_description=description,
+                event_category=category,
                 data=log.data,
                 user_id=log.user_id,
                 created_at=log.created_at,
             )
-            for log, description in results
+            for log, description, category in results
         ]
 
     def save(self, model: AnimalModel):
@@ -1748,11 +1756,15 @@ class SQLAnimalRepository(SQLBaseRepository):
         return AnimalImageModel.model_validate(image, from_attributes=True)
 
     def get_images(self, animal_id: int) -> list[AnimalImageModel]:
-        results = self.session.execute(
-            select(AnimalImage)
-            .where(AnimalImage.animal_id == animal_id)
-            .order_by(AnimalImage.created_at.asc())
-        ).scalars().all()
+        results = (
+            self.session.execute(
+                select(AnimalImage)
+                .where(AnimalImage.animal_id == animal_id)
+                .order_by(AnimalImage.created_at.asc())
+            )
+            .scalars()
+            .all()
+        )
         return [
             AnimalImageModel.model_validate(r, from_attributes=True)
             for r in results
