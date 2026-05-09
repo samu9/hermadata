@@ -19,6 +19,7 @@ from hermadata.routers import (
     util_router,
     vet_router,
 )
+from hermadata.routers.therapy_router import reminders_router
 
 logging.config.dictConfig(json.load(open("hermadata/log-configs.json")))
 
@@ -49,6 +50,7 @@ def build_app():
     app.include_router(user_router.router)
     app.include_router(structure_router.router)
     app.include_router(therapy_router.router)
+    app.include_router(reminders_router)
 
     app.add_exception_handler(APIException, api_error_exception_handler)
 
