@@ -5,6 +5,7 @@ import AnimalEditFormWrapper from "../components/animal/AnimalEditFormWrapper"
 import AnimalEvents from "../components/animal/AnimalEvents"
 import AnimalExitForm from "../components/animal/AnimalExitForm"
 import AnimalGallery from "../components/animal/AnimalGallery"
+import AnimalHealth from "../components/animal/AnimalHealth"
 import AnimalOverview from "../components/animal/AnimalOverview"
 import ProtectedRoute from "../components/ProtectedRoute"
 import RoleProtectedRoute from "../components/RoleProtectedRoute"
@@ -69,7 +70,7 @@ const routes: RouteObject[] = [
                             },
                             {
                                 path: "health",
-                                element: <div>IN COSTRUZIONE</div>,
+                                element: <AnimalHealth />,
                             },
                             {
                                 path: "exit",
