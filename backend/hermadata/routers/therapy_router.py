@@ -69,7 +69,7 @@ def attach_document(
             document_id=data.document_id,
         )
     except (NoResultFound, ValueError) as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @router.post("/{therapy_id}/end", response_model=TherapyRead)
