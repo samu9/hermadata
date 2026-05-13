@@ -74,7 +74,7 @@ import {
 } from "../models/user.schema"
 import { PaginationQuery } from "../models/pagination.schema"
 import { Structure } from "../models/structure.schema"
-import { NewTherapy, Therapy } from "../models/therapy.schema"
+import { NewTherapy, Therapy, TherapyReminder } from "../models/therapy.schema"
 
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 
@@ -756,9 +756,36 @@ class ApiService {
         return this.get<Therapy[]>(ApiEndpoints.therapy.list(animalId))
     }
 
+    getTherapyReminders(
+        structureIds: number[],
+        days = 30,
+    ): Promise<TherapyReminder[]> {
+        return this.get<TherapyReminder[]>(ApiEndpoints.therapy.reminders, {
+            structure_ids: structureIds,
+            days,
+        })
+    }
+
     createTherapy(animalId: number, data: NewTherapy): Promise<Therapy> {
         return this.post<Therapy>(ApiEndpoints.therapy.create(animalId), data)
     }
+
+    endTherapy(animalId: number, therapyId: number): Promise<Therapy> {
+        return this.post<Therapy>(ApiEndpoints.therapy.end(animalId, therapyId), {})
+    }
+
+    attachTherapyDocument(
+        animalId: number,
+        therapyId: number,
+        docType: "prescription" | "transport",
+        documentId: number,
+    ): Promise<Therapy> {
+        return this.post<Therapy>(
+            ApiEndpoints.therapy.attachDocument(animalId, therapyId, docType),
+            { document_id: documentId },
+        )
+    }
+
 
     isAuthenticated(): boolean {
         const token = localStorage.getItem("accessToken")
