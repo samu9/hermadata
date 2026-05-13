@@ -10,6 +10,7 @@
  * - Role-based access control for admin features
  */
 
+import TherapyRemindersCard from "../components/TherapyRemindersCard"
 import { Button } from "primereact/button"
 import { Badge } from "primereact/badge"
 import { Skeleton } from "primereact/skeleton"
@@ -197,6 +198,9 @@ const HomePage = () => {
                     loading={statsLoading}
                 />
             </div>
+
+            {/* Therapy Reminders */}
+            <TherapyRemindersCard />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Recent Animals */}
