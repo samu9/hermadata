@@ -200,3 +200,25 @@ export const useCreateTherapyMutation = (animalId: number) => {
         },
     )
 }
+
+export const useTherapyRemindersQuery = (
+    structureIds: number[],
+    days = 30,
+) =>
+    useQuery(
+        ["therapy-reminders", structureIds, days],
+        () => apiService.getTherapyReminders(structureIds, days),
+        { enabled: structureIds.length > 0, staleTime: 0 },
+    )
+
+export const useEndTherapyMutation = (animalId: number) => {
+    const queryClient = useQueryClient()
+    return useMutation(
+        (therapyId: number) => apiService.endTherapy(animalId, therapyId),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries(["therapies", animalId])
+            },
+        },
+    )
+}
