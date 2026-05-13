@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import select, update
+from sqlalchemy import or_, select, update
 from sqlalchemy.exc import NoResultFound
 
 from hermadata.constants import AnimalEvent, ReminderUnit
@@ -159,7 +159,7 @@ class SQLTherapyRepository(SQLBaseRepository):
             select(Therapy, Animal.id, Animal.code, Animal.name)
             .join(Animal, Therapy.animal_id == Animal.id)
             .where(
-                Therapy.end_date.is_(None),
+                or_(Therapy.end_date.is_(None), Therapy.end_date >= date.today()),
                 Therapy.reminder_value.is_not(None),
                 Therapy.reminder_unit.is_not(None),
                 Animal.deleted_at.is_(None),
