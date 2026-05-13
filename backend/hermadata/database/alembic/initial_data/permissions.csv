@@ -15,3 +15,4 @@ MU,manage_users,Manage user accounts and roles
 BDA,browse_deleted_animals,Browse deleted animal records
 AAE,add_animal_event,Aggiungi evento animal
 UAI,upload_animal_image,Upload and manage animal images
+BAE,browse_animal_events,Browse animal events
