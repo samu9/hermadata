@@ -7,20 +7,20 @@ Gestionale canile · aggiornare con `- [x]` per marcare i punti completati.
 ## 🐛 Bug da correggere
 
 - [x] Sovrapposizione bottone 'Aggiungi documento' e 'Nuova uscita' `alta`
-- [ ] Bug creazione adottante `alta`
+- [x] Bug creazione adottante `alta`
 - [ ] Bug giorno indietro in 'Sposta in rifugio' `media`
-- [ ] Correggere nome/cognome nella creazione utente `media`
+- [x] Correggere nome/cognome nella creazione utente `media`
 - [ ] Verificare comportamento tasto indietro del browser `media`
 
 ---
 
 ## 🏗️ Gestione strutture
 
-- [ ] Struttura attiva diventa filtro della lista animali (non è più un contesto globale) `alta`
-- [ ] Possibilità di non filtrare per struttura (vista tutte le strutture) `alta`
-- [ ] Aggiungere selezione struttura nell'inserimento di un nuovo animale `alta`
-- [ ] Vincolo: animali non in sanitario non possono essere inseriti in una struttura sanitaria (es. i recuperi sono forzatamente in sanitario) `alta`
-- [ ] Spostamento in rifugio diventa spostamento di struttura: selezionare struttura destinazione `alta`
+- [x] Struttura attiva diventa filtro della lista animali (non è più un contesto globale) `alta`
+- [x] Possibilità di non filtrare per struttura (vista tutte le strutture) `alta`
+- [x] Aggiungere selezione struttura nell'inserimento di un nuovo animale `alta`
+- [x] Vincolo: animali non in sanitario non possono essere inseriti in una struttura sanitaria (es. i recuperi sono forzatamente in sanitario) `alta`
+- [x] Spostamento in rifugio diventa spostamento di struttura: selezionare struttura destinazione `alta`
 
 ---
 
@@ -48,17 +48,17 @@ Gestionale canile · aggiornare con `- [x]` per marcare i punti completati.
 ## 🔖 Ingresso & chip
 
 - [x] Gestione ingresso completo: chip obbligatorio o flag 'senza chip' `alta`
-- [ ] Solo conferimenti possono entrare direttamente nel rifugio (vincolo logico) `alta`
-- [ ] Documento di ingresso → 'mail di attivazione', generato su richiesta (non automatico) `media`
+- [ ] Solo conferimenti possono entrare direttamente nel rifugio (vincolo logico) [chiedere a Luca] `alta`
+- [ ] Documento di ingresso → 'mail di attivazione', generato su richiesta (non automatico) [chiedere Luca] `media`
 
 ---
 
 ## 🔄 Stadi & movimenti
 
-- [ ] Data di passaggio da sanitario a rifugio con relativo documento `alta`
+- [ ] Data di passaggio da sanitario a rifugio con relativo documento [chiedere a Luca] `alta`
 - [x] Filtro vista per stadio: sanitario / rifugio `media`
-- [ ] Riportare stadio di provenienza (sanitario o rifugio) nel documento di variazione `media`
-- [ ] Se stadio = sanitario → denominazione 'Canile Chiodo' `media`
+- [ ] Riportare stadio di provenienza (sanitario o rifugio) nel documento di variazione [chiedere a Luca] `media`
+- [x] Se stadio = sanitario → denominazione 'Canile Chiodo' `media`
 
 ---
 
@@ -69,8 +69,8 @@ Gestionale canile · aggiornare con `- [x]` per marcare i punti completati.
 - [x] Aggiungere flag 'adozione temporanea' `alta`
 - [x] Affido confermato → genera documento adozione definitiva (senza 'temporaneo', data scelta) `alta`
 - [x] Affido non confermato → nuovo ingresso di tipo 'rientro' con comune originale `alta`
-- [ ] Restituzione al proprietario = adozione (ricerca/inserimento proprietario) `media`
-- [ ] Mantenere in memoria dati uscita nel frontend `media`
+- [x] Restituzione al proprietario = adozione (ricerca/inserimento proprietario) `media`
+- [x] Mantenere in memoria dati uscita nel frontend `media`
 
 ---
 
@@ -81,8 +81,8 @@ Gestionale canile · aggiornare con `- [x]` per marcare i punti completati.
 - [x] Aggiungere firma operatore nel modulo adozione `alta`
 - [ ] Modulo delega `media`
 - [ ] Documenti autogenerati non devono apparire nel menu 'Carica nuovo documento' `media`
-- [ ] Titoli e date dei documenti modificabili negli affidi `media`
-- [ ] Usare date in italiano in tutte le stampe `media`
+- [x] Titoli e date dei documenti modificabili negli affidi `media`
+- [x] Usare date in italiano in tutte le stampe `media`
 
 ---
 
@@ -127,8 +127,8 @@ Gestionale canile · aggiornare con `- [x]` per marcare i punti completati.
 - [ ] Ruolo 'solo gatti': accesso limitato agli animali felini `alta`
 - [ ] Ruolo 'con estrazioni': abilitare export e generazione documenti `alta`
 - [ ] Utenti con comuni di competenza: bloccare tutte le azioni (scrittura, estrazioni, report) su animali di comuni non assegnati `alta`
-- [ ] Lista comuni e province nei selettori filtrata ai soli comuni di competenza dell'utente loggato `alta`
-- [ ] Verifica lato server: i vincoli di competenza devono essere enforced anche sulle API, non solo sul frontend `alta`
+- [x] Lista comuni e province nei selettori filtrata ai soli comuni di competenza dell'utente loggato `alta`
+- [x] Verifica lato server: i vincoli di competenza devono essere enforced anche sulle API, non solo sul frontend `alta`
 - [ ] Superuser: visualizzazione eventi con utente associato `media`
 
 ---
