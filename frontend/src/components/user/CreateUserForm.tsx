@@ -50,6 +50,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onUserCreated }) => {
 
     const form = useForm<CreateUserForm>({
         resolver: zodResolver(createUserSchema),
+        mode: "onChange",
         defaultValues: {
             name: "",
             surname: "",
