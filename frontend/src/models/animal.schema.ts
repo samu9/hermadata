@@ -265,6 +265,7 @@ export const animalLogSchema = z.object({
     animal_id: z.number(),
     event: z.string(),
     event_description: z.string(),
+    event_category: z.string(),
     data: z.record(z.any()).nullable(),
     user_id: z.number().nullable(),
     created_at: z.string(), // DateTime string
