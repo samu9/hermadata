@@ -84,6 +84,8 @@ const ApiEndpoints = {
     therapy: {
         list: (animalId: number) => `/animal/${animalId}/therapies`,
         create: (animalId: number) => `/animal/${animalId}/therapies`,
+        delete: (animalId: number, therapyId: number) =>
+            `/animal/${animalId}/therapies/${therapyId}`,
         end: (animalId: number, therapyId: number) =>
             `/animal/${animalId}/therapies/${therapyId}/end`,
         attachDocument: (animalId: number, therapyId: number, docType: string) =>

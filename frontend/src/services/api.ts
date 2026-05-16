@@ -774,6 +774,10 @@ class ApiService {
         return this.post<Therapy>(ApiEndpoints.therapy.end(animalId, therapyId), {})
     }
 
+    deleteTherapy(animalId: number, therapyId: number): Promise<void> {
+        return this.delete<void>(ApiEndpoints.therapy.delete(animalId, therapyId))
+    }
+
     attachTherapyDocument(
         animalId: number,
         therapyId: number,

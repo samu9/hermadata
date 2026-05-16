@@ -222,3 +222,15 @@ export const useEndTherapyMutation = (animalId: number) => {
         },
     )
 }
+
+export const useDeleteTherapyMutation = (animalId: number) => {
+    const queryClient = useQueryClient()
+    return useMutation(
+        (therapyId: number) => apiService.deleteTherapy(animalId, therapyId),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries(["therapies", animalId])
+            },
+        },
+    )
+}
