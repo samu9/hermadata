@@ -72,6 +72,23 @@ def attach_document(
         raise HTTPException(status_code=404, detail=str(e)) from e
 
 
+@router.delete("/{therapy_id}", status_code=204)
+def delete_therapy(
+    animal_id: int,
+    therapy_id: int,
+    repo: Annotated[SQLTherapyRepository, Depends(get_therapy_repository)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+):
+    try:
+        repo.delete_therapy(
+            therapy_id=therapy_id,
+            animal_id=animal_id,
+            user_id=current_user.user_id,
+        )
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="Terapia non trovata")
+
+
 @router.post("/{therapy_id}/end", response_model=TherapyRead)
 def end_therapy(
     animal_id: int,
