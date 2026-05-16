@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import or_, select, update
@@ -137,6 +137,32 @@ class SQLTherapyRepository(SQLBaseRepository):
         self.session.flush()
         return TherapyRead.model_validate(therapy)
 
+    def delete_therapy(
+        self, therapy_id: int, animal_id: int, user_id: int | None = None
+    ) -> TherapyRead:
+        therapy = self.session.execute(
+            select(Therapy).where(
+                Therapy.id == therapy_id,
+                Therapy.animal_id == animal_id,
+                Therapy.deleted_at.is_(None),
+            )
+        ).scalar_one_or_none()
+
+        if therapy is None:
+            raise NoResultFound(f"Therapy {therapy_id} not found")
+
+        therapy.deleted_at = datetime.utcnow()
+
+        log = AnimalLog(
+            animal_id=animal_id,
+            event=AnimalEvent.therapy_deleted.value,
+            data={"description": therapy.description},
+            user_id=user_id,
+        )
+        self.session.add(log)
+        self.session.flush()
+        return TherapyRead.model_validate(therapy)
+
     def end_therapy(self, therapy_id: int, animal_id: int) -> TherapyRead:
         therapy = self.session.execute(
             select(Therapy).where(
@@ -160,6 +186,7 @@ class SQLTherapyRepository(SQLBaseRepository):
             .join(Animal, Therapy.animal_id == Animal.id)
             .where(
                 or_(Therapy.end_date.is_(None), Therapy.end_date >= date.today()),
+                Therapy.deleted_at.is_(None),
                 Therapy.reminder_value.is_not(None),
                 Therapy.reminder_unit.is_not(None),
                 Animal.deleted_at.is_(None),
@@ -197,7 +224,10 @@ class SQLTherapyRepository(SQLBaseRepository):
         rows = (
             self.session.execute(
                 select(Therapy)
-                .where(Therapy.animal_id == animal_id)
+                .where(
+                    Therapy.animal_id == animal_id,
+                    Therapy.deleted_at.is_(None),
+                )
                 .order_by(Therapy.start_date.desc())
             )
             .scalars()
