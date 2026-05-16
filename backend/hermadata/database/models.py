@@ -648,6 +648,9 @@ class Therapy(Base):
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(), server_onupdate=func.now(), nullable=True
     )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
 
 
 class Provincia(Base):
