@@ -38,12 +38,28 @@ export const therapyReminderSchema = z.object({
 
 export type TherapyReminder = z.infer<typeof therapyReminderSchema>
 
-export const newTherapySchema = z.object({
-    start_date: z.string().min(1, "Data inizio obbligatoria"),
-    end_date: z.string().nullable().optional(),
-    description: z.string().min(1, "Descrizione obbligatoria"),
-    reminder_value: z.number().int().positive().nullable().optional(),
-    reminder_unit: reminderUnitSchema.nullable().optional(),
-})
+export const newTherapySchema = z
+    .object({
+        start_date: z.string().min(1, "Data inizio obbligatoria"),
+        end_date: z.string().nullable().optional(),
+        description: z
+            .string()
+            .min(5, "La descrizione deve contenere almeno 5 caratteri"),
+        reminder_value: z.number().int().positive().nullable().optional(),
+        reminder_unit: reminderUnitSchema.nullable().optional(),
+    })
+    .superRefine((data, ctx) => {
+        if (data.end_date) {
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            if (new Date(data.end_date) < today) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["end_date"],
+                    message: "La data di fine deve essere nel futuro",
+                })
+            }
+        }
+    })
 
 export type NewTherapy = z.infer<typeof newTherapySchema>
