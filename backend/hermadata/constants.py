@@ -165,6 +165,7 @@ class AnimalEvent(Enum):
     temp_adoption_undone = "TU"  # Temporary adoption undone (animal returned)
     move_structure = "MV"  # Animal moved to another structure
     therapy = "TH"  # Therapy created
+    therapy_deleted = "THD"  # Therapy soft-deleted
 
 
 class ReminderUnit(str, Enum):
