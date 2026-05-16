@@ -40,9 +40,11 @@ import {
 import { apiService } from "../../main"
 import {
     useCreateTherapyMutation,
+    useDeleteTherapyMutation,
     useEndTherapyMutation,
     useTherapiesQuery,
 } from "../../queries"
+import { useAuth } from "../../contexts/AuthContext"
 
 const REMINDER_UNIT_OPTIONS: { label: string; value: ReminderUnit }[] = [
     { label: "giorni", value: "day" },
@@ -157,10 +159,17 @@ const TherapyForm = ({
                                 locale="it"
                                 showIcon
                                 showButtonBar
-                                className="w-full"
+                                className={classNames("w-full", {
+                                    "p-invalid": !!errors.end_date,
+                                })}
                             />
                         )}
                     />
+                    {errors.end_date && (
+                        <small className="text-red-500">
+                            {errors.end_date.message}
+                        </small>
+                    )}
                 </div>
             </div>
 
@@ -239,7 +248,11 @@ const TherapyForm = ({
     )
 }
 
-const getNextDueDate = (startDate: string, value: number, unit: ReminderUnit): Date => {
+const getNextDueDate = (
+    startDate: string,
+    value: number,
+    unit: ReminderUnit,
+): Date => {
     const start = new Date(startDate)
     start.setHours(0, 0, 0, 0)
     const today = new Date()
@@ -249,10 +262,14 @@ const getNextDueDate = (startDate: string, value: number, unit: ReminderUnit): D
 
     const addPeriod = (d: Date): Date => {
         switch (unit) {
-            case "day":   return addDays(d, value)
-            case "week":  return addWeeks(d, value)
-            case "month": return addMonths(d, value)
-            case "year":  return addYears(d, value)
+            case "day":
+                return addDays(d, value)
+            case "week":
+                return addWeeks(d, value)
+            case "month":
+                return addMonths(d, value)
+            case "year":
+                return addYears(d, value)
         }
     }
 
@@ -263,9 +280,20 @@ const getNextDueDate = (startDate: string, value: number, unit: ReminderUnit): D
 
 const dueDateStyle = (due: Date): { label: string; className: string } => {
     const days = differenceInDays(due, new Date())
-    if (days === 0) return { label: "Oggi", className: "text-amber-700 bg-amber-50 border-amber-200" }
-    if (days <= 7) return { label: `Tra ${days} giorni`, className: "text-amber-700 bg-amber-50 border-amber-200" }
-    return { label: format(due, "d MMM yyyy", { locale: it }), className: "text-surface-600 bg-surface-50 border-surface-200" }
+    if (days === 0)
+        return {
+            label: "Oggi",
+            className: "text-amber-700 bg-amber-50 border-amber-200",
+        }
+    if (days <= 7)
+        return {
+            label: `Tra ${days} giorni`,
+            className: "text-amber-700 bg-amber-50 border-amber-200",
+        }
+    return {
+        label: format(due, "d MMM yyyy", { locale: it }),
+        className: "text-surface-600 bg-surface-50 border-surface-200",
+    }
 }
 
 type DocType = "prescription" | "transport"
@@ -298,7 +326,12 @@ const DocSlot = ({
         setUploading(true)
         try {
             const docId = await apiService.uploadDoc(file)
-            await apiService.attachTherapyDocument(animalId, therapyId, docType, docId)
+            await apiService.attachTherapyDocument(
+                animalId,
+                therapyId,
+                docType,
+                docId,
+            )
             onAttached()
             toastService.showSuccess(`${label} allegata`)
         } catch {
@@ -312,7 +345,10 @@ const DocSlot = ({
     return (
         <div className="flex items-center justify-between gap-3 py-1.5 border-t border-surface-100 first:border-t-0">
             <span className="flex items-center gap-2 text-sm text-surface-600">
-                <FontAwesomeIcon icon={icon} className="text-surface-400 text-xs w-3" />
+                <FontAwesomeIcon
+                    icon={icon}
+                    className="text-surface-400 text-xs w-3"
+                />
                 {label}
             </span>
             {documentId ? (
@@ -351,12 +387,14 @@ const TherapyCard = ({
     active,
     animalId,
     onEnd,
+    onDelete,
     onDocAttached,
 }: {
     therapy: Therapy
     active: boolean
     animalId: number
     onEnd?: () => void
+    onDelete?: () => void
     onDocAttached: () => void
 }) => (
     <div
@@ -368,7 +406,12 @@ const TherapyCard = ({
         )}
     >
         {/* Top accent bar */}
-        <div className={classNames("h-1 w-full", active ? "bg-primary-500" : "bg-surface-300")} />
+        <div
+            className={classNames(
+                "h-1 w-full",
+                active ? "bg-primary-500" : "bg-surface-300",
+            )}
+        />
 
         <div className="p-5 flex gap-4">
             {/* Left icon */}
@@ -393,22 +436,36 @@ const TherapyCard = ({
                 {/* Meta row */}
                 <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-surface-500">
                     <span className="flex items-center gap-1.5">
-                        <FontAwesomeIcon icon={faCalendarDay} className="text-surface-400 text-xs" />
+                        <FontAwesomeIcon
+                            icon={faCalendarDay}
+                            className="text-surface-400 text-xs"
+                        />
                         <span>
                             Inizio:{" "}
                             <span className="font-medium text-surface-700">
-                                {format(new Date(therapy.start_date), "d MMM yyyy", { locale: it })}
+                                {format(
+                                    new Date(therapy.start_date),
+                                    "d MMM yyyy",
+                                    { locale: it },
+                                )}
                             </span>
                         </span>
                     </span>
 
                     {therapy.end_date && (
                         <span className="flex items-center gap-1.5">
-                            <FontAwesomeIcon icon={faCalendarCheck} className="text-surface-400 text-xs" />
+                            <FontAwesomeIcon
+                                icon={faCalendarCheck}
+                                className="text-surface-400 text-xs"
+                            />
                             <span>
                                 Fine:{" "}
                                 <span className="font-medium text-surface-700">
-                                    {format(new Date(therapy.end_date), "d MMM yyyy", { locale: it })}
+                                    {format(
+                                        new Date(therapy.end_date),
+                                        "d MMM yyyy",
+                                        { locale: it },
+                                    )}
                                 </span>
                             </span>
                         </span>
@@ -416,7 +473,10 @@ const TherapyCard = ({
 
                     {therapy.reminder_value && therapy.reminder_unit && (
                         <span className="flex items-center gap-1.5">
-                            <FontAwesomeIcon icon={faBell} className="text-amber-400 text-xs" />
+                            <FontAwesomeIcon
+                                icon={faBell}
+                                className="text-amber-400 text-xs"
+                            />
                             <span>
                                 ogni{" "}
                                 <span className="font-medium text-surface-700">
@@ -426,16 +486,28 @@ const TherapyCard = ({
                             </span>
                         </span>
                     )}
-                    {active && therapy.reminder_value && therapy.reminder_unit && (() => {
-                        const due = getNextDueDate(therapy.start_date, therapy.reminder_value, therapy.reminder_unit)
-                        const style = dueDateStyle(due)
-                        return (
-                            <span className={`flex items-center gap-1.5 text-xs font-medium border rounded-full px-2.5 py-0.5 ${style.className}`}>
-                                <FontAwesomeIcon icon={faCalendarDay} className="text-xs" />
-                                Prossima: {style.label}
-                            </span>
-                        )
-                    })()}
+                    {active &&
+                        therapy.reminder_value &&
+                        therapy.reminder_unit &&
+                        (() => {
+                            const due = getNextDueDate(
+                                therapy.start_date,
+                                therapy.reminder_value,
+                                therapy.reminder_unit,
+                            )
+                            const style = dueDateStyle(due)
+                            return (
+                                <span
+                                    className={`flex items-center gap-1.5 text-xs font-medium border rounded-full px-2.5 py-0.5 ${style.className}`}
+                                >
+                                    <FontAwesomeIcon
+                                        icon={faCalendarDay}
+                                        className="text-xs"
+                                    />
+                                    Prossima: {style.label}
+                                </span>
+                            )
+                        })()}
                 </div>
 
                 {/* Document attachments */}
@@ -456,16 +528,28 @@ const TherapyCard = ({
                     ))}
                 </div>
 
-                {active && onEnd && (
-                    <div className="flex justify-end pt-1">
-                        <Button
-                            label="Termina terapia"
-                            icon="pi pi-stop-circle"
-                            severity="danger"
-                            text
-                            size="small"
-                            onClick={onEnd}
-                        />
+                {(onEnd || onDelete) && (
+                    <div className="flex justify-end gap-2 pt-1">
+                        {active && onEnd && (
+                            <Button
+                                label="Termina terapia"
+                                icon="pi pi-stop-circle"
+                                severity="danger"
+                                text
+                                size="small"
+                                onClick={onEnd}
+                            />
+                        )}
+                        {onDelete && (
+                            <Button
+                                label="Elimina"
+                                icon="pi pi-trash"
+                                severity="danger"
+                                text
+                                size="small"
+                                onClick={onDelete}
+                            />
+                        )}
                     </div>
                 )}
             </div>
@@ -476,13 +560,20 @@ const TherapyCard = ({
 const AnimalHealth = () => {
     const { id } = useParams()
     const animalId = Number(id)
+    const { user } = useAuth()
     const [showForm, setShowForm] = useState(false)
-    const { data: therapies = [], isLoading, refetch } = useTherapiesQuery(animalId)
+    const {
+        data: therapies = [],
+        isLoading,
+        refetch,
+    } = useTherapiesQuery(animalId)
     const endMutation = useEndTherapyMutation(animalId)
+    const deleteMutation = useDeleteTherapyMutation(animalId)
 
     const handleEnd = (therapyId: number) => {
         confirmDialog({
-            message: "Vuoi terminare questa terapia? Verrà impostata la data di fine ad oggi.",
+            message:
+                "Vuoi terminare questa terapia? Verrà impostata la data di fine ad oggi.",
             header: "Termina terapia",
             icon: "pi pi-exclamation-triangle",
             acceptLabel: "Termina",
@@ -492,6 +583,25 @@ const AnimalHealth = () => {
                 try {
                     await endMutation.mutateAsync(therapyId)
                     toastService.showSuccess("Terapia terminata")
+                } catch {
+                    // error toasted by interceptor
+                }
+            },
+        })
+    }
+
+    const handleDelete = (therapyId: number) => {
+        confirmDialog({
+            message: "Vuoi eliminare questa terapia? L'operazione non può essere annullata.",
+            header: "Elimina terapia",
+            icon: "pi pi-trash",
+            acceptLabel: "Elimina",
+            rejectLabel: "Annulla",
+            acceptClassName: "p-button-danger",
+            accept: async () => {
+                try {
+                    await deleteMutation.mutateAsync(therapyId)
+                    toastService.showSuccess("Terapia eliminata")
                 } catch {
                     // error toasted by interceptor
                 }
@@ -546,6 +656,7 @@ const AnimalHealth = () => {
                                     active
                                     animalId={animalId}
                                     onEnd={() => handleEnd(t.id)}
+                                    onDelete={user?.is_superuser ? () => handleDelete(t.id) : undefined}
                                     onDocAttached={refetch}
                                 />
                             ))}
@@ -567,6 +678,7 @@ const AnimalHealth = () => {
                                     therapy={t}
                                     active={false}
                                     animalId={animalId}
+                                    onDelete={user?.is_superuser ? () => handleDelete(t.id) : undefined}
                                     onDocAttached={refetch}
                                 />
                             ))}
