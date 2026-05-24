@@ -160,11 +160,20 @@ export const useRolesQuery = () =>
     })
 
 // Dashboard queries
-export const useDashboardStatsQuery = () =>
-    useQuery(["dashboard-stats"], () => apiService.getDashboardStats(), {
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        refetchOnWindowFocus: false,
-    })
+export const useAnimalStatsQuery = (params: {
+    from_date: string
+    to_date: string
+    structure_ids?: number[]
+}) =>
+    useQuery(
+        ["animal-stats", params],
+        () => apiService.getAnimalStats(params),
+        {
+            staleTime: 5 * 60 * 1000,
+            refetchOnWindowFocus: false,
+            enabled: !!params.from_date && !!params.to_date,
+        },
+    )
 
 export const useRecentAnimalsQuery = (limit: number = 5) =>
     useQuery(

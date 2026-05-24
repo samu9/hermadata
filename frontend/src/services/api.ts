@@ -695,33 +695,29 @@ class ApiService {
         )
         return result.map((permission) => permissionSchema.parse(permission))
     }
-    // Dashboard statistics methods
-    async getDashboardStats(): Promise<{
-        totalAnimals: number
-        activeAnimals: number
-        adoptedAnimals: number
-        recentEntries: number
-        recentExits: number
+    async getAnimalStats(params: {
+        from_date: string
+        to_date: string
+        structure_ids?: number[]
+    }): Promise<{
+        total_animals: number
+        present_animals: number
+        adopted_animals: number
+        entered_animals: number
     }> {
-        // Since there's no dedicated stats endpoint, we'll use search to get counts
-        const activeAnimalsResult = await this.searchAnimals({
-            from_index: 0,
-            to_index: 1,
-            present: true,
+        const searchParams = new URLSearchParams({
+            from_date: params.from_date,
+            to_date: params.to_date,
         })
-        const totalAnimalsResult = await this.searchAnimals({
-            from_index: 0,
-            to_index: 1,
-        })
-
-        return {
-            totalAnimals: totalAnimalsResult.total,
-            activeAnimals: activeAnimalsResult.total,
-            adoptedAnimals:
-                totalAnimalsResult.total - activeAnimalsResult.total,
-            recentEntries: 0, // Would need better date filtering
-            recentExits: 0, // Would need exit endpoint to calculate properly
+        if (params.structure_ids?.length) {
+            params.structure_ids.forEach((id) =>
+                searchParams.append("structure_ids", String(id)),
+            )
         }
+        const response = await this.inst.get(
+            `${ApiEndpoints.animal.stats}?${searchParams.toString()}`,
+        )
+        return response.data
     }
 
     async getRecentAnimals(limit: number = 5): Promise<AnimalSearchResult[]> {
