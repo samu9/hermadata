@@ -66,6 +66,8 @@ from hermadata.repositories.animal.models import (
     AnimalSearchModel,
     AnimalSearchResult,
     AnimalSearchResultQuery,
+    AnimalStatsQuery,
+    AnimalStatsResult,
     CompleteEntryModel,
     ExitCheckResult,
     FurColorName,
@@ -1118,6 +1120,68 @@ class SQLAnimalRepository(SQLBaseRepository):
         result = AdoptionModel.model_validate(adoption, from_attributes=True)
 
         return result
+
+    def get_stats(self, query: AnimalStatsQuery) -> AnimalStatsResult:
+        base_where = [Animal.deleted_at.is_(None)]
+        if query.structure_ids:
+            base_where.append(Animal.structure_id.in_(query.structure_ids))
+
+        total = self.session.execute(
+            select(func.count(func.distinct(Animal.id)))
+            .select_from(Animal)
+            .join(AnimalEntry, Animal.id == AnimalEntry.animal_id)
+            .where(
+                *base_where,
+                AnimalEntry.entry_date <= query.to_date,
+                or_(
+                    AnimalEntry.exit_date.is_(None),
+                    AnimalEntry.exit_date >= query.from_date,
+                ),
+            )
+        ).scalar_one()
+
+        present = self.session.execute(
+            select(func.count(Animal.id))
+            .select_from(Animal)
+            .join(
+                AnimalEntry,
+                and_(
+                    Animal.id == AnimalEntry.animal_id,
+                    AnimalEntry.current.is_(True),
+                ),
+            )
+            .where(*base_where, AnimalEntry.exit_date.is_(None))
+        ).scalar_one()
+
+        adopted = self.session.execute(
+            select(func.count(func.distinct(Animal.id)))
+            .select_from(Animal)
+            .join(AnimalEntry, Animal.id == AnimalEntry.animal_id)
+            .where(
+                *base_where,
+                AnimalEntry.exit_date >= query.from_date,
+                AnimalEntry.exit_date <= query.to_date,
+                AnimalEntry.exit_type == ExitType.adoption,
+            )
+        ).scalar_one()
+
+        entered = self.session.execute(
+            select(func.count(func.distinct(Animal.id)))
+            .select_from(Animal)
+            .join(AnimalEntry, Animal.id == AnimalEntry.animal_id)
+            .where(
+                *base_where,
+                AnimalEntry.entry_date >= query.from_date,
+                AnimalEntry.entry_date <= query.to_date,
+            )
+        ).scalar_one()
+
+        return AnimalStatsResult(
+            total_animals=total,
+            present_animals=present,
+            adopted_animals=adopted,
+            entered_animals=entered,
+        )
 
     def count_animal_days(self, query: AnimalDaysQuery) -> AnimalDaysResult:
         entries = self.session.execute(

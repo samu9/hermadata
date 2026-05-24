@@ -46,6 +46,8 @@ from hermadata.repositories.animal.models import (
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
+    AnimalStatsQuery,
+    AnimalStatsResult,
     CompleteEntryModel,
     ExitCheckResult,
     MoveToShelterRequest,
@@ -131,6 +133,17 @@ def search_animals(
     result = repo.search(query, allowed_city_codes=allowed_city_codes)
 
     return result
+
+
+@router.get("/stats", response_model=AnimalStatsResult)
+def get_animal_stats(
+    query: Annotated[AnimalStatsQuery, Depends(use_cache=False)],
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    structure_ids: Annotated[list[int] | None, Query()] = None,
+):
+    query.structure_ids = structure_ids
+    return repo.get_stats(query)
 
 
 @router.get("/search/report")

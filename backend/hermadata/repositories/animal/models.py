@@ -393,6 +393,19 @@ class AnimalExitsQuery(ExtractionQuery):
     exit_type: ExitType | None = None
 
 
+class AnimalStatsQuery(BaseModel):
+    from_date: date
+    to_date: date
+    structure_ids: list[int] | None = None
+
+
+class AnimalStatsResult(BaseModel):
+    total_animals: int
+    present_animals: int
+    adopted_animals: int
+    entered_animals: int
+
+
 class AnimalDaysItem(BaseModel):
     animal_name: str | None = None
     animal_chip_code: str | None = None
