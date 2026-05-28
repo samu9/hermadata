@@ -21,3 +21,11 @@ class StorageInterface(ABC):
     @abstractmethod
     def clear_storage(self):
         pass
+
+    @abstractmethod
+    def get_presigned_url(
+        self, key: str, filename: str, mimetype: str, expires_in: int
+    ) -> str | None:
+        """Return a short-lived presigned download URL,
+        or None if not supported."""
+        pass

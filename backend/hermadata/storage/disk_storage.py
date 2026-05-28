@@ -41,6 +41,11 @@ class DiskStorage(StorageInterface):
         print(f"Files in storage: {files}")
         return files
 
+    def get_presigned_url(
+        self, key: str, filename: str, mimetype: str, expires_in: int
+    ) -> str | None:
+        return None
+
     def clear_storage(self):
         shutil.rmtree(self.base_path)
         os.makedirs(self.base_path)
