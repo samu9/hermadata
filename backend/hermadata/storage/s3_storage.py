@@ -70,6 +70,28 @@ class S3Storage(StorageInterface):
             )
             return []
 
+    def get_presigned_url(
+        self, key: str, filename: str, mimetype: str, expires_in: int
+    ) -> str | None:
+        try:
+            url = self.s3.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": self.bucket_name,
+                    "Key": key,
+                    "ResponseContentDisposition": f'attachment; filename="{filename}"',
+                    "ResponseContentType": mimetype,
+                },
+                ExpiresIn=expires_in,
+            )
+            logger.info(
+                f"Presigned URL generated for '{key}' in bucket '{self.bucket_name}'."
+            )
+            return url
+        except ClientError as e:
+            logger.error(f"Failed to generate presigned URL for '{key}': {e}")
+            raise e
+
     def clear_storage(self):
         try:
             objects = self.s3.list_objects_v2(Bucket=self.bucket_name).get(
