@@ -109,10 +109,14 @@ def get_structure_repository(
 
 # Keep global instances for non-session dependent objects
 s3_storage = (
-    S3Storage(settings.storage.s3.bucket) if settings.storage.s3 else None
+    S3Storage(settings.storage.s3.bucket, settings.storage.s3.region)
+    if settings.storage.s3
+    else None
 )
 image_s3_storage = (
-    S3Storage(settings.storage.s3.images_bucket) if settings.storage.s3 else None
+    S3Storage(settings.storage.s3.images_bucket, settings.storage.s3.region)
+    if settings.storage.s3
+    else None
 )
 disk_storage = (
     DiskStorage(settings.storage.disk.base_path) if settings.storage.disk else None

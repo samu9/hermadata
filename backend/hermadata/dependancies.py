@@ -42,7 +42,7 @@ def get_db_session(
 def get_s3_storage() -> S3Storage | None:
     if settings.storage.s3 is None:
         return None
-    return S3Storage(settings.storage.s3.bucket)
+    return S3Storage(settings.storage.s3.bucket, settings.storage.s3.region)
 
 
 def get_disk_storage() -> DiskStorage | None:

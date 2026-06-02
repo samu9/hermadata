@@ -16,6 +16,7 @@ class DBSettings(BaseSettings):
 class S3StorageSettings(BaseSettings):
     bucket: str
     images_bucket: str
+    region: str = "eu-central-1"
     presigned_url_expires_in: int = 600
 
 
