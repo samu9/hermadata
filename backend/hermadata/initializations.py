@@ -108,21 +108,39 @@ def get_structure_repository(
 
 
 # Keep global instances for non-session dependent objects
-s3_storage = S3Storage(settings.storage.s3.bucket)
-image_s3_storage = S3Storage(settings.storage.s3.images_bucket)
-disk_storage = DiskStorage(settings.storage.disk.base_path)
-image_disk_storage = DiskStorage(
-    f"{settings.storage.disk.base_path}/{settings.storage.disk.images_path}"
+s3_storage = (
+    S3Storage(settings.storage.s3.bucket) if settings.storage.s3 else None
+)
+image_s3_storage = (
+    S3Storage(settings.storage.s3.images_bucket) if settings.storage.s3 else None
+)
+disk_storage = (
+    DiskStorage(settings.storage.disk.base_path) if settings.storage.disk else None
+)
+image_disk_storage = (
+    DiskStorage(
+        f"{settings.storage.disk.base_path}/{settings.storage.disk.images_path}"
+    )
+    if settings.storage.disk
+    else None
 )
 
 storage_map = {
-    StorageType.disk: disk_storage,
-    StorageType.aws_s3: s3_storage,
+    k: v
+    for k, v in {
+        StorageType.disk: disk_storage,
+        StorageType.aws_s3: s3_storage,
+    }.items()
+    if v is not None
 }
 
 image_storage_map = {
-    StorageType.disk: image_disk_storage,
-    StorageType.aws_s3: image_s3_storage,
+    k: v
+    for k, v in {
+        StorageType.disk: image_disk_storage,
+        StorageType.aws_s3: image_s3_storage,
+    }.items()
+    if v is not None
 }
 
 
