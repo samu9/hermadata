@@ -126,7 +126,9 @@ def serve_document(
         key=doc.key,
         filename=doc.filename,
         mimetype=doc.mimetype,
-        expires_in=settings.storage.s3.presigned_url_expires_in,
+        expires_in=settings.storage.s3.presigned_url_expires_in
+        if settings.storage.s3
+        else 600,
     )
     if presigned_url is not None:
         return DocumentUrlResponse(url=presigned_url)
