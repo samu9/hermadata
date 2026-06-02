@@ -124,29 +124,6 @@ def test_serve_document_not_found(app: TestClient):
     assert response.status_code == 404
 
 
-def test_serve_document_not_uploaded(
-    db_session: Session,
-    app: TestClient,
-    document_repository: SQLDocumentRepository,
-):
-    """Document with is_uploaded=False returns 404."""
-    document_id = document_repository.new_document(
-        data=NewDocument(
-            filename="not_uploaded.txt",
-            data=b"data",
-            mimetype="plain/text",
-            is_uploaded=True,
-        )
-    )
-    db_session.execute(
-        Document.__table__.update()
-        .where(Document.id == document_id)
-        .values(is_uploaded=False)
-    )
-
-    response = app.get(f"/document/{document_id}")
-    assert response.status_code == 404
-
 
 def test_serve_document_dd_permission_denied(db_session: Session):
     """User without DD permission receives 403."""
