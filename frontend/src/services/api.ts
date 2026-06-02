@@ -428,8 +428,11 @@ class ApiService {
         return parsed
     }
 
-    async openDocument(document_id: number) {
-        window.open(new URL(ApiEndpoints.doc.open(document_id), this.baseURL))
+    async openDocument(document_id: number): Promise<void> {
+        const result = await this.get<{ url: string }>(
+            ApiEndpoints.doc.open(document_id),
+        )
+        window.open(result.url)
     }
 
     async getAnimalSizes() {
