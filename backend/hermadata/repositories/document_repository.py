@@ -1,13 +1,27 @@
 from uuid import uuid4
 
 from pydantic import BaseModel, constr
-from sqlalchemy import insert, select
+from sqlalchemy import insert, or_, select
 from sqlalchemy.orm import Session
 
 from hermadata.constants import DocKindCode, StorageType
-from hermadata.database.models import Document, DocumentKind
+from hermadata.database.models import (
+    AnimalDocument,
+    Document,
+    DocumentKind,
+    DocumentPermission,
+    UserRole,
+)
 from hermadata.repositories import SQLBaseRepository
 from hermadata.storage.base import StorageInterface
+
+
+class DocumentDownloadData(BaseModel):
+    key: str
+    storage_service: StorageType
+    filename: str
+    mimetype: str
+    document_kind_id: int | None
 
 
 class NewDocument(BaseModel):
@@ -128,3 +142,79 @@ class SQLDocumentRepository(SQLBaseRepository):
         data = self.storage[storage_service].retrieve_file(key)
 
         return data, content_type, filename
+
+    def get_document_download_data(
+        self, document_id: int
+    ) -> DocumentDownloadData | None:
+        """Fetch document metadata needed for serving/redirecting a download.
+
+        Returns None if the document does not exist or is not yet uploaded.
+        Uses an outer join so documents not linked to an animal_document still resolve.
+        """
+        row = self.session.execute(
+            select(
+                Document.key,
+                Document.storage_service,
+                Document.filename,
+                Document.mimetype,
+                Document.is_uploaded,
+                AnimalDocument.document_kind_id,
+            )
+            .outerjoin(
+                AnimalDocument, AnimalDocument.document_id == Document.id
+            )
+            .where(Document.id == document_id)
+        ).first()
+
+        if row is None:
+            return None
+
+        (
+            key,
+            storage_service,
+            filename,
+            mimetype,
+            is_uploaded,
+            document_kind_id,
+        ) = row
+
+        if not is_uploaded:
+            return None
+
+        return DocumentDownloadData(
+            key=key,
+            storage_service=StorageType(storage_service),
+            filename=filename,
+            mimetype=mimetype,
+            document_kind_id=document_kind_id,
+        )
+
+    def can_view_document(
+        self, document_kind_id: int, user_id: int, role_name: str | None
+    ) -> bool:
+        """Return False if an explicit can_view=False restriction applies to this user.
+
+        If no restriction row exists for this document kind / user / role, access is allowed.
+        """
+        user_role_conditions = [DocumentPermission.user_id == user_id]
+        if role_name is not None:
+            role_id_subq = (
+                select(UserRole.id)
+                .where(UserRole.name == role_name)
+                .scalar_subquery()
+            )
+            user_role_conditions.append(
+                DocumentPermission.role_id == role_id_subq
+            )
+
+        restricted = self.session.execute(
+            select(DocumentPermission.id)
+            .where(
+                DocumentPermission.document_kind_id == document_kind_id,
+                DocumentPermission.can_view == False,  # noqa: E712
+                or_(*user_role_conditions),
+            )
+            .limit(1)
+        ).scalar()
+
+        return restricted is None
