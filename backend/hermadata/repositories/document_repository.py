@@ -157,7 +157,6 @@ class SQLDocumentRepository(SQLBaseRepository):
                 Document.storage_service,
                 Document.filename,
                 Document.mimetype,
-                Document.is_uploaded,
                 AnimalDocument.document_kind_id,
             )
             .outerjoin(
@@ -169,17 +168,7 @@ class SQLDocumentRepository(SQLBaseRepository):
         if row is None:
             return None
 
-        (
-            key,
-            storage_service,
-            filename,
-            mimetype,
-            is_uploaded,
-            document_kind_id,
-        ) = row
-
-        if not is_uploaded:
-            return None
+        key, storage_service, filename, mimetype, document_kind_id = row
 
         return DocumentDownloadData(
             key=key,
