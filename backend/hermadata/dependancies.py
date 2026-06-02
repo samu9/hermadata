@@ -39,26 +39,28 @@ def get_db_session(
         session.close()
 
 
-def get_s3_storage():
-    s3_storage = S3Storage(settings.storage.s3.bucket)
+def get_s3_storage() -> S3Storage | None:
+    if settings.storage.s3 is None:
+        return None
+    return S3Storage(settings.storage.s3.bucket)
 
-    return s3_storage
 
-
-def get_disk_storage():
-    disk_storage = DiskStorage(settings.storage.disk.base_path)
-
-    return disk_storage
+def get_disk_storage() -> DiskStorage | None:
+    if settings.storage.disk is None:
+        return None
+    return DiskStorage(settings.storage.disk.base_path)
 
 
 def get_storage_map(
-    disk_storage: Annotated[DiskStorage, Depends(get_disk_storage)],
-    s3_storage: Annotated[S3Storage, Depends(get_s3_storage)],
+    disk_storage: Annotated[DiskStorage | None, Depends(get_disk_storage)],
+    s3_storage: Annotated[S3Storage | None, Depends(get_s3_storage)],
 ):
-    return {
-        StorageType.disk: disk_storage,
-        StorageType.aws_s3: s3_storage,
-    }
+    storage = {}
+    if disk_storage is not None:
+        storage[StorageType.disk] = disk_storage
+    if s3_storage is not None:
+        storage[StorageType.aws_s3] = s3_storage
+    return storage
 
 
 def get_jinja_env() -> Environment:
