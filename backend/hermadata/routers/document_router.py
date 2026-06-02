@@ -1,7 +1,14 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
-from fastapi.responses import RedirectResponse
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+)
+from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 
 from hermadata.constants import Permission
@@ -17,6 +24,10 @@ from hermadata.services.user_service import TokenData
 from hermadata.settings import settings
 
 router = APIRouter(prefix="/document")
+
+
+class DocumentUrlResponse(BaseModel):
+    url: str
 
 
 @router.post("", response_model=int)
@@ -68,9 +79,28 @@ def create_new_kind(
     return new_doc_kind
 
 
-@router.get("/{document_id}", response_class=Response)
+@router.get("/{document_id}/stream", response_class=Response)
+def stream_document(
+    document_id: int,
+    doc_repo: Annotated[
+        SQLDocumentRepository, Depends(get_document_repository)
+    ],
+):
+    """Unauthenticated byte-streaming endpoint for disk storage (dev only).
+
+    Production traffic always hits S3 presigned URLs directly. This endpoint
+    is the target URL returned by serve_document when running on disk storage.
+    """
+    data, content_type, filename = doc_repo.get_data(document_id)
+    return Response(
+        content=data, media_type=content_type, headers={"filename": filename}
+    )
+
+
+@router.get("/{document_id}", response_model=DocumentUrlResponse)
 def serve_document(
     document_id: int,
+    request: Request,
     doc_repo: Annotated[
         SQLDocumentRepository, Depends(get_document_repository)
     ],
@@ -99,11 +129,7 @@ def serve_document(
         expires_in=settings.storage.s3.presigned_url_expires_in,
     )
     if presigned_url is not None:
-        return RedirectResponse(url=presigned_url, status_code=307)
+        return DocumentUrlResponse(url=presigned_url)
 
-    data = storage_backend.retrieve_file(doc.key)
-    return Response(
-        content=data,
-        media_type=doc.mimetype,
-        headers={"filename": doc.filename},
-    )
+    stream_url = str(request.base_url) + f"document/{document_id}/stream"
+    return DocumentUrlResponse(url=stream_url)
