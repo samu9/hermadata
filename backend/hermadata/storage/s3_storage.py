@@ -10,9 +10,13 @@ logger = logging.getLogger(__name__)
 
 
 class S3Storage(StorageInterface):
-    def __init__(self, bucket_name):
+    def __init__(self, bucket_name, region_name: str | None = None):
         self.bucket_name = bucket_name
-        self.s3 = boto3.client("s3", config=Config(signature_version="s3v4"))
+        self.s3 = boto3.client(
+            "s3",
+            region_name=region_name,
+            config=Config(signature_version="s3v4"),
+        )
 
     def store_file(self, file_name, content):
         try:
