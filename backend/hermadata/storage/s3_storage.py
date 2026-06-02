@@ -79,7 +79,7 @@ class S3Storage(StorageInterface):
                 Params={
                     "Bucket": self.bucket_name,
                     "Key": key,
-                    "ResponseContentDisposition": f'attachment; filename="{filename}"',
+                    "ResponseContentDisposition": f'inline; filename="{filename}"',
                     "ResponseContentType": mimetype,
                 },
                 ExpiresIn=expires_in,
