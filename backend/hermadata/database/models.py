@@ -437,6 +437,9 @@ class Document(Base):
     filename: Mapped[str] = mapped_column(String(100))
     mimetype: Mapped[str] = mapped_column(String(50))
 
+    # True when the document was manually uploaded by the user;
+    # False when it was generated automatically (e.g. rendered from a template).
+    # This is NOT a readiness/availability flag.
     is_uploaded: Mapped[str] = mapped_column(Boolean, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
