@@ -35,7 +35,7 @@ const NewVetButton = (props: Props) => {
                     Nuovo veterinario
                 </Button>
                 <OverlayPanel showCloseIcon ref={op}>
-                    <div className="">
+                    <div className="max-w-[90vw]">
                         <NewVetForm onSaved={(a) => onNew(a)} />
                     </div>
                 </OverlayPanel>

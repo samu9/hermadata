@@ -309,6 +309,7 @@ const UserList: React.FC = () => {
                     setSelectedUser(null)
                 }}
                 style={{ width: "500px" }}
+                breakpoints={{ "640px": "95vw" }}
                 modal
             >
                 {selectedUser && (

@@ -435,6 +435,7 @@ const AnimalRecord = (props: Props) => {
                 header="Sposta in rifugio"
                 visible={moveToShelterDialogVisible}
                 style={{ width: "400px" }}
+                breakpoints={{ "640px": "95vw" }}
                 onHide={() => setMoveToShelterDialogVisible(false)}
                 footer={
                     <div className="flex justify-end gap-2">
@@ -487,6 +488,7 @@ const AnimalRecord = (props: Props) => {
                 header="Conferma adozione"
                 visible={confirmAdoptionDialogVisible}
                 style={{ width: "400px" }}
+                breakpoints={{ "640px": "95vw" }}
                 onHide={() => setConfirmAdoptionDialogVisible(false)}
                 footer={
                     <div className="flex justify-end gap-2">

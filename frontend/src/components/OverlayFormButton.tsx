@@ -50,7 +50,7 @@ const OverlayFormButton = <T,>({
                     },
                 }}
             >
-                <div className="w-[25rem] p-6 bg-white rounded-xl">
+                <div className="w-[90vw] max-w-[25rem] p-6 bg-white rounded-xl">
                     <FormComponent onSuccess={handleSuccess} {...formProps} />
                 </div>
             </OverlayPanel>

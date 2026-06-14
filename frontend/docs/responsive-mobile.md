@@ -23,7 +23,7 @@ Tracking doc for making the HermaData frontend responsive down to ~375px **witho
 | 0 | Foundations: viewport meta, `useMediaQuery` hook, overflow guard | ✅ done |
 | 1 | App shell + navigation: sidebar → drawer, mobile top bar | ✅ done |
 | 2 | Tables → horizontal scroll | ✅ done |
-| 3 | Overlays, popovers & dialogs → responsive widths | ⬜ todo |
+| 3 | Overlays, popovers & dialogs → responsive widths | ✅ done |
 | 4 | FAB toolbar (icon-only on mobile) | ⬜ todo |
 | 5 | Animal profile (header polaroid, tab bar) | ⬜ todo |
 | 6 | Forms (single-column fallback, full-width inputs) | ⬜ todo |
@@ -76,3 +76,27 @@ so it doesn't sit awkwardly when the filter toolbar wraps.
 
 Note: 2 pre-existing failures in `HomePage.test.tsx` ("Date Importanti") are
 unrelated — they fail identically on the original code (verified via stash).
+
+## Phase 3 — Overlays, popovers & dialogs ✅
+
+**Overlay panels** (anchored popovers) had fixed inner widths that overflow a
+375px screen. Changed fixed `w-[Nrem]` → `w-[90vw] max-w-[Nrem]` so they shrink
+on mobile but keep the same width on desktop (90vw ≫ Nrem there):
+- `OverlayFormButton` (25rem), `ControlledBreedsDropdown` /
+  `ControlledDocKindsDropdown` / `ControlledFurColorDropdown` / `NewEntry`
+  (20rem each).
+- `NewItemButton` / `NewAdopterButton` / `NewVetButton` wrapped their form in
+  an unconstrained `div` → added `max-w-[90vw]` so the panel can't exceed the
+  viewport (desktop natural width unchanged).
+
+**Dialogs** with fixed px / narrow vw widths got PrimeReact `breakpoints` (only
+affects viewports ≤ the listed width; desktop uses `style.width` unchanged):
+- `AnimalRecord` move-to-shelter + confirm-adoption (400px) → `640px: 95vw`
+- `UserList` edit user (500px) → `640px: 95vw`
+- `AnimalGallery` delete-confirm (360px) → `640px: 90vw`
+- `AnimalAdoptionPage` no-results (50vw — too narrow on phones) →
+  `960px: 85vw, 640px: 95vw`
+
+**Already responsive, left as-is:** `AnimalExitForm` (`w-full max-w-4xl`),
+`AnimalEvents` (`w-full max-w-md`), `UpdateAnimalEntryDialog` /
+`AnimalImageUploadDialog` / `AnimalGallery` image dialog (all `90vw` + maxWidth).

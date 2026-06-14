@@ -165,6 +165,7 @@ const AnimalAdoptionPage = () => {
                                 header="Nessun risultato"
                                 visible={showNewAdopterDialog}
                                 style={{ width: "50vw" }}
+                                breakpoints={{ "960px": "85vw", "640px": "95vw" }}
                                 onHide={() => setShowNewAdopterDialog(false)}
                                 footer={dialogFooter}
                                 pt={{
