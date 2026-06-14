@@ -190,12 +190,12 @@ const AnimalRecordHeader = (props: Props) => {
         <div className="relative mb-6 mt-4">
             {/* Polaroid — top nearly flush with card top border */}
             <div
-                className="absolute -top-1 left-6 z-10"
+                className="absolute -top-1 left-4 sm:left-6 z-10"
                 style={{ transform: `rotate(${rotation}deg)` }}
             >
                 <div
                     className={classNames(
-                        "bg-white p-1.5 pb-6 shadow-xl rounded-sm w-32 group cursor-pointer",
+                        "bg-white p-1.5 pb-6 shadow-xl rounded-sm w-24 sm:w-32 group cursor-pointer",
                         { grayscale: isNotPresent },
                     )}
                     onClick={handleImageClick}
@@ -228,7 +228,7 @@ const AnimalRecordHeader = (props: Props) => {
             {/* Card */}
             <div
                 className={classNames(
-                    "rounded-xl shadow-sm border pt-6 pb-6 pr-6 pl-44",
+                    "rounded-xl shadow-sm border pt-6 pb-6 pr-6 pl-36 sm:pl-44",
                     {
                         "bg-surface-100 border-surface-300": isNotPresent,
                         "bg-red-50 border-red-200": isSanitary,

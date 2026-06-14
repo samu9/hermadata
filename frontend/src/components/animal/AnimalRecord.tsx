@@ -407,7 +407,8 @@ const AnimalRecord = (props: Props) => {
                             "bg-transparent border-b border-surface-200 mb-6",
                     },
                     menu: {
-                        className: "bg-transparent border-none flex flex-wrap",
+                        className:
+                            "bg-transparent border-none flex flex-nowrap overflow-x-auto",
                     },
                     menuitem: { className: "bg-transparent border-none mr-2" },
                     action: { className: "hidden" }, // Hide default action since we use template

@@ -25,7 +25,7 @@ Tracking doc for making the HermaData frontend responsive down to ~375px **witho
 | 2 | Tables → horizontal scroll | ✅ done |
 | 3 | Overlays, popovers & dialogs → responsive widths | ✅ done |
 | 4 | FAB toolbar (icon-only on mobile) | ✅ done |
-| 5 | Animal profile (header polaroid, tab bar) | ⬜ todo |
+| 5 | Animal profile (header polaroid, tab bar) | ✅ done |
 | 6 | Forms (single-column fallback, full-width inputs) | ⬜ todo |
 | 7 | Remaining pages sweep | ⬜ todo |
 | 8 | Verification (manual @ 375/768/1280, vitest) | ⬜ todo |
@@ -133,3 +133,21 @@ move + new-entry on an animal profile), overflowing a 375px row.
 passes when the suite runs batched. Always run `vitest` over a directory, not a
 single component test file. Baseline: 2 failed / 75 passed (the 2 are the
 pre-existing HomePage "Date Importanti" failures).
+
+## Phase 5 — Animal profile ✅
+
+Files: `AnimalRecordHeader.tsx`, `AnimalRecord.tsx`.
+
+- **Header polaroid**: the photo is absolutely positioned and the card reserves
+  left space with `pl-44` (176px), which crushed the name/badges at 375px.
+  Shrunk on phones, original restored at `sm+` (desktop unchanged): polaroid
+  frame `w-24 sm:w-32`, position `left-4 sm:left-6`, card padding
+  `pl-36 sm:pl-44`.
+- **Tab bar** (`TabMenu`): was `flex flex-wrap`, so 6–7 tabs wrapped into 2–3
+  messy rows on a phone. Now `flex-nowrap overflow-x-auto` — a single
+  horizontally-swipeable row. Desktop already fits all tabs in one row, so no
+  visual change there.
+- **Tab bodies**: already responsive — real data grids use
+  `grid-cols-1 lg:grid-cols-2`; the only unconditional `grid-cols-2` instances
+  are loading skeletons and a single-checkbox wrapper (both fine on mobile).
+  No changes needed.
