@@ -493,6 +493,8 @@ const HomePage = () => {
                                 value={recentAnimals}
                                 size="small"
                                 className="w-full"
+                                scrollable
+                                tableStyle={{ minWidth: "44rem" }}
                                 emptyMessage="Nessun animale trovato"
                                 rowClassName={() =>
                                     "hover:bg-surface-50 transition-colors"

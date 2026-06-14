@@ -51,6 +51,8 @@ const AnimalDocs = () => {
         <div>
             <DataTable
                 emptyMessage="Nessun documento trovato"
+                scrollable
+                tableStyle={{ minWidth: "22rem" }}
                 selectionMode="single"
                 onSelectionChange={(e) => apiService.openDocument(e.value.id)}
                 value={

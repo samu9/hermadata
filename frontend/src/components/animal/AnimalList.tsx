@@ -444,13 +444,13 @@ const AnimalList = () => {
                         </div>
                     </>
                 )}
-                <div className="ml-auto">
+                <div className="w-full sm:w-auto sm:ml-auto">
                     <Button
                         icon={
                             <FontAwesomeIcon icon={faPrint} className="mr-2" />
                         }
                         label="Stampa"
-                        className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
+                        className="w-full sm:w-auto justify-center !bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
                         onClick={() => {
                             const { from_index, to_index, ...filters } =
                                 queryData
@@ -470,6 +470,8 @@ const AnimalList = () => {
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
                 <DataTable
                     className="w-full"
+                    scrollable
+                    tableStyle={{ minWidth: "60rem" }}
                     filters={lazyState.filters}
                     value={animalQuery.data?.items}
                     selectionMode="single"

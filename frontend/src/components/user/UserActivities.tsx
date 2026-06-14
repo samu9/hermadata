@@ -233,6 +233,8 @@ const UserActivities: React.FC = () => {
                 loading={activitiesQuery.isLoading}
                 emptyMessage="Nessuna attività trovata con i filtri selezionati"
                 className="p-datatable-sm"
+                scrollable
+                tableStyle={{ minWidth: "48rem" }}
                 pt={{
                     headerRow: { className: "bg-surface-50 text-surface-700" },
                 }}

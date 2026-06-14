@@ -97,6 +97,8 @@ const AnimalEntriesList = ({ animalId }: Props) => {
                     paginator
                     rows={10}
                     className="p-datatable-sm"
+                    scrollable
+                    tableStyle={{ minWidth: "64rem" }}
                     emptyMessage="Nessun ingresso trovato"
                 >
                     <Column

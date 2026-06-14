@@ -22,7 +22,7 @@ Tracking doc for making the HermaData frontend responsive down to ~375px **witho
 |---|---|---|
 | 0 | Foundations: viewport meta, `useMediaQuery` hook, overflow guard | ✅ done |
 | 1 | App shell + navigation: sidebar → drawer, mobile top bar | ✅ done |
-| 2 | Tables → horizontal scroll | ⬜ todo |
+| 2 | Tables → horizontal scroll | ✅ done |
 | 3 | Overlays, popovers & dialogs → responsive widths | ⬜ todo |
 | 4 | FAB toolbar (icon-only on mobile) | ⬜ todo |
 | 5 | Animal profile (header polaroid, tab bar) | ⬜ todo |
@@ -48,3 +48,31 @@ Files: `App.tsx`, `components/layout/SideMenu.tsx`, `components/Nav.tsx`.
 
 ### Desktop regression check
 At ≥1024px: backdrop hidden, Nav hidden, SideMenu static/in-flow at `w-72` — identical to before.
+
+## Phase 2 — Tables → horizontal scroll ✅
+
+Approach: PrimeReact's official horizontal-scroll pattern — add `scrollable` +
+`tableStyle={{ minWidth: "<N>rem" }}` to each `DataTable`. The table body keeps
+its natural min width and scrolls inside the DataTable's own wrapper (paginator
+stays fixed, header sticky). On desktop the container is wider than `minWidth`,
+so the table renders at 100% — visually identical to before.
+
+`min-w-0` on the App content column (Phase 0) ensures the table region can
+actually overflow-scroll instead of stretching the page.
+
+| Table | File | minWidth |
+|---|---|---|
+| Animal list | `components/animal/AnimalList.tsx` | 60rem |
+| Adopter list | `components/adopter/AdopterList.tsx` | 48rem |
+| Vet list | `components/vet/VetList.tsx` | 40rem |
+| Dashboard recent | `pages/HomePage.tsx` | 44rem |
+| Animal entries | `components/animal/AnimalEntriesList.tsx` | 64rem |
+| Animal docs | `components/animal/AnimalDocs.tsx` | 22rem |
+| User list | `components/user/UserList.tsx` | 64rem |
+| User activities | `components/user/UserActivities.tsx` | 48rem |
+
+Also: AnimalList "Stampa" button → full-width on mobile (`w-full sm:w-auto`)
+so it doesn't sit awkwardly when the filter toolbar wraps.
+
+Note: 2 pre-existing failures in `HomePage.test.tsx` ("Date Importanti") are
+unrelated — they fail identically on the original code (verified via stash).
