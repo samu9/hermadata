@@ -107,10 +107,20 @@ The floating `Toolbar` could stack 3–4 *labeled* pill buttons (delete + exit +
 move + new-entry on an animal profile), overflowing a 375px row.
 
 - `Toolbar` + `OverlayFormButton`: buttons become **icon-only 48px circles**
-  below `sm` (`!w-12 !h-12 !p-0`), restoring the labeled pill from `sm` up
-  (`sm:!w-auto sm:!px-6 sm:!py-3`). Label hidden via `hidden sm:inline`, with
-  `aria-label` kept for a11y. Container moved to `bottom-4 right-4` on mobile
+  on mobile (`!w-12 !h-12 !p-0`), restoring the exact original labeled pill on
+  desktop. The mobile/desktop toggle is done in **JS via `useIsMobile()`**, not
+  CSS breakpoints — see gotcha below. Label rendered only on desktop; mobile
+  keeps `aria-label` for a11y. Container moved to `bottom-4 right-4` on mobile
   (`sm:bottom-8 sm:right-8` = desktop unchanged) and `flex-wrap` as a safety net.
+
+> ⚠️ **Gotcha — don't mix `!important` with responsive variants.** The first
+> attempt used `!w-12 ... sm:!w-auto` to flip the FAB shape at the `sm`
+> breakpoint. `sm:!w-auto` did **not** reliably override the base `!w-12`, so
+> the desktop FABs stayed stuck as icon-only circles with hidden labels. Plain
+> `sm:`/`lg:` (no `!`) work fine across the app; it's the important+responsive
+> combination that's fragile. When a class needs `!important` to beat PrimeReact
+> *and* must change per breakpoint, toggle it in JS with `useIsMobile()` and
+> reuse the exact original desktop class string so desktop stays pixel-identical.
 - Standalone list FABs (`NewItemButton`, `NewAdopterButton`) keep their label
   (single pill fits 375px) but reposition to `bottom-4 right-4 sm:bottom-8
   sm:right-8`.

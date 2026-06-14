@@ -3,6 +3,14 @@ import { Button } from "primereact/button"
 import { OverlayPanel } from "primereact/overlaypanel"
 import { useRef } from "react"
 import { SeverityType } from "../constants"
+import { useIsMobile } from "../hooks/useMediaQuery"
+
+// Exact original desktop styling (labeled pill).
+const DESKTOP_FAB =
+    "shadow-lg !rounded-full px-6 py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
+// Mobile: icon-only 48px circle.
+const MOBILE_FAB =
+    "shadow-lg !rounded-full !w-12 !h-12 !p-0 justify-center gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
 
 interface OverlayFormButtonProps<T> {
     buttonText: string
@@ -23,6 +31,7 @@ const OverlayFormButton = <T,>({
     onSuccessAction,
 }: OverlayFormButtonProps<T>) => {
     const op = useRef<OverlayPanel>(null)
+    const isMobile = useIsMobile()
 
     const handleSuccess = (data: T) => {
         onSuccessAction(data)
@@ -32,13 +41,13 @@ const OverlayFormButton = <T,>({
     return (
         <div>
             <Button
-                className="shadow-lg !rounded-full !w-12 !h-12 !p-0 justify-center sm:!w-auto sm:!h-auto sm:!px-6 sm:!py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
+                className={isMobile ? MOBILE_FAB : DESKTOP_FAB}
                 aria-label={buttonText}
                 severity={severity}
                 onClick={(e) => op.current && op.current.toggle(e)}
             >
                 <FontAwesomeIcon icon={buttonIcon} fixedWidth />
-                <span className="hidden sm:inline">{buttonText}</span>
+                {!isMobile && <span>{buttonText}</span>}
             </Button>
             <OverlayPanel
                 showCloseIcon

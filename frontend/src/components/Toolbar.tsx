@@ -2,13 +2,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button } from "primereact/button"
 import OverlayFormButton from "./OverlayFormButton" // The generic button component
 import { useToolbar } from "../contexts/Toolbar"
+import { useIsMobile } from "../hooks/useMediaQuery"
 
-// On mobile the buttons collapse to icon-only circles; the label shows from `sm` up.
-const FAB_CLASS =
-    "shadow-lg !rounded-full !w-12 !h-12 !p-0 justify-center sm:!w-auto sm:!h-auto sm:!px-6 sm:!py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
+// Exact original desktop styling (labeled pill).
+const DESKTOP_FAB =
+    "shadow-lg !rounded-full px-6 py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
+// Mobile: icon-only 48px circle.
+const MOBILE_FAB =
+    "shadow-lg !rounded-full !w-12 !h-12 !p-0 justify-center gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
 
 const Toolbar = () => {
     const { buttons } = useToolbar()
+    const isMobile = useIsMobile()
     const sorted = [...buttons].sort((a, b) => (a.order ?? 50) - (b.order ?? 50))
 
     return (
@@ -17,7 +22,7 @@ const Toolbar = () => {
                 button.onClick ? (
                     <Button
                         key={button.id}
-                        className={FAB_CLASS}
+                        className={isMobile ? MOBILE_FAB : DESKTOP_FAB}
                         aria-label={button.buttonText}
                         severity={button.severity}
                         onClick={button.onClick}
@@ -25,9 +30,7 @@ const Toolbar = () => {
                         loading={button.loading}
                     >
                         <FontAwesomeIcon icon={button.buttonIcon} fixedWidth />
-                        <span className="hidden sm:inline">
-                            {button.buttonText}
-                        </span>
+                        {!isMobile && <span>{button.buttonText}</span>}
                     </Button>
                 ) : (
                     <OverlayFormButton
