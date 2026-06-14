@@ -1,4 +1,3 @@
-import { Divider } from "primereact/divider"
 import { NavLink } from "react-router-dom"
 import LoggedUserCard from "../LoggedUserCard"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -16,6 +15,7 @@ import logo from "../../assets/hermadata.svg"
 import { useAuth } from "../../contexts/AuthContext"
 import { Permission } from "../../constants"
 import { classNames } from "primereact/utils"
+import { faXmark } from "@fortawesome/free-solid-svg-icons"
 type MenuElementProps = {
     to: string
     label: string | React.ReactNode
@@ -54,17 +54,41 @@ const MenuElement = (props: MenuElementProps) => (
         )}
     </NavLink>
 )
-const SideMenu = () => {
+type Props = {
+    /** Drawer open state (mobile only). Ignored at `lg` where the menu is static. */
+    isOpen?: boolean
+    /** Called when the user closes the drawer (mobile only). */
+    onClose?: () => void
+}
+
+const SideMenu = ({ isOpen = false, onClose }: Props) => {
     const { can } = useAuth()
     const { canAccessSuperUserFeatures } = usePermissions()
 
     return (
-        <div className="h-screen w-72 bg-surface-900 flex flex-col border-r border-surface-800 shadow-xl z-20">
+        <div
+            className={classNames(
+                "h-screen w-72 bg-surface-900 flex flex-col border-r border-surface-800 shadow-xl",
+                // Mobile: fixed slide-in drawer. Desktop: static, always visible.
+                "fixed inset-y-0 left-0 z-40 transition-transform duration-300 lg:static lg:translate-x-0 lg:z-20",
+                {
+                    "translate-x-0": isOpen,
+                    "-translate-x-full": !isOpen,
+                }
+            )}
+        >
             <div className="flex items-center gap-3 px-6 py-6 mb-2">
                 <img src={logo} className="w-8 h-8" alt="Logo" />
                 <div className="font-bold text-xl text-white tracking-tight">
                     Hermadata
                 </div>
+                <button
+                    onClick={onClose}
+                    aria-label="Chiudi menu"
+                    className="ml-auto lg:hidden p-2 -mr-2 rounded-lg text-surface-400 hover:text-white hover:bg-surface-800 transition-colors"
+                >
+                    <FontAwesomeIcon icon={faXmark} className="text-lg" />
+                </button>
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 space-y-1 custom-scrollbar">
