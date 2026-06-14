@@ -12,6 +12,13 @@ on:
                     - both
                     - backend
                     - frontend
+            stage:
+                description: 'Deployment stage (e.g. prod, test) — included in the release tag'
+                required: false
+                type: string
+
+permissions:
+    contents: write
 
 jobs:
     deploy-backend:
@@ -115,3 +122,37 @@ jobs:
                     tar -xzf ~/hermadata-frontend.tar.gz -C /var/www/hermadata
                     rm ~/hermadata-frontend.tar.gz
                   '
+
+    tag-backend:
+        name: Tag Backend Deploy
+        needs: deploy-backend
+        if: ${{ always() && needs.deploy-backend.result == 'success' }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Create and push tag
+              run: |
+                  TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
+                  STAGE="${{ inputs.stage }}"
+                  TAG="${STAGE:+${STAGE}-}be-${TIMESTAMP}"
+                  git tag "$TAG"
+                  git push origin "$TAG"
+
+    tag-frontend:
+        name: Tag Frontend Deploy
+        needs: deploy-frontend
+        if: ${{ always() && needs.deploy-frontend.result == 'success' }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Create and push tag
+              run: |
+                  TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
+                  STAGE="${{ inputs.stage }}"
+                  TAG="${STAGE:+${STAGE}-}fe-${TIMESTAMP}"
+                  git tag "$TAG"
+                  git push origin "$TAG"
