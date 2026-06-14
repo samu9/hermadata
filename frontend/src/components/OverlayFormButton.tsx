@@ -30,13 +30,15 @@ const OverlayFormButton = <T,>({
     }
 
     return (
-        <div className="bottom-4 right-4">
+        <div>
             <Button
-                className="shadow-lg !rounded-full px-6 py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
+                className="shadow-lg !rounded-full !w-12 !h-12 !p-0 justify-center sm:!w-auto sm:!h-auto sm:!px-6 sm:!py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
+                aria-label={buttonText}
                 severity={severity}
                 onClick={(e) => op.current && op.current.toggle(e)}
             >
-                <FontAwesomeIcon icon={buttonIcon} fixedWidth /> {buttonText}
+                <FontAwesomeIcon icon={buttonIcon} fixedWidth />
+                <span className="hidden sm:inline">{buttonText}</span>
             </Button>
             <OverlayPanel
                 showCloseIcon

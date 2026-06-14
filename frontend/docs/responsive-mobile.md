@@ -24,7 +24,7 @@ Tracking doc for making the HermaData frontend responsive down to ~375px **witho
 | 1 | App shell + navigation: sidebar → drawer, mobile top bar | ✅ done |
 | 2 | Tables → horizontal scroll | ✅ done |
 | 3 | Overlays, popovers & dialogs → responsive widths | ✅ done |
-| 4 | FAB toolbar (icon-only on mobile) | ⬜ todo |
+| 4 | FAB toolbar (icon-only on mobile) | ✅ done |
 | 5 | Animal profile (header polaroid, tab bar) | ⬜ todo |
 | 6 | Forms (single-column fallback, full-width inputs) | ⬜ todo |
 | 7 | Remaining pages sweep | ⬜ todo |
@@ -100,3 +100,26 @@ affects viewports ≤ the listed width; desktop uses `style.width` unchanged):
 **Already responsive, left as-is:** `AnimalExitForm` (`w-full max-w-4xl`),
 `AnimalEvents` (`w-full max-w-md`), `UpdateAnimalEntryDialog` /
 `AnimalImageUploadDialog` / `AnimalGallery` image dialog (all `90vw` + maxWidth).
+
+## Phase 4 — FAB toolbar ✅
+
+The floating `Toolbar` could stack 3–4 *labeled* pill buttons (delete + exit +
+move + new-entry on an animal profile), overflowing a 375px row.
+
+- `Toolbar` + `OverlayFormButton`: buttons become **icon-only 48px circles**
+  below `sm` (`!w-12 !h-12 !p-0`), restoring the labeled pill from `sm` up
+  (`sm:!w-auto sm:!px-6 sm:!py-3`). Label hidden via `hidden sm:inline`, with
+  `aria-label` kept for a11y. Container moved to `bottom-4 right-4` on mobile
+  (`sm:bottom-8 sm:right-8` = desktop unchanged) and `flex-wrap` as a safety net.
+- Standalone list FABs (`NewItemButton`, `NewAdopterButton`) keep their label
+  (single pill fits 375px) but reposition to `bottom-4 right-4 sm:bottom-8
+  sm:right-8`.
+- `PageWrapper`: extra bottom padding on mobile (`pb-24 md:pb-8`) so FABs don't
+  cover the last row of content. Desktop (`md+`) padding unchanged.
+
+### Test-env note
+`layout.test.tsx` fails with "document is not defined" when run **in isolation**
+(jsdom doesn't init for a lone file) — this is pre-existing and unrelated; it
+passes when the suite runs batched. Always run `vitest` over a directory, not a
+single component test file. Baseline: 2 failed / 75 passed (the 2 are the
+pre-existing HomePage "Date Importanti" failures).
