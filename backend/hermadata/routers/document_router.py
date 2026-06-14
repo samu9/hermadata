@@ -122,9 +122,10 @@ def serve_document(
             )
 
     storage_backend = doc_repo.storage[doc.storage_service]
+    display_name = doc.title or doc.filename
     presigned_url = storage_backend.get_presigned_url(
         key=doc.key,
-        filename=doc.filename,
+        filename=display_name,
         mimetype=doc.mimetype,
         expires_in=settings.storage.s3.presigned_url_expires_in
         if settings.storage.s3

@@ -20,6 +20,7 @@ class DocumentDownloadData(BaseModel):
     key: str
     storage_service: StorageType
     filename: str
+    title: str | None
     mimetype: str
     document_kind_id: int | None
 
@@ -158,6 +159,7 @@ class SQLDocumentRepository(SQLBaseRepository):
                 Document.filename,
                 Document.mimetype,
                 AnimalDocument.document_kind_id,
+                AnimalDocument.title,
             )
             .outerjoin(
                 AnimalDocument, AnimalDocument.document_id == Document.id
@@ -168,12 +170,13 @@ class SQLDocumentRepository(SQLBaseRepository):
         if row is None:
             return None
 
-        key, storage_service, filename, mimetype, document_kind_id = row
+        key, storage_service, filename, mimetype, document_kind_id, title = row
 
         return DocumentDownloadData(
             key=key,
             storage_service=StorageType(storage_service),
             filename=filename,
+            title=title,
             mimetype=mimetype,
             document_kind_id=document_kind_id,
         )
