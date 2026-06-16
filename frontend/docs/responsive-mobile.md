@@ -27,7 +27,7 @@ Tracking doc for making the HermaData frontend responsive down to ~375px **witho
 | 4 | FAB toolbar (icon-only on mobile) | ✅ done |
 | 5 | Animal profile (header polaroid, tab bar) | ✅ done |
 | 6 | Forms (single-column fallback, full-width inputs) | ✅ done |
-| 7 | Remaining pages sweep | ⬜ todo |
+| 7 | Remaining pages sweep | ✅ done |
 | 8 | Verification (manual @ 375/768/1280, vitest) | ⬜ todo |
 
 ---
@@ -174,3 +174,22 @@ These two forms live in FAB-anchored overlay panels that previously had only
 would collapse to min-width on mobile. Changed those wrappers
 (`NewItemButton`, `NewAdopterButton`, `NewVetButton`) to `w-[90vw] sm:w-auto`:
 definite 90vw on phones, `w-auto` (= the original content-sized width) on desktop.
+
+## Phase 7 — Remaining pages sweep ✅
+
+Audited every remaining page. **Already responsive, no change:** `AdminPage`
+(`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`), `ProfilePage`
+(`grid-cols-1 lg:grid-cols-3` + `md:grid-cols-2`), `LoginPage` (`w-full max-w-md`
+card, `p-4`), `DataExtractionsPage` extraction forms (`grid-cols-1 md:grid-cols-2`),
+`AdoptersPage` / `VetsPage` (just render the scroll-wrapped tables), the adoption
+`AnimalCard` / `AdopterCard` (small flex cards).
+
+**Changed:**
+- `AnimalAdoptionPage` sticky bottom action bar: two side-by-side `w-full`
+  buttons (long Italian labels cramped at 375px) → `flex flex-col sm:flex-row`
+  so they stack on phones, 50/50 from `sm` up (desktop unchanged). Also removed
+  a pre-existing unused `Divider` import.
+- `UserManagementPage`: header `flex justify-between` →
+  `flex flex-col sm:flex-row …` so the title and admin badge stack on phones;
+  added `scrollable` to the `TabView` so its 3 tabs swipe if they overflow
+  (PrimeReact only shows scroll buttons when needed, so desktop is unchanged).

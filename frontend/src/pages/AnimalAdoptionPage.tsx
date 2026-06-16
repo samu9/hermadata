@@ -3,7 +3,6 @@ import { faHandHoldingHeart } from "@fortawesome/free-solid-svg-icons/faHandHold
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Button } from "primereact/button"
 import { Dialog } from "primereact/dialog"
-import { Divider } from "primereact/divider"
 import { Toast } from "primereact/toast"
 import { useEffect, useRef, useState } from "react"
 import { useMutation } from "react-query"
@@ -234,7 +233,7 @@ const AnimalAdoptionPage = () => {
                 </div>
             </div>
 
-            <div className="shrink-0 flex gap-4 pt-4 border-t border-surface-200 bg-surface-50 -mx-4 px-4 -mb-4 pb-4 sticky bottom-0 z-10">
+            <div className="shrink-0 flex flex-col sm:flex-row gap-4 pt-4 border-t border-surface-200 bg-surface-50 -mx-4 px-4 -mb-4 pb-4 sticky bottom-0 z-10">
                 <Button
                     onClick={() => onConfirm(false)}
                     className="!bg-white !text-surface-700 !border-surface-300 hover:!bg-surface-50 w-full justify-center font-bold shadow-sm"
