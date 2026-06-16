@@ -41,7 +41,7 @@ const NewItemButton = <T,>(props: Props<T>) => {
                     {props.label}
                 </Button>
                 <OverlayPanel showCloseIcon ref={op}>
-                    <div className="max-w-[90vw]">{clonedForm}</div>
+                    <div className="w-[90vw] sm:w-auto">{clonedForm}</div>
                 </OverlayPanel>
                 <Toast ref={toast} position="bottom-right" />
             </div>

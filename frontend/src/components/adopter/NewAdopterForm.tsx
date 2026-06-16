@@ -59,36 +59,36 @@ const NewAdopterForm = (props: Props) => {
             <FormProvider {...form}>
                 <form
                     onSubmit={handleSubmit(onSubmit)}
-                    className="flex flex-col gap-2 items-start"
+                    className="flex flex-col gap-2 items-start w-full"
                 >
-                    <div className="flex flex-col gap-2 items-start">
-                        <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 items-start w-full">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full">
                             <ControlledInputText
                                 fieldName="name"
                                 label="Nome"
-                                className="w-64"
+                                className="w-full sm:w-64"
                             />
                             <ControlledInputText
                                 fieldName="surname"
                                 label="Cognome"
-                                className="w-64"
+                                className="w-full sm:w-64"
                             />
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full">
                             <ControlledInputText
                                 fieldName="fiscal_code"
                                 label="Codice fiscale"
                                 uppercase
-                                className="w-64"
+                                className="w-full sm:w-64"
                             />
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full">
                             <UncontrolledProvinceDropdown
                                 label="Provincia residenza"
                                 onChange={(value) =>
                                     setProvinciaResidenza(value)
                                 }
-                                className="w-64"
+                                className="w-full sm:w-64"
                             />
                             <ControlledDropdown
                                 label="Comune di residenza"
@@ -97,11 +97,11 @@ const NewAdopterForm = (props: Props) => {
                                 optionValue="id"
                                 options={comuneResidenzaQuery.data}
                                 fieldName="residence_city_code"
-                                className="w-64"
+                                className="w-full sm:w-64"
                             />
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full">
                             <ControlledDropdown
                                 label="Tipo documento"
                                 optionLabel="name"
@@ -111,18 +111,18 @@ const NewAdopterForm = (props: Props) => {
                                     { name: "Patente di guida", id: "dl" },
                                 ]}
                                 fieldName="document_type"
-                                className="w-64"
+                                className="w-full sm:w-64"
                             />
                             <ControlledInputText
                                 fieldName="document_number"
                                 label="Numero documento"
-                                className="w-64"
+                                className="w-full sm:w-64"
                             />
                         </div>
                         <ControlledInputText
                             fieldName="phone"
                             label="Telefono"
-                            className="w-64"
+                            className="w-full sm:w-64"
                         />
                     </div>
                     <div className="mt-4">

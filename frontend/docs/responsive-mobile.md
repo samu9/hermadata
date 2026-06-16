@@ -26,7 +26,7 @@ Tracking doc for making the HermaData frontend responsive down to ~375px **witho
 | 3 | Overlays, popovers & dialogs → responsive widths | ✅ done |
 | 4 | FAB toolbar (icon-only on mobile) | ✅ done |
 | 5 | Animal profile (header polaroid, tab bar) | ✅ done |
-| 6 | Forms (single-column fallback, full-width inputs) | ⬜ todo |
+| 6 | Forms (single-column fallback, full-width inputs) | ✅ done |
 | 7 | Remaining pages sweep | ⬜ todo |
 | 8 | Verification (manual @ 375/768/1280, vitest) | ⬜ todo |
 
@@ -151,3 +151,26 @@ Files: `AnimalRecordHeader.tsx`, `AnimalRecord.tsx`.
   `grid-cols-1 lg:grid-cols-2`; the only unconditional `grid-cols-2` instances
   are loading skeletons and a single-checkbox wrapper (both fine on mobile).
   No changes needed.
+
+## Phase 6 — Forms ✅
+
+Most forms were already responsive: `NewAnimalEntryForm` uses full-width
+`w-full` inputs in a vertical stack; `CreateUserForm` / `EditUserForm` /
+`AnimalEditForm` / `AnimalExitForm` use `grid-cols-1 md:grid-cols-2`.
+
+The two that weren't: **`NewAdopterForm`** and **`NewVetForm`** packed pairs of
+fixed-width fields (`w-64` = 256px) into `flex gap-2` rows (~520px wide → overflow
+at 375px). Fixed by:
+- rows `flex gap-2` → `flex flex-col sm:flex-row gap-2 w-full` (stack on phones,
+  side-by-side from `sm`).
+- fields `w-64` → `w-full sm:w-64` (`className` lands on the wrapper; the input
+  is already `w-full` inside it).
+- form + inner wrapper got `w-full` so the now-`w-full` rows resolve to a
+  definite width despite the parents' `items-start` (no-op on desktop, where the
+  `w-64` fields still drive width).
+
+These two forms live in FAB-anchored overlay panels that previously had only
+`max-w-[90vw]` (no definite width) — once the fields became `w-full` the content
+would collapse to min-width on mobile. Changed those wrappers
+(`NewItemButton`, `NewAdopterButton`, `NewVetButton`) to `w-[90vw] sm:w-auto`:
+definite 90vw on phones, `w-auto` (= the original content-sized width) on desktop.

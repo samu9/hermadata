@@ -35,7 +35,7 @@ const NewAdopterButton = (props: Props) => {
                     Nuovo adottante
                 </Button>
                 <OverlayPanel showCloseIcon ref={op}>
-                    <div className="max-w-[90vw]">
+                    <div className="w-[90vw] sm:w-auto">
                         <NewAdopterForm onSaved={(a) => onNew(a)} />
                     </div>
                 </OverlayPanel>
