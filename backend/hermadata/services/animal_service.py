@@ -122,6 +122,7 @@ class AnimalService:
                 document_id=document_id,
                 document_kind_code=DocKindCode.comunicazione_ingresso,
                 title="ingresso",
+                animal_entry_id=entry.id,
             ),
         )
 
@@ -130,12 +131,21 @@ class AnimalService:
     ):
         self.animal_repository.exit(animal_id, data, user_id)
 
-        if data.exit_type == ExitType.temporary_adoption:
-            self.generate_adoption_report(animal_id, temporary=True)
-        elif data.exit_type in (ExitType.adoption, ExitType.custody):
-            self.generate_adoption_report(animal_id)
+        animal_entry_id = self.animal_repository.get_current_entry_id(
+            animal_id
+        )
 
-        self.generate_variation_report(animal_id)
+        if data.exit_type == ExitType.temporary_adoption:
+            self.generate_adoption_report(
+                animal_id, animal_entry_id, temporary=True
+            )
+        elif data.exit_type in (ExitType.adoption, ExitType.custody):
+            self.generate_adoption_report(animal_id, animal_entry_id)
+
+        self.generate_variation_report(animal_id, animal_entry_id)
+
+    def delete_exit(self, animal_id: int, user_id: int | None = None):
+        self.animal_repository.delete_exit(animal_id, user_id)
 
     def days_report(self, query: AnimalDaysQuery):
         animal_days = self.animal_repository.count_animal_days(query)
@@ -182,7 +192,10 @@ class AnimalService:
         return filename, report
 
     def generate_adoption_report(
-        self, animal_id: int, temporary: bool = False
+        self,
+        animal_id: int,
+        animal_entry_id: int,
+        temporary: bool = False,
     ):
         variables = self.animal_repository.get_adoption_report_variables(
             animal_id
@@ -215,6 +228,7 @@ class AnimalService:
                 document_id=new_document_id,
                 document_kind_code=DocKindCode.adozione,
                 title=doc_title,
+                animal_entry_id=animal_entry_id,
             ),
         )
 
@@ -228,6 +242,10 @@ class AnimalService:
         and generate final document."""
         variables = self.animal_repository.confirm_temporary_adoption(
             animal_id, confirmation_date, user_id
+        )
+
+        animal_entry_id = self.animal_repository.get_current_entry_id(
+            animal_id
         )
 
         pdf = self.report_generator.build_adoption_report(variables)
@@ -248,10 +266,11 @@ class AnimalService:
                 document_id=new_document_id,
                 document_kind_code=DocKindCode.adozione,
                 title=f"Adozione {variables.animal.chip_code}",
+                animal_entry_id=animal_entry_id,
             ),
         )
 
-        self.generate_variation_report(animal_id)
+        self.generate_variation_report(animal_id, animal_entry_id)
 
     def undo_temporary_adoption(
         self, animal_id: int, user_id: int | None = None
@@ -259,7 +278,9 @@ class AnimalService:
         """Undo a temporary adoption: add rientro entry for the animal."""
         self.animal_repository.undo_temporary_adoption(animal_id, user_id)
 
-    def generate_variation_report(self, animal_id: int):
+    def generate_variation_report(
+        self, animal_id: int, animal_entry_id: int
+    ):
         variables = self.animal_repository.get_variation_report_variables(
             animal_id=animal_id
         )
@@ -282,5 +303,6 @@ class AnimalService:
                 document_id=new_document_id,
                 document_kind_code=DocKindCode.variazione,
                 title="Variazione",
+                animal_entry_id=animal_entry_id,
             ),
         )

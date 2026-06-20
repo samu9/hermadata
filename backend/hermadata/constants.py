@@ -194,6 +194,21 @@ class DocKindCode(Enum):
     variazione = "VA"
 
 
+# Document kinds strictly tied to a specific animal_entry. A document of one of
+# these kinds must reference the entry (entry/exit event) it belongs to.
+# Includes both the auto-generated kinds and their signed-upload counterparts.
+ENTRY_TIED_DOC_KIND_CODES: frozenset[str] = frozenset(
+    {"CI", "U", "UF", "AD", "ADF", "AF", "AFF", "VA", "VAF", "RP"}
+)
+
+# Subset of ENTRY_TIED_DOC_KIND_CODES generated/produced by an exit (adoption,
+# affido, return, variation, exit comms). These are soft-deleted together with
+# the exit when a superuser deletes it. The entry-arrival doc (CI) is excluded.
+EXIT_DOC_KIND_CODES: frozenset[str] = frozenset(
+    {"U", "UF", "AD", "ADF", "AF", "AFF", "VA", "VAF", "RP"}
+)
+
+
 class RecurrenceType(str, Enum):
     DAILY = "day"
     WEEKLY = "week"

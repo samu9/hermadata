@@ -351,6 +351,7 @@ class NewAnimalDocument(BaseModel):
     document_id: int
     document_kind_code: str
     title: Annotated[str, StringConstraints(max_length=100)]
+    animal_entry_id: int | None = None
 
 
 class AnimalDocumentModel(BaseModel):

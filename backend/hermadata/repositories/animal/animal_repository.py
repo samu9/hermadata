@@ -18,6 +18,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
 from hermadata.constants import (
+    ENTRY_TIED_DOC_KIND_CODES,
+    EXIT_DOC_KIND_CODES,
     HEALTHCARE_STAGE_ENTRY_TYPES,
     AnimalEvent,
     EntryType,
@@ -160,6 +162,10 @@ class ExitNotValidException(Exception):
 
 
 class ExistingAdoptionException(Exception):
+    pass
+
+
+class DocumentEntryRequiredException(APIException):
     pass
 
 
@@ -350,6 +356,15 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return new_entry_id
 
+    def get_current_entry_id(self, animal_id: int) -> int:
+        """Return the id of the animal's current entry."""
+        return self.session.execute(
+            select(AnimalEntry.id).where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
+        ).scalar_one()
+
     def check_complete_entry_needed(self, animal_id: int) -> bool:
         check = self.session.execute(
             select(AnimalEntry.id).where(
@@ -506,6 +521,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 and_(
                     Adoption.animal_id == Animal.id,
                     Adoption.returned_at.is_(None),
+                    Adoption.deleted_at.is_(None),
                 ),
                 isouter=True,
             )
@@ -565,6 +581,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 and_(
                     Adoption.animal_id == Animal.id,
                     Adoption.returned_at.is_(None),
+                    Adoption.deleted_at.is_(None),
                 ),
                 isouter=True,
             )
@@ -951,6 +968,25 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
         ).scalar_one()
 
+        # Documents of certain kinds are strictly tied to a specific entry.
+        if data.document_kind_code in ENTRY_TIED_DOC_KIND_CODES:
+            if data.animal_entry_id is None:
+                raise DocumentEntryRequiredException(
+                    f"document kind {data.document_kind_code} requires an "
+                    "animal_entry_id"
+                )
+            entry_belongs = self.session.execute(
+                select(AnimalEntry.id).where(
+                    AnimalEntry.id == data.animal_entry_id,
+                    AnimalEntry.animal_id == animal_id,
+                )
+            ).scalar_one_or_none()
+            if entry_belongs is None:
+                raise DocumentEntryRequiredException(
+                    f"entry {data.animal_entry_id} does not belong to "
+                    f"animal {animal_id}"
+                )
+
         document_kind_id = self.session.execute(
             select(DocumentKind.id).where(
                 DocumentKind.code == data.document_kind_code
@@ -961,6 +997,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             document_id=data.document_id,
             document_kind_id=document_kind_id,
             title=data.title,
+            animal_entry_id=data.animal_entry_id,
         )
         self.session.add(animal_document)
         self.session.flush()
@@ -1168,11 +1205,83 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
         self.session.flush()
 
+    def delete_exit(self, animal_id: int, user_id: int | None = None) -> None:
+        """Delete the exit on an animal's current entry (superuser action).
+
+        Clears the exit columns of the current ``animal_entry``, soft-deletes
+        any adoption tied to that entry and the exit-generated documents,
+        reverting the animal to "present".
+        """
+        current_entry = self.session.execute(
+            select(AnimalEntry)
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+                Animal.deleted_at.is_(None),
+            )
+        ).scalar_one_or_none()
+
+        if current_entry is None:
+            raise AnimalNotPresentException
+
+        if not current_entry.exit_date:
+            raise ExitNotValidException("animal has no exit to delete")
+
+        now = get_now()
+
+        # Soft-delete any active adoption linked to this entry
+        self.session.execute(
+            update(Adoption)
+            .where(
+                Adoption.animal_entry_id == current_entry.id,
+                Adoption.deleted_at.is_(None),
+            )
+            .values(deleted_at=now)
+        )
+
+        # Soft-delete the exit-generated documents (adoption, variation,
+        # exit comms, ...) tied to this entry. The arrival document (CI)
+        # stays, since the entry itself is not removed.
+        exit_doc_kind_ids = (
+            select(DocumentKind.id)
+            .where(DocumentKind.code.in_(EXIT_DOC_KIND_CODES))
+            .scalar_subquery()
+        )
+        self.session.execute(
+            update(AnimalDocument)
+            .where(
+                AnimalDocument.animal_entry_id == current_entry.id,
+                AnimalDocument.deleted_at.is_(None),
+                AnimalDocument.document_kind_id.in_(exit_doc_kind_ids),
+            )
+            .values(deleted_at=now)
+        )
+
+        event_log = AnimalLog(
+            animal_id=animal_id,
+            event=AnimalEvent.exit_deleted.value,
+            data={
+                "exit_date": current_entry.exit_date.isoformat(),
+                "exit_type": current_entry.exit_type,
+                "exit_notes": current_entry.exit_notes,
+            },
+            user_id=user_id,
+        )
+        self.session.add(event_log)
+
+        current_entry.exit_date = None
+        current_entry.exit_type = None
+        current_entry.exit_notes = None
+
+        self.session.flush()
+
     def new_adoption(self, data: NewAdoption) -> AdoptionModel:
         existing_adoption = self.session.execute(
             select(Adoption.id).where(
                 Adoption.animal_id == data.animal_id,
                 Adoption.returned_at.is_(None),
+                Adoption.deleted_at.is_(None),
             )
         ).first()
 

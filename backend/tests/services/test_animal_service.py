@@ -82,7 +82,10 @@ def test_variation_report_adoption(
         ),
     )
 
-    animal_service.generate_variation_report(animal_id)
+    animal_service.generate_variation_report(
+        animal_id,
+        animal_service.animal_repository.get_current_entry_id(animal_id),
+    )
 
     animal_service.animal_repository.session.execute(
         select(DocumentKind.code)
@@ -122,7 +125,10 @@ def test_variation_report_death(
         ),
     )
 
-    animal_service.generate_variation_report(animal_id)
+    animal_service.generate_variation_report(
+        animal_id,
+        animal_service.animal_repository.get_current_entry_id(animal_id),
+    )
 
     animal_service.animal_repository.session.execute(
         select(DocumentKind.code)

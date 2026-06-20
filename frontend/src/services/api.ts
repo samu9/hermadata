@@ -519,6 +519,10 @@ class ApiService {
         return result
     }
 
+    async deleteAnimalExit(id: number): Promise<void> {
+        await this.delete(ApiEndpoints.animal.exit(id))
+    }
+
     async checkAnimalExit(id: number): Promise<ExitCheckResult> {
         const result = await this.get<ExitCheckResult>(
             ApiEndpoints.animal.checkExit(id),

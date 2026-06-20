@@ -470,9 +470,11 @@ def empty_db(db_session: Session):
     db_session.execute(delete(MedicalActivityRecord))
     db_session.execute(delete(MedicalActivity))
     db_session.execute(delete(Adoption))
+    # AnimalDocument references AnimalEntry (animal_entry_id FK), so it must be
+    # deleted before AnimalEntry.
+    db_session.execute(delete(AnimalDocument))
     db_session.execute(delete(AnimalEntry))
     db_session.execute(delete(AnimalLog))
-    db_session.execute(delete(AnimalDocument))
     db_session.execute(delete(Document))
     db_session.execute(delete(Animal))
     db_session.execute(delete(Adopter))

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { ENTRY_TIED_DOC_KIND_CODES } from "../constants"
 import {
     createPaginatedResponseSchema,
     paginationQuerySchema,
@@ -158,11 +159,25 @@ export type PaginatedAnimalSearchResult = z.infer<
     typeof paginatedAnimalSearchResultSchema
 >
 
-export const animalDocUploadSchema = z.object({
-    title: z.string().min(1),
-    document_kind_code: z.string().min(1),
-    document_id: z.number(),
-})
+export const animalDocUploadSchema = z
+    .object({
+        title: z.string().min(1),
+        document_kind_code: z.string().min(1),
+        document_id: z.number(),
+        animal_entry_id: z.number().nullish(),
+    })
+    .superRefine((data, ctx) => {
+        if (
+            ENTRY_TIED_DOC_KIND_CODES.includes(data.document_kind_code) &&
+            !data.animal_entry_id
+        ) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["animal_entry_id"],
+                message: "Seleziona l'ingresso a cui associare il documento",
+            })
+        }
+    })
 
 export type AnimalDocUpload = z.infer<typeof animalDocUploadSchema>
 

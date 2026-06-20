@@ -33,6 +33,7 @@ from hermadata.permissions import (
     require_superuser,
 )
 from hermadata.repositories.animal.animal_repository import (
+    DocumentEntryRequiredException,
     EntryNotCompleteException,
     ExistingChipCodeException,
     NotAShelterStructureException,
@@ -364,7 +365,16 @@ def upload_animal_document(
             status_code=400,
             detail={"message": "This document kind cannot be uploaded"},
         )
-    result = animal_repo.new_document(animal_id, data)
+    try:
+        result = animal_repo.new_document(animal_id, data)
+    except DocumentEntryRequiredException as e:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Questo tipo di documento deve essere associato a un "
+                "ingresso/uscita dell'animale."
+            ),
+        ) from e
     return result
 
 
@@ -436,6 +446,24 @@ def animal_exit(
     service.exit(animal_id, data, user_id=current_user.user_id)
 
     return True
+
+
+@router.delete("/{animal_id}/exit", response_model=None)
+def delete_animal_exit(
+    animal_id: int,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(require_superuser)],
+):
+    """Delete an animal's exit (superuser only).
+
+    Clears the exit columns of the current entry and soft-deletes any adoption
+    tied to it, reverting the animal to a present/in-shelter state.
+    """
+    try:
+        service.delete_exit(animal_id, user_id=current_user.user_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return Response(status_code=204)
 
 
 @router.get("/{animal_id}/exit-check")

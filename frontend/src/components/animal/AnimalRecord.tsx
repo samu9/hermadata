@@ -133,6 +133,8 @@ const AnimalRecord = (props: Props) => {
     )
     const [activeIndex, setActiveIndex] = useState(1)
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
+    const [deleteExitDialogVisible, setDeleteExitDialogVisible] =
+        useState(false)
     const [moveToShelterDialogVisible, setMoveToShelterDialogVisible] =
         useState(false)
     const [moveToShelterDate, setMoveToShelterDate] = useState<Date | null>(
@@ -164,6 +166,20 @@ const AnimalRecord = (props: Props) => {
             navigate("/")
         } catch (error) {
             console.error("Failed to delete animal", error)
+        }
+    }
+
+    const confirmDeleteExit = async () => {
+        if (!id) return
+        try {
+            await apiService.deleteAnimalExit(Number(id))
+            await queryClient.invalidateQueries(["animal", id])
+            await queryClient.invalidateQueries(["animal-entries", id])
+            await queryClient.invalidateQueries(["animal-search"])
+            toastService.showSuccess("Uscita eliminata correttamente")
+            setDeleteExitDialogVisible(false)
+        } catch (error) {
+            console.error("Failed to delete animal exit", error)
         }
     }
 
@@ -299,6 +315,20 @@ const AnimalRecord = (props: Props) => {
     }, [isSuperUser, addButton, removeButton])
 
     useEffect(() => {
+        if (isSuperUser && props.data.exit_date) {
+            addButton({
+                id: "delete-exit",
+                buttonText: "Elimina uscita",
+                buttonIcon: faRotateLeft,
+                severity: "warning",
+                order: 15,
+                onClick: () => setDeleteExitDialogVisible(true),
+            })
+        }
+        return () => removeButton("delete-exit")
+    }, [isSuperUser, props.data.exit_date, addButton, removeButton])
+
+    useEffect(() => {
         if (props.data?.exit_date && can(Permission.CREATE_ANIMAL)) {
             addButton({
                 id: "new-entry",
@@ -426,6 +456,19 @@ const AnimalRecord = (props: Props) => {
                 accept={confirmDelete}
                 reject={() => setDeleteDialogVisible(false)}
                 acceptLabel="Elimina"
+                rejectLabel="Annulla"
+                acceptClassName="p-button-danger"
+            />
+
+            <ConfirmDialog
+                visible={deleteExitDialogVisible}
+                onHide={() => setDeleteExitDialogVisible(false)}
+                message="Sei sicuro di voler eliminare l'uscita di questo animale? L'animale tornerà presente in struttura e l'eventuale adozione collegata verrà annullata."
+                header="Conferma eliminazione uscita"
+                icon="pi pi-exclamation-triangle"
+                accept={confirmDeleteExit}
+                reject={() => setDeleteExitDialogVisible(false)}
+                acceptLabel="Elimina uscita"
                 rejectLabel="Annulla"
                 acceptClassName="p-button-danger"
             />
