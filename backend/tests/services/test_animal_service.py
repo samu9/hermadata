@@ -342,3 +342,85 @@ def test_confirm_temporary_adoption_service(
     # The last one should NOT have "Temporanea" in title
     final_doc = [d for d in docs if d and "Temporanea" not in d]
     assert len(final_doc) >= 1
+
+
+def test_edit_marks_documents_dirty_and_rerender_clears(
+    make_animal,
+    make_adopter,
+    animal_service: AnimalService,
+    complete_animal_data,
+):
+    """Editing embedded data flags the entry's rendered docs dirty; re-render
+    produces a fresh, non-dirty document tied to the same entry."""
+    animal_id = make_animal()
+    animal_service.complete_entry(
+        animal_id,
+        data=CompleteEntryModel(
+            entry_date=datetime.now().date() - timedelta(days=10)
+        ),
+    )
+    adopter_id = make_adopter()
+    complete_animal_data(animal_id)
+
+    animal_service.exit(
+        animal_id,
+        data=AnimalExit(
+            exit_date=datetime.now().date(),
+            exit_type=ExitType.adoption,
+            adopter_id=adopter_id,
+            notes="Test",
+            location_address="Via test",
+            location_city_code="H501",
+        ),
+    )
+
+    repo = animal_service.animal_repository
+
+    # The exit generated a fresh (non-dirty) adoption document.
+    docs = repo.get_documents(animal_id)
+    ad_doc = next(
+        d
+        for d in docs
+        if d.document_kind_code == DocKindCode.adozione.value
+    )
+    assert ad_doc.dirty is False
+    assert ad_doc.rerenderable is True
+    assert ad_doc.animal_entry_id is not None
+    entry_id = ad_doc.animal_entry_id
+    old_document_id = ad_doc.document_id
+
+    # Editing animal data flags the entry's rendered documents dirty.
+    animal_service.update(animal_id, UpdateAnimalModel(name="Rinominato"))
+    docs = repo.get_documents(animal_id)
+    ad_doc = next(
+        d
+        for d in docs
+        if d.document_kind_code == DocKindCode.adozione.value
+    )
+    assert ad_doc.dirty is True
+
+    # Re-render: old doc gone, fresh doc in its place, same entry, not dirty.
+    animal_service.rerender_document(animal_id, old_document_id)
+    docs = repo.get_documents(animal_id)
+    ad_docs = [
+        d
+        for d in docs
+        if d.document_kind_code == DocKindCode.adozione.value
+    ]
+    assert len(ad_docs) == 1
+    new_ad = ad_docs[0]
+    assert new_ad.document_id != old_document_id
+    assert new_ad.dirty is False
+    assert new_ad.animal_entry_id == entry_id
+
+
+def test_rerender_document_not_found_raises(
+    make_animal,
+    animal_service: AnimalService,
+):
+    import pytest
+    from sqlalchemy.exc import NoResultFound
+
+    animal_id = make_animal()
+    with pytest.raises(NoResultFound):
+        animal_service.rerender_document(animal_id, 999999)

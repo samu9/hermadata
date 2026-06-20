@@ -833,6 +833,11 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.add(event_log)
         self.session.flush()
 
+        # Entry/exit data is embedded in this entry's rendered documents; flag
+        # them stale so they can be re-rendered.
+        if result.rowcount:
+            self.mark_entry_documents_dirty(entry_id)
+
         return result.rowcount
 
     def update(
@@ -912,6 +917,14 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
         self.session.add(event_log)
         self.session.flush()
+
+        # Animal data appears in the current entry's rendered documents; flag
+        # them stale so they can be re-rendered.
+        if result.rowcount:
+            self.mark_entry_documents_dirty(
+                self.get_current_entry_id(id)
+            )
+
         return result.rowcount
 
     def move_to_shelter(
@@ -1135,6 +1148,29 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalDocument.deleted_at.is_(None),
             )
             .values(deleted_at=get_now())
+        )
+        self.session.flush()
+
+    def mark_entry_documents_dirty(self, animal_entry_id: int) -> None:
+        """Flag the entry's re-renderable documents as stale (dirty).
+
+        Called after the data those documents embed is edited. Only kinds with
+        a generator (CI/AD/VA) are marked, since only those can be re-rendered.
+        """
+        rerenderable_kind_ids = (
+            select(DocumentKind.id)
+            .where(DocumentKind.code.in_(RERENDERABLE_DOC_KIND_CODES))
+            .scalar_subquery()
+        )
+        self.session.execute(
+            update(AnimalDocument)
+            .where(
+                AnimalDocument.animal_entry_id == animal_entry_id,
+                AnimalDocument.deleted_at.is_(None),
+                AnimalDocument.dirty.is_(False),
+                AnimalDocument.document_kind_id.in_(rerenderable_kind_ids),
+            )
+            .values(dirty=True)
         )
         self.session.flush()
 
