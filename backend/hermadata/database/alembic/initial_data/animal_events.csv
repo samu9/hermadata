@@ -1,6 +1,7 @@
 code,description,category
 CR,Creazione animale,automatic
 EX,Uscita,automatic
+ED,Uscita eliminata,automatic
 NE,Nuovo ingresso,automatic
 EC,Completamento ingresso,automatic
 DU,Aggiornamento dati,automatic

@@ -156,6 +156,7 @@ class AnimalEvent(Enum):
     # Automatic events
     create = "CR"  # Animal creation
     exit_ = "EX"  # Animal exit (adoption, death, etc.)
+    exit_deleted = "ED"  # Animal exit deleted (reverted by superuser)
     new_entry = "NE"  # New animal entry (re-entry)
     entry_complete = "EC"  # Entry completion with entry date
     data_update = "DU"  # Animal data update

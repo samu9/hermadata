@@ -209,6 +209,10 @@ class Adoption(Base):
     returned_at: Mapped[datetime | None] = mapped_column(
         DateTime(), nullable=True
     )
+    # set when an exit is deleted by a superuser: the adoption is voided
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
 
 
 # class Person(Base):
@@ -517,6 +521,9 @@ class AnimalDocument(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(), server_onupdate=func.now(), nullable=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
     )
 
     __table_args__ = (
