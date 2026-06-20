@@ -185,6 +185,11 @@ export const animalDocumentSchema = z.object({
     animal_id: z.number(),
     document_id: z.number(),
     document_kind_code: z.string(),
+    document_kind_name: z.string().nullish(),
+    title: z.string().nullish(),
+    animal_entry_id: z.number().nullish(),
+    dirty: z.boolean().default(false),
+    rerenderable: z.boolean().default(false),
     created_at: dateFromString,
 })
 

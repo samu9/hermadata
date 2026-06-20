@@ -439,6 +439,17 @@ class ApiService {
         )
     }
 
+    async rerenderAnimalDocument(
+        animalId: number,
+        documentId: number,
+    ): Promise<AnimalDocument[]> {
+        const result = await this.post<AnimalDocument[]>(
+            ApiEndpoints.animal.rerenderDocument(animalId, documentId),
+            {},
+        )
+        return result.map((r) => animalDocumentSchema.parse(r))
+    }
+
     async openDocument(document_id: number): Promise<void> {
         const result = await this.get<{ url: string }>(
             ApiEndpoints.doc.open(document_id),
