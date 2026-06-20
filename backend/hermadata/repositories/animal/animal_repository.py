@@ -814,31 +814,53 @@ class SQLAnimalRepository(SQLBaseRepository):
         return result.rowcount
 
     def update(
-        self, id: str, updates: UpdateAnimalModel, user_id: int | None = None
+        self,
+        id: str,
+        updates: UpdateAnimalModel,
+        user_id: int | None = None,
+        allow_chip_override: bool = False,
     ) -> int:
-        """Return updated rowcound"""
+        """Return updated rowcound.
+
+        ``allow_chip_override`` lets privileged callers (superusers) change a
+        chip code that was already set. Without it, an already-set chip code is
+        left untouched.
+        """
         values = updates.model_dump(exclude_none=True)
         if updates.chip_code:
-            is_set = self.session.execute(
-                select(Animal.chip_code_set).where(
+            current_chip, is_set = self.session.execute(
+                select(Animal.chip_code, Animal.chip_code_set).where(
                     Animal.id == id, Animal.deleted_at.is_(None)
                 )
-            ).scalar_one()
+            ).one()
 
-            if is_set:
+            if is_set and not allow_chip_override:
                 logger.info("chip code already set for animal id %s", id)
                 updates.chip_code = None
-            values["chip_code_set"] = True
+                values.pop("chip_code", None)
+            else:
+                values["chip_code_set"] = True
 
-            # Log chip assignment separately if it's being set
-            if updates.chip_code and not is_set:
-                chip_log = AnimalLog(
-                    animal_id=id,
-                    event=AnimalEvent.chip_assigned.value,
-                    data={"chip_code": updates.chip_code},
-                    user_id=user_id,
-                )
-                self.session.add(chip_log)
+                # Log chip assignment / change as an audit event
+                if not is_set:
+                    chip_log = AnimalLog(
+                        animal_id=id,
+                        event=AnimalEvent.chip_assigned.value,
+                        data={"chip_code": updates.chip_code},
+                        user_id=user_id,
+                    )
+                    self.session.add(chip_log)
+                elif current_chip != updates.chip_code:
+                    chip_log = AnimalLog(
+                        animal_id=id,
+                        event=AnimalEvent.chip_assigned.value,
+                        data={
+                            "chip_code": updates.chip_code,
+                            "previous_chip_code": current_chip,
+                        },
+                        user_id=user_id,
+                    )
+                    self.session.add(chip_log)
 
         try:
             result = self.session.execute(

@@ -62,8 +62,11 @@ class AnimalService:
         animal_id: int,
         data: UpdateAnimalModel,
         user_id: int | None = None,
+        allow_chip_override: bool = False,
     ):
-        affected = self.animal_repository.update(animal_id, data, user_id)
+        affected = self.animal_repository.update(
+            animal_id, data, user_id, allow_chip_override=allow_chip_override
+        )
 
         if not affected:
             raise Exception(f"no animals affected by update, {animal_id=}")

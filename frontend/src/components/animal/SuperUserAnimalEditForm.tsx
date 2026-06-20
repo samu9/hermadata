@@ -189,9 +189,15 @@ const SuperUserAnimalEditForm = () => {
                                     fieldName="chip_code"
                                     label="Chip"
                                     mask="999.999.999.999.999"
-                                    disabled={animalQuery.data?.chip_code_set}
                                     className="w-full"
                                 />
+                                {animalQuery.data?.chip_code_set && (
+                                    <small className="-mt-2 text-yellow-700">
+                                        Il chip è già impostato. La modifica
+                                        verrà registrata negli eventi
+                                        dell'animale.
+                                    </small>
+                                )}
                                 <div className="grid grid-cols-2 gap-4">
                                     <ControlledCheckbox<AnimalEditSuperUser>
                                         fieldName="sterilized"

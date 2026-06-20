@@ -277,7 +277,12 @@ def update_animal(
     ],
 ) -> int | ApiError:
     try:
-        result = service.update(animal_id, data, user_id=current_user.user_id)
+        result = service.update(
+            animal_id,
+            data,
+            user_id=current_user.user_id,
+            allow_chip_override=current_user.is_superuser,
+        )
     except ExistingChipCodeException as e:
         return ApiError(
             code=ApiErrorCode.existing_chip_code,
