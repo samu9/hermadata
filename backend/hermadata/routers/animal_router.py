@@ -34,6 +34,7 @@ from hermadata.permissions import (
 )
 from hermadata.repositories.animal.animal_repository import (
     DocumentEntryRequiredException,
+    DocumentNotRerenderableException,
     EntryNotCompleteException,
     ExistingChipCodeException,
     NotAShelterStructureException,
@@ -432,6 +433,40 @@ def delete_animal_document(
 
     animal_repo.soft_delete_document(animal_id, document_id)
     return Response(status_code=204)
+
+
+@router.post(
+    "/{animal_id}/document/{document_id}/rerender",
+    response_model=list[AnimalDocumentModel],
+)
+def rerender_animal_document(
+    animal_id: int,
+    document_id: int,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    animal_repo: Annotated[
+        SQLAnimalRepository, Depends(get_animal_repository)
+    ],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.UPLOAD_DOCUMENT))
+    ],
+):
+    """Re-render a stale entry-tied document (CI/AD/VA).
+
+    Soft-deletes the existing document and generates a fresh one from current
+    data, tied to the same entry. Returns the updated document list.
+    """
+    try:
+        service.rerender_document(
+            animal_id, document_id, user_id=current_user.user_id
+        )
+    except NoResultFound as e:
+        raise HTTPException(
+            status_code=404, detail="Document not found"
+        ) from e
+    except DocumentNotRerenderableException as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    return animal_repo.get_documents(animal_id)
 
 
 @router.post("/{animal_id}/exit")

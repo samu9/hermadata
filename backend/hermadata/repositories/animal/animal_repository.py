@@ -170,6 +170,10 @@ class DocumentEntryRequiredException(APIException):
     pass
 
 
+class DocumentNotRerenderableException(APIException):
+    pass
+
+
 class SQLAnimalRepository(SQLBaseRepository):
     animal_birth_date_to_age = func.TIMESTAMPDIFF(
         text("year"), Animal.birth_date, func.current_date()
@@ -1086,6 +1090,40 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalDocument.deleted_at.is_(None),
             )
         ).scalar_one()
+
+    def get_document_rerender_info(
+        self, animal_id: int, document_id: int
+    ) -> tuple[str, int | None, str | None] | None:
+        """Return (document_kind_code, animal_entry_id, entry_exit_type) for a
+        non-deleted animal document, or None if it does not exist.
+
+        ``entry_exit_type`` is the exit_type of the tied entry (used to pick
+        the adoption variant when re-rendering); None for non entry-tied docs.
+        """
+        row = self.session.execute(
+            select(
+                DocumentKind.code,
+                AnimalDocument.animal_entry_id,
+                AnimalEntry.exit_type,
+            )
+            .join(
+                DocumentKind,
+                DocumentKind.id == AnimalDocument.document_kind_id,
+            )
+            .join(
+                AnimalEntry,
+                AnimalEntry.id == AnimalDocument.animal_entry_id,
+                isouter=True,
+            )
+            .where(
+                AnimalDocument.animal_id == animal_id,
+                AnimalDocument.document_id == document_id,
+                AnimalDocument.deleted_at.is_(None),
+            )
+        ).one_or_none()
+        if row is None:
+            return None
+        return (row[0], row[1], row[2])
 
     def soft_delete_document(self, animal_id: int, document_id: int) -> None:
         """Soft-delete the link between an animal and a document."""

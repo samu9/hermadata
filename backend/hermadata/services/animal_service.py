@@ -2,16 +2,25 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
-from hermadata.constants import DocKindCode, ExitType
+from hermadata.constants import (
+    RERENDERABLE_DOC_KIND_CODES,
+    AnimalEvent,
+    DocKindCode,
+    ExitType,
+)
 from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import (
     ReportAnimalEntryVariables,
     ReportAnimalListVariables,
     ReportGenerator,
 )
-from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
+from hermadata.repositories.animal.animal_repository import (
+    DocumentNotRerenderableException,
+    SQLAnimalRepository,
+)
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalEntriesQuery,
@@ -304,5 +313,56 @@ class AnimalService:
                 document_kind_code=DocKindCode.variazione,
                 title="Variazione",
                 animal_entry_id=animal_entry_id,
+            ),
+        )
+
+    def rerender_document(
+        self, animal_id: int, document_id: int, user_id: int | None = None
+    ):
+        """Regenerate an entry-tied rendered document from current data.
+
+        Soft-deletes the stale document and produces a fresh one tied to the
+        same entry. Only CI / AD / VA kinds have generators.
+        """
+        info = self.animal_repository.get_document_rerender_info(
+            animal_id, document_id
+        )
+        if info is None:
+            raise NoResultFound("document not found")
+
+        kind_code, animal_entry_id, entry_exit_type = info
+        if (
+            kind_code not in RERENDERABLE_DOC_KIND_CODES
+            or animal_entry_id is None
+        ):
+            raise DocumentNotRerenderableException(
+                f"document kind {kind_code} cannot be re-rendered"
+            )
+
+        # Soft-delete the stale document before producing the fresh one.
+        self.animal_repository.soft_delete_document(animal_id, document_id)
+
+        if kind_code == DocKindCode.comunicazione_ingresso.value:
+            self.generate_entry_report(animal_entry_id)
+        elif kind_code == DocKindCode.adozione.value:
+            self.generate_adoption_report(
+                animal_id,
+                animal_entry_id,
+                temporary=entry_exit_type
+                == ExitType.temporary_adoption.value,
+            )
+        elif kind_code == DocKindCode.variazione.value:
+            self.generate_variation_report(animal_id, animal_entry_id)
+
+        self.animal_repository.add_log(
+            animal_id,
+            NewAnimalLogModel(
+                event=AnimalEvent.document_rerendered.value,
+                data={
+                    "document_id": document_id,
+                    "document_kind_code": kind_code,
+                    "animal_entry_id": animal_entry_id,
+                },
+                user_id=user_id,
             ),
         )
