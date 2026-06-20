@@ -21,6 +21,7 @@ from hermadata.constants import (
     ENTRY_TIED_DOC_KIND_CODES,
     EXIT_DOC_KIND_CODES,
     HEALTHCARE_STAGE_ENTRY_TYPES,
+    RERENDERABLE_DOC_KIND_CODES,
     AnimalEvent,
     EntryType,
     ExitType,
@@ -987,11 +988,11 @@ class SQLAnimalRepository(SQLBaseRepository):
                     f"animal {animal_id}"
                 )
 
-        document_kind_id = self.session.execute(
-            select(DocumentKind.id).where(
+        document_kind_id, document_kind_name = self.session.execute(
+            select(DocumentKind.id, DocumentKind.name).where(
                 DocumentKind.code == data.document_kind_code
             )
-        ).scalar_one()
+        ).one()
         animal_document = AnimalDocument(
             animal_id=animal_id,
             document_id=data.document_id,
@@ -1006,6 +1007,14 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_id=animal_id,
             document_id=data.document_id,
             document_kind_code=data.document_kind_code,
+            document_kind_name=document_kind_name,
+            title=data.title,
+            animal_entry_id=data.animal_entry_id,
+            dirty=False,
+            rerenderable=(
+                data.document_kind_code in RERENDERABLE_DOC_KIND_CODES
+                and data.animal_entry_id is not None
+            ),
             created_at=animal_document.created_at,
         )
 
@@ -1016,6 +1025,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             select(
                 AnimalDocument.document_id,
                 DocumentKind.code,
+                DocumentKind.name,
+                AnimalDocument.title,
+                AnimalDocument.animal_entry_id,
+                AnimalDocument.dirty,
                 AnimalDocument.created_at,
             )
             .join(
@@ -1028,6 +1041,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalDocument.deleted_at.is_(None),
                 Animal.deleted_at.is_(None),
             )
+            .order_by(AnimalDocument.created_at.desc())
         ).all()
 
         docs = [
@@ -1035,9 +1049,25 @@ class SQLAnimalRepository(SQLBaseRepository):
                 animal_id=animal_id,
                 document_id=document_id,
                 document_kind_code=document_kind_code,
+                document_kind_name=document_kind_name,
+                title=title,
+                animal_entry_id=animal_entry_id,
+                dirty=dirty,
+                rerenderable=(
+                    document_kind_code in RERENDERABLE_DOC_KIND_CODES
+                    and animal_entry_id is not None
+                ),
                 created_at=created_at,
             )
-            for document_id, document_kind_code, created_at in result
+            for (
+                document_id,
+                document_kind_code,
+                document_kind_name,
+                title,
+                animal_entry_id,
+                dirty,
+                created_at,
+            ) in result
         ]
 
         return docs
@@ -1688,8 +1718,13 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
 
     def _get_animal_data_report_variables(
-        self, animal_id: int
+        self, animal_id: int, animal_entry_id: int | None = None
     ) -> AnimalVariables:
+        entry_condition = (
+            AnimalEntry.id == animal_entry_id
+            if animal_entry_id is not None
+            else AnimalEntry.current.is_(True)
+        )
         data = self.session.execute(
             select(
                 Animal.name,
@@ -1709,7 +1744,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry,
                 and_(
                     AnimalEntry.animal_id == Animal.id,
-                    AnimalEntry.current.is_(True),
+                    entry_condition,
                 ),
             )
             .join(Comune, AnimalEntry.origin_city_code == Comune.id)
@@ -1762,7 +1797,14 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return adopter_variables
 
-    def get_adoption_report_variables(self, animal_id: int):
+    def get_adoption_report_variables(
+        self, animal_id: int, animal_entry_id: int | None = None
+    ):
+        entry_condition = (
+            AnimalEntry.id == animal_entry_id
+            if animal_entry_id is not None
+            else AnimalEntry.current.is_(True)
+        )
         (
             adoption_date,
             exit_type,
@@ -1789,7 +1831,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             .join(Comune, Adoption.location_city_code == Comune.id)
             .where(
                 AnimalEntry.animal_id == animal_id,
-                AnimalEntry.current.is_(True),
+                entry_condition,
             )
         ).one()
 
@@ -1797,7 +1839,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             raise Exception("last exit is not an adoption")
 
         adopter = self._get_adopter_data_report_variables(adopter_id)
-        animal_variables = self._get_animal_data_report_variables(animal_id)
+        animal_variables = self._get_animal_data_report_variables(
+            animal_id, animal_entry_id
+        )
         structure_variables = self._get_structure_report_variables(animal_id)
 
         variables = ReportAdoptionVariables(
@@ -1813,7 +1857,14 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return variables
 
-    def get_variation_report_variables(self, animal_id: int):
+    def get_variation_report_variables(
+        self, animal_id: int, animal_entry_id: int | None = None
+    ):
+        entry_condition = (
+            AnimalEntry.id == animal_entry_id
+            if animal_entry_id is not None
+            else AnimalEntry.current.is_(True)
+        )
         (
             variation_date,
             variation_type,
@@ -1843,7 +1894,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
             .where(
                 AnimalEntry.animal_id == animal_id,
-                AnimalEntry.current.is_(True),
+                entry_condition,
             )
         ).one()
 
@@ -1853,7 +1904,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             or None
         )
 
-        animal_variables = self._get_animal_data_report_variables(animal_id)
+        animal_variables = self._get_animal_data_report_variables(
+            animal_id, animal_entry_id
+        )
         structure_variables = self._get_structure_report_variables(animal_id)
 
         variables = ReportVariationVariables(

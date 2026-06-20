@@ -198,7 +198,7 @@ class AnimalService:
         temporary: bool = False,
     ):
         variables = self.animal_repository.get_adoption_report_variables(
-            animal_id
+            animal_id, animal_entry_id
         )
 
         if temporary:
@@ -282,7 +282,7 @@ class AnimalService:
         self, animal_id: int, animal_entry_id: int
     ):
         variables = self.animal_repository.get_variation_report_variables(
-            animal_id=animal_id
+            animal_id=animal_id, animal_entry_id=animal_entry_id
         )
 
         pdf = self.report_generator.build_variation_report(variables)

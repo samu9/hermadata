@@ -209,6 +209,10 @@ EXIT_DOC_KIND_CODES: frozenset[str] = frozenset(
     {"U", "UF", "AD", "ADF", "AF", "AFF", "VA", "VAF", "RP"}
 )
 
+# Rendered document kinds that have an active generator and can therefore be
+# re-rendered (and flagged "dirty" when their embedded data changes).
+RERENDERABLE_DOC_KIND_CODES: frozenset[str] = frozenset({"CI", "AD", "VA"})
+
 
 class RecurrenceType(str, Enum):
     DAILY = "day"

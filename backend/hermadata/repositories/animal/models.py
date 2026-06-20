@@ -358,6 +358,11 @@ class AnimalDocumentModel(BaseModel):
     animal_id: int
     document_id: int
     document_kind_code: str
+    document_kind_name: str | None = None
+    title: str | None = None
+    animal_entry_id: int | None = None
+    dirty: bool = False
+    rerenderable: bool = False
     created_at: datetime
 
 
