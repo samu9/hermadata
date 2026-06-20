@@ -27,6 +27,8 @@ const ApiEndpoints = {
             `/animal/${animalId}/entries/${entryId}`,
         documents: (id: number) => `/animal/${id}/document`,
         newDocument: (id: number) => `/animal/${id}/document`,
+        deleteDocument: (animalId: number, documentId: number) =>
+            `/animal/${animalId}/document/${documentId}`,
         uploadImage: (id: number) => `/animal/${id}/image`,
         listImages: (id: number) => `/animal/${id}/images`,
         serveImage: (animalId: number, imageId: number) =>

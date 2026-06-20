@@ -13,7 +13,12 @@ from fastapi import (
 from pydantic import BaseModel
 from sqlalchemy.exc import NoResultFound
 
-from hermadata.constants import EXCEL_MEDIA_TYPE, ApiErrorCode, Permission
+from hermadata.constants import (
+    EXCEL_MEDIA_TYPE,
+    ApiErrorCode,
+    Permission,
+    StorageType,
+)
 from hermadata.initializations import (
     get_animal_repository,
     get_animal_service,
@@ -356,6 +361,62 @@ def upload_animal_document(
         )
     result = animal_repo.new_document(animal_id, data)
     return result
+
+
+@router.delete("/{animal_id}/document/{document_id}", response_model=None)
+def delete_animal_document(
+    animal_id: int,
+    document_id: int,
+    animal_repo: Annotated[
+        SQLAnimalRepository, Depends(get_animal_repository)
+    ],
+    doc_repo: Annotated[
+        SQLDocumentRepository, Depends(get_document_repository)
+    ],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    permanent: bool = False,
+):
+    """Delete a document attached to an animal.
+
+    By default the animal-document link is soft-deleted, gated by the per-kind
+    document delete permission. Superusers may pass ``permanent=true`` to
+    permanently remove the document, also deleting it from storage (S3/disk).
+    """
+    try:
+        animal_document = animal_repo.get_animal_document(
+            animal_id, document_id
+        )
+    except NoResultFound as e:
+        raise HTTPException(
+            status_code=404, detail="Document not found"
+        ) from e
+
+    if permanent:
+        if not current_user.is_superuser:
+            raise HTTPException(
+                status_code=403,
+                detail="Only superusers can permanently delete documents",
+            )
+        key, storage_service = animal_repo.hard_delete_document(
+            animal_id, document_id
+        )
+        storage_backend = doc_repo.storage.get(StorageType(storage_service))
+        if storage_backend is not None:
+            storage_backend.delete_file(key)
+        return Response(status_code=204)
+
+    if not current_user.is_superuser and not doc_repo.can_delete_document(
+        animal_document.document_kind_id,
+        current_user.user_id,
+        current_user.role,
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to delete this document",
+        )
+
+    animal_repo.soft_delete_document(animal_id, document_id)
+    return Response(status_code=204)
 
 
 @router.post("/{animal_id}/exit")

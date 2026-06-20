@@ -3,7 +3,17 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 
 from pydantic import validate_call
-from sqlalchemy import and_, case, func, insert, or_, select, text, update
+from sqlalchemy import (
+    and_,
+    case,
+    delete,
+    func,
+    insert,
+    or_,
+    select,
+    text,
+    update,
+)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
@@ -24,6 +34,7 @@ from hermadata.database.models import (
     AnimalLog,
     Breed,
     Comune,
+    Document,
     DocumentKind,
     FurColor,
     MedicalActivity,
@@ -955,6 +966,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             .join(Animal, Animal.id == AnimalDocument.animal_id)
             .where(
                 AnimalDocument.animal_id == animal_id,
+                AnimalDocument.deleted_at.is_(None),
                 Animal.deleted_at.is_(None),
             )
         ).all()
@@ -970,6 +982,61 @@ class SQLAnimalRepository(SQLBaseRepository):
         ]
 
         return docs
+
+    def get_animal_document(
+        self, animal_id: int, document_id: int
+    ) -> AnimalDocument:
+        """Fetch the (non soft-deleted) animal_document link row.
+
+        Raises NoResultFound if it does not exist or is already soft-deleted.
+        """
+        return self.session.execute(
+            select(AnimalDocument).where(
+                AnimalDocument.animal_id == animal_id,
+                AnimalDocument.document_id == document_id,
+                AnimalDocument.deleted_at.is_(None),
+            )
+        ).scalar_one()
+
+    def soft_delete_document(self, animal_id: int, document_id: int) -> None:
+        """Soft-delete the link between an animal and a document."""
+        self.session.execute(
+            update(AnimalDocument)
+            .where(
+                AnimalDocument.animal_id == animal_id,
+                AnimalDocument.document_id == document_id,
+                AnimalDocument.deleted_at.is_(None),
+            )
+            .values(deleted_at=get_now())
+        )
+        self.session.flush()
+
+    def hard_delete_document(
+        self, animal_id: int, document_id: int
+    ) -> tuple[str, str]:
+        """Permanently delete a document and its animal link.
+
+        Returns the (storage_key, storage_service) of the underlying physical
+        document so the caller can remove it from the storage backend.
+        """
+        key, storage_service = self.session.execute(
+            select(Document.key, Document.storage_service).where(
+                Document.id == document_id
+            )
+        ).one()
+
+        self.session.execute(
+            delete(AnimalDocument).where(
+                AnimalDocument.animal_id == animal_id,
+                AnimalDocument.document_id == document_id,
+            )
+        )
+        self.session.execute(
+            delete(Document).where(Document.id == document_id)
+        )
+        self.session.flush()
+
+        return key, storage_service
 
     @validate_call
     def check_exit_requirements(self, animal_id: int) -> ExitCheckResult:

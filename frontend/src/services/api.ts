@@ -428,6 +428,17 @@ class ApiService {
         return parsed
     }
 
+    async deleteAnimalDocument(
+        animalId: number,
+        documentId: number,
+        permanent = false,
+    ): Promise<void> {
+        await this.inst.delete(
+            ApiEndpoints.animal.deleteDocument(animalId, documentId),
+            { params: { permanent } },
+        )
+    }
+
     async openDocument(document_id: number): Promise<void> {
         const result = await this.get<{ url: string }>(
             ApiEndpoints.doc.open(document_id),

@@ -210,3 +210,34 @@ class SQLDocumentRepository(SQLBaseRepository):
         ).scalar()
 
         return restricted is None
+
+    def can_delete_document(
+        self, document_kind_id: int, user_id: int, role_name: str | None
+    ) -> bool:
+        """Return False if an explicit can_delete=False restriction applies.
+
+        Mirrors can_view_document: if no restriction row exists for this
+        document kind / user / role, deletion is allowed.
+        """
+        user_role_conditions = [DocumentPermission.user_id == user_id]
+        if role_name is not None:
+            role_id_subq = (
+                select(UserRole.id)
+                .where(UserRole.name == role_name)
+                .scalar_subquery()
+            )
+            user_role_conditions.append(
+                DocumentPermission.role_id == role_id_subq
+            )
+
+        restricted = self.session.execute(
+            select(DocumentPermission.id)
+            .where(
+                DocumentPermission.document_kind_id == document_kind_id,
+                DocumentPermission.can_delete == False,  # noqa: E712
+                or_(*user_role_conditions),
+            )
+            .limit(1)
+        ).scalar()
+
+        return restricted is None
