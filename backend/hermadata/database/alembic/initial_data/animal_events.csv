@@ -21,3 +21,4 @@ MSB,Morsicatura subita,manual
 CC,Certificazione,manual
 TH,Terapia,health
 THD,Terapia eliminata,health
+DR,Documento rigenerato,automatic

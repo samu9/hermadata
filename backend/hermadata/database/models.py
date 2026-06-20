@@ -530,6 +530,11 @@ class AnimalDocument(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(), nullable=True
     )
+    # True when the data this (rendered) document embeds has since been
+    # edited, so the document is stale and should be re-rendered.
+    dirty: Mapped[bool] = mapped_column(
+        Boolean, server_default=expression.false(), default=False
+    )
 
     __table_args__ = (
         UniqueConstraint(

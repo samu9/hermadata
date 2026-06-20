@@ -167,6 +167,7 @@ class AnimalEvent(Enum):
     move_structure = "MV"  # Animal moved to another structure
     therapy = "TH"  # Therapy created
     therapy_deleted = "THD"  # Therapy soft-deleted
+    document_rerendered = "DR"  # Rendered document regenerated
 
 
 class ReminderUnit(str, Enum):
