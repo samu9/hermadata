@@ -13,6 +13,7 @@ type ToolbarButton = {
     buttonIcon: any // Use the appropriate FontAwesomeIcon type
     severity?: SeverityType
     order?: number
+    group?: "default" | "superuser"
     disabled?: boolean
     loading?: boolean
     FormComponent?: React.ComponentType<{ onSuccess: (data: any) => void }>

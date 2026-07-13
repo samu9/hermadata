@@ -302,10 +302,11 @@ const AnimalRecord = (props: Props) => {
         if (isSuperUser) {
             addButton({
                 id: "delete-animal",
-                buttonText: "Elimina",
+                buttonText: "Elimina animale",
                 buttonIcon: faTrash,
                 severity: "danger",
                 order: 10,
+                group: "superuser",
                 onClick: () => setDeleteDialogVisible(true),
             })
         }
@@ -322,6 +323,7 @@ const AnimalRecord = (props: Props) => {
                 buttonIcon: faRotateLeft,
                 severity: "warning",
                 order: 15,
+                group: "superuser",
                 onClick: () => setDeleteExitDialogVisible(true),
             })
         }
