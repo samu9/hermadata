@@ -1,9 +1,20 @@
-from datetime import date
+from datetime import date, datetime, timedelta
+from typing import Callable
 
+from sqlalchemy import select
+
+from hermadata.constants import DocKindCode, ExitType
+from hermadata.database.models import AnimalDocument, DocumentKind
+from hermadata.repositories.animal.models import (
+    AnimalExit,
+    CompleteEntryModel,
+    NewAnimalModel,
+)
 from hermadata.services.adopter_service import (
     AdopterService,
     NewAdopterRequest,
 )
+from hermadata.services.animal_service import AnimalService
 
 
 def test_create_adopter(adopter_service: AdopterService):
@@ -120,3 +131,95 @@ def test_create_adopter_foreign_born(adopter_service: AdopterService):
     assert city is not None
     assert city.name == "STATO ESTERO"
     assert city.provincia == "EE"
+
+
+def test_update_adopter_marks_adoption_documents_dirty(
+    adopter_service: AdopterService,
+    animal_service: AnimalService,
+    make_animal: Callable[[NewAnimalModel], int],
+    complete_animal_data: Callable[[int], None],
+):
+    """Editing an adopter flags its rendered adoption (AD) documents dirty.
+
+    Non-adoption rendered documents on the same entry (e.g. the variation
+    report) must stay clean, since they don't embed adopter data.
+    """
+    adopter = adopter_service.create(
+        NewAdopterRequest(
+            name="Mario",
+            surname="Rossi",
+            fiscal_code="RSSMRA80A01H501U",
+            residence_city_code="H501",
+            phone="3331234567",
+            document_type="id",
+            document_number="AR1234567",
+        )
+    )
+
+    # Set up an adopted animal: exit with adoption produces a rendered
+    # adoption (AD) document plus a variation (VA) document on the same entry.
+    animal_id = make_animal()
+    animal_service.complete_entry(
+        animal_id,
+        CompleteEntryModel(
+            entry_date=datetime.now().date() - timedelta(days=10)
+        ),
+    )
+    complete_animal_data(animal_id)
+    animal_service.exit(
+        animal_id,
+        AnimalExit(
+            exit_date=datetime.now().date(),
+            exit_type=ExitType.adoption,
+            adopter_id=adopter.id,
+            notes="Test",
+            location_address="Via test",
+            location_city_code="H501",
+        ),
+    )
+
+    entry_id = animal_service.animal_repository.get_current_entry_id(animal_id)
+    session = adopter_service.adopter_repository.session
+
+    def dirty_flags(kind_code: str) -> list:
+        return (
+            session.execute(
+                select(AnimalDocument.dirty)
+                .join(
+                    DocumentKind,
+                    DocumentKind.id == AnimalDocument.document_kind_id,
+                )
+                .where(
+                    AnimalDocument.animal_entry_id == entry_id,
+                    AnimalDocument.deleted_at.is_(None),
+                    DocumentKind.code == kind_code,
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+    ad_before = dirty_flags(DocKindCode.adozione.value)
+    assert ad_before and all(not d for d in ad_before)
+
+    adopter_service.update(
+        adopter.id,
+        NewAdopterRequest(
+            name="Luigi",
+            surname="Verdi",
+            fiscal_code="RSSMRA80A01H501U",
+            residence_city_code="H501",
+            phone="3339999999",
+            document_type="id",
+            document_number="AR7654321",
+        ),
+    )
+
+    # Adopter record updated.
+    updated = adopter_service.adopter_repository.get_by_id(adopter.id)
+    assert updated.name == "LUIGI"
+    assert updated.phone == "3339999999"
+
+    # Adoption document flagged dirty; variation document left clean.
+    assert all(dirty_flags(DocKindCode.adozione.value))
+    assert all(not d for d in dirty_flags(DocKindCode.variazione.value))

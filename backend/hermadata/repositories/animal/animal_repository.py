@@ -56,6 +56,7 @@ from hermadata.reports.report_generator import (
     StructureVariables,
 )
 from hermadata.repositories import SQLBaseRepository
+from hermadata.repositories.adopter_repository import AdopterModel
 from hermadata.repositories.animal.models import (
     AddMedicalRecordModel,
     AdoptionModel,
@@ -470,6 +471,29 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         if not result:
             return None
+
+    def get_animal_adopter(self, animal_id: int) -> AdopterModel | None:
+        """Return the adopter of the animal's active adoption, if any.
+
+        Considers the current, non-returned, non-voided adoption. Returns
+        ``None`` when the animal has never been adopted or has been returned.
+        """
+        adopter = self.session.execute(
+            select(Adopter)
+            .join(Adoption, Adoption.adopter_id == Adopter.id)
+            .join(Animal, Animal.id == Adoption.animal_id)
+            .where(
+                Adoption.animal_id == animal_id,
+                Adoption.returned_at.is_(None),
+                Adoption.deleted_at.is_(None),
+                Animal.deleted_at.is_(None),
+            )
+        ).scalar_one_or_none()
+
+        if adopter is None:
+            return None
+
+        return AdopterModel.model_validate(adopter, from_attributes=True)
 
     def search(
         self,
@@ -921,9 +945,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         # Animal data appears in the current entry's rendered documents; flag
         # them stale so they can be re-rendered.
         if result.rowcount:
-            self.mark_entry_documents_dirty(
-                self.get_current_entry_id(id)
-            )
+            self.mark_entry_documents_dirty(self.get_current_entry_id(id))
 
         return result.rowcount
 

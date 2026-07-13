@@ -245,6 +245,17 @@ class ApiService {
         return animalSchema.parse(result)
     }
 
+    async getAnimalAdopter(
+        id: string | number,
+    ): Promise<Adopter | null> {
+        const result = await this.get<Adopter | null>(
+            ApiEndpoints.animal.adopter(id),
+        )
+        if (!result) return null
+
+        return adopterSchema.parse(result)
+    }
+
     async searchAnimals(
         query: AnimalSearchQuery,
     ): Promise<PaginatedAnimalSearchResult> {
@@ -500,6 +511,15 @@ class ApiService {
         )
 
         return result
+    }
+
+    async updateAdopter(id: number, data: NewAdopter): Promise<Adopter> {
+        const result = await this.put<Adopter>(
+            ApiEndpoints.adopter.update(id),
+            data,
+        )
+
+        return adopterSchema.parse(result)
     }
 
     async searchAdopter(

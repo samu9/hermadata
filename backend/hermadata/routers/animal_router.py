@@ -32,6 +32,7 @@ from hermadata.permissions import (
     require_permission,
     require_superuser,
 )
+from hermadata.repositories.adopter_repository import AdopterModel
 from hermadata.repositories.animal.animal_repository import (
     DocumentEntryRequiredException,
     DocumentNotRerenderableException,
@@ -267,6 +268,14 @@ def get_animal(
         raise HTTPException(status_code=404, detail="No animal found") from e
 
     return animal_data
+
+
+@router.get("/{animal_id}/adopter", response_model=AdopterModel | None)
+def get_animal_adopter(
+    animal_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+):
+    return repo.get_animal_adopter(animal_id)
 
 
 @router.post("/{animal_id}", response_model=int | ApiError)

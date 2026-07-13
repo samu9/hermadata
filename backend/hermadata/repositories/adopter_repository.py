@@ -3,10 +3,17 @@ from enum import Enum
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, StringConstraints
-from sqlalchemy import func, insert, select
+from sqlalchemy import func, insert, select, update
 from sqlalchemy.orm import MappedColumn
 
-from hermadata.database.models import Adopter, Comune
+from hermadata.constants import DocKindCode
+from hermadata.database.models import (
+    Adopter,
+    Adoption,
+    AnimalDocument,
+    Comune,
+    DocumentKind,
+)
 from hermadata.models import PaginationResult, SearchQuery
 from hermadata.repositories import SQLBaseRepository
 from hermadata.repositories.animal.models import WhereClauseMapItem
@@ -61,9 +68,7 @@ class AdopterSearchQuery(SearchQuery):
         "phone": WhereClauseMapItem(
             lambda v: Adopter.phone.like(f"{v}%"), False
         ),
-        "city": WhereClauseMapItem(
-            lambda v: Comune.name.like(f"{v}%"), False
-        ),
+        "city": WhereClauseMapItem(lambda v: Comune.name.like(f"{v}%"), False),
     }
 
     def as_order_by_clause(self) -> MappedColumn:
@@ -89,14 +94,18 @@ class SQLAdopterRepository(SQLBaseRepository):
         count_stmt = (
             select(func.count("*"))
             .select_from(Adopter)
-            .join(Comune, Adopter.residence_city_code == Comune.id, isouter=True)
+            .join(
+                Comune, Adopter.residence_city_code == Comune.id, isouter=True
+            )
             .where(*where)
         )
         total = self.session.execute(count_stmt).scalar_one()
 
         stmt = (
             select(Adopter, Comune.name.label("city"))
-            .join(Comune, Adopter.residence_city_code == Comune.id, isouter=True)
+            .join(
+                Comune, Adopter.residence_city_code == Comune.id, isouter=True
+            )
             .where(*where)
             .order_by(query.as_order_by_clause())
         )
@@ -109,7 +118,12 @@ class SQLAdopterRepository(SQLBaseRepository):
 
         response = [
             AdopterSearchResult.model_validate(
-                {**AdopterModel.model_validate(row.Adopter, from_attributes=True).model_dump(), "city": row.city}
+                {
+                    **AdopterModel.model_validate(
+                        row.Adopter, from_attributes=True
+                    ).model_dump(),
+                    "city": row.city,
+                }
             )
             for row in rows
         ]
@@ -121,3 +135,44 @@ class SQLAdopterRepository(SQLBaseRepository):
         if not result:
             raise Exception("Adopter not found")
         return AdopterModel.model_validate(result, from_attributes=True)
+
+    def update(self, id: int, data: NewAdopter) -> int:
+        """Update an adopter and return the number of updated rows."""
+        result = self.session.execute(
+            update(Adopter).where(Adopter.id == id).values(**data.model_dump())
+        )
+        self.session.flush()
+        return result.rowcount
+
+    def mark_adopter_documents_dirty(self, adopter_id: int) -> int:
+        """Flag the adopter's rendered adoption documents as stale (dirty).
+
+        Called after the adopter's data is edited. Adopter data is embedded
+        only in adoption (AD) documents, so we mark just those, scoped to the
+        entries where this adopter has a non-voided adoption.
+        """
+        adozione_kind_id = (
+            select(DocumentKind.id)
+            .where(DocumentKind.code == DocKindCode.adozione.value)
+            .scalar_subquery()
+        )
+        entry_ids = (
+            select(Adoption.animal_entry_id)
+            .where(
+                Adoption.adopter_id == adopter_id,
+                Adoption.deleted_at.is_(None),
+            )
+            .scalar_subquery()
+        )
+        result = self.session.execute(
+            update(AnimalDocument)
+            .where(
+                AnimalDocument.animal_entry_id.in_(entry_ids),
+                AnimalDocument.deleted_at.is_(None),
+                AnimalDocument.dirty.is_(False),
+                AnimalDocument.document_kind_id == adozione_kind_id,
+            )
+            .values(dirty=True)
+        )
+        self.session.flush()
+        return result.rowcount

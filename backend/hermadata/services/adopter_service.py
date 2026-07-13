@@ -88,8 +88,12 @@ class AdopterService:
 
         return city_code
 
-    def create(self, data: NewAdopterRequest) -> AdopterModel:
-        """Create a new adopter."""
+    def _build_repo_adopter(self, data: NewAdopterRequest) -> NewAdopter:
+        """Validate a request and derive the full repository adopter model.
+
+        Birth date and birth city are decoded from the fiscal code; both the
+        birth and residence city codes are validated against the database.
+        """
         if not codicefiscale.is_valid(data.fiscal_code):
             raise InvalidFiscalCodeException()
 
@@ -109,14 +113,30 @@ class AdopterService:
                 f"not found in database"
             )
 
-        # Convert to repository model
-        repo_data = NewAdopter(
+        return NewAdopter(
             **data.model_dump(),
             birth_city_code=validated_birth_city_code,
             birth_date=birth_date,
         )
 
+    def create(self, data: NewAdopterRequest) -> AdopterModel:
+        """Create a new adopter."""
+        repo_data = self._build_repo_adopter(data)
+
         return self.adopter_repository.create(repo_data)
+
+    def update(self, adopter_id: int, data: NewAdopterRequest) -> AdopterModel:
+        """Update an adopter and flag its adoption documents as stale.
+
+        Adopter data is embedded in rendered adoption documents, so editing it
+        marks the linked (non-voided) adoption documents dirty for re-render.
+        """
+        repo_data = self._build_repo_adopter(data)
+
+        self.adopter_repository.update(adopter_id, repo_data)
+        self.adopter_repository.mark_adopter_documents_dirty(adopter_id)
+
+        return self.adopter_repository.get_by_id(adopter_id)
 
     def search(
         self, query: AdopterSearchQuery

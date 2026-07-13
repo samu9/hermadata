@@ -16,6 +16,7 @@ const ApiEndpoints = {
     },
     animal: {
         getById: (code: string) => `/animal/${code}`,
+        adopter: (id: string | number) => `/animal/${id}/adopter`,
         create: "/animal",
         search: "/animal/search",
         update: (id: string) => `/animal/${id}`,
@@ -57,6 +58,7 @@ const ApiEndpoints = {
         create: "/adopter",
         get: "/adopter",
         getById: (id: number) => `/adopter/${id}`,
+        update: (id: number) => `/adopter/${id}`,
         search: "/adopter/search",
     },
     adoption: {
