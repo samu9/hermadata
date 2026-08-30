@@ -4,3 +4,7 @@ class APIException(Exception):
 
 class InvalidFiscalCodeException(APIException):
     pass
+
+
+class DuplicateFiscalCodeException(APIException):
+    pass

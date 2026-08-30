@@ -4,9 +4,11 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, StringConstraints
 from sqlalchemy import func, insert, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import MappedColumn
 
 from hermadata.database.models import Adopter, Comune
+from hermadata.errors import DuplicateFiscalCodeException
 from hermadata.models import PaginationResult, SearchQuery
 from hermadata.repositories import SQLBaseRepository
 from hermadata.repositories.animal.models import WhereClauseMapItem
@@ -73,9 +75,14 @@ class AdopterSearchQuery(SearchQuery):
 class SQLAdopterRepository(SQLBaseRepository):
     def create(self, data: NewAdopter) -> AdopterModel:
         dump = data.model_dump()
-        result = self.session.execute(insert(Adopter).values(**dump))
-
-        self.session.flush()
+        try:
+            result = self.session.execute(insert(Adopter).values(**dump))
+            self.session.flush()
+        except IntegrityError as e:
+            self.session.rollback()
+            if "fiscal_code" in str(e.orig):
+                raise DuplicateFiscalCodeException() from e
+            raise
 
         adopter_id = result.lastrowid
 
