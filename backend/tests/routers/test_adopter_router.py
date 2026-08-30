@@ -47,6 +47,34 @@ def test_new_adopter(
     assert stored.surname == data.surname.upper()
 
 
+def test_new_adopter_duplicate_fiscal_code(
+    app: TestClient,
+    db_session: Session,
+):
+    data = NewAdopterRequest(
+        name="Mario",
+        surname="Rossi",
+        fiscal_code="RSSMRA80A01H501U",
+        document_type=IDDocumentType.identity_card,
+        document_number="AA12345BB",
+        residence_city_code="H501",
+        phone="123456789",
+    )
+
+    json_data = jsonable_encoder(data.model_dump())
+    first_response = app.post("/adopter/", json=json_data)
+    assert first_response.status_code == 200
+
+    second_response = app.post("/adopter/", json=json_data)
+
+    assert second_response.status_code == 400
+    content = json.loads(second_response.content)
+    assert (
+        content["detail"]
+        == "Adottante già esistente con questo codice fiscale."
+    )
+
+
 def test_search_adopter(
     app: TestClient,
     make_adopter,

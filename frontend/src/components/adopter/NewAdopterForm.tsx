@@ -46,6 +46,15 @@ const NewAdopterForm = (props: Props) => {
                         type: "manual",
                         message: "Codice fiscale non valido",
                     })
+                } else if (
+                    detail ===
+                    "Adottante già esistente con questo codice fiscale."
+                ) {
+                    setError("fiscal_code", {
+                        type: "manual",
+                        message:
+                            "Esiste già un adottante con questo codice fiscale",
+                    })
                 }
             }
         },

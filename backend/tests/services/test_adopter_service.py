@@ -92,6 +92,30 @@ def test_create_adopter_invalid_residence_city(
         adopter_service.create(new_adopter_data)
 
 
+def test_create_adopter_duplicate_fiscal_code(
+    adopter_service: AdopterService,
+):
+    """Test that a duplicate fiscal code raises on adopter creation."""
+    import pytest
+
+    from hermadata.errors import DuplicateFiscalCodeException
+
+    new_adopter_data = NewAdopterRequest(
+        name="Mario",
+        surname="Rossi",
+        fiscal_code="RSSMRA80A01H501U",
+        residence_city_code="H501",
+        phone="3331234567",
+        document_type="id",
+        document_number="AR1234567",
+    )
+
+    adopter_service.create(new_adopter_data)
+
+    with pytest.raises(DuplicateFiscalCodeException):
+        adopter_service.create(new_adopter_data)
+
+
 def test_create_adopter_foreign_born(adopter_service: AdopterService):
     """Test creating an adopter born abroad (foreign birthplace code starting with Z)."""
     # RSSMRA80A01Z100A is a valid codice fiscale for someone born in Albania (Z100)
