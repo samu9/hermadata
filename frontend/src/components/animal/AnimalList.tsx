@@ -5,6 +5,7 @@ import {
     faHospital,
     faHome,
     faPrint,
+    faGear,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
@@ -195,10 +196,10 @@ const AnimalList = () => {
     }, [animalQuery.data])
     const navigate = useNavigate()
 
-    const [printDialogVisible, setPrintDialogVisible] = useState(false)
+    const [printSettingsVisible, setPrintSettingsVisible] = useState(false)
     const [printExtraFields, setPrintExtraFields] = useSessionStorage<
         AnimalListReportExtraField[]
-    >("animal-list:print-extra-fields", [])
+    >("animal-list:print-extra-fields", ["age", "sterilized"])
 
     const togglePrintExtraField = (
         field: AnimalListReportExtraField,
@@ -220,7 +221,6 @@ const AnimalList = () => {
             document.body.appendChild(link)
             link.click()
             link.remove()
-            setPrintDialogVisible(false)
         },
     })
 
@@ -462,56 +462,44 @@ const AnimalList = () => {
                         </div>
                     </>
                 )}
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
+                    <Button
+                        icon={<FontAwesomeIcon icon={faGear} />}
+                        tooltip="Impostazioni di stampa"
+                        tooltipOptions={{ position: "bottom" }}
+                        aria-label="Impostazioni di stampa"
+                        className="!bg-surface-0 !border-surface-200 !text-surface-700 hover:!bg-surface-50 !text-sm !px-3 !py-2 !rounded-lg"
+                        onClick={() => setPrintSettingsVisible(true)}
+                    />
                     <Button
                         icon={
                             <FontAwesomeIcon icon={faPrint} className="mr-2" />
                         }
                         label="Stampa"
                         className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
-                        onClick={() => setPrintDialogVisible(true)}
+                        onClick={() => {
+                            const { from_index, to_index, ...filters } =
+                                queryData
+                            printReport.mutate({
+                                ...filters,
+                                structure_ids:
+                                    queryData.structure_ids?.length
+                                        ? queryData.structure_ids
+                                        : undefined,
+                            } as AnimalSearchQuery)
+                        }}
+                        loading={printReport.isLoading}
                     />
                 </div>
             </div>
 
             <Dialog
-                header="Stampa elenco animali"
-                visible={printDialogVisible}
-                onHide={() => setPrintDialogVisible(false)}
+                header="Impostazioni di stampa"
+                visible={printSettingsVisible}
+                onHide={() => setPrintSettingsVisible(false)}
                 modal
                 resizable={false}
                 draggable={false}
-                footer={
-                    <div className="flex justify-end gap-2">
-                        <Button
-                            label="Annulla"
-                            className="!bg-surface-0 !border-surface-200 !text-surface-700 hover:!bg-surface-50 !text-sm !px-4 !py-2 !rounded-lg"
-                            onClick={() => setPrintDialogVisible(false)}
-                        />
-                        <Button
-                            icon={
-                                <FontAwesomeIcon
-                                    icon={faPrint}
-                                    className="mr-2"
-                                />
-                            }
-                            label="Stampa"
-                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
-                            onClick={() => {
-                                const { from_index, to_index, ...filters } =
-                                    queryData
-                                printReport.mutate({
-                                    ...filters,
-                                    structure_ids:
-                                        queryData.structure_ids?.length
-                                            ? queryData.structure_ids
-                                            : undefined,
-                                } as AnimalSearchQuery)
-                            }}
-                            loading={printReport.isLoading}
-                        />
-                    </div>
-                }
             >
                 <p className="text-sm text-surface-600 mb-4">
                     Informazioni aggiuntive da includere nella stampa:
