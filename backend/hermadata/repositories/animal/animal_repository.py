@@ -547,6 +547,8 @@ class SQLAnimalRepository(SQLBaseRepository):
                     (Animal.sex == 1, "F"),
                     else_=None,
                 ).label("sex"),
+                Animal.birth_date,
+                Animal.sterilized,
             )
             .select_from(Animal)
             .join(

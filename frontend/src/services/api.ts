@@ -26,6 +26,7 @@ import {
     AnimalExit,
     AnimalExitsReportSchema,
     AnimalImage,
+    AnimalListReportExtraField,
     AnimalSearchQuery,
     AnimalSearchResult,
     ExitCheckResult,
@@ -572,9 +573,12 @@ class ApiService {
         return { url, filename }
     }
 
-    async animalSearchReport(data: AnimalSearchQuery) {
+    async animalSearchReport(
+        data: AnimalSearchQuery,
+        extraFields: AnimalListReportExtraField[] = [],
+    ) {
         const result = await this.inst.get(ApiEndpoints.animal.searchReport, {
-            params: data,
+            params: { ...data, extra_fields: extraFields },
             responseType: "blob",
         })
         const filename = result.headers["x-filename"].toString()

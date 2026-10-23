@@ -6,13 +6,16 @@ from openpyxl import load_workbook
 from hermadata.constants import EntryType, ExitType
 from hermadata.reports.report_generator import (
     AdopterVariables,
+    AnimalListReportRow,
     AnimalVariables,
     ReportAdoptionVariables,
     ReportAnimalEntryVariables,
+    ReportAnimalListVariables,
     ReportChipAssignmentVariables,
     ReportFormat,
     ReportGenerator,
     ReportVariationVariables,
+    format_age,
 )
 from hermadata.repositories.animal.models import (
     AnimalDaysItem,
@@ -20,6 +23,7 @@ from hermadata.repositories.animal.models import (
     AnimalDaysResult,
     AnimalEntriesItem,
     AnimalEntriesQuery,
+    AnimalListReportExtraField,
     AnimalReportResult,
 )
 from hermadata.settings import Settings
@@ -237,3 +241,50 @@ def test_models():
     dump = r.model_dump()
 
     assert isinstance(dump["animal"]["age"], str)
+
+
+def test_format_age():
+    today = date.today()
+    assert format_age(None) == ""
+    assert format_age(today) == "Appena nato"
+    assert format_age(today - timedelta(days=1)) == "1 giorno"
+    assert format_age(today.replace(year=today.year - 1)) == "1 anno"
+    assert format_age(today.replace(year=today.year - 3)) == "3 anni"
+
+
+def test_animal_list_report_extra_fields(
+    jinja_env, report_generator: ReportGenerator
+):
+    items = [
+        AnimalListReportRow(
+            name="Gino",
+            chip_code="111.111.111.111.111",
+            origin_city="Trieste",
+            sex="M",
+            birth_date=date.today().replace(year=date.today().year - 2),
+            sterilized=True,
+        ),
+        AnimalListReportRow(origin_city="Trieste", sterilized=False),
+    ]
+    template = jinja_env.get_template("animal_list.jinja")
+
+    base = ReportAnimalListVariables(items=items, total=len(items))
+    html = template.render(**base.model_dump())
+    assert "Età" not in html
+    assert "Sterilizzato" not in html
+
+    full = ReportAnimalListVariables(
+        items=items,
+        total=len(items),
+        extra_fields=[
+            AnimalListReportExtraField.AGE,
+            AnimalListReportExtraField.STERILIZED,
+        ],
+    )
+    html = template.render(**full.model_dump())
+    assert "<th>Età</th>" in html
+    assert "<th>Sterilizzato</th>" in html
+    assert "<td>2 anni</td>" in html
+    assert "Sì" in html and "<td>No</td>" in html
+
+    assert report_generator.build_animal_list_report(full)

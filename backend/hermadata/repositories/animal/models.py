@@ -340,6 +340,13 @@ class AnimalListReportItem(BaseModel):
     chip_code: str | None = None
     origin_city: str
     sex: str | None = None
+    birth_date: date | None = None
+    sterilized: bool | None = None
+
+
+class AnimalListReportExtraField(str, Enum):
+    AGE = "age"
+    STERILIZED = "sterilized"
 
 
 AnimalListReportItemQuery = namedtuple(
