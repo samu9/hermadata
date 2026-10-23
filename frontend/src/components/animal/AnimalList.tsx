@@ -35,8 +35,7 @@ import {
     useExitTypesQuery,
     useStructuresQuery,
 } from "../../queries"
-import UncontrolledComuniDropdown from "../forms/uncontrolled/UncontrolledComuniDropdown"
-import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
+import CityPicker from "../forms/city/CityPicker"
 import { classNames } from "primereact/utils"
 import { InputText } from "primereact/inputtext"
 import { useEntryTypesMap, useExitTypesMap } from "../../hooks/useMaps"
@@ -127,12 +126,6 @@ const SwitchFilter = (props: SwitchFilterProps) => {
 
 const AnimalList = () => {
     const [totalRecords, setTotalRecords] = useState(0)
-    const [provinciaProvenienzaFilter, setProvinciaProvenienzaFilter] =
-        useSessionStorage<string | undefined>(
-            "animal-list:provincia-filter",
-            undefined,
-        )
-
     const [lazyState, setLazyState] = useSessionStorage<LazyTableState>(
         "animal-list:lazy-state",
         {
@@ -166,7 +159,6 @@ const AnimalList = () => {
 
     const resetFilters = () => {
         setLazyState((prev) => ({ ...prev, filters: INITIAL_FILTERS }))
-        setProvinciaProvenienzaFilter(undefined)
     }
 
     useEffect(() => {
@@ -211,19 +203,11 @@ const AnimalList = () => {
     ) => {
         return (
             <div className="flex flex-col gap-2 p-2">
-                <UncontrolledProvinceDropdown
-                    value={provinciaProvenienzaFilter}
-                    onChange={(value) => setProvinciaProvenienzaFilter(value)}
-                    className="w-full"
+                <CityPicker
+                    value={options.value}
+                    onChange={(value) => options.filterCallback(value)}
+                    fieldClassName="w-full"
                 />
-                {provinciaProvenienzaFilter && (
-                    <UncontrolledComuniDropdown
-                        provincia={provinciaProvenienzaFilter}
-                        value={options.value}
-                        onChange={(value) => options.filterCallback(value)}
-                        className="w-full"
-                    />
-                )}
             </div>
         )
     }
@@ -567,9 +551,6 @@ const AnimalList = () => {
                         filterMatchMode={FilterMatchMode.EQUALS}
                         header="Provenienza"
                         field="comune"
-                        onFilterClear={() =>
-                            setProvinciaProvenienzaFilter(undefined)
-                        }
                         showFilterMenuOptions={false}
                         showFilterOperator={false}
                         showAddButton={false}

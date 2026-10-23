@@ -11,7 +11,6 @@ import { Checkbox } from "primereact/checkbox"
 import { useEffect, useRef, useState } from "react"
 import {
     useAnimalQuery,
-    useComuniQuery,
     useExitTypesQuery,
     useAdopterQuery,
 } from "../../queries"
@@ -29,13 +28,9 @@ import ControlledTextarea from "../forms/ControlledTextarea"
 import { useLoader } from "../../contexts/Loader"
 import AdopterCard from "../adoption/AdopterCard"
 import { Adopter } from "../../models/adopter.schema"
-import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
+import ControlledCityPicker from "../forms/city/ControlledCityPicker"
 import ControlledInputText from "../forms/ControlledInputText"
 import { useFormPersist } from "../../hooks/useFormPersist"
-
-type AnimalExitFormState = AnimalExit & {
-    _provincia_detenzione?: string
-}
 
 const AnimalExitForm = () => {
     const { id } = useParams()
@@ -58,7 +53,7 @@ const AnimalExitForm = () => {
     const exitTypesForDropdown = exitTypesQuery.data?.filter(
         (t) => t.id !== "T",
     )
-    const form = useForm<AnimalExitFormState>({
+    const form = useForm<AnimalExit>({
         resolver: zodResolver(animalExitSchema),
         defaultValues: {
             animal_id: parseInt(id!),
@@ -74,16 +69,7 @@ const AnimalExitForm = () => {
         getValues,
         setValue,
         reset,
-        register,
     } = form
-
-    // Register UI state fields so they are persisted
-    useEffect(() => {
-        register("_provincia_detenzione")
-    }, [register])
-
-    const provinciaDetenzione = watch("_provincia_detenzione")
-    const comuneDetenzioneQuery = useComuniQuery(provinciaDetenzione)
 
     const adopterId = watch("adopter_id")
     const adopterQuery = useAdopterQuery(adopterId)
@@ -210,23 +196,9 @@ const AnimalExitForm = () => {
                                     className="w-full"
                                 />
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <UncontrolledProvinceDropdown
-                                        label="Provincia di detenzione"
-                                        onChange={(value) =>
-                                            setValue(
-                                                "_provincia_detenzione",
-                                                value,
-                                            )
-                                        }
-                                        value={provinciaDetenzione}
-                                        className="w-full"
-                                    />
-                                    <ControlledDropdown
-                                        label="Comune di detenzione"
-                                        disabled={!comuneDetenzioneQuery.data}
-                                        optionLabel="name"
-                                        optionValue="id"
-                                        options={comuneDetenzioneQuery.data}
+                                    <ControlledCityPicker
+                                        provinciaLabel="Provincia di detenzione"
+                                        comuneLabel="Comune di detenzione"
                                         fieldName="location_city_code"
                                         className="w-full"
                                     />

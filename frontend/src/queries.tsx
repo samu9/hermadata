@@ -1,4 +1,4 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from "react-query"
+import { useMutation, useQuery, useQueryClient } from "react-query"
 import { apiService } from "./main"
 import { AdopterSearch } from "./models/adopter.schema"
 import { AnimalSearchQuery } from "./models/animal.schema"
@@ -42,16 +42,6 @@ export const useProvinceQuery = () =>
         staleTime: Infinity,
     })
 
-export const useComuniQuery = (provincia?: string) =>
-    useQuery(
-        ["comuni", provincia],
-        () => (provincia && apiService.getComuni(provincia)) || [],
-        {
-            placeholderData: [],
-            staleTime: Infinity,
-        },
-    )
-
 // All the comuni of Italy (~8k), fetched once per session and searched
 // client side by the city autocompletes
 export const useAllComuniQuery = () =>
@@ -59,7 +49,7 @@ export const useAllComuniQuery = () =>
         staleTime: Infinity,
     })
 
-export const useComuneQuery =(code?: string) =>
+export const useComuneQuery = (code?: string) =>
     useQuery(
         ["comune", code],
         () => (code ? apiService.getComune(code) : null),
@@ -68,17 +58,6 @@ export const useComuneQuery =(code?: string) =>
             staleTime: Infinity,
         },
     )
-
-export const useComuniByCodesQuery = (codes: string[]) => {
-    const results = useQueries(
-        codes.map((code) => ({
-            queryKey: ["comune", code],
-            queryFn: () => apiService.getComune(code),
-            staleTime: Infinity,
-        })),
-    )
-    return results.map((r) => r.data).filter(Boolean)
-}
 
 export const useDocKindsQuery = () =>
     useQuery("doc-kinds", () => apiService.getAllDocKinds(), {
