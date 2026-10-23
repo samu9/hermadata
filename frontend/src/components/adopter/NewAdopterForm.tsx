@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
-import { useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 import { apiService } from "../../main"
@@ -10,20 +9,15 @@ import {
     NewAdopter,
     newAdopterSchema,
 } from "../../models/adopter.schema"
-import { useComuniQuery } from "../../queries"
+import ControlledCityPicker from "../forms/city/ControlledCityPicker"
 import ControlledDropdown from "../forms/ControlledDropdown"
 import ControlledInputText from "../forms/ControlledInputText"
-import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
 
 type Props = {
     onSaved?: (result: Adopter) => void
 }
 
 const NewAdopterForm = (props: Props) => {
-    const [provinciaResidenza, setProvinciaResidenza] = useState<string>()
-
-    const comuneResidenzaQuery = useComuniQuery(provinciaResidenza)
-
     const form = useForm<NewAdopter>({
         resolver: zodResolver(newAdopterSchema),
     })
@@ -83,19 +77,9 @@ const NewAdopterForm = (props: Props) => {
                             />
                         </div>
                         <div className="flex gap-2">
-                            <UncontrolledProvinceDropdown
-                                label="Provincia residenza"
-                                onChange={(value) =>
-                                    setProvinciaResidenza(value)
-                                }
-                                className="w-64"
-                            />
-                            <ControlledDropdown
-                                label="Comune di residenza"
-                                disabled={!comuneResidenzaQuery.data}
-                                optionLabel="name"
-                                optionValue="id"
-                                options={comuneResidenzaQuery.data}
+                            <ControlledCityPicker
+                                provinciaLabel="Provincia residenza"
+                                comuneLabel="Comune di residenza"
                                 fieldName="residence_city_code"
                                 className="w-64"
                             />

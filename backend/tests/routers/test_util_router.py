@@ -29,6 +29,14 @@ def test_get_comuni(app: TestClient):
     assert isinstance(data, list)
 
 
+def test_get_all_comuni(app: TestClient):
+    result = app.get("/util/comuni")
+
+    assert result.status_code == 200
+    data = result.json()
+    assert len({c["provincia"] for c in data}) > 1
+
+
 def test_get_comune_by_code(app: TestClient):
     result = app.get("/util/comune/H501")
 

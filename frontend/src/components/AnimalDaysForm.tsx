@@ -2,9 +2,8 @@ import { faDownload } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
-import { Dropdown } from "primereact/dropdown"
-import { useEffect, useState } from "react"
-import { Controller, FormProvider, useForm } from "react-hook-form"
+import { useEffect } from "react"
+import { FormProvider, useForm } from "react-hook-form"
 import { useMutation } from "react-query"
 import { useAuth } from "../contexts/AuthContext"
 import { apiService } from "../main"
@@ -12,25 +11,13 @@ import {
     animalDaysRequestSchema,
     AnimalDaysRequestSchema,
 } from "../models/animal.schema"
-import {
-    useComuniByCodesQuery,
-    useComuniQuery,
-    useProvinceQuery,
-} from "../queries"
+import ControlledCityPicker from "./forms/city/ControlledCityPicker"
 import ControlledInputDate from "./forms/ControlledInputDate"
 import { SubTitle } from "./typography"
 
 const AnimalDaysForm = () => {
     const { user } = useAuth()
     const restrictedCities = user?.city_codes ?? null
-
-    const [provincia, setProvincia] = useState<string>()
-
-    const provinceQuery = useProvinceQuery()
-    const comuniQuery = useComuniQuery(restrictedCities ? undefined : provincia)
-    const allowedComuniData = useComuniByCodesQuery(restrictedCities ?? [])
-
-    const comuniOptions = restrictedCities ? allowedComuniData : comuniQuery.data
 
     const form = useForm<AnimalDaysRequestSchema>({
         resolver: zodResolver(animalDaysRequestSchema),
@@ -81,49 +68,10 @@ const AnimalDaysForm = () => {
                             fieldName="to_date"
                             label="Data fine"
                         />
-                        {!restrictedCities && (
-                            <div className="flex flex-col w-full">
-                                <label
-                                    className="block text-sm font-medium mb-1 text-surface-700"
-                                    htmlFor="provincia"
-                                >
-                                    Provincia
-                                </label>
-                                <Dropdown
-                                    value={provincia}
-                                    onChange={(e) => {
-                                        setProvincia(e.target.value)
-                                    }}
-                                    options={provinceQuery.data}
-                                    optionLabel="name"
-                                    optionValue="id"
-                                    placeholder="Seleziona"
-                                    className="w-full"
-                                />
-                            </div>
-                        )}
-
-                        <Controller
-                            name="city_code"
-                            control={form.control}
-                            render={({ field }) => (
-                                <div className="w-full">
-                                    <label
-                                        className="block text-sm font-medium mb-1 text-surface-700"
-                                        htmlFor={field.name}
-                                    >
-                                        Comune
-                                    </label>
-                                    <Dropdown
-                                        {...field}
-                                        options={comuniOptions}
-                                        optionLabel="name"
-                                        optionValue="id"
-                                        placeholder="Seleziona"
-                                        className="w-full"
-                                    />
-                                </div>
-                            )}
+                        <ControlledCityPicker
+                            fieldName="city_code"
+                            allowedCodes={restrictedCities}
+                            className="w-full"
                         />
                     </div>
                     <div className="mt-6 flex justify-end">
