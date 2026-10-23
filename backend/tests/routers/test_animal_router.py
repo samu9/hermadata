@@ -252,6 +252,77 @@ def test_delete_animal(app: TestClient, make_animal, db_session: Session):
     assert animal.deleted_at is not None
 
 
+def test_browse_deleted_animal(
+    app: TestClient, make_animal, animal_service: AnimalService
+):
+    animal_id = make_animal()
+    animal_service.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=datetime.now().date())
+    )
+    app.delete(f"/animal/{animal_id}")
+
+    result = app.get("/animal/search", params={"from_index": 0, "to_index": 1000})
+    assert animal_id not in [a["id"] for a in result.json()["items"]]
+
+    result = app.get(
+        "/animal/search",
+        params={
+            "deleted": True,
+            "present": True,
+            "not_present": True,
+            "from_index": 0,
+            "to_index": 1000,
+        },
+    )
+    assert result.status_code == 200
+    items = {a["id"]: a for a in result.json()["items"]}
+    assert animal_id in items
+    assert items[animal_id]["deleted_at"] is not None
+
+    result = app.get(f"/animal/{animal_id}")
+    assert result.status_code == 200
+    assert result.json()["deleted_at"] is not None
+
+    result = app.get(f"/animal/{animal_id}/entries")
+    assert result.status_code == 200
+    assert len(result.json()) == 1
+
+    result = app.get(f"/animal/{animal_id}/document")
+    assert result.status_code == 200
+
+
+def test_browse_deleted_animal_without_permission(
+    app: TestClient, make_animal
+):
+    from hermadata.constants import Permission
+    from hermadata.initializations import get_current_user
+    from hermadata.services.user_service import TokenData
+
+    animal_id = make_animal()
+    app.delete(f"/animal/{animal_id}")
+
+    app.app.dependency_overrides[get_current_user] = lambda: TokenData(
+        user_id=1,
+        email="test@test.it",
+        is_active=True,
+        is_superuser=False,
+        permissions=[
+            p.value
+            for p in Permission
+            if p != Permission.BROWSE_DELETED_ANIMALS
+        ],
+    )
+
+    result = app.get("/animal/search", params={"deleted": True})
+    assert result.status_code == 403
+
+    result = app.get(f"/animal/{animal_id}")
+    assert result.status_code == 404
+
+    result = app.get(f"/animal/{animal_id}/entries")
+    assert result.json() == []
+
+
 def test_get_animal_documents(app: TestClient, make_animal):
     animal_id = make_animal()
 
