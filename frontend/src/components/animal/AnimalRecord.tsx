@@ -34,7 +34,6 @@ import { Dialog } from "primereact/dialog"
 import { Calendar } from "primereact/calendar"
 import { Button } from "primereact/button"
 import { Dropdown } from "primereact/dropdown"
-import { InputText } from "primereact/inputtext"
 import { apiService } from "../../main"
 import { toastService } from "../../services/toast"
 import { useQueryClient } from "react-query"
@@ -133,11 +132,7 @@ const AnimalRecord = (props: Props) => {
     )
     const [activeIndex, setActiveIndex] = useState(1)
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
-    const [deleteConfirmText, setDeleteConfirmText] = useState("")
     const [isDeleting, setIsDeleting] = useState(false)
-    const canConfirmDelete =
-        deleteConfirmText.trim().toUpperCase() ===
-        props.data.code.trim().toUpperCase()
     const [moveToShelterDialogVisible, setMoveToShelterDialogVisible] =
         useState(false)
     const [moveToShelterDate, setMoveToShelterDate] = useState<Date | null>(
@@ -161,13 +156,9 @@ const AnimalRecord = (props: Props) => {
 
     const { addButton, removeButton } = useToolbar()
 
-    const closeDeleteDialog = () => {
-        setDeleteDialogVisible(false)
-        setDeleteConfirmText("")
-    }
+    const closeDeleteDialog = () => setDeleteDialogVisible(false)
 
     const confirmDelete = async () => {
-        if (!canConfirmDelete) return
         try {
             setIsDeleting(true)
             await apiService.deleteAnimal(Number(id))
@@ -305,10 +296,7 @@ const AnimalRecord = (props: Props) => {
                 severity: "danger",
                 order: 0,
                 subtle: true,
-                onClick: () => {
-                    setDeleteConfirmText("")
-                    setDeleteDialogVisible(true)
-                },
+                onClick: () => setDeleteDialogVisible(true),
             })
         }
         return () => {
@@ -448,6 +436,7 @@ const AnimalRecord = (props: Props) => {
                             icon="pi pi-times"
                             onClick={closeDeleteDialog}
                             className="p-button-text"
+                            autoFocus
                         />
                         <Button
                             label="Elimina definitivamente"
@@ -455,56 +444,24 @@ const AnimalRecord = (props: Props) => {
                             severity="danger"
                             onClick={confirmDelete}
                             loading={isDeleting}
-                            disabled={!canConfirmDelete}
                         />
                     </div>
                 }
             >
-                <form
-                    className="flex flex-col gap-4"
-                    onSubmit={(e) => {
-                        e.preventDefault()
-                        confirmDelete()
-                    }}
-                >
-                    <div className="flex gap-3 items-start p-3 rounded-md bg-red-50 text-red-800 border border-red-200">
-                        <i className="pi pi-exclamation-triangle text-xl mt-0.5" />
-                        <p>
-                            Stai per eliminare l'animale{" "}
-                            <strong>
-                                {props.data.name
-                                    ? `${props.data.name} (${props.data.code})`
-                                    : props.data.code}
-                            </strong>{" "}
-                            con tutti i suoi dati. L'animale non sarà più
-                            visibile nell'applicazione.{" "}
-                            <strong>
-                                Questa azione non può essere annullata.
-                            </strong>
-                        </p>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                        <label
-                            htmlFor="delete-animal-confirm"
-                            className="text-sm font-medium"
-                        >
-                            Per confermare, digita il codice dell'animale:{" "}
-                            <span className="font-mono font-bold select-none">
-                                {props.data.code}
-                            </span>
-                        </label>
-                        <InputText
-                            id="delete-animal-confirm"
-                            value={deleteConfirmText}
-                            onChange={(e) =>
-                                setDeleteConfirmText(e.target.value)
-                            }
-                            autoComplete="off"
-                            autoFocus
-                            className="font-mono"
-                        />
-                    </div>
-                </form>
+                <div className="flex gap-3 items-start p-3 rounded-md bg-red-50 text-red-800 border border-red-200">
+                    <i className="pi pi-exclamation-triangle text-xl mt-0.5" />
+                    <p>
+                        Stai per eliminare l'animale{" "}
+                        <strong>
+                            {props.data.name
+                                ? `${props.data.name} (${props.data.code})`
+                                : props.data.code}
+                        </strong>{" "}
+                        con tutti i suoi dati. L'animale non sarà più visibile
+                        nell'applicazione.{" "}
+                        <strong>Questa azione non può essere annullata.</strong>
+                    </p>
+                </div>
             </Dialog>
 
             {/* Move to Shelter Dialog */}
