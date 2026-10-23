@@ -67,6 +67,7 @@ export const animalSchema = z.object({
     healthcare_stage: z.boolean().optional(),
     without_chip: z.boolean().optional(),
     structure_id: z.number().nullish(),
+    deleted_at: dateFromString.nullish(),
     entries: z.array(animalEntrySchema).optional(),
 })
 
@@ -146,6 +147,7 @@ export const animalSearchResultSchema = z.object({
     healthcare_stage: z.boolean().optional(),
     without_chip: z.boolean().optional(),
     structure_id: z.number(),
+    deleted_at: dateFromString.nullish(),
 })
 
 export type AnimalSearchResult = z.infer<typeof animalSearchResultSchema>
@@ -188,6 +190,7 @@ export const animalSearchQuerySchema = paginationQuerySchema.extend({
     sort_order: z.number().nullish(),
     cats: z.boolean().nullish(),
     dogs: z.boolean().nullish(),
+    deleted: z.boolean().nullish(),
     structure_ids: z.array(z.number()).nullish(),
 })
 
