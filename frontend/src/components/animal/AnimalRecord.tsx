@@ -13,6 +13,7 @@ import {
     faRotateLeft,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { format } from "date-fns"
 import { MenuItem } from "primereact/menuitem"
 import { TabMenu } from "primereact/tabmenu"
 import { classNames } from "primereact/utils"
@@ -91,6 +92,9 @@ const generateItems = (
         path: "health",
     })
 
+    // Deleted animals are read-only: no edit/exit tabs
+    if (data.deleted_at) return items
+
     // Edit tab - requires animal editing permissions
     can(Permission.EDIT_ANIMAL) &&
         items.push({
@@ -160,6 +164,7 @@ const AnimalRecord = (props: Props) => {
     const [isConfirmingAdoption, setIsConfirmingAdoption] = useState(false)
 
     const { addButton, removeButton } = useToolbar()
+    const isDeleted = Boolean(props.data.deleted_at)
 
     const closeDeleteDialog = () => {
         setDeleteDialogVisible(false)
@@ -172,6 +177,7 @@ const AnimalRecord = (props: Props) => {
             setIsDeleting(true)
             await apiService.deleteAnimal(Number(id))
             await queryClient.invalidateQueries(["animal-search"])
+            await queryClient.invalidateQueries(["animal", id])
             toastService.showSuccess("Animale eliminato correttamente")
             navigate("/")
         } catch (error) {
@@ -244,7 +250,11 @@ const AnimalRecord = (props: Props) => {
     }
 
     useEffect(() => {
-        if (props.data.healthcare_stage && !props.data.exit_type) {
+        if (
+            !isDeleted &&
+            props.data.healthcare_stage &&
+            !props.data.exit_type
+        ) {
             addButton({
                 id: "move-to-shelter",
                 buttonText: "Sposta in rifugio",
@@ -260,6 +270,7 @@ const AnimalRecord = (props: Props) => {
         }
         return () => removeButton("move-to-shelter")
     }, [
+        isDeleted,
         props.data.healthcare_stage,
         props.data.exit_type,
         addButton,
@@ -268,7 +279,11 @@ const AnimalRecord = (props: Props) => {
 
     // Temporary adoption action buttons
     useEffect(() => {
-        if (props.data.exit_type === "T" && can(Permission.MAKE_ADOPTION)) {
+        if (
+            !isDeleted &&
+            props.data.exit_type === "T" &&
+            can(Permission.MAKE_ADOPTION)
+        ) {
             addButton({
                 id: "confirm-temp-adoption",
                 buttonText: "Conferma adozione",
@@ -294,10 +309,10 @@ const AnimalRecord = (props: Props) => {
             removeButton("undo-temp-adoption")
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.data.exit_type, can, addButton, removeButton])
+    }, [isDeleted, props.data.exit_type, can, addButton, removeButton])
 
     useEffect(() => {
-        if (isSuperUser) {
+        if (isSuperUser && !isDeleted) {
             addButton({
                 id: "delete-animal",
                 buttonText: "Elimina animale",
@@ -311,13 +326,15 @@ const AnimalRecord = (props: Props) => {
                 },
             })
         }
-        return () => {
-            if (isSuperUser) removeButton("delete-animal")
-        }
-    }, [isSuperUser, addButton, removeButton])
+        return () => removeButton("delete-animal")
+    }, [isSuperUser, isDeleted, addButton, removeButton])
 
     useEffect(() => {
-        if (props.data?.exit_date && can(Permission.CREATE_ANIMAL)) {
+        if (
+            !isDeleted &&
+            props.data?.exit_date &&
+            can(Permission.CREATE_ANIMAL)
+        ) {
             addButton({
                 id: "new-entry",
                 buttonText: "Nuovo ingresso",
@@ -333,7 +350,7 @@ const AnimalRecord = (props: Props) => {
             })
         }
         return () => removeButton("new-entry")
-    }, [props.data?.exit_date, can, addButton, removeButton, id])
+    }, [isDeleted, props.data?.exit_date, can, addButton, removeButton, id])
 
     useEffect(() => {
         const pathElements = location.pathname.split("/").filter((e) => e)
@@ -412,6 +429,16 @@ const AnimalRecord = (props: Props) => {
     }))
     return (
         <div>
+            {props.data.deleted_at && (
+                <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-800">
+                    <FontAwesomeIcon icon={faTrash} className="flex-shrink-0" />
+                    <span className="text-sm font-medium">
+                        Animale eliminato il{" "}
+                        {format(props.data.deleted_at, "dd/MM/yyyy HH:mm")}.
+                        La scheda è in sola lettura.
+                    </span>
+                </div>
+            )}
             <div className="mb-6">
                 <AnimalRecordHeader data={props.data} />
             </div>
