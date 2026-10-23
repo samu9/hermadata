@@ -10,7 +10,22 @@ const Toolbar = () => {
     return (
         <div className="fixed bottom-8 right-8 flex gap-3 z-50">
             {sorted.map((button) =>
-                button.onClick ? (
+                button.onClick && button.subtle ? (
+                    <Button
+                        key={button.id}
+                        className="!rounded-full !w-10 !h-10 !p-0 justify-center self-center mr-8 bg-white/80 opacity-60 transition-opacity hover:opacity-100"
+                        severity={button.severity}
+                        outlined
+                        onClick={button.onClick}
+                        disabled={button.disabled}
+                        loading={button.loading}
+                        tooltip={button.buttonText}
+                        tooltipOptions={{ position: "top" }}
+                        aria-label={button.buttonText}
+                    >
+                        <FontAwesomeIcon icon={button.buttonIcon} fixedWidth />
+                    </Button>
+                ) : button.onClick ? (
                     <Button
                         key={button.id}
                         className="shadow-lg !rounded-full px-6 py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
