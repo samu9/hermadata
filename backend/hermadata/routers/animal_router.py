@@ -173,20 +173,13 @@ def serve_animal_list_report(
             status_code=403,
             detail="Insufficient permissions to browse non-present animals",
         )
-    if (
-        query.deleted is not False
-        and check_permission(current_user, Permission.BROWSE_DELETED_ANIMALS)
-        is False
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="Insufficient permissions to browse deleted animals",
-        )
 
     allowed_city_codes = None
     if current_user.city_codes:
         allowed_city_codes = current_user.city_codes
 
+    # Deleted animals are never included in the report
+    query.deleted = False
     query.structure_ids = structure_ids
     filename, report = service.animal_list_report(
         query, allowed_city_codes=allowed_city_codes

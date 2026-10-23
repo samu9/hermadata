@@ -470,27 +470,34 @@ const AnimalList = () => {
                         </div>
                     </>
                 )}
-                <div className="ml-auto">
-                    <Button
-                        icon={
-                            <FontAwesomeIcon icon={faPrint} className="mr-2" />
-                        }
-                        label="Stampa"
-                        className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
-                        onClick={() => {
-                            const { from_index, to_index, ...filters } =
-                                searchQuery
-                            printReport.mutate({
-                                ...filters,
-                                structure_ids:
-                                    queryData.structure_ids?.length
-                                        ? queryData.structure_ids
-                                        : undefined,
-                            } as AnimalSearchQuery)
-                        }}
-                        loading={printReport.isLoading}
-                    />
-                </div>
+                {!showDeleted && (
+                    <div className="ml-auto">
+                        <Button
+                            icon={
+                                <FontAwesomeIcon icon={faPrint} className="mr-2" />
+                            }
+                            label="Stampa"
+                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
+                            onClick={() => {
+                                // Deleted animals are never part of the report
+                                const {
+                                    from_index, // eslint-disable-line @typescript-eslint/no-unused-vars
+                                    to_index, // eslint-disable-line @typescript-eslint/no-unused-vars
+                                    deleted, // eslint-disable-line @typescript-eslint/no-unused-vars
+                                    ...filters
+                                } = queryData
+                                printReport.mutate({
+                                    ...filters,
+                                    structure_ids:
+                                        queryData.structure_ids?.length
+                                            ? queryData.structure_ids
+                                            : undefined,
+                                } as AnimalSearchQuery)
+                            }}
+                            loading={printReport.isLoading}
+                        />
+                    </div>
+                )}
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">

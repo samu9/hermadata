@@ -261,7 +261,9 @@ def test_browse_deleted_animal(
     )
     app.delete(f"/animal/{animal_id}")
 
-    result = app.get("/animal/search", params={"from_index": 0, "to_index": 1000})
+    result = app.get(
+        "/animal/search", params={"from_index": 0, "to_index": 1000}
+    )
     assert animal_id not in [a["id"] for a in result.json()["items"]]
 
     result = app.get(
@@ -322,6 +324,40 @@ def test_browse_deleted_animal_without_permission(
     result = app.get(f"/animal/{animal_id}/entries")
     assert result.json() == []
 
+
+
+def test_animal_list_report_excludes_deleted(app: TestClient):
+    from hermadata.constants import Permission
+    from hermadata.initializations import (
+        get_animal_service,
+        get_current_user,
+    )
+    from hermadata.services.user_service import TokenData
+
+    received = []
+
+    class FakeService:
+        def animal_list_report(self, query, allowed_city_codes=None):
+            received.append(query)
+            return "elenco_animali.pdf", b"pdf"
+
+    app.app.dependency_overrides[get_animal_service] = FakeService
+    app.app.dependency_overrides[get_current_user] = lambda: TokenData(
+        user_id=1,
+        email="test@test.it",
+        is_active=True,
+        is_superuser=False,
+        permissions=[
+            p.value
+            for p in Permission
+            if p != Permission.BROWSE_DELETED_ANIMALS
+        ],
+    )
+
+    result = app.get("/animal/search/report", params={"deleted": True})
+
+    assert result.status_code == 200
+    assert received[0].deleted is False
 
 def test_get_animal_documents(app: TestClient, make_animal):
     animal_id = make_animal()
