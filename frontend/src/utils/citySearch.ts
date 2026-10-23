@@ -11,6 +11,14 @@ const keepApiOrder = (a: { index: number }, b: { index: number }) =>
     a.index - b.index
 
 /**
+ * The name without spaces, apostrophes and dashes, so that a query typed
+ * without them is still a prefix match ("sangiu" -> "San Giuliano ...",
+ * ranked above "Monte San Giusto").
+ */
+const compactName = (item: { name: string }) =>
+    item.name.replace(/[\s'’-]/g, "")
+
+/**
  * Fuzzy search on province, by name or by sigla ("TS", "trst", "Trieste").
  * Ranking: exact > starts with > word starts with > contains > acronym >
  * letters in order. Case and accent insensitive.
@@ -23,7 +31,11 @@ export const searchProvince = (
     if (!query.trim()) return province.slice(0, limit)
 
     return matchSorter(province, query.trim(), {
-        keys: ["name", { key: "id", threshold: rankings.EQUAL }],
+        keys: [
+            "name",
+            compactName,
+            { key: "id", threshold: rankings.EQUAL },
+        ],
         baseSort: keepApiOrder,
     }).slice(0, limit)
 }
@@ -40,7 +52,7 @@ export const searchComuni = (
     if (!query.trim()) return comuni.slice(0, limit)
 
     return matchSorter(comuni, query.trim(), {
-        keys: ["name"],
+        keys: ["name", compactName],
         baseSort: keepApiOrder,
     }).slice(0, limit)
 }

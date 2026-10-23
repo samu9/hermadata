@@ -57,6 +57,20 @@ describe('searchComuni', () => {
     ])
   })
 
+  it('ranks names starting with a query typed without spaces first', () => {
+    const sanGiu = [
+      { id: 'F612', name: 'Monte San Giusto', provincia: 'MC' },
+      { id: 'G134', name: 'Orta San Giulio', provincia: 'NO' },
+      { id: 'H930', name: 'San Giuliano Milanese', provincia: 'MI' },
+    ]
+    expect(names(searchComuni(sanGiu, 'sangiu'))[0]).toBe(
+      'San Giuliano Milanese',
+    )
+    expect(names(searchComuni(comuni, 'reggionell'))).toEqual([
+      "Reggio nell'Emilia",
+    ])
+  })
+
   it('ignores accents and case', () => {
     expect(names(searchComuni(comuni, 'AGLIE'))).toEqual(['Agliè'])
   })
