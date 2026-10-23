@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from hermadata.constants import DocKindCode, ExitType
 from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import (
+    AnimalListReportRow,
     ReportAnimalEntryVariables,
     ReportAnimalListVariables,
     ReportGenerator,
@@ -17,6 +18,7 @@ from hermadata.repositories.animal.models import (
     AnimalEntriesQuery,
     AnimalExit,
     AnimalExitsQuery,
+    AnimalListReportExtraField,
     AnimalLogModel,
     AnimalSearchModel,
     CompleteEntryModel,
@@ -147,13 +149,15 @@ class AnimalService:
         self,
         query: AnimalSearchModel,
         allowed_city_codes: list[str] | None = None,
+        extra_fields: list[AnimalListReportExtraField] | None = None,
     ):
         items = self.animal_repository.search_for_list_report(
             query, allowed_city_codes
         )
         variables = ReportAnimalListVariables(
-            items=items,
+            items=[AnimalListReportRow(**i.model_dump()) for i in items],
             total=len(items),
+            extra_fields=extra_fields or [],
         )
         pdf = self.report_generator.build_animal_list_report(variables)
         return "elenco_animali.pdf", pdf

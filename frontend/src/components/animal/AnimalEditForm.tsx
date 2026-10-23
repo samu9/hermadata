@@ -126,6 +126,7 @@ const AnimalEditForm = () => {
     useEffect(() => {
         addButton({
             id: "save-animal",
+            group: "page",
             buttonText: "Salva",
             buttonIcon: faFloppyDisk,
             disabled: !isDirty || updateAnimalMutation.isLoading,
