@@ -473,15 +473,11 @@ const AnimalList = () => {
                     </>
                 )}
                 {!showDeleted && (
-                    <div className="ml-auto flex items-center gap-2">
-                        <Button
-                            icon={<FontAwesomeIcon icon={faGear} />}
-                            tooltip="Impostazioni di stampa"
-                            tooltipOptions={{ position: "bottom" }}
-                            aria-label="Impostazioni di stampa"
-                            className="!bg-surface-0 !border-surface-200 !text-surface-700 hover:!bg-surface-50 !text-sm !px-3 !py-2 !rounded-lg"
-                            onClick={() => setPrintSettingsVisible(true)}
-                        />
+                    <div
+                        role="group"
+                        aria-label="Stampa"
+                        className="ml-auto inline-flex items-stretch"
+                    >
                         <Button
                             icon={
                                 <FontAwesomeIcon
@@ -490,7 +486,7 @@ const AnimalList = () => {
                                 />
                             }
                             label="Stampa"
-                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
+                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg !rounded-r-none"
                             onClick={() => {
                                 // Deleted animals are never part of the report
                                 const {
@@ -508,6 +504,14 @@ const AnimalList = () => {
                                 } as AnimalSearchQuery)
                             }}
                             loading={printReport.isLoading}
+                        />
+                        <Button
+                            icon={<FontAwesomeIcon icon={faGear} />}
+                            tooltip="Impostazioni di stampa"
+                            tooltipOptions={{ position: "bottom" }}
+                            aria-label="Impostazioni di stampa"
+                            className="!bg-primary-600 !border-primary-600 !border-l-primary-400 hover:!bg-primary-700 !text-white !text-sm !px-3 !py-2 !rounded-lg !rounded-l-none"
+                            onClick={() => setPrintSettingsVisible(true)}
                         />
                     </div>
                 )}
