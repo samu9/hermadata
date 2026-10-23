@@ -9,9 +9,33 @@ const byOrder = (a: ToolbarButton, b: ToolbarButton) =>
 const buttonClassName =
     "!rounded-full px-5 py-2.5 gap-2 !font-bold whitespace-nowrap"
 
+const subtleButtonClassName =
+    "!rounded-full !px-3 !py-1.5 gap-1.5 !text-sm whitespace-nowrap hover:!bg-red-50"
+
+const Divider = ({ className = "" }: { className?: string }) => (
+    <div className={`h-8 w-px bg-surface-300 ${className}`} aria-hidden />
+)
+
 const ToolbarItem = ({ button }: { button: ToolbarButton }) => {
     // Record-wide actions are secondary (outlined), page actions are primary
     const outlined = button.group !== "page"
+
+    if (button.onClick && button.subtle) {
+        return (
+            <Button
+                className={subtleButtonClassName}
+                severity={button.severity}
+                outlined
+                size="small"
+                onClick={button.onClick}
+                disabled={button.disabled}
+                loading={button.loading}
+            >
+                <FontAwesomeIcon icon={button.buttonIcon} fixedWidth />
+                {button.buttonText}
+            </Button>
+        )
+    }
 
     return button.onClick ? (
         <Button
@@ -41,21 +65,35 @@ const ToolbarItem = ({ button }: { button: ToolbarButton }) => {
 
 const Toolbar = () => {
     const { buttons } = useToolbar()
-    const recordButtons = buttons.filter((b) => b.group !== "page").sort(byOrder)
-    const pageButtons = buttons.filter((b) => b.group === "page").sort(byOrder)
+    // Subtle (destructive) actions sit apart, at the far left of the bar
+    const subtleButtons = buttons.filter((b) => b.subtle).sort(byOrder)
+    const recordButtons = buttons
+        .filter((b) => !b.subtle && b.group !== "page")
+        .sort(byOrder)
+    const pageButtons = buttons
+        .filter((b) => !b.subtle && b.group === "page")
+        .sort(byOrder)
 
     if (buttons.length === 0) return null
+
+    const hasMainButtons = recordButtons.length > 0 || pageButtons.length > 0
 
     return (
         <>
             {/* Reserve space so the floating bar never covers page content */}
             <div className="h-24" aria-hidden />
             <div className="fixed bottom-6 right-8 z-50 flex items-center gap-3 rounded-full border border-surface-200 bg-white/90 p-2 shadow-xl backdrop-blur">
+                {subtleButtons.map((button) => (
+                    <ToolbarItem key={button.id} button={button} />
+                ))}
+                {subtleButtons.length > 0 && hasMainButtons && (
+                    <Divider className="mx-3" />
+                )}
                 {recordButtons.map((button) => (
                     <ToolbarItem key={button.id} button={button} />
                 ))}
                 {recordButtons.length > 0 && pageButtons.length > 0 && (
-                    <div className="h-8 w-px bg-surface-300" aria-hidden />
+                    <Divider />
                 )}
                 {pageButtons.map((button) => (
                     <ToolbarItem key={button.id} button={button} />
