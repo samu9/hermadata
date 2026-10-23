@@ -13,17 +13,16 @@ const Toolbar = () => {
                 button.onClick && button.subtle ? (
                     <Button
                         key={button.id}
-                        className="!rounded-full !w-10 !h-10 !p-0 justify-center self-center mr-8 bg-white/80 opacity-60 transition-opacity hover:opacity-100"
+                        className="!rounded-full !px-3 !py-1.5 gap-1.5 !text-sm self-center mr-8 !bg-white shadow-md hover:!bg-red-50"
                         severity={button.severity}
                         outlined
+                        size="small"
                         onClick={button.onClick}
                         disabled={button.disabled}
                         loading={button.loading}
-                        tooltip={button.buttonText}
-                        tooltipOptions={{ position: "top" }}
-                        aria-label={button.buttonText}
                     >
                         <FontAwesomeIcon icon={button.buttonIcon} fixedWidth />
+                        {button.buttonText}
                     </Button>
                 ) : button.onClick ? (
                     <Button

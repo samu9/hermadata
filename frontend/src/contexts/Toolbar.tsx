@@ -19,7 +19,7 @@ type ToolbarButton = {
     onSuccessAction?: (data: any) => void
     formProps?: Record<string, any>
     onClick?: () => void
-    // Render as a small, icon-only button set apart from the main actions
+    // Render as a small, low-emphasis button set apart from the main actions
     // (for destructive actions that must not be clicked by mistake)
     subtle?: boolean
 }
