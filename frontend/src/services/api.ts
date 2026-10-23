@@ -190,10 +190,10 @@ class ApiService {
         return result
     }
 
-    async getComuni(provincia: string): Promise<ComuneSchema[]> {
+    async getComuni(provincia?: string): Promise<ComuneSchema[]> {
         const data = await this.get<ComuneSchema[]>(
             ApiEndpoints.util.getComuni,
-            { provincia },
+            provincia ? { provincia } : undefined,
         )
         const result = data.map((d) => comuneSchema.parse(d))
 

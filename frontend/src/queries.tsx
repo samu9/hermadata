@@ -52,7 +52,14 @@ export const useComuniQuery = (provincia?: string) =>
         },
     )
 
-export const useComuneQuery = (code?: string) =>
+// All the comuni of Italy (~8k), fetched once per session and searched
+// client side by the city autocompletes
+export const useAllComuniQuery = () =>
+    useQuery("comuni", () => apiService.getComuni(), {
+        staleTime: Infinity,
+    })
+
+export const useComuneQuery =(code?: string) =>
     useQuery(
         ["comune", code],
         () => (code ? apiService.getComune(code) : null),
