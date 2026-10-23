@@ -8,7 +8,11 @@ import { useParams } from "react-router-dom"
 import { useToolbar } from "../../contexts/Toolbar"
 import { apiService } from "../../main"
 import { DocKind } from "../../models/docs.schema"
-import { useAnimalDocumentsQuery, useDocKindsQuery } from "../../queries"
+import {
+    useAnimalDocumentsQuery,
+    useAnimalQuery,
+    useDocKindsQuery,
+} from "../../queries"
 import AnimalDocUploadForm from "./AnimalDocUploadForm"
 
 const AnimalDocs = () => {
@@ -27,13 +31,16 @@ const AnimalDocs = () => {
 
     const animalDocumentsQuery = useAnimalDocumentsQuery(parseInt(id!))
     const { addButton, removeButton } = useToolbar()
+    const isDeleted = Boolean(useAnimalQuery(id!).data?.deleted_at)
 
     useEffect(() => {
         const buttonId = "new-animal-doc"
+        if (isDeleted) return
 
         // Add the button on mount
         addButton({
             id: buttonId,
+            group: "page",
             buttonText: "Inserisci documento",
             buttonIcon: faFile,
             FormComponent: AnimalDocUploadForm,
@@ -46,7 +53,7 @@ const AnimalDocs = () => {
         return () => {
             removeButton(buttonId)
         }
-    }, [])
+    }, [isDeleted, addButton, removeButton])
     return (
         <div>
             <DataTable

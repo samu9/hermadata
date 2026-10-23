@@ -26,6 +26,7 @@ import { useSessionStorage } from "../../hooks/useSessionStorage"
 import { useNavigate } from "react-router-dom"
 import { useMutation } from "react-query"
 import {
+    AnimalListReportExtraField,
     AnimalSearchQuery,
     AnimalSearchResult,
 } from "../../models/animal.schema"
@@ -44,6 +45,7 @@ import { useAuth } from "../../contexts/AuthContext"
 import { Permission } from "../../constants"
 import { Tooltip } from "primereact/tooltip"
 import { Button } from "primereact/button"
+import { Dialog } from "primereact/dialog"
 import { apiService } from "../../main"
 
 type LazyTableState = {
@@ -137,6 +139,7 @@ const AnimalList = () => {
     )
     const { can } = useAuth()
     const { data: structures = [] } = useStructuresQuery()
+    const canBrowseDeleted = can(Permission.BROWSE_DELETED_ANIMALS)
     const canBrowseNotPresentOnly =
         can(Permission.BROWSE_NOT_PRESENT_ANIMALS) &&
         !can(Permission.BROWSE_PRESENT_ANIMALS)
@@ -167,8 +170,17 @@ const AnimalList = () => {
         }
     }, [structures])
 
+    // Deleted animals are searched regardless of their presence
+    const showDeleted = canBrowseDeleted && Boolean(queryData.deleted)
     const searchQuery: AnimalSearchQuery = {
         ...queryData,
+        ...(showDeleted
+            ? {
+                  present: can(Permission.BROWSE_PRESENT_ANIMALS),
+                  not_present: can(Permission.BROWSE_NOT_PRESENT_ANIMALS),
+              }
+            : {}),
+        deleted: showDeleted,
         structure_ids:
             queryData.structure_ids && queryData.structure_ids.length > 0
                 ? queryData.structure_ids
@@ -185,9 +197,24 @@ const AnimalList = () => {
     }, [animalQuery.data])
     const navigate = useNavigate()
 
+    const [printDialogVisible, setPrintDialogVisible] = useState(false)
+    const [printExtraFields, setPrintExtraFields] = useSessionStorage<
+        AnimalListReportExtraField[]
+    >("animal-list:print-extra-fields", [])
+
+    const togglePrintExtraField = (
+        field: AnimalListReportExtraField,
+        enabled: boolean,
+    ) =>
+        setPrintExtraFields((fields) =>
+            enabled
+                ? [...fields.filter((f) => f !== field), field]
+                : fields.filter((f) => f !== field),
+        )
+
     const printReport = useMutation({
         mutationFn: (query: AnimalSearchQuery) =>
-            apiService.animalSearchReport(query),
+            apiService.animalSearchReport(query, printExtraFields),
         onSuccess: (result: { url: string; filename: string }) => {
             const link = document.createElement("a")
             link.href = result.url
@@ -195,6 +222,7 @@ const AnimalList = () => {
             document.body.appendChild(link)
             link.click()
             link.remove()
+            setPrintDialogVisible(false)
         },
     })
 
@@ -286,7 +314,8 @@ const AnimalList = () => {
     return (
         <div className="w-full space-y-4">
             <div className="p-4 bg-white rounded-xl shadow-sm border border-surface-200 flex gap-3 flex-wrap items-center">
-                {can(Permission.BROWSE_PRESENT_ANIMALS) &&
+                {!showDeleted &&
+                    can(Permission.BROWSE_PRESENT_ANIMALS) &&
                     can(Permission.BROWSE_NOT_PRESENT_ANIMALS) && (
                         <>
                             <SwitchFilter
@@ -367,6 +396,21 @@ const AnimalList = () => {
                         }
                     }}
                 />
+                {canBrowseDeleted && (
+                    <>
+                        <div className="w-px h-8 bg-surface-200 mx-1"></div>
+                        <SwitchFilter
+                            label="Eliminati"
+                            checked={showDeleted}
+                            onChange={(e) =>
+                                setQueryData({
+                                    ...queryData,
+                                    deleted: e.value,
+                                })
+                            }
+                        />
+                    </>
+                )}
                 {hasActiveFilters && (
                     <>
                         <div className="w-px h-8 bg-surface-200 mx-1" />
@@ -428,28 +472,84 @@ const AnimalList = () => {
                         </div>
                     </>
                 )}
-                <div className="ml-auto">
-                    <Button
-                        icon={
-                            <FontAwesomeIcon icon={faPrint} className="mr-2" />
+                {!showDeleted && (
+                    <div className="ml-auto">
+                        <Button
+                            icon={
+                                <FontAwesomeIcon icon={faPrint} className="mr-2" />
+                            }
+                            label="Stampa"
+                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
+                            onClick={() => setPrintDialogVisible(true)}
+                        />
+                    </div>
+                )}
+            </div>
+
+            <Dialog
+                header="Stampa elenco animali"
+                visible={printDialogVisible}
+                onHide={() => setPrintDialogVisible(false)}
+                modal
+                resizable={false}
+                draggable={false}
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            label="Annulla"
+                            className="!bg-surface-0 !border-surface-200 !text-surface-700 hover:!bg-surface-50 !text-sm !px-4 !py-2 !rounded-lg"
+                            onClick={() => setPrintDialogVisible(false)}
+                        />
+                        <Button
+                            icon={
+                                <FontAwesomeIcon
+                                    icon={faPrint}
+                                    className="mr-2"
+                                />
+                            }
+                            label="Stampa"
+                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
+                            onClick={() => {
+                                // Deleted animals are never part of the report
+                                const {
+                                    from_index, // eslint-disable-line @typescript-eslint/no-unused-vars
+                                    to_index, // eslint-disable-line @typescript-eslint/no-unused-vars
+                                    deleted, // eslint-disable-line @typescript-eslint/no-unused-vars
+                                    ...filters
+                                } = queryData
+                                printReport.mutate({
+                                    ...filters,
+                                    structure_ids:
+                                        queryData.structure_ids?.length
+                                            ? queryData.structure_ids
+                                            : undefined,
+                                } as AnimalSearchQuery)
+                            }}
+                            loading={printReport.isLoading}
+                        />
+                    </div>
+                }
+            >
+                <p className="text-sm text-surface-600 mb-4">
+                    Informazioni aggiuntive da includere nella stampa:
+                </p>
+                <div className="flex flex-wrap gap-3">
+                    <SwitchFilter
+                        label="Età"
+                        checked={printExtraFields.includes("age")}
+                        onChange={(e) =>
+                            togglePrintExtraField("age", !!e.value)
                         }
-                        label="Stampa"
-                        className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
-                        onClick={() => {
-                            const { from_index, to_index, ...filters } =
-                                queryData
-                            printReport.mutate({
-                                ...filters,
-                                structure_ids:
-                                    queryData.structure_ids?.length
-                                        ? queryData.structure_ids
-                                        : undefined,
-                            } as AnimalSearchQuery)
-                        }}
-                        loading={printReport.isLoading}
+                    />
+                    <SwitchFilter
+                        label="Sterilizzato"
+                        checked={printExtraFields.includes("sterilized")}
+                        onChange={(e) =>
+                            togglePrintExtraField("sterilized", !!e.value)
+                        }
                     />
                 </div>
-            </div>
+            </Dialog>
 
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
                 <DataTable
@@ -589,7 +689,7 @@ const AnimalList = () => {
                         header="Tipo ingresso"
                     />
 
-                    {queryData.not_present && (
+                    {(queryData.not_present || showDeleted) && (
                         <Column
                             body={(animal: AnimalSearchResult) =>
                                 animal.exit_date &&
@@ -598,7 +698,7 @@ const AnimalList = () => {
                             header="Data uscita"
                         />
                     )}
-                    {queryData.not_present && (
+                    {(queryData.not_present || showDeleted) && (
                         <Column
                             filter
                             showFilterMatchModes={false}
@@ -619,6 +719,18 @@ const AnimalList = () => {
                                 )
                             }
                             header="Tipo uscita"
+                        />
+                    )}
+                    {showDeleted && (
+                        <Column
+                            body={(animal: AnimalSearchResult) =>
+                                animal.deleted_at && (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                        {format(animal.deleted_at, "dd/MM/y")}
+                                    </span>
+                                )
+                            }
+                            header="Eliminato il"
                         />
                     )}
                     <Column

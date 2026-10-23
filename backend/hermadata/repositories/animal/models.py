@@ -277,6 +277,7 @@ class AnimalModel(BaseModel):
     healthcare_stage: bool = False
     without_chip: bool = False
     structure_id: int | None = None
+    deleted_at: datetime | None = None
 
     model_config = ConfigDict(extra="ignore")
 
@@ -326,6 +327,7 @@ class AnimalSearchResult(BaseModel):
     healthcare_stage: bool = False
     without_chip: bool = False
     structure_id: int
+    deleted_at: datetime | None = None
 
 
 AnimalSearchResultQuery = namedtuple(
@@ -340,6 +342,13 @@ class AnimalListReportItem(BaseModel):
     chip_code: str | None = None
     origin_city: str
     sex: str | None = None
+    birth_date: date | None = None
+    sterilized: bool | None = None
+
+
+class AnimalListReportExtraField(str, Enum):
+    AGE = "age"
+    STERILIZED = "sterilized"
 
 
 AnimalListReportItemQuery = namedtuple(
