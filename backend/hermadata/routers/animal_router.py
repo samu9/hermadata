@@ -182,6 +182,8 @@ def serve_animal_list_report(
     if current_user.city_codes:
         allowed_city_codes = current_user.city_codes
 
+    # Deleted animals are never included in the report
+    query.deleted = False
     query.structure_ids = structure_ids
     filename, report = service.animal_list_report(
         query,
@@ -261,6 +263,9 @@ def get_animal(
         animal_data = repo.get(
             AnimalQueryModel(id=animal_id),
             allowed_city_codes=allowed_city_codes,
+            include_deleted=check_permission(
+                current_user, Permission.BROWSE_DELETED_ANIMALS
+            ),
         )
     except NoResultFound as e:
         raise HTTPException(status_code=404, detail="No animal found") from e
@@ -333,8 +338,14 @@ def add_animal_log(
 def get_animal_documents(
     animal_id: int,
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
-    docs = repo.get_documents(animal_id)
+    docs = repo.get_documents(
+        animal_id,
+        include_deleted=check_permission(
+            current_user, Permission.BROWSE_DELETED_ANIMALS
+        ),
+    )
 
     return docs
 
@@ -415,8 +426,14 @@ def add_entry(
 def get_animal_entries(
     animal_id: int,
     repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
-    result = repo.get_animal_entries(animal_id)
+    result = repo.get_animal_entries(
+        animal_id,
+        include_deleted=check_permission(
+            current_user, Permission.BROWSE_DELETED_ANIMALS
+        ),
+    )
 
     return result
 

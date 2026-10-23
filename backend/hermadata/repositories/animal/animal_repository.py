@@ -354,6 +354,7 @@ class SQLAnimalRepository(SQLBaseRepository):
         self,
         query: AnimalQueryModel,
         allowed_city_codes: list[str] | None = None,
+        include_deleted: bool = False,
     ) -> AnimalModel:
         where = []
         if query.id is not None:
@@ -366,7 +367,8 @@ class SQLAnimalRepository(SQLBaseRepository):
         if query.rescue_city_code is not None:
             where.append(Animal.rescue_city_code == query.rescue_city_code)
 
-        where.append(Animal.deleted_at.is_(None))
+        if not include_deleted:
+            where.append(Animal.deleted_at.is_(None))
 
         if allowed_city_codes:
             where.append(AnimalEntry.origin_city_code.in_(allowed_city_codes))
@@ -399,6 +401,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 ).label("healthcare_stage"),
                 AnimalEntry.without_chip,
                 Animal.structure_id,
+                Animal.deleted_at,
             )
             .where(*where)
             .join(
@@ -488,6 +491,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 ).label("healthcare_stage"),
                 AnimalEntry.without_chip,
                 Animal.structure_id,
+                Animal.deleted_at,
             )
             .select_from(Animal)
             .join(
@@ -727,7 +731,9 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return result
 
-    def get_animal_entries(self, animal_id: int) -> list[AnimalEntryModel]:
+    def get_animal_entries(
+        self, animal_id: int, include_deleted: bool = False
+    ) -> list[AnimalEntryModel]:
         entries_data = self.session.execute(
             select(
                 AnimalEntry,
@@ -742,7 +748,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             .join(Comune, Comune.id == AnimalEntry.origin_city_code)
             .where(
                 AnimalEntry.animal_id == animal_id,
-                Animal.deleted_at.is_(None),
+                *([] if include_deleted else [Animal.deleted_at.is_(None)]),
             )
             .order_by(AnimalEntry.entry_date.desc())
         ).all()
@@ -943,7 +949,7 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return result
 
-    def get_documents(self, animal_id: int):
+    def get_documents(self, animal_id: int, include_deleted: bool = False):
         result = self.session.execute(
             select(
                 AnimalDocument.document_id,
@@ -957,7 +963,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             .join(Animal, Animal.id == AnimalDocument.animal_id)
             .where(
                 AnimalDocument.animal_id == animal_id,
-                Animal.deleted_at.is_(None),
+                *([] if include_deleted else [Animal.deleted_at.is_(None)]),
             )
         ).all()
 

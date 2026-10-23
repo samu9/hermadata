@@ -122,8 +122,8 @@ export const mockProvince: ProvinciaSchema[] = [
 ]
 
 export const mockComuni: ComuneSchema[] = [
-  { id: 'H501', name: 'Roma' },
-  { id: 'F205', name: 'Milano' },
+  { id: 'H501', name: 'Roma', provincia: 'RM' },
+  { id: 'F205', name: 'Milano', provincia: 'MI' },
 ]
 
 export const mockAnimalSizes: IntUtilItem[] = [

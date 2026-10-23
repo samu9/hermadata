@@ -37,8 +37,7 @@ import {
     useExitTypesQuery,
     useStructuresQuery,
 } from "../../queries"
-import UncontrolledComuniDropdown from "../forms/uncontrolled/UncontrolledComuniDropdown"
-import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
+import CityPicker from "../forms/city/CityPicker"
 import { classNames } from "primereact/utils"
 import { InputText } from "primereact/inputtext"
 import { useEntryTypesMap, useExitTypesMap } from "../../hooks/useMaps"
@@ -130,12 +129,6 @@ const SwitchFilter = (props: SwitchFilterProps) => {
 
 const AnimalList = () => {
     const [totalRecords, setTotalRecords] = useState(0)
-    const [provinciaProvenienzaFilter, setProvinciaProvenienzaFilter] =
-        useSessionStorage<string | undefined>(
-            "animal-list:provincia-filter",
-            undefined,
-        )
-
     const [lazyState, setLazyState] = useSessionStorage<LazyTableState>(
         "animal-list:lazy-state",
         {
@@ -147,6 +140,7 @@ const AnimalList = () => {
     )
     const { can } = useAuth()
     const { data: structures = [] } = useStructuresQuery()
+    const canBrowseDeleted = can(Permission.BROWSE_DELETED_ANIMALS)
     const canBrowseNotPresentOnly =
         can(Permission.BROWSE_NOT_PRESENT_ANIMALS) &&
         !can(Permission.BROWSE_PRESENT_ANIMALS)
@@ -169,7 +163,6 @@ const AnimalList = () => {
 
     const resetFilters = () => {
         setLazyState((prev) => ({ ...prev, filters: INITIAL_FILTERS }))
-        setProvinciaProvenienzaFilter(undefined)
     }
 
     useEffect(() => {
@@ -178,8 +171,17 @@ const AnimalList = () => {
         }
     }, [structures])
 
+    // Deleted animals are searched regardless of their presence
+    const showDeleted = canBrowseDeleted && Boolean(queryData.deleted)
     const searchQuery: AnimalSearchQuery = {
         ...queryData,
+        ...(showDeleted
+            ? {
+                  present: can(Permission.BROWSE_PRESENT_ANIMALS),
+                  not_present: can(Permission.BROWSE_NOT_PRESENT_ANIMALS),
+              }
+            : {}),
+        deleted: showDeleted,
         structure_ids:
             queryData.structure_ids && queryData.structure_ids.length > 0
                 ? queryData.structure_ids
@@ -229,19 +231,11 @@ const AnimalList = () => {
     ) => {
         return (
             <div className="flex flex-col gap-2 p-2">
-                <UncontrolledProvinceDropdown
-                    value={provinciaProvenienzaFilter}
-                    onChange={(value) => setProvinciaProvenienzaFilter(value)}
-                    className="w-full"
+                <CityPicker
+                    value={options.value}
+                    onChange={(value) => options.filterCallback(value)}
+                    fieldClassName="w-full"
                 />
-                {provinciaProvenienzaFilter && (
-                    <UncontrolledComuniDropdown
-                        provincia={provinciaProvenienzaFilter}
-                        value={options.value}
-                        onChange={(value) => options.filterCallback(value)}
-                        className="w-full"
-                    />
-                )}
             </div>
         )
     }
@@ -320,7 +314,8 @@ const AnimalList = () => {
     return (
         <div className="w-full space-y-4">
             <div className="p-4 bg-white rounded-xl shadow-sm border border-surface-200 flex gap-3 flex-wrap items-center">
-                {can(Permission.BROWSE_PRESENT_ANIMALS) &&
+                {!showDeleted &&
+                    can(Permission.BROWSE_PRESENT_ANIMALS) &&
                     can(Permission.BROWSE_NOT_PRESENT_ANIMALS) && (
                         <>
                             <SwitchFilter
@@ -401,6 +396,21 @@ const AnimalList = () => {
                         }
                     }}
                 />
+                {canBrowseDeleted && (
+                    <>
+                        <div className="w-px h-8 bg-surface-200 mx-1"></div>
+                        <SwitchFilter
+                            label="Eliminati"
+                            checked={showDeleted}
+                            onChange={(e) =>
+                                setQueryData({
+                                    ...queryData,
+                                    deleted: e.value,
+                                })
+                            }
+                        />
+                    </>
+                )}
                 {hasActiveFilters && (
                     <>
                         <div className="w-px h-8 bg-surface-200 mx-1" />
@@ -462,35 +472,45 @@ const AnimalList = () => {
                         </div>
                     </>
                 )}
-                <div className="ml-auto flex items-center gap-2">
-                    <Button
-                        icon={<FontAwesomeIcon icon={faGear} />}
-                        tooltip="Impostazioni di stampa"
-                        tooltipOptions={{ position: "bottom" }}
-                        aria-label="Impostazioni di stampa"
-                        className="!bg-surface-0 !border-surface-200 !text-surface-700 hover:!bg-surface-50 !text-sm !px-3 !py-2 !rounded-lg"
-                        onClick={() => setPrintSettingsVisible(true)}
-                    />
-                    <Button
-                        icon={
-                            <FontAwesomeIcon icon={faPrint} className="mr-2" />
-                        }
-                        label="Stampa"
-                        className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
-                        onClick={() => {
-                            const { from_index, to_index, ...filters } =
-                                queryData
-                            printReport.mutate({
-                                ...filters,
-                                structure_ids:
-                                    queryData.structure_ids?.length
-                                        ? queryData.structure_ids
-                                        : undefined,
-                            } as AnimalSearchQuery)
-                        }}
-                        loading={printReport.isLoading}
-                    />
-                </div>
+                {!showDeleted && (
+                    <div className="ml-auto flex items-center gap-2">
+                        <Button
+                            icon={<FontAwesomeIcon icon={faGear} />}
+                            tooltip="Impostazioni di stampa"
+                            tooltipOptions={{ position: "bottom" }}
+                            aria-label="Impostazioni di stampa"
+                            className="!bg-surface-0 !border-surface-200 !text-surface-700 hover:!bg-surface-50 !text-sm !px-3 !py-2 !rounded-lg"
+                            onClick={() => setPrintSettingsVisible(true)}
+                        />
+                        <Button
+                            icon={
+                                <FontAwesomeIcon
+                                    icon={faPrint}
+                                    className="mr-2"
+                                />
+                            }
+                            label="Stampa"
+                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
+                            onClick={() => {
+                                // Deleted animals are never part of the report
+                                const {
+                                    from_index, // eslint-disable-line @typescript-eslint/no-unused-vars
+                                    to_index, // eslint-disable-line @typescript-eslint/no-unused-vars
+                                    deleted, // eslint-disable-line @typescript-eslint/no-unused-vars
+                                    ...filters
+                                } = queryData
+                                printReport.mutate({
+                                    ...filters,
+                                    structure_ids:
+                                        queryData.structure_ids?.length
+                                            ? queryData.structure_ids
+                                            : undefined,
+                                } as AnimalSearchQuery)
+                            }}
+                            loading={printReport.isLoading}
+                        />
+                    </div>
+                )}
             </div>
 
             <Dialog
@@ -622,9 +642,6 @@ const AnimalList = () => {
                         filterMatchMode={FilterMatchMode.EQUALS}
                         header="Provenienza"
                         field="comune"
-                        onFilterClear={() =>
-                            setProvinciaProvenienzaFilter(undefined)
-                        }
                         showFilterMenuOptions={false}
                         showFilterOperator={false}
                         showAddButton={false}
@@ -663,7 +680,7 @@ const AnimalList = () => {
                         header="Tipo ingresso"
                     />
 
-                    {queryData.not_present && (
+                    {(queryData.not_present || showDeleted) && (
                         <Column
                             body={(animal: AnimalSearchResult) =>
                                 animal.exit_date &&
@@ -672,7 +689,7 @@ const AnimalList = () => {
                             header="Data uscita"
                         />
                     )}
-                    {queryData.not_present && (
+                    {(queryData.not_present || showDeleted) && (
                         <Column
                             filter
                             showFilterMatchModes={false}
@@ -693,6 +710,18 @@ const AnimalList = () => {
                                 )
                             }
                             header="Tipo uscita"
+                        />
+                    )}
+                    {showDeleted && (
+                        <Column
+                            body={(animal: AnimalSearchResult) =>
+                                animal.deleted_at && (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                                        {format(animal.deleted_at, "dd/MM/y")}
+                                    </span>
+                                )
+                            }
+                            header="Eliminato il"
                         />
                     )}
                     <Column
