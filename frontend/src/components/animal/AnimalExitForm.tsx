@@ -22,7 +22,11 @@ import { Toast } from "primereact/toast"
 import { useParams } from "react-router-dom"
 import SearchAdopter from "../adoption/SearchAdopter"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faAdd, faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons"
+import {
+    faAdd,
+    faDoorOpen,
+    faMagnifyingGlass,
+} from "@fortawesome/free-solid-svg-icons"
 import NewAdopterForm from "../adopter/NewAdopterForm"
 import { Dialog } from "primereact/dialog"
 import ControlledTextarea from "../forms/ControlledTextarea"
@@ -32,6 +36,7 @@ import { Adopter } from "../../models/adopter.schema"
 import UncontrolledProvinceDropdown from "../forms/uncontrolled/UncontrolledProvinceDropdown"
 import ControlledInputText from "../forms/ControlledInputText"
 import { useFormPersist } from "../../hooks/useFormPersist"
+import { useToolbar } from "../../contexts/Toolbar"
 
 type AnimalExitFormState = AnimalExit & {
     _provincia_detenzione?: string
@@ -133,6 +138,28 @@ const AnimalExitForm = () => {
             },
         })
     }
+
+    const { addButton, removeButton } = useToolbar()
+    useEffect(() => {
+        addButton({
+            id: "save-exit",
+            group: "page",
+            buttonText: "Salva Uscita",
+            buttonIcon: faDoorOpen,
+            disabled: !isValid || animalExitMutation.isLoading,
+            loading: animalExitMutation.isLoading,
+            order: 100,
+            onClick: () => handleSubmit(onSubmit)(),
+        })
+        return () => removeButton("save-exit")
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        isValid,
+        isTemporary,
+        animalExitMutation.isLoading,
+        addButton,
+        removeButton,
+    ])
 
     const [isAdoption, setIsAdoption] = useState(false)
     const [isDetention, setIsDetention] = useState(false)
@@ -349,18 +376,6 @@ const AnimalExitForm = () => {
                             label="Note"
                             className="w-full"
                         />
-                    </div>
-
-                    {/* Submit Button */}
-                    <div className="flex justify-end">
-                        <Button
-                            disabled={!isValid}
-                            type="submit"
-                            size="large"
-                            className="px-8"
-                        >
-                            Salva Uscita
-                        </Button>
                     </div>
                 </form>
             </FormProvider>

@@ -136,6 +136,7 @@ const SuperUserAnimalEditForm = () => {
     useEffect(() => {
         addButton({
             id: "save-animal",
+            group: "page",
             buttonText: "Salva (Super User)",
             buttonIcon: faFloppyDisk,
             disabled: !isDirty || updateAnimalMutation.isLoading,

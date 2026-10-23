@@ -26,6 +26,7 @@ import { useSessionStorage } from "../../hooks/useSessionStorage"
 import { useNavigate } from "react-router-dom"
 import { useMutation } from "react-query"
 import {
+    AnimalListReportExtraField,
     AnimalSearchQuery,
     AnimalSearchResult,
 } from "../../models/animal.schema"
@@ -45,6 +46,7 @@ import { useAuth } from "../../contexts/AuthContext"
 import { Permission } from "../../constants"
 import { Tooltip } from "primereact/tooltip"
 import { Button } from "primereact/button"
+import { Dialog } from "primereact/dialog"
 import { apiService } from "../../main"
 
 type LazyTableState = {
@@ -203,9 +205,24 @@ const AnimalList = () => {
     }, [animalQuery.data])
     const navigate = useNavigate()
 
+    const [printDialogVisible, setPrintDialogVisible] = useState(false)
+    const [printExtraFields, setPrintExtraFields] = useSessionStorage<
+        AnimalListReportExtraField[]
+    >("animal-list:print-extra-fields", [])
+
+    const togglePrintExtraField = (
+        field: AnimalListReportExtraField,
+        enabled: boolean,
+    ) =>
+        setPrintExtraFields((fields) =>
+            enabled
+                ? [...fields.filter((f) => f !== field), field]
+                : fields.filter((f) => f !== field),
+        )
+
     const printReport = useMutation({
         mutationFn: (query: AnimalSearchQuery) =>
-            apiService.animalSearchReport(query),
+            apiService.animalSearchReport(query, printExtraFields),
         onSuccess: (result: { url: string; filename: string }) => {
             const link = document.createElement("a")
             link.href = result.url
@@ -213,6 +230,7 @@ const AnimalList = () => {
             document.body.appendChild(link)
             link.click()
             link.remove()
+            setPrintDialogVisible(false)
         },
     })
 
@@ -478,6 +496,35 @@ const AnimalList = () => {
                             }
                             label="Stampa"
                             className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
+                            onClick={() => setPrintDialogVisible(true)}
+                        />
+                    </div>
+                )}
+            </div>
+
+            <Dialog
+                header="Stampa elenco animali"
+                visible={printDialogVisible}
+                onHide={() => setPrintDialogVisible(false)}
+                modal
+                resizable={false}
+                draggable={false}
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            label="Annulla"
+                            className="!bg-surface-0 !border-surface-200 !text-surface-700 hover:!bg-surface-50 !text-sm !px-4 !py-2 !rounded-lg"
+                            onClick={() => setPrintDialogVisible(false)}
+                        />
+                        <Button
+                            icon={
+                                <FontAwesomeIcon
+                                    icon={faPrint}
+                                    className="mr-2"
+                                />
+                            }
+                            label="Stampa"
+                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
                             onClick={() => {
                                 // Deleted animals are never part of the report
                                 const {
@@ -497,8 +544,28 @@ const AnimalList = () => {
                             loading={printReport.isLoading}
                         />
                     </div>
-                )}
-            </div>
+                }
+            >
+                <p className="text-sm text-surface-600 mb-4">
+                    Informazioni aggiuntive da includere nella stampa:
+                </p>
+                <div className="flex flex-wrap gap-3">
+                    <SwitchFilter
+                        label="Età"
+                        checked={printExtraFields.includes("age")}
+                        onChange={(e) =>
+                            togglePrintExtraField("age", !!e.value)
+                        }
+                    />
+                    <SwitchFilter
+                        label="Sterilizzato"
+                        checked={printExtraFields.includes("sterilized")}
+                        onChange={(e) =>
+                            togglePrintExtraField("sterilized", !!e.value)
+                        }
+                    />
+                </div>
+            </Dialog>
 
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
                 <DataTable

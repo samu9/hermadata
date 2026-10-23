@@ -40,6 +40,7 @@ const AnimalDocs = () => {
         // Add the button on mount
         addButton({
             id: buttonId,
+            group: "page",
             buttonText: "Inserisci documento",
             buttonIcon: faFile,
             FormComponent: AnimalDocUploadForm,

@@ -41,6 +41,7 @@ from hermadata.repositories.animal.models import (
     AnimalExit,
     AnimalExitsQuery,
     AnimalImageModel,
+    AnimalListReportExtraField,
     AnimalLogModel,
     AnimalModel,
     AnimalQueryModel,
@@ -152,6 +153,9 @@ def serve_animal_list_report(
     service: Annotated[AnimalService, Depends(get_animal_service)],
     current_user: Annotated[TokenData, Depends(get_current_user)],
     structure_ids: Annotated[list[int] | None, Query()] = None,
+    extra_fields: Annotated[
+        list[AnimalListReportExtraField] | None, Query()
+    ] = None,
 ):
     if (
         query.present
@@ -182,7 +186,9 @@ def serve_animal_list_report(
     query.deleted = False
     query.structure_ids = structure_ids
     filename, report = service.animal_list_report(
-        query, allowed_city_codes=allowed_city_codes
+        query,
+        allowed_city_codes=allowed_city_codes,
+        extra_fields=extra_fields,
     )
 
     return Response(

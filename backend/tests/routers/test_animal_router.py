@@ -337,7 +337,9 @@ def test_animal_list_report_excludes_deleted(app: TestClient):
     received = []
 
     class FakeService:
-        def animal_list_report(self, query, allowed_city_codes=None):
+        def animal_list_report(
+            self, query, allowed_city_codes=None, extra_fields=None
+        ):
             received.append(query)
             return "elenco_animali.pdf", b"pdf"
 

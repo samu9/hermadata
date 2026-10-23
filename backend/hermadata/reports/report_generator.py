@@ -13,6 +13,7 @@ from pydantic import (
     Field,
     PlainSerializer,
     StringConstraints,
+    computed_field,
     field_serializer,
     field_validator,
     model_validator,
@@ -35,6 +36,7 @@ from hermadata.repositories.animal.models import (
     AnimalEntriesQuery,
     AnimalExitsItem,
     AnimalExitsQuery,
+    AnimalListReportExtraField,
     AnimalListReportItem,
     AnimalReportResult,
 )
@@ -122,6 +124,30 @@ class AdopterVariables(BaseModel):
     document_number: NullableString
 
 
+def format_age(birth_date: date | None) -> str:
+    if birth_date is None:
+        return ""
+    today = date.today()
+    years = (
+        today.year
+        - birth_date.year
+        - ((today.month, today.day) < (birth_date.month, birth_date.day))
+    )
+    if years >= 1:
+        return f"{years} {'anno' if years == 1 else 'anni'}"
+    months = (
+        (today.year - birth_date.year) * 12 + today.month - birth_date.month
+    )
+    if today.day < birth_date.day:
+        months -= 1
+    if months > 0:
+        return f"{months} {'mese' if months == 1 else 'mesi'}"
+    days = (today - birth_date).days
+    if days > 0:
+        return f"{days} {'giorno' if days == 1 else 'giorni'}"
+    return "Appena nato"
+
+
 class AnimalVariables(BaseVariables):
     name: NullableString
     chip_code: NullableString
@@ -145,31 +171,7 @@ class AnimalVariables(BaseVariables):
             from datetime import datetime
 
             birth_date = datetime.strptime(birth_date, "%Y-%m-%d").date()
-        today = date.today()
-        years = (
-            today.year
-            - birth_date.year
-            - ((today.month, today.day) < (birth_date.month, birth_date.day))
-        )
-        if years >= 1:
-            data["age"] = f"{years} {'anno' if years == 1 else 'anni'}"
-        else:
-            months = (
-                (today.year - birth_date.year) * 12
-                + today.month
-                - birth_date.month
-            )
-            if today.day < birth_date.day:
-                months -= 1
-            if months > 0:
-                data["age"] = f"{months} {'mese' if months == 1 else 'mesi'}"
-            else:
-                days = (today - birth_date).days
-                data["age"] = (
-                    f"{days} {'giorno' if days == 1 else 'giorni'}"
-                    if days > 0
-                    else "Appena nato"
-                )
+        data["age"] = format_age(birth_date)
         return data
 
     @field_validator("sex", mode="before")
@@ -222,10 +224,18 @@ class ReportCustodyVariables(ReportDefaultVariables):
     exit_date: ReportDate
 
 
+class AnimalListReportRow(AnimalListReportItem):
+    @computed_field
+    @property
+    def age(self) -> str:
+        return format_age(self.birth_date)
+
+
 class ReportAnimalListVariables(ReportDefaultVariables):
     title: str = ""
-    items: list[AnimalListReportItem]
+    items: list[AnimalListReportRow]
     total: int
+    extra_fields: list[AnimalListReportExtraField] = []
 
     def model_post_init(self, __context) -> None:
         if not self.title:

@@ -196,6 +196,8 @@ export const animalSearchQuerySchema = paginationQuerySchema.extend({
 
 export type AnimalSearchQuery = z.infer<typeof animalSearchQuerySchema>
 
+export type AnimalListReportExtraField = "age" | "sterilized"
+
 export const newAnimalAdoptionSchema = z.object({
     animal_id: z.number(),
     adopter_id: z.number(),
