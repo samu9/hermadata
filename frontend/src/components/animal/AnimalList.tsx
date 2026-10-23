@@ -5,6 +5,7 @@ import {
     faHospital,
     faHome,
     faPrint,
+    faGear,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
@@ -197,10 +198,10 @@ const AnimalList = () => {
     }, [animalQuery.data])
     const navigate = useNavigate()
 
-    const [printDialogVisible, setPrintDialogVisible] = useState(false)
+    const [printSettingsVisible, setPrintSettingsVisible] = useState(false)
     const [printExtraFields, setPrintExtraFields] = useSessionStorage<
         AnimalListReportExtraField[]
-    >("animal-list:print-extra-fields", [])
+    >("animal-list:print-extra-fields", ["age", "sterilized"])
 
     const togglePrintExtraField = (
         field: AnimalListReportExtraField,
@@ -222,7 +223,6 @@ const AnimalList = () => {
             document.body.appendChild(link)
             link.click()
             link.remove()
-            setPrintDialogVisible(false)
         },
     })
 
@@ -473,33 +473,11 @@ const AnimalList = () => {
                     </>
                 )}
                 {!showDeleted && (
-                    <div className="ml-auto">
-                        <Button
-                            icon={
-                                <FontAwesomeIcon icon={faPrint} className="mr-2" />
-                            }
-                            label="Stampa"
-                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
-                            onClick={() => setPrintDialogVisible(true)}
-                        />
-                    </div>
-                )}
-            </div>
-
-            <Dialog
-                header="Stampa elenco animali"
-                visible={printDialogVisible}
-                onHide={() => setPrintDialogVisible(false)}
-                modal
-                resizable={false}
-                draggable={false}
-                footer={
-                    <div className="flex justify-end gap-2">
-                        <Button
-                            label="Annulla"
-                            className="!bg-surface-0 !border-surface-200 !text-surface-700 hover:!bg-surface-50 !text-sm !px-4 !py-2 !rounded-lg"
-                            onClick={() => setPrintDialogVisible(false)}
-                        />
+                    <div
+                        role="group"
+                        aria-label="Stampa"
+                        className="ml-auto inline-flex items-stretch"
+                    >
                         <Button
                             icon={
                                 <FontAwesomeIcon
@@ -508,7 +486,7 @@ const AnimalList = () => {
                                 />
                             }
                             label="Stampa"
-                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg"
+                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg !rounded-r-none"
                             onClick={() => {
                                 // Deleted animals are never part of the report
                                 const {
@@ -527,8 +505,25 @@ const AnimalList = () => {
                             }}
                             loading={printReport.isLoading}
                         />
+                        <Button
+                            icon={<FontAwesomeIcon icon={faGear} />}
+                            tooltip="Impostazioni di stampa"
+                            tooltipOptions={{ position: "bottom" }}
+                            aria-label="Impostazioni di stampa"
+                            className="!bg-primary-600 !border-primary-600 !border-l-primary-400 hover:!bg-primary-700 !text-white !text-sm !px-3 !py-2 !rounded-lg !rounded-l-none"
+                            onClick={() => setPrintSettingsVisible(true)}
+                        />
                     </div>
-                }
+                )}
+            </div>
+
+            <Dialog
+                header="Impostazioni di stampa"
+                visible={printSettingsVisible}
+                onHide={() => setPrintSettingsVisible(false)}
+                modal
+                resizable={false}
+                draggable={false}
             >
                 <p className="text-sm text-surface-600 mb-4">
                     Informazioni aggiuntive da includere nella stampa:
