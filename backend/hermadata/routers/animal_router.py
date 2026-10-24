@@ -323,6 +323,17 @@ def delete_animal(
     return Response(content=None, status_code=204)
 
 
+@router.post("/{animal_id}/restore")
+def restore_animal(
+    animal_id: int,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(require_superuser)],
+):
+    if service.restore(animal_id) == 0:
+        raise HTTPException(status_code=404, detail="No deleted animal found")
+    return Response(content=None, status_code=204)
+
+
 @router.get("/{animal_id}/logs", response_model=list[AnimalLogModel])
 def get_animal_logs(
     animal_id: int,

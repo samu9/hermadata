@@ -138,6 +138,8 @@ const AnimalRecord = (props: Props) => {
     const [activeIndex, setActiveIndex] = useState(1)
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
+    const [restoreDialogVisible, setRestoreDialogVisible] = useState(false)
+    const [isRestoring, setIsRestoring] = useState(false)
     const [deleteExitDialogVisible, setDeleteExitDialogVisible] =
         useState(false)
     const [moveToShelterDialogVisible, setMoveToShelterDialogVisible] =
@@ -165,6 +167,7 @@ const AnimalRecord = (props: Props) => {
     const isDeleted = Boolean(props.data.deleted_at)
 
     const closeDeleteDialog = () => setDeleteDialogVisible(false)
+    const closeRestoreDialog = () => setRestoreDialogVisible(false)
 
     const confirmDelete = async () => {
         try {
@@ -178,6 +181,21 @@ const AnimalRecord = (props: Props) => {
             console.error("Failed to delete animal", error)
         } finally {
             setIsDeleting(false)
+        }
+    }
+
+    const confirmRestore = async () => {
+        try {
+            setIsRestoring(true)
+            await apiService.restoreAnimal(Number(id))
+            await queryClient.invalidateQueries(["animal-search"])
+            await queryClient.invalidateQueries(["animal", id])
+            toastService.showSuccess("Animale ripristinato correttamente")
+            setRestoreDialogVisible(false)
+        } catch (error) {
+            console.error("Failed to restore animal", error)
+        } finally {
+            setIsRestoring(false)
         }
     }
 
@@ -332,6 +350,20 @@ const AnimalRecord = (props: Props) => {
             })
         }
         return () => removeButton("delete-animal")
+    }, [isSuperUser, isDeleted, addButton, removeButton])
+
+    useEffect(() => {
+        if (isSuperUser && isDeleted) {
+            addButton({
+                id: "restore-animal",
+                buttonText: "Ripristina animale",
+                buttonIcon: faRotateLeft,
+                severity: "success",
+                order: 10,
+                onClick: () => setRestoreDialogVisible(true),
+            })
+        }
+        return () => removeButton("restore-animal")
     }, [isSuperUser, isDeleted, addButton, removeButton])
 
     useEffect(() => {
@@ -521,6 +553,44 @@ const AnimalRecord = (props: Props) => {
                         <strong>Questa azione non può essere annullata.</strong>
                     </p>
                 </div>
+            </Dialog>
+
+            {/* Restore Animal Dialog */}
+            <Dialog
+                header="Ripristinare l'animale?"
+                visible={restoreDialogVisible}
+                style={{ width: "480px" }}
+                onHide={closeRestoreDialog}
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            label="Annulla"
+                            icon="pi pi-times"
+                            onClick={closeRestoreDialog}
+                            className="p-button-text"
+                            disabled={isRestoring}
+                        />
+                        <Button
+                            label="Ripristina"
+                            icon="pi pi-replay"
+                            severity="success"
+                            onClick={confirmRestore}
+                            loading={isRestoring}
+                            autoFocus
+                        />
+                    </div>
+                }
+            >
+                <p className="m-0">
+                    Stai per ripristinare l'animale{" "}
+                    <strong>
+                        {props.data.name
+                            ? `${props.data.name} (${props.data.code})`
+                            : props.data.code}
+                    </strong>
+                    . L'animale tornerà visibile e modificabile
+                    nell'applicazione.
+                </p>
             </Dialog>
 
             <ConfirmDialog

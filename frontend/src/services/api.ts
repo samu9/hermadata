@@ -300,6 +300,10 @@ class ApiService {
         await this.delete(ApiEndpoints.animal.delete(id))
     }
 
+    async restoreAnimal(id: number): Promise<void> {
+        await this.post<void>(ApiEndpoints.animal.restore(id), {})
+    }
+
     async completeAnimalEntry(
         id: string,
         data: AnimalCompleteEntry,

@@ -717,6 +717,15 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
         self.session.flush()
 
+    def restore_animal(self, animal_id: int) -> int:
+        result = self.session.execute(
+            update(Animal)
+            .where(Animal.id == animal_id, Animal.deleted_at.is_not(None))
+            .values(deleted_at=None)
+        )
+        self.session.flush()
+        return result.rowcount
+
     def move_to_structure(
         self,
         animal_id: int,
