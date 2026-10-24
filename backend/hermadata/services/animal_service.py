@@ -95,6 +95,9 @@ class AnimalService:
     def soft_delete(self, animal_id: int):
         self.animal_repository.soft_delete_animal(animal_id)
 
+    def restore(self, animal_id: int) -> int:
+        return self.animal_repository.restore_animal(animal_id)
+
     def complete_entry(
         self,
         animal_id: int,

@@ -252,6 +252,44 @@ def test_delete_animal(app: TestClient, make_animal, db_session: Session):
     assert animal.deleted_at is not None
 
 
+def test_restore_animal(app: TestClient, make_animal, db_session: Session):
+    animal_id = make_animal()
+    app.delete(f"/animal/{animal_id}")
+
+    result = app.post(f"/animal/{animal_id}/restore")
+    assert result.status_code == 204
+
+    db_session.expire_all()
+    animal = db_session.execute(
+        select(Animal).where(Animal.id == animal_id)
+    ).scalar_one()
+    assert animal.deleted_at is None
+
+    # Restoring an already-active animal returns 404
+    result = app.post(f"/animal/{animal_id}/restore")
+    assert result.status_code == 404
+
+
+def test_restore_animal_requires_superuser(app: TestClient, make_animal):
+    from hermadata.constants import Permission
+    from hermadata.initializations import get_current_user
+    from hermadata.services.user_service import TokenData
+
+    animal_id = make_animal()
+    app.delete(f"/animal/{animal_id}")
+
+    app.app.dependency_overrides[get_current_user] = lambda: TokenData(
+        user_id=1,
+        email="test@test.it",
+        is_active=True,
+        is_superuser=False,
+        permissions=[p.value for p in Permission],
+    )
+
+    result = app.post(f"/animal/{animal_id}/restore")
+    assert result.status_code == 403
+
+
 def test_browse_deleted_animal(
     app: TestClient, make_animal, animal_service: AnimalService
 ):
