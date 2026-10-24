@@ -142,7 +142,7 @@ def test_animal_entries_report(empty_db, report_generator: ReportGenerator):
     assert rows[1][4].value == "M"
 
 
-def test_variation_report(report_generator: ReportGenerator):
+def test_variation_report(jinja_env, report_generator: ReportGenerator):
     variables = ReportVariationVariables(
         animal=AnimalVariables(
             name="Gino",
@@ -170,6 +170,14 @@ def test_variation_report(report_generator: ReportGenerator):
     pdf = report_generator.build_variation_report(variables)
 
     assert pdf
+
+    return_variables = variables.model_copy(
+        update={"variation_type": ExitType.return_}
+    )
+    template = jinja_env.get_template("variation.jinja")
+    html = template.render(**return_variables.model_dump())
+    assert "stato restituito al Sig." in html
+    assert "stato restituito dal Sig." not in html
 
 
 def test_adoption_report(report_generator: ReportGenerator):
