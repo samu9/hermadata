@@ -33,7 +33,7 @@ const ComuneAutoComplete = ({
             (comuniQuery.data ?? []).filter(
                 (c) =>
                     (!provincia || c.provincia === provincia) &&
-                    (!allowedCodes || allowedCodes.includes(c.id)),
+                    (!allowedCodes?.length || allowedCodes.includes(c.id)),
             ),
         [comuniQuery.data, provincia, allowedCodes],
     )

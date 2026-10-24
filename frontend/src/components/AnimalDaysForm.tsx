@@ -17,7 +17,7 @@ import { SubTitle } from "./typography"
 
 const AnimalDaysForm = () => {
     const { user } = useAuth()
-    const restrictedCities = user?.city_codes ?? null
+    const restrictedCities = user?.city_codes?.length ? user.city_codes : null
 
     const form = useForm<AnimalDaysRequestSchema>({
         resolver: zodResolver(animalDaysRequestSchema),
