@@ -46,6 +46,23 @@ describe('DataExtractionsPage', () => {
       expect(downloadButtons.length).toBeGreaterThanOrEqual(1)
     })
   })
+
+  it('shows the Provincia selector in animal days report when operator has empty city_codes array', async () => {
+    localStorage.setItem(
+      'userData',
+      JSON.stringify({
+        username: 'operator@hermadata.it',
+        is_superuser: false,
+        role: 'operator',
+        permissions: ['DS'],
+        city_codes: [],
+      })
+    )
+    renderWithProviders(<DataExtractionsPage />)
+    await waitFor(() => {
+      expect(screen.getAllByText('Provincia')).toHaveLength(3)
+    })
+  })
 })
 
 describe('VetsPage', () => {

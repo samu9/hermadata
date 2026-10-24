@@ -45,7 +45,7 @@ const CityPicker = (props: CityPickerProps) => {
 
     return (
         <>
-            {!props.allowedCodes && (
+            {!props.allowedCodes?.length && (
                 <ProvinciaAutoComplete
                     id={props.id && `${props.id}-provincia`}
                     label={props.provinciaLabel}
