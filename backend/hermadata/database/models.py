@@ -209,6 +209,10 @@ class Adoption(Base):
     returned_at: Mapped[datetime | None] = mapped_column(
         DateTime(), nullable=True
     )
+    # set when an exit is deleted by a superuser: the adoption is voided
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
 
 
 # class Person(Base):
@@ -511,12 +515,25 @@ class AnimalDocument(Base):
     animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
     document_id: Mapped[int] = mapped_column(ForeignKey("document.id"))
     document_kind_id = mapped_column(ForeignKey("document_kind.id"))
+    # Set for documents tied to a specific entry/exit event (adoption,
+    # variation, entry/exit comms, ...). Null for general animal documents.
+    animal_entry_id: Mapped[int | None] = mapped_column(
+        ForeignKey("animal_entry.id"), nullable=True
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(), server_onupdate=func.now(), nullable=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
+    # True when the data this (rendered) document embeds has since been
+    # edited, so the document is stale and should be re-rendered.
+    dirty: Mapped[bool] = mapped_column(
+        Boolean, server_default=expression.false(), default=False
     )
 
     __table_args__ = (

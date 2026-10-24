@@ -31,6 +31,21 @@ export type SeverityType =
     | "help"
     | undefined
 
+// Document kinds strictly tied to a specific animal entry/exit event.
+// Mirrors ENTRY_TIED_DOC_KIND_CODES in the backend constants.
+export const ENTRY_TIED_DOC_KIND_CODES = [
+    "CI",
+    "U",
+    "UF",
+    "AD",
+    "ADF",
+    "AF",
+    "AFF",
+    "VA",
+    "VAF",
+    "RP",
+]
+
 export const REQUIRED_EXIT_FIELDS_LABELS: Record<string, string> = {
     chip_code: "Microchip",
     fur: "Pelo",

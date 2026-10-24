@@ -1,6 +1,7 @@
 code,description,category
 CR,Creazione animale,automatic
 EX,Uscita,automatic
+ED,Uscita eliminata,automatic
 NE,Nuovo ingresso,automatic
 EC,Completamento ingresso,automatic
 DU,Aggiornamento dati,automatic
@@ -20,3 +21,4 @@ MSB,Morsicatura subita,manual
 CC,Certificazione,manual
 TH,Terapia,health
 THD,Terapia eliminata,health
+DR,Documento rigenerato,automatic

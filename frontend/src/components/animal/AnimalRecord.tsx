@@ -32,6 +32,7 @@ import { Animal } from "../../models/animal.schema"
 import NewAnimalForm from "../new-entry/NewAnimalEntryForm"
 import AnimalRecordHeader from "./AnimalRecordHeader"
 import { Dialog } from "primereact/dialog"
+import { ConfirmDialog } from "primereact/confirmdialog"
 import { Calendar } from "primereact/calendar"
 import { Button } from "primereact/button"
 import { Dropdown } from "primereact/dropdown"
@@ -137,6 +138,8 @@ const AnimalRecord = (props: Props) => {
     const [activeIndex, setActiveIndex] = useState(1)
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
+    const [deleteExitDialogVisible, setDeleteExitDialogVisible] =
+        useState(false)
     const [moveToShelterDialogVisible, setMoveToShelterDialogVisible] =
         useState(false)
     const [moveToShelterDate, setMoveToShelterDate] = useState<Date | null>(
@@ -175,6 +178,20 @@ const AnimalRecord = (props: Props) => {
             console.error("Failed to delete animal", error)
         } finally {
             setIsDeleting(false)
+        }
+    }
+
+    const confirmDeleteExit = async () => {
+        if (!id) return
+        try {
+            await apiService.deleteAnimalExit(Number(id))
+            await queryClient.invalidateQueries(["animal", id])
+            await queryClient.invalidateQueries(["animal-entries", id])
+            await queryClient.invalidateQueries(["animal-search"])
+            toastService.showSuccess("Uscita eliminata correttamente")
+            setDeleteExitDialogVisible(false)
+        } catch (error) {
+            console.error("Failed to delete animal exit", error)
         }
     }
 
@@ -316,6 +333,21 @@ const AnimalRecord = (props: Props) => {
         }
         return () => removeButton("delete-animal")
     }, [isSuperUser, isDeleted, addButton, removeButton])
+
+    useEffect(() => {
+        if (isSuperUser && !isDeleted && props.data.exit_date) {
+            addButton({
+                id: "delete-exit",
+                buttonText: "Elimina uscita",
+                buttonIcon: faRotateLeft,
+                severity: "warning",
+                order: 5,
+                subtle: true,
+                onClick: () => setDeleteExitDialogVisible(true),
+            })
+        }
+        return () => removeButton("delete-exit")
+    }, [isSuperUser, isDeleted, props.data.exit_date, addButton, removeButton])
 
     useEffect(() => {
         if (
@@ -490,6 +522,19 @@ const AnimalRecord = (props: Props) => {
                     </p>
                 </div>
             </Dialog>
+
+            <ConfirmDialog
+                visible={deleteExitDialogVisible}
+                onHide={() => setDeleteExitDialogVisible(false)}
+                message="Sei sicuro di voler eliminare l'uscita di questo animale? L'animale tornerà presente in struttura e l'eventuale adozione collegata verrà annullata."
+                header="Conferma eliminazione uscita"
+                icon="pi pi-exclamation-triangle"
+                accept={confirmDeleteExit}
+                reject={() => setDeleteExitDialogVisible(false)}
+                acceptLabel="Elimina uscita"
+                rejectLabel="Annulla"
+                acceptClassName="p-button-danger"
+            />
 
             {/* Move to Shelter Dialog */}
             <Dialog

@@ -156,6 +156,7 @@ class AnimalEvent(Enum):
     # Automatic events
     create = "CR"  # Animal creation
     exit_ = "EX"  # Animal exit (adoption, death, etc.)
+    exit_deleted = "ED"  # Animal exit deleted (reverted by superuser)
     new_entry = "NE"  # New animal entry (re-entry)
     entry_complete = "EC"  # Entry completion with entry date
     data_update = "DU"  # Animal data update
@@ -166,6 +167,7 @@ class AnimalEvent(Enum):
     move_structure = "MV"  # Animal moved to another structure
     therapy = "TH"  # Therapy created
     therapy_deleted = "THD"  # Therapy soft-deleted
+    document_rerendered = "DR"  # Rendered document regenerated
 
 
 class ReminderUnit(str, Enum):
@@ -191,6 +193,25 @@ class DocKindCode(Enum):
     affido = "AF"
     adozione = "AD"
     variazione = "VA"
+
+
+# Document kinds strictly tied to a specific animal_entry. A document of one of
+# these kinds must reference the entry (entry/exit event) it belongs to.
+# Includes both the auto-generated kinds and their signed-upload counterparts.
+ENTRY_TIED_DOC_KIND_CODES: frozenset[str] = frozenset(
+    {"CI", "U", "UF", "AD", "ADF", "AF", "AFF", "VA", "VAF", "RP"}
+)
+
+# Subset of ENTRY_TIED_DOC_KIND_CODES generated/produced by an exit (adoption,
+# affido, return, variation, exit comms). These are soft-deleted together with
+# the exit when a superuser deletes it. The entry-arrival doc (CI) is excluded.
+EXIT_DOC_KIND_CODES: frozenset[str] = frozenset(
+    {"U", "UF", "AD", "ADF", "AF", "AFF", "VA", "VAF", "RP"}
+)
+
+# Rendered document kinds that have an active generator and can therefore be
+# re-rendered (and flagged "dirty" when their embedded data changes).
+RERENDERABLE_DOC_KIND_CODES: frozenset[str] = frozenset({"CI", "AD", "VA"})
 
 
 class RecurrenceType(str, Enum):

@@ -3,12 +3,25 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 
 from pydantic import validate_call
-from sqlalchemy import and_, case, func, insert, or_, select, text, update
+from sqlalchemy import (
+    and_,
+    case,
+    delete,
+    func,
+    insert,
+    or_,
+    select,
+    text,
+    update,
+)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 
 from hermadata.constants import (
+    ENTRY_TIED_DOC_KIND_CODES,
+    EXIT_DOC_KIND_CODES,
     HEALTHCARE_STAGE_ENTRY_TYPES,
+    RERENDERABLE_DOC_KIND_CODES,
     AnimalEvent,
     EntryType,
     ExitType,
@@ -24,6 +37,7 @@ from hermadata.database.models import (
     AnimalLog,
     Breed,
     Comune,
+    Document,
     DocumentKind,
     FurColor,
     MedicalActivity,
@@ -42,6 +56,7 @@ from hermadata.reports.report_generator import (
     StructureVariables,
 )
 from hermadata.repositories import SQLBaseRepository
+from hermadata.repositories.adopter_repository import AdopterModel
 from hermadata.repositories.animal.models import (
     AddMedicalRecordModel,
     AdoptionModel,
@@ -149,6 +164,14 @@ class ExitNotValidException(Exception):
 
 
 class ExistingAdoptionException(Exception):
+    pass
+
+
+class DocumentEntryRequiredException(APIException):
+    pass
+
+
+class DocumentNotRerenderableException(APIException):
     pass
 
 
@@ -339,6 +362,15 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return new_entry_id
 
+    def get_current_entry_id(self, animal_id: int) -> int:
+        """Return the id of the animal's current entry."""
+        return self.session.execute(
+            select(AnimalEntry.id).where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+            )
+        ).scalar_one()
+
     def check_complete_entry_needed(self, animal_id: int) -> bool:
         check = self.session.execute(
             select(AnimalEntry.id).where(
@@ -443,6 +475,29 @@ class SQLAnimalRepository(SQLBaseRepository):
         if not result:
             return None
 
+    def get_animal_adopter(self, animal_id: int) -> AdopterModel | None:
+        """Return the adopter of the animal's active adoption, if any.
+
+        Considers the current, non-returned, non-voided adoption. Returns
+        ``None`` when the animal has never been adopted or has been returned.
+        """
+        adopter = self.session.execute(
+            select(Adopter)
+            .join(Adoption, Adoption.adopter_id == Adopter.id)
+            .join(Animal, Animal.id == Adoption.animal_id)
+            .where(
+                Adoption.animal_id == animal_id,
+                Adoption.returned_at.is_(None),
+                Adoption.deleted_at.is_(None),
+                Animal.deleted_at.is_(None),
+            )
+        ).scalar_one_or_none()
+
+        if adopter is None:
+            return None
+
+        return AdopterModel.model_validate(adopter, from_attributes=True)
+
     def search(
         self,
         query: AnimalSearchModel,
@@ -499,6 +554,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 and_(
                     Adoption.animal_id == Animal.id,
                     Adoption.returned_at.is_(None),
+                    Adoption.deleted_at.is_(None),
                 ),
                 isouter=True,
             )
@@ -560,6 +616,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 and_(
                     Adoption.animal_id == Animal.id,
                     Adoption.returned_at.is_(None),
+                    Adoption.deleted_at.is_(None),
                 ),
                 isouter=True,
             )
@@ -808,34 +865,61 @@ class SQLAnimalRepository(SQLBaseRepository):
         self.session.add(event_log)
         self.session.flush()
 
+        # Entry/exit data is embedded in this entry's rendered documents; flag
+        # them stale so they can be re-rendered.
+        if result.rowcount:
+            self.mark_entry_documents_dirty(entry_id)
+
         return result.rowcount
 
     def update(
-        self, id: str, updates: UpdateAnimalModel, user_id: int | None = None
+        self,
+        id: str,
+        updates: UpdateAnimalModel,
+        user_id: int | None = None,
+        allow_chip_override: bool = False,
     ) -> int:
-        """Return updated rowcound"""
+        """Return updated rowcound.
+
+        ``allow_chip_override`` lets privileged callers (superusers) change a
+        chip code that was already set. Without it, an already-set chip code is
+        left untouched.
+        """
         values = updates.model_dump(exclude_none=True)
         if updates.chip_code:
-            is_set = self.session.execute(
-                select(Animal.chip_code_set).where(
+            current_chip, is_set = self.session.execute(
+                select(Animal.chip_code, Animal.chip_code_set).where(
                     Animal.id == id, Animal.deleted_at.is_(None)
                 )
-            ).scalar_one()
+            ).one()
 
-            if is_set:
+            if is_set and not allow_chip_override:
                 logger.info("chip code already set for animal id %s", id)
                 updates.chip_code = None
-            values["chip_code_set"] = True
+                values.pop("chip_code", None)
+            else:
+                values["chip_code_set"] = True
 
-            # Log chip assignment separately if it's being set
-            if updates.chip_code and not is_set:
-                chip_log = AnimalLog(
-                    animal_id=id,
-                    event=AnimalEvent.chip_assigned.value,
-                    data={"chip_code": updates.chip_code},
-                    user_id=user_id,
-                )
-                self.session.add(chip_log)
+                # Log chip assignment / change as an audit event
+                if not is_set:
+                    chip_log = AnimalLog(
+                        animal_id=id,
+                        event=AnimalEvent.chip_assigned.value,
+                        data={"chip_code": updates.chip_code},
+                        user_id=user_id,
+                    )
+                    self.session.add(chip_log)
+                elif current_chip != updates.chip_code:
+                    chip_log = AnimalLog(
+                        animal_id=id,
+                        event=AnimalEvent.chip_assigned.value,
+                        data={
+                            "chip_code": updates.chip_code,
+                            "previous_chip_code": current_chip,
+                        },
+                        user_id=user_id,
+                    )
+                    self.session.add(chip_log)
 
         try:
             result = self.session.execute(
@@ -865,6 +949,12 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
         self.session.add(event_log)
         self.session.flush()
+
+        # Animal data appears in the current entry's rendered documents; flag
+        # them stale so they can be re-rendered.
+        if result.rowcount:
+            self.mark_entry_documents_dirty(self.get_current_entry_id(id))
+
         return result.rowcount
 
     def move_to_shelter(
@@ -926,16 +1016,36 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
         ).scalar_one()
 
-        document_kind_id = self.session.execute(
-            select(DocumentKind.id).where(
+        # Documents of certain kinds are strictly tied to a specific entry.
+        if data.document_kind_code in ENTRY_TIED_DOC_KIND_CODES:
+            if data.animal_entry_id is None:
+                raise DocumentEntryRequiredException(
+                    f"document kind {data.document_kind_code} requires an "
+                    "animal_entry_id"
+                )
+            entry_belongs = self.session.execute(
+                select(AnimalEntry.id).where(
+                    AnimalEntry.id == data.animal_entry_id,
+                    AnimalEntry.animal_id == animal_id,
+                )
+            ).scalar_one_or_none()
+            if entry_belongs is None:
+                raise DocumentEntryRequiredException(
+                    f"entry {data.animal_entry_id} does not belong to "
+                    f"animal {animal_id}"
+                )
+
+        document_kind_id, document_kind_name = self.session.execute(
+            select(DocumentKind.id, DocumentKind.name).where(
                 DocumentKind.code == data.document_kind_code
             )
-        ).scalar_one()
+        ).one()
         animal_document = AnimalDocument(
             animal_id=animal_id,
             document_id=data.document_id,
             document_kind_id=document_kind_id,
             title=data.title,
+            animal_entry_id=data.animal_entry_id,
         )
         self.session.add(animal_document)
         self.session.flush()
@@ -944,6 +1054,14 @@ class SQLAnimalRepository(SQLBaseRepository):
             animal_id=animal_id,
             document_id=data.document_id,
             document_kind_code=data.document_kind_code,
+            document_kind_name=document_kind_name,
+            title=data.title,
+            animal_entry_id=data.animal_entry_id,
+            dirty=False,
+            rerenderable=(
+                data.document_kind_code in RERENDERABLE_DOC_KIND_CODES
+                and data.animal_entry_id is not None
+            ),
             created_at=animal_document.created_at,
         )
 
@@ -954,6 +1072,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             select(
                 AnimalDocument.document_id,
                 DocumentKind.code,
+                DocumentKind.name,
+                AnimalDocument.title,
+                AnimalDocument.animal_entry_id,
+                AnimalDocument.dirty,
                 AnimalDocument.created_at,
             )
             .join(
@@ -963,8 +1085,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             .join(Animal, Animal.id == AnimalDocument.animal_id)
             .where(
                 AnimalDocument.animal_id == animal_id,
+                AnimalDocument.deleted_at.is_(None),
                 *([] if include_deleted else [Animal.deleted_at.is_(None)]),
             )
+            .order_by(AnimalDocument.created_at.desc())
         ).all()
 
         docs = [
@@ -972,12 +1096,140 @@ class SQLAnimalRepository(SQLBaseRepository):
                 animal_id=animal_id,
                 document_id=document_id,
                 document_kind_code=document_kind_code,
+                document_kind_name=document_kind_name,
+                title=title,
+                animal_entry_id=animal_entry_id,
+                dirty=dirty,
+                rerenderable=(
+                    document_kind_code in RERENDERABLE_DOC_KIND_CODES
+                    and animal_entry_id is not None
+                ),
                 created_at=created_at,
             )
-            for document_id, document_kind_code, created_at in result
+            for (
+                document_id,
+                document_kind_code,
+                document_kind_name,
+                title,
+                animal_entry_id,
+                dirty,
+                created_at,
+            ) in result
         ]
 
         return docs
+
+    def get_animal_document(
+        self, animal_id: int, document_id: int
+    ) -> AnimalDocument:
+        """Fetch the (non soft-deleted) animal_document link row.
+
+        Raises NoResultFound if it does not exist or is already soft-deleted.
+        """
+        return self.session.execute(
+            select(AnimalDocument).where(
+                AnimalDocument.animal_id == animal_id,
+                AnimalDocument.document_id == document_id,
+                AnimalDocument.deleted_at.is_(None),
+            )
+        ).scalar_one()
+
+    def get_document_rerender_info(
+        self, animal_id: int, document_id: int
+    ) -> tuple[str, int | None, str | None] | None:
+        """Return (document_kind_code, animal_entry_id, entry_exit_type) for a
+        non-deleted animal document, or None if it does not exist.
+
+        ``entry_exit_type`` is the exit_type of the tied entry (used to pick
+        the adoption variant when re-rendering); None for non entry-tied docs.
+        """
+        row = self.session.execute(
+            select(
+                DocumentKind.code,
+                AnimalDocument.animal_entry_id,
+                AnimalEntry.exit_type,
+            )
+            .join(
+                DocumentKind,
+                DocumentKind.id == AnimalDocument.document_kind_id,
+            )
+            .join(
+                AnimalEntry,
+                AnimalEntry.id == AnimalDocument.animal_entry_id,
+                isouter=True,
+            )
+            .where(
+                AnimalDocument.animal_id == animal_id,
+                AnimalDocument.document_id == document_id,
+                AnimalDocument.deleted_at.is_(None),
+            )
+        ).one_or_none()
+        if row is None:
+            return None
+        return (row[0], row[1], row[2])
+
+    def soft_delete_document(self, animal_id: int, document_id: int) -> None:
+        """Soft-delete the link between an animal and a document."""
+        self.session.execute(
+            update(AnimalDocument)
+            .where(
+                AnimalDocument.animal_id == animal_id,
+                AnimalDocument.document_id == document_id,
+                AnimalDocument.deleted_at.is_(None),
+            )
+            .values(deleted_at=get_now())
+        )
+        self.session.flush()
+
+    def mark_entry_documents_dirty(self, animal_entry_id: int) -> None:
+        """Flag the entry's re-renderable documents as stale (dirty).
+
+        Called after the data those documents embed is edited. Only kinds with
+        a generator (CI/AD/VA) are marked, since only those can be re-rendered.
+        """
+        rerenderable_kind_ids = (
+            select(DocumentKind.id)
+            .where(DocumentKind.code.in_(RERENDERABLE_DOC_KIND_CODES))
+            .scalar_subquery()
+        )
+        self.session.execute(
+            update(AnimalDocument)
+            .where(
+                AnimalDocument.animal_entry_id == animal_entry_id,
+                AnimalDocument.deleted_at.is_(None),
+                AnimalDocument.dirty.is_(False),
+                AnimalDocument.document_kind_id.in_(rerenderable_kind_ids),
+            )
+            .values(dirty=True)
+        )
+        self.session.flush()
+
+    def hard_delete_document(
+        self, animal_id: int, document_id: int
+    ) -> tuple[str, str]:
+        """Permanently delete a document and its animal link.
+
+        Returns the (storage_key, storage_service) of the underlying physical
+        document so the caller can remove it from the storage backend.
+        """
+        key, storage_service = self.session.execute(
+            select(Document.key, Document.storage_service).where(
+                Document.id == document_id
+            )
+        ).one()
+
+        self.session.execute(
+            delete(AnimalDocument).where(
+                AnimalDocument.animal_id == animal_id,
+                AnimalDocument.document_id == document_id,
+            )
+        )
+        self.session.execute(
+            delete(Document).where(Document.id == document_id)
+        )
+        self.session.flush()
+
+        return key, storage_service
 
     @validate_call
     def check_exit_requirements(self, animal_id: int) -> ExitCheckResult:
@@ -1087,11 +1339,83 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
         self.session.flush()
 
+    def delete_exit(self, animal_id: int, user_id: int | None = None) -> None:
+        """Delete the exit on an animal's current entry (superuser action).
+
+        Clears the exit columns of the current ``animal_entry``, soft-deletes
+        any adoption tied to that entry and the exit-generated documents,
+        reverting the animal to "present".
+        """
+        current_entry = self.session.execute(
+            select(AnimalEntry)
+            .join(Animal, Animal.id == AnimalEntry.animal_id)
+            .where(
+                AnimalEntry.animal_id == animal_id,
+                AnimalEntry.current.is_(True),
+                Animal.deleted_at.is_(None),
+            )
+        ).scalar_one_or_none()
+
+        if current_entry is None:
+            raise AnimalNotPresentException
+
+        if not current_entry.exit_date:
+            raise ExitNotValidException("animal has no exit to delete")
+
+        now = get_now()
+
+        # Soft-delete any active adoption linked to this entry
+        self.session.execute(
+            update(Adoption)
+            .where(
+                Adoption.animal_entry_id == current_entry.id,
+                Adoption.deleted_at.is_(None),
+            )
+            .values(deleted_at=now)
+        )
+
+        # Soft-delete the exit-generated documents (adoption, variation,
+        # exit comms, ...) tied to this entry. The arrival document (CI)
+        # stays, since the entry itself is not removed.
+        exit_doc_kind_ids = (
+            select(DocumentKind.id)
+            .where(DocumentKind.code.in_(EXIT_DOC_KIND_CODES))
+            .scalar_subquery()
+        )
+        self.session.execute(
+            update(AnimalDocument)
+            .where(
+                AnimalDocument.animal_entry_id == current_entry.id,
+                AnimalDocument.deleted_at.is_(None),
+                AnimalDocument.document_kind_id.in_(exit_doc_kind_ids),
+            )
+            .values(deleted_at=now)
+        )
+
+        event_log = AnimalLog(
+            animal_id=animal_id,
+            event=AnimalEvent.exit_deleted.value,
+            data={
+                "exit_date": current_entry.exit_date.isoformat(),
+                "exit_type": current_entry.exit_type,
+                "exit_notes": current_entry.exit_notes,
+            },
+            user_id=user_id,
+        )
+        self.session.add(event_log)
+
+        current_entry.exit_date = None
+        current_entry.exit_type = None
+        current_entry.exit_notes = None
+
+        self.session.flush()
+
     def new_adoption(self, data: NewAdoption) -> AdoptionModel:
         existing_adoption = self.session.execute(
             select(Adoption.id).where(
                 Adoption.animal_id == data.animal_id,
                 Adoption.returned_at.is_(None),
+                Adoption.deleted_at.is_(None),
             )
         ).first()
 
@@ -1498,8 +1822,13 @@ class SQLAnimalRepository(SQLBaseRepository):
         )
 
     def _get_animal_data_report_variables(
-        self, animal_id: int
+        self, animal_id: int, animal_entry_id: int | None = None
     ) -> AnimalVariables:
+        entry_condition = (
+            AnimalEntry.id == animal_entry_id
+            if animal_entry_id is not None
+            else AnimalEntry.current.is_(True)
+        )
         data = self.session.execute(
             select(
                 Animal.name,
@@ -1519,7 +1848,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry,
                 and_(
                     AnimalEntry.animal_id == Animal.id,
-                    AnimalEntry.current.is_(True),
+                    entry_condition,
                 ),
             )
             .join(Comune, AnimalEntry.origin_city_code == Comune.id)
@@ -1572,7 +1901,14 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return adopter_variables
 
-    def get_adoption_report_variables(self, animal_id: int):
+    def get_adoption_report_variables(
+        self, animal_id: int, animal_entry_id: int | None = None
+    ):
+        entry_condition = (
+            AnimalEntry.id == animal_entry_id
+            if animal_entry_id is not None
+            else AnimalEntry.current.is_(True)
+        )
         (
             adoption_date,
             exit_type,
@@ -1599,7 +1935,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             .join(Comune, Adoption.location_city_code == Comune.id)
             .where(
                 AnimalEntry.animal_id == animal_id,
-                AnimalEntry.current.is_(True),
+                entry_condition,
             )
         ).one()
 
@@ -1607,7 +1943,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             raise Exception("last exit is not an adoption")
 
         adopter = self._get_adopter_data_report_variables(adopter_id)
-        animal_variables = self._get_animal_data_report_variables(animal_id)
+        animal_variables = self._get_animal_data_report_variables(
+            animal_id, animal_entry_id
+        )
         structure_variables = self._get_structure_report_variables(animal_id)
 
         variables = ReportAdoptionVariables(
@@ -1623,7 +1961,14 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return variables
 
-    def get_variation_report_variables(self, animal_id: int):
+    def get_variation_report_variables(
+        self, animal_id: int, animal_entry_id: int | None = None
+    ):
+        entry_condition = (
+            AnimalEntry.id == animal_entry_id
+            if animal_entry_id is not None
+            else AnimalEntry.current.is_(True)
+        )
         (
             variation_date,
             variation_type,
@@ -1653,7 +1998,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
             .where(
                 AnimalEntry.animal_id == animal_id,
-                AnimalEntry.current.is_(True),
+                entry_condition,
             )
         ).one()
 
@@ -1663,7 +2008,9 @@ class SQLAnimalRepository(SQLBaseRepository):
             or None
         )
 
-        animal_variables = self._get_animal_data_report_variables(animal_id)
+        animal_variables = self._get_animal_data_report_variables(
+            animal_id, animal_entry_id
+        )
         structure_variables = self._get_structure_report_variables(animal_id)
 
         variables = ReportVariationVariables(

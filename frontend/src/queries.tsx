@@ -17,6 +17,16 @@ export const useAnimalQuery = (id: string) =>
         staleTime: Infinity,
     })
 
+export const useAnimalAdopterQuery = (
+    animalId: string | number,
+    enabled = true,
+) =>
+    useQuery(["animal-adopter", animalId], {
+        queryFn: () => apiService.getAnimalAdopter(animalId),
+        enabled: enabled && !!animalId,
+        staleTime: Infinity,
+    })
+
 export const useAnimalEntriesQuery = (animalId: string) =>
     useQuery(["animal-entries", animalId], {
         queryFn: () => apiService.getAnimalEntries(animalId),

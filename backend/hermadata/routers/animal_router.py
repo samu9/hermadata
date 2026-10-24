@@ -13,7 +13,12 @@ from fastapi import (
 from pydantic import BaseModel
 from sqlalchemy.exc import NoResultFound
 
-from hermadata.constants import EXCEL_MEDIA_TYPE, ApiErrorCode, Permission
+from hermadata.constants import (
+    EXCEL_MEDIA_TYPE,
+    ApiErrorCode,
+    Permission,
+    StorageType,
+)
 from hermadata.initializations import (
     get_animal_repository,
     get_animal_service,
@@ -27,7 +32,10 @@ from hermadata.permissions import (
     require_permission,
     require_superuser,
 )
+from hermadata.repositories.adopter_repository import AdopterModel
 from hermadata.repositories.animal.animal_repository import (
+    DocumentEntryRequiredException,
+    DocumentNotRerenderableException,
     EntryNotCompleteException,
     ExistingChipCodeException,
     NotAShelterStructureException,
@@ -273,6 +281,14 @@ def get_animal(
     return animal_data
 
 
+@router.get("/{animal_id}/adopter", response_model=AdopterModel | None)
+def get_animal_adopter(
+    animal_id: int,
+    repo: Annotated[SQLAnimalRepository, Depends(get_animal_repository)],
+):
+    return repo.get_animal_adopter(animal_id)
+
+
 @router.post("/{animal_id}", response_model=int | ApiError)
 def update_animal(
     animal_id: int,
@@ -283,7 +299,12 @@ def update_animal(
     ],
 ) -> int | ApiError:
     try:
-        result = service.update(animal_id, data, user_id=current_user.user_id)
+        result = service.update(
+            animal_id,
+            data,
+            user_id=current_user.user_id,
+            allow_chip_override=current_user.is_superuser,
+        )
     except ExistingChipCodeException as e:
         return ApiError(
             code=ApiErrorCode.existing_chip_code,
@@ -371,8 +392,107 @@ def upload_animal_document(
             status_code=400,
             detail={"message": "This document kind cannot be uploaded"},
         )
-    result = animal_repo.new_document(animal_id, data)
+    try:
+        result = animal_repo.new_document(animal_id, data)
+    except DocumentEntryRequiredException as e:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Questo tipo di documento deve essere associato a un "
+                "ingresso/uscita dell'animale."
+            ),
+        ) from e
     return result
+
+
+@router.delete("/{animal_id}/document/{document_id}", response_model=None)
+def delete_animal_document(
+    animal_id: int,
+    document_id: int,
+    animal_repo: Annotated[
+        SQLAnimalRepository, Depends(get_animal_repository)
+    ],
+    doc_repo: Annotated[
+        SQLDocumentRepository, Depends(get_document_repository)
+    ],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+    permanent: bool = False,
+):
+    """Delete a document attached to an animal.
+
+    By default the animal-document link is soft-deleted, gated by the per-kind
+    document delete permission. Superusers may pass ``permanent=true`` to
+    permanently remove the document, also deleting it from storage (S3/disk).
+    """
+    try:
+        animal_document = animal_repo.get_animal_document(
+            animal_id, document_id
+        )
+    except NoResultFound as e:
+        raise HTTPException(
+            status_code=404, detail="Document not found"
+        ) from e
+
+    if permanent:
+        if not current_user.is_superuser:
+            raise HTTPException(
+                status_code=403,
+                detail="Only superusers can permanently delete documents",
+            )
+        key, storage_service = animal_repo.hard_delete_document(
+            animal_id, document_id
+        )
+        storage_backend = doc_repo.storage.get(StorageType(storage_service))
+        if storage_backend is not None:
+            storage_backend.delete_file(key)
+        return Response(status_code=204)
+
+    if not current_user.is_superuser and not doc_repo.can_delete_document(
+        animal_document.document_kind_id,
+        current_user.user_id,
+        current_user.role,
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to delete this document",
+        )
+
+    animal_repo.soft_delete_document(animal_id, document_id)
+    return Response(status_code=204)
+
+
+@router.post(
+    "/{animal_id}/document/{document_id}/rerender",
+    response_model=list[AnimalDocumentModel],
+)
+def rerender_animal_document(
+    animal_id: int,
+    document_id: int,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    animal_repo: Annotated[
+        SQLAnimalRepository, Depends(get_animal_repository)
+    ],
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.UPLOAD_DOCUMENT))
+    ],
+):
+    """Re-render a stale entry-tied document (CI/AD/VA).
+
+    Soft-deletes the existing document and generates a fresh one from current
+    data, tied to the same entry. Returns the updated document list.
+    """
+    try:
+        service.rerender_document(
+            animal_id, document_id, user_id=current_user.user_id
+        )
+    except NoResultFound as e:
+        raise HTTPException(
+            status_code=404, detail="Document not found"
+        ) from e
+    except DocumentNotRerenderableException as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    return animal_repo.get_documents(animal_id)
 
 
 @router.post("/{animal_id}/exit")
@@ -387,6 +507,24 @@ def animal_exit(
     service.exit(animal_id, data, user_id=current_user.user_id)
 
     return True
+
+
+@router.delete("/{animal_id}/exit", response_model=None)
+def delete_animal_exit(
+    animal_id: int,
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(require_superuser)],
+):
+    """Delete an animal's exit (superuser only).
+
+    Clears the exit columns of the current entry and soft-deletes any adoption
+    tied to it, reverting the animal to a present/in-shelter state.
+    """
+    try:
+        service.delete_exit(animal_id, user_id=current_user.user_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return Response(status_code=204)
 
 
 @router.get("/{animal_id}/exit-check")

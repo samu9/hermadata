@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { ENTRY_TIED_DOC_KIND_CODES } from "../constants"
 import {
     createPaginatedResponseSchema,
     paginationQuerySchema,
@@ -160,11 +161,25 @@ export type PaginatedAnimalSearchResult = z.infer<
     typeof paginatedAnimalSearchResultSchema
 >
 
-export const animalDocUploadSchema = z.object({
-    title: z.string().min(1),
-    document_kind_code: z.string().min(1),
-    document_id: z.number(),
-})
+export const animalDocUploadSchema = z
+    .object({
+        title: z.string().min(1),
+        document_kind_code: z.string().min(1),
+        document_id: z.number(),
+        animal_entry_id: z.number().nullish(),
+    })
+    .superRefine((data, ctx) => {
+        if (
+            ENTRY_TIED_DOC_KIND_CODES.includes(data.document_kind_code) &&
+            !data.animal_entry_id
+        ) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["animal_entry_id"],
+                message: "Seleziona l'ingresso a cui associare il documento",
+            })
+        }
+    })
 
 export type AnimalDocUpload = z.infer<typeof animalDocUploadSchema>
 
@@ -172,6 +187,11 @@ export const animalDocumentSchema = z.object({
     animal_id: z.number(),
     document_id: z.number(),
     document_kind_code: z.string(),
+    document_kind_name: z.string().nullish(),
+    title: z.string().nullish(),
+    animal_entry_id: z.number().nullish(),
+    dirty: z.boolean().default(false),
+    rerenderable: z.boolean().default(false),
     created_at: dateFromString,
 })
 

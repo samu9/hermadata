@@ -246,6 +246,17 @@ class ApiService {
         return animalSchema.parse(result)
     }
 
+    async getAnimalAdopter(
+        id: string | number,
+    ): Promise<Adopter | null> {
+        const result = await this.get<Adopter | null>(
+            ApiEndpoints.animal.adopter(id),
+        )
+        if (!result) return null
+
+        return adopterSchema.parse(result)
+    }
+
     async searchAnimals(
         query: AnimalSearchQuery,
     ): Promise<PaginatedAnimalSearchResult> {
@@ -429,6 +440,28 @@ class ApiService {
         return parsed
     }
 
+    async deleteAnimalDocument(
+        animalId: number,
+        documentId: number,
+        permanent = false,
+    ): Promise<void> {
+        await this.inst.delete(
+            ApiEndpoints.animal.deleteDocument(animalId, documentId),
+            { params: { permanent } },
+        )
+    }
+
+    async rerenderAnimalDocument(
+        animalId: number,
+        documentId: number,
+    ): Promise<AnimalDocument[]> {
+        const result = await this.post<AnimalDocument[]>(
+            ApiEndpoints.animal.rerenderDocument(animalId, documentId),
+            {},
+        )
+        return result.map((r) => animalDocumentSchema.parse(r))
+    }
+
     async openDocument(document_id: number): Promise<void> {
         const result = await this.get<{ url: string }>(
             ApiEndpoints.doc.open(document_id),
@@ -481,6 +514,15 @@ class ApiService {
         return result
     }
 
+    async updateAdopter(id: number, data: NewAdopter): Promise<Adopter> {
+        const result = await this.put<Adopter>(
+            ApiEndpoints.adopter.update(id),
+            data,
+        )
+
+        return adopterSchema.parse(result)
+    }
+
     async searchAdopter(
         query: AdopterSearch,
     ): Promise<PaginatedAdopterSearchResult> {
@@ -507,6 +549,10 @@ class ApiService {
         )
 
         return result
+    }
+
+    async deleteAnimalExit(id: number): Promise<void> {
+        await this.delete(ApiEndpoints.animal.exit(id))
     }
 
     async checkAnimalExit(id: number): Promise<ExitCheckResult> {

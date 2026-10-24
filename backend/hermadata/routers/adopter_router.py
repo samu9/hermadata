@@ -59,3 +59,13 @@ def get_adopter_by_id(
         return repo.get_by_id(adopter_id)
     except Exception:
         raise HTTPException(status_code=404, detail="Adopter not found")
+
+
+@router.put("/{adopter_id}", response_model=AdopterModel)
+def update_adopter(
+    adopter_id: int,
+    data: NewAdopterRequest,
+    service: Annotated[AdopterService, Depends(get_adopter_service)],
+):
+    adopter = service.update(adopter_id, data)
+    return adopter

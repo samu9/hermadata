@@ -16,6 +16,7 @@ const ApiEndpoints = {
     },
     animal: {
         getById: (code: string) => `/animal/${code}`,
+        adopter: (id: string | number) => `/animal/${id}/adopter`,
         create: "/animal",
         search: "/animal/search",
         update: (id: string) => `/animal/${id}`,
@@ -27,6 +28,10 @@ const ApiEndpoints = {
             `/animal/${animalId}/entries/${entryId}`,
         documents: (id: number) => `/animal/${id}/document`,
         newDocument: (id: number) => `/animal/${id}/document`,
+        deleteDocument: (animalId: number, documentId: number) =>
+            `/animal/${animalId}/document/${documentId}`,
+        rerenderDocument: (animalId: number, documentId: number) =>
+            `/animal/${animalId}/document/${documentId}/rerender`,
         uploadImage: (id: number) => `/animal/${id}/image`,
         listImages: (id: number) => `/animal/${id}/images`,
         serveImage: (animalId: number, imageId: number) =>
@@ -53,6 +58,7 @@ const ApiEndpoints = {
         create: "/adopter",
         get: "/adopter",
         getById: (id: number) => `/adopter/${id}`,
+        update: (id: number) => `/adopter/${id}`,
         search: "/adopter/search",
     },
     adoption: {

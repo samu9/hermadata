@@ -7,6 +7,7 @@ import {
     faSignOutAlt,
     faCamera,
     faBuilding,
+    faHandHoldingHeart,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { format } from "date-fns"
@@ -18,13 +19,17 @@ import { useExitTypesMap } from "../../hooks/useMaps"
 import { Animal } from "../../models/animal.schema"
 import { ChipCodeBadge } from "./misc"
 import AnimalImageUploadDialog from "./AnimalImageUploadDialog"
-import { useStructuresQuery } from "../../queries"
+import { useAnimalAdopterQuery, useStructuresQuery } from "../../queries"
 import { apiService } from "../../main"
-import { useParams } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 
 type Props = {
     data: Animal
 }
+
+// Exit types that assign the animal to an adopter (see backend ExitType:
+// "A" = adoption, "T" = temporary adoption).
+const ADOPTION_EXIT_TYPES = ["A", "T"]
 
 const ADOPTABILITY_FLAG_COLOR: { [key: number]: string } = {
     0: "#6B7280", // gray-500
@@ -97,6 +102,45 @@ const NotPresentAlert = ({ data, bare }: { data: Animal; bare?: boolean }) => {
                 </div>
             </div>
         </div>
+    )
+}
+
+const AdoptedByBox = ({ animalId }: { animalId: string }) => {
+    const adopterQuery = useAnimalAdopterQuery(animalId)
+    const adopter = adopterQuery.data
+
+    if (!adopter) {
+        return null
+    }
+
+    return (
+        <Link
+            to={`/adopters/${adopter.id}`}
+            className="block max-w-sm px-4 py-3 rounded-lg bg-white border border-surface-200 hover:border-primary-300 hover:shadow-sm transition-all"
+            title="Vai alla scheda dell'adottante"
+        >
+            <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                    <FontAwesomeIcon
+                        icon={faHandHoldingHeart}
+                        className="w-4 h-4 flex-shrink-0 text-primary-600"
+                    />
+                    <h3 className="text-sm font-semibold text-surface-700">
+                        Adottato da
+                    </h3>
+                </div>
+                <div className="text-xs">
+                    <div className="font-medium text-surface-900">
+                        {adopter.name} {adopter.surname}
+                    </div>
+                    {adopter.fiscal_code && (
+                        <div className="font-mono text-surface-500 mt-0.5">
+                            {adopter.fiscal_code}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </Link>
     )
 }
 
@@ -185,6 +229,10 @@ const AnimalRecordHeader = (props: Props) => {
     const isNotPresent = exitDate && exitDate < new Date()
     const isSanitary =
         !isNotPresent && !props.data.exit_type && !!props.data.healthcare_stage
+    const isAdopted =
+        !!isNotPresent &&
+        !!props.data.exit_type &&
+        ADOPTION_EXIT_TYPES.includes(props.data.exit_type)
 
     return (
         <div className="relative mb-6 mt-4">
@@ -302,11 +350,14 @@ const AnimalRecordHeader = (props: Props) => {
 
                     {/* Alert for Not Present Animals */}
                     {props.data.exit_type && props.data.exit_date && (
-                        <div className="lg:flex-shrink-0">
+                        <div className="lg:flex-shrink-0 flex flex-col gap-3">
                             <NotPresentAlert
                                 data={props.data}
                                 bare={!!isNotPresent}
                             />
+                            {isAdopted && animalId && (
+                                <AdoptedByBox animalId={animalId} />
+                            )}
                         </div>
                     )}
 

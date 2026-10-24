@@ -6,14 +6,15 @@ import {
     animalDocUploadSchema,
 } from "../../models/animal.schema"
 import { FileUpload, FileUploadHandlerEvent } from "primereact/fileupload"
-import { useDocKindsQuery } from "../../queries"
+import { useAnimalEntriesQuery, useDocKindsQuery } from "../../queries"
 import ControlledDropdown from "../forms/ControlledDropdown"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { apiService } from "../../main"
+import { ENTRY_TIED_DOC_KIND_CODES } from "../../constants"
 import { Button } from "primereact/button"
 import { useMutation, useQueryClient } from "react-query"
 import { Toast } from "primereact/toast"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faCheck, faCheckCircle } from "@fortawesome/free-solid-svg-icons"
 import { useParams } from "react-router-dom"
@@ -33,9 +34,28 @@ const AnimalDocUploadForm = (props: Props) => {
             title: undefined,
         },
     })
-    const { handleSubmit, setValue, getValues, reset } = form
+    const { handleSubmit, setValue, getValues, reset, watch } = form
     const docKindsQuery = useDocKindsQuery()
+    const entriesQuery = useAnimalEntriesQuery(id!)
     const queryClient = useQueryClient()
+
+    const selectedKind = watch("document_kind_code")
+    const entryTied = ENTRY_TIED_DOC_KIND_CODES.includes(selectedKind)
+
+    // Clear any selected entry when switching to a non entry-tied kind
+    useEffect(() => {
+        if (!entryTied) {
+            setValue("animal_entry_id", null)
+        }
+    }, [entryTied, setValue])
+
+    const entryOptions = (entriesQuery.data || []).map((e) => ({
+        id: e.id,
+        label: [
+            `Ingresso ${e.entry_date ?? "—"}`,
+            e.exit_date ? `Uscita ${e.exit_date}` : "in struttura",
+        ].join(" · "),
+    }))
 
     const newAnimalDocumentMutation = useMutation({
         mutationFn: (data: AnimalDocUpload) =>
@@ -105,6 +125,16 @@ const AnimalDocUploadForm = (props: Props) => {
                         )}
                         className="w-full"
                     />
+                    {entryTied && (
+                        <ControlledDropdown
+                            label="Ingresso/Uscita associato"
+                            fieldName="animal_entry_id"
+                            optionLabel="label"
+                            optionValue="id"
+                            options={entryOptions}
+                            className="w-full"
+                        />
+                    )}
                     <div className="flex items-center gap-3">
                         <FileUpload
                             disabled={uploadDocMutation.status == "loading"}

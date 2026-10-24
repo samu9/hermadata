@@ -221,7 +221,9 @@ def test_add_entry(
     complete_animal_data,
 ):
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
+        race_id="C",
+        rescue_city_code="H501",
+        entry_type=EntryType.rescue,
         structure_id=1,
     )
     code = animal_repository.new_animal(data)
@@ -235,7 +237,9 @@ def test_add_entry(
     with pytest.raises(NoRequiredExitDataException):
         animal_repository.exit(
             animal_id,
-            AnimalExit(exit_date=date(2024, 1, 2), exit_type=ExitType.disappeared),
+            AnimalExit(
+                exit_date=date(2024, 1, 2), exit_type=ExitType.disappeared
+            ),
         )
 
     complete_animal_data(animal_id)
@@ -276,7 +280,9 @@ def test_count_days(
     complete_animal_data,
 ):
     new_animal = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value,
+        race_id="C",
+        rescue_city_code="H501",
+        entry_type=EntryType.rescue.value,
         structure_id=1,
     )
 
@@ -349,7 +355,9 @@ def test_count_days(
     assert result.total_days == 10
 
     new_animal = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue.value,
+        race_id="C",
+        rescue_city_code="H501",
+        entry_type=EntryType.rescue.value,
         structure_id=1,
     )
 
@@ -625,7 +633,9 @@ def test_get_animal(
     animal_repository: SQLAnimalRepository,
     make_animal,
 ):
-    from hermadata.repositories.animal.animal_repository import AnimalNotPresentException
+    from hermadata.repositories.animal.animal_repository import (
+        AnimalNotPresentException,
+    )
     from hermadata.repositories.animal.models import AnimalQueryModel
 
     animal_id = make_animal()
@@ -826,13 +836,15 @@ def test_temporary_adoption_exit(
 ):
     """Test that an animal can exit with temporary adoption exit type."""
     from hermadata.repositories.adopter_repository import (
-        NewAdopter,
         IDDocumentType,
+        NewAdopter,
         SQLAdopterRepository,
     )
 
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
+        race_id="C",
+        rescue_city_code="H501",
+        entry_type=EntryType.rescue,
         structure_id=1,
     )
     code = animal_repository.new_animal(data)
@@ -890,13 +902,15 @@ def test_confirm_temporary_adoption(
 ):
     """Test confirming a temporary adoption updates exit_type to adoption."""
     from hermadata.repositories.adopter_repository import (
-        NewAdopter,
         IDDocumentType,
+        NewAdopter,
         SQLAdopterRepository,
     )
 
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
+        race_id="C",
+        rescue_city_code="H501",
+        entry_type=EntryType.rescue,
         structure_id=1,
     )
     code = animal_repository.new_animal(data)
@@ -935,9 +949,7 @@ def test_confirm_temporary_adoption(
     )
 
     # Confirm the temporary adoption
-    animal_repository.confirm_temporary_adoption(
-        animal_id, date(2024, 3, 1)
-    )
+    animal_repository.confirm_temporary_adoption(animal_id, date(2024, 3, 1))
 
     # Verify exit_type changed to adoption
     entry = db_session.execute(
@@ -957,15 +969,17 @@ def test_undo_temporary_adoption(
     complete_animal_data,
 ):
     """Test undoing a temporary adoption adds a rientro entry."""
+    from hermadata.database.models import Adoption
     from hermadata.repositories.adopter_repository import (
-        NewAdopter,
         IDDocumentType,
+        NewAdopter,
         SQLAdopterRepository,
     )
-    from hermadata.database.models import Adoption
 
     data = NewAnimalModel(
-        race_id="C", rescue_city_code="H501", entry_type=EntryType.rescue,
+        race_id="C",
+        rescue_city_code="H501",
+        entry_type=EntryType.rescue,
         structure_id=1,
     )
     code = animal_repository.new_animal(data)
@@ -1034,3 +1048,38 @@ def test_undo_temporary_adoption(
         )
     ).scalar_one()
     assert adoption.returned_at is not None
+
+
+def test_get_animal_adopter(
+    animal_repository: SQLAnimalRepository,
+    make_animal,
+    make_adopter,
+    complete_animal_data,
+):
+    """get_animal_adopter returns the adopter of the active adoption."""
+    animal_id = make_animal()
+
+    # No adoption yet.
+    assert animal_repository.get_animal_adopter(animal_id) is None
+
+    complete_animal_data(animal_id)
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
+
+    adopter_id = make_adopter()
+    animal_repository.exit(
+        animal_id,
+        AnimalExit(
+            exit_date=date(2024, 1, 2),
+            exit_type=ExitType.adoption,
+            adopter_id=adopter_id,
+            location_address="Via Test",
+            location_city_code="H501",
+        ),
+    )
+
+    adopter = animal_repository.get_animal_adopter(animal_id)
+    assert adopter is not None
+    assert adopter.id == adopter_id
+    assert adopter.name == "MARIO"

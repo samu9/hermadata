@@ -10,6 +10,7 @@ import AnimalOverview from "../components/animal/AnimalOverview"
 import ProtectedRoute from "../components/ProtectedRoute"
 import RoleProtectedRoute from "../components/RoleProtectedRoute"
 import AdoptersPage from "../pages/AdoptersPage"
+import EditAdopterPage from "../pages/EditAdopterPage"
 import AdminPage from "../pages/AdminPage"
 import AnimalAdoptionPage from "../pages/AnimalAdoptionPage"
 import AnimalProfilePage from "../pages/AnimalProfilePage"
@@ -89,7 +90,11 @@ const routes: RouteObject[] = [
             },
             {
                 path: "adopters",
-                element: <AdoptersPage />,
+                element: <Outlet />,
+                children: [
+                    { index: true, element: <AdoptersPage /> },
+                    { path: ":id", element: <EditAdopterPage /> },
+                ],
             },
             {
                 path: "vets",
