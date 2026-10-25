@@ -1,18 +1,18 @@
 code,permission,description
-CA,create_animal,Create new animal records
-MA,make_adoption,Process animal adoptions
-UD,upload_document,Upload documents to the system
-EAD,edit_adopter,Edit adopter information
-EAN,edit_animal,Edit animal information
-BPA,browse_present_animals,Browse animals currently present
-BNA,browse_not_present_animals,Browse animals no longer present
-BAD,browse_adopters,Browse adopter records
-BAV,browse_vets,Browse veterinarian records
-DD,download_document,Download documents from the system
-DS,download_summary,Download summary reports
-SDP,set_document_permission,Set document permissions
-MU,manage_users,Manage user accounts and roles
-BDA,browse_deleted_animals,Browse deleted animal records
-AAE,add_animal_event,Aggiungi evento animal
-UAI,upload_animal_image,Upload and manage animal images
-BAE,browse_animal_events,Browse animal events
+CA,create_animal,Crea nuove schede animale
+MA,make_adoption,Gestisci adozioni animali
+UD,upload_document,Carica documenti nel sistema
+EAD,edit_adopter,Modifica dati adottanti
+EAN,edit_animal,Modifica dati animali
+BPA,browse_present_animals,Visualizza animali presenti
+BNA,browse_not_present_animals,Visualizza animali non più presenti
+BAD,browse_adopters,Visualizza anagrafica adottanti
+BAV,browse_vets,Visualizza anagrafica veterinari
+DD,download_document,Scarica documenti dal sistema
+DS,download_summary,Scarica report riepilogativi
+SDP,set_document_permission,Imposta permessi sui documenti
+MU,manage_users,"Gestisci utenti, ruoli e permessi"
+BDA,browse_deleted_animals,Visualizza animali eliminati
+AAE,add_animal_event,Aggiungi eventi animale
+UAI,upload_animal_image,Carica e gestisci foto animali
+BAE,browse_animal_events,Visualizza cronologia eventi animale
