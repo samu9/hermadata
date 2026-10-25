@@ -11,6 +11,7 @@ from hermadata.initializations import (
     get_user_service,
 )
 from hermadata.models import PaginationResult
+from hermadata.permissions import require_permission
 from hermadata.repositories.activity_repository import (
     ActivityFilterQuery,
     ActivityModel,
@@ -19,9 +20,11 @@ from hermadata.repositories.activity_repository import (
 from hermadata.repositories.user_repository import (
     PermissionModel,
     RoleModel,
+    SetUserPermissionsModel,
     SQLUserRepository,
     UpdateUserModel,
     UserListQuery,
+    UserPermissionDetailModel,
 )
 from hermadata.services.user_service import (
     ChangePasswordModel,
@@ -129,6 +132,55 @@ def get_all_permissions(
 ):
     """Get all available permissions. Requires authentication."""
     return user_repository.get_all_permissions()
+
+
+@router.get(
+    "/{user_id}/permissions",
+    response_model=list[UserPermissionDetailModel],
+)
+def get_user_permission_details(
+    user_id: int,
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.MANAGE_USERS))
+    ],
+    user_repository: Annotated[
+        SQLUserRepository, Depends(get_user_repository)
+    ],
+):
+    """Get all permissions with their role origin, user-specific override
+    and effective state for the given user. Requires MANAGE_USERS."""
+    if not user_repository.user_exists(user_id):
+        raise HTTPException(status_code=404, detail="User not found")
+    return user_repository.get_user_permission_details(user_id)
+
+
+@router.put("/{user_id}/permissions")
+def set_user_permissions(
+    user_id: int,
+    data: SetUserPermissionsModel,
+    current_user: Annotated[
+        TokenData, Depends(require_permission(Permission.MANAGE_USERS))
+    ],
+    user_repository: Annotated[
+        SQLUserRepository, Depends(get_user_repository)
+    ],
+):
+    """Replace the user-specific permission overrides of a user.
+    Requires MANAGE_USERS. Changes are effective at the next login."""
+    if not user_repository.user_exists(user_id):
+        raise HTTPException(status_code=404, detail="User not found")
+
+    unknown = user_repository.get_unknown_permission_codes(
+        [o.permission_code for o in data.overrides]
+    )
+    if unknown:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown permission codes: {', '.join(unknown)}",
+        )
+
+    user_repository.set_user_permissions(user_id, data)
+    return True
 
 
 @router.put("/{user_id}")

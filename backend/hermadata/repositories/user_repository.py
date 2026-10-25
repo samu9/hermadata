@@ -1,12 +1,17 @@
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.exc import NoResultFound
 
 from hermadata.constants import Permission
 from hermadata.database.models import Permission as PermissionEntity
-from hermadata.database.models import User, UserRole, UserRolePermission
+from hermadata.database.models import (
+    User,
+    UserPermission,
+    UserRole,
+    UserRolePermission,
+)
 from hermadata.models import PaginationQuery, PaginationResult
 from hermadata.repositories import SQLBaseRepository
 
@@ -63,6 +68,26 @@ class PermissionModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserPermissionOverride(BaseModel):
+    permission_code: str
+    # True = explicitly granted, False = explicitly revoked
+    granted: bool
+
+
+class SetUserPermissionsModel(BaseModel):
+    overrides: list[UserPermissionOverride] = []
+
+
+class UserPermissionDetailModel(BaseModel):
+    code: str
+    description: str | None = None
+    # permission granted by the user's role
+    from_role: bool
+    # None = inherit from role, True = granted, False = revoked
+    override: bool | None = None
+    effective: bool
+
+
 class SQLUserRepository(SQLBaseRepository):
     def _get_role_id_by_name(self, role_name: str | None) -> int | None:
         """Get role ID by role name"""
@@ -106,7 +131,9 @@ class SQLUserRepository(SQLBaseRepository):
 
         user_data, role_name = result
 
-        permissions = self.get_user_permissions(user_data.role_id)
+        permissions = self.get_user_permissions(
+            user_data.id, user_data.role_id
+        )
 
         user = UserModel(
             id=user_data.id,
@@ -140,16 +167,16 @@ class SQLUserRepository(SQLBaseRepository):
         # user.city_codes is already populated by SQLAlchemy
         # because it's in the model
 
-        # Get permissions for this user's role
-        permissions = self.get_user_permissions(user.role_id)
+        # Get effective permissions (role + user-specific overrides)
+        permissions = self.get_user_permissions(user.id, user.role_id)
         user.permissions = permissions
 
         return user
 
-    def get_user_permissions(self, role_id: int) -> list[str]:
-        """Get all permission codes for a given role"""
+    def _get_role_permission_codes(self, role_id: int | None) -> set[str]:
+        """Get all permission codes granted by a given role"""
         if role_id is None:
-            return []
+            return set()
 
         result = (
             self.session.execute(
@@ -161,7 +188,120 @@ class SQLUserRepository(SQLBaseRepository):
             .all()
         )
 
-        return list(result)
+        return set(result)
+
+    def _get_user_overrides(self, user_id: int) -> dict[str, bool]:
+        """Get the user-specific permission overrides as code -> granted"""
+        result = self.session.execute(
+            select(UserPermission.permission_code, UserPermission.granted)
+            .where(UserPermission.user_id == user_id)
+            .order_by(UserPermission.id)
+        ).all()
+
+        return {row.permission_code: row.granted for row in result}
+
+    def get_user_permissions(
+        self, user_id: int, role_id: int | None
+    ) -> list[str]:
+        """Get the effective permission codes for a user.
+
+        effective = (role permissions | granted overrides) - revoked overrides
+        """
+        effective = self._get_role_permission_codes(role_id)
+        for code, granted in self._get_user_overrides(user_id).items():
+            if granted:
+                effective.add(code)
+            else:
+                effective.discard(code)
+
+        return sorted(effective)
+
+    def get_user_permission_details(
+        self, user_id: int
+    ) -> list[UserPermissionDetailModel]:
+        """Get all permissions, with role origin, override and effective
+        state for the given user"""
+        role_id = self.session.execute(
+            select(User.role_id).where(
+                User.id == user_id, User.deleted_at.is_(None)
+            )
+        ).one()[0]
+
+        role_codes = self._get_role_permission_codes(role_id)
+        overrides = self._get_user_overrides(user_id)
+
+        permissions = (
+            self.session.execute(
+                select(PermissionEntity).order_by(PermissionEntity.code)
+            )
+            .scalars()
+            .all()
+        )
+
+        details = []
+        for permission in permissions:
+            from_role = permission.code in role_codes
+            override = overrides.get(permission.code)
+            details.append(
+                UserPermissionDetailModel(
+                    code=permission.code,
+                    description=permission.description,
+                    from_role=from_role,
+                    override=override,
+                    effective=from_role if override is None else override,
+                )
+            )
+
+        return details
+
+    def set_user_permissions(
+        self, user_id: int, data: SetUserPermissionsModel
+    ):
+        """Replace all the permission overrides of a user"""
+        # last occurrence wins on duplicated codes
+        overrides = {o.permission_code: o.granted for o in data.overrides}
+
+        self.session.execute(
+            delete(UserPermission).where(UserPermission.user_id == user_id)
+        )
+        if overrides:
+            self.session.execute(
+                insert(UserPermission),
+                [
+                    {
+                        "user_id": user_id,
+                        "permission_code": code,
+                        "granted": granted,
+                    }
+                    for code, granted in overrides.items()
+                ],
+            )
+        self.session.flush()
+
+    def user_exists(self, user_id: int) -> bool:
+        """Return True if a non-deleted user with the given id exists"""
+        result = self.session.execute(
+            select(func.count())
+            .select_from(User)
+            .where(User.id == user_id, User.deleted_at.is_(None))
+        ).scalar_one()
+
+        return result > 0
+
+    def get_unknown_permission_codes(self, codes: list[str]) -> list[str]:
+        """Return the codes that don't exist in the permissions table"""
+        if not codes:
+            return []
+        existing = set(
+            self.session.execute(
+                select(PermissionEntity.code).where(
+                    PermissionEntity.code.in_(codes)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return sorted(set(codes) - existing)
 
     def get_all_roles(self) -> list[RoleModel]:
         """Get all roles"""
@@ -233,7 +373,7 @@ class SQLUserRepository(SQLBaseRepository):
         # Convert to UserModel instances
         user_models = []
         for user, role_name in result:
-            permissions = self.get_user_permissions(user.role_id)
+            permissions = self.get_user_permissions(user.id, user.role_id)
 
             user_data = UserModel(
                 id=user.id,

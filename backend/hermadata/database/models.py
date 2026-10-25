@@ -386,6 +386,37 @@ class UserRolePermission(Base):
     )
 
 
+class UserPermission(Base):
+    """Per-user permission override on top of the role permissions.
+
+    granted=True explicitly grants the permission, granted=False
+    explicitly revokes it even if the user's role grants it.
+    """
+
+    __tablename__ = "user_permissions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    permission_code: Mapped[str] = mapped_column(
+        String(3), ForeignKey("permissions.code")
+    )
+    granted: Mapped[bool] = mapped_column(Boolean())
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "permission_code", name="unique_user_permission"
+        ),
+    )
+
+
 class Permission(Base):
     __tablename__ = "permissions"
 
