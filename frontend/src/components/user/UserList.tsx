@@ -12,6 +12,7 @@ import { apiService } from "../../main"
 import { ManagementUser } from "../../models/user.schema"
 import { useComuneQuery } from "../../queries"
 import EditUserForm from "./EditUserForm"
+import UserPermissionsDialog from "./UserPermissionsDialog"
 
 // Component to fetch and display city name
 const CityNameTag: React.FC<{ code: string }> = ({ code }) => {
@@ -31,6 +32,7 @@ const UserList: React.FC = () => {
         null,
     )
     const [showEditDialog, setShowEditDialog] = useState(false)
+    const [showPermissionsDialog, setShowPermissionsDialog] = useState(false)
     const toast = useRef<Toast>(null)
     const queryClient = useQueryClient()
 
@@ -155,6 +157,15 @@ const UserList: React.FC = () => {
                         setShowEditDialog(true)
                     }}
                     tooltip="Modifica utente"
+                />
+                <Button
+                    icon="pi pi-key"
+                    className="p-button-rounded p-button-text"
+                    onClick={() => {
+                        setSelectedUser(user)
+                        setShowPermissionsDialog(true)
+                    }}
+                    tooltip="Gestisci permessi"
                 />
                 <Button
                     icon={user.is_active ? "pi pi-eye-slash" : "pi pi-eye"}
@@ -293,7 +304,7 @@ const UserList: React.FC = () => {
                     <Column
                         header="Azioni"
                         body={actionsBodyTemplate}
-                        style={{ width: "150px" }}
+                        style={{ width: "200px" }}
                     />
                 </DataTable>
             </div>
@@ -319,6 +330,33 @@ const UserList: React.FC = () => {
                         }}
                         onCancel={() => {
                             setShowEditDialog(false)
+                            setSelectedUser(null)
+                        }}
+                    />
+                )}
+            </Dialog>
+
+            {/* User Permissions Dialog */}
+            <Dialog
+                header={`Permessi – ${selectedUser?.email ?? ""}`}
+                visible={showPermissionsDialog}
+                onHide={() => {
+                    setShowPermissionsDialog(false)
+                    setSelectedUser(null)
+                }}
+                style={{ width: "950px" }}
+                modal
+            >
+                {selectedUser && (
+                    <UserPermissionsDialog
+                        user={selectedUser}
+                        onSaved={() => {
+                            setShowPermissionsDialog(false)
+                            setSelectedUser(null)
+                            queryClient.invalidateQueries("users")
+                        }}
+                        onCancel={() => {
+                            setShowPermissionsDialog(false)
                             setSelectedUser(null)
                         }}
                     />

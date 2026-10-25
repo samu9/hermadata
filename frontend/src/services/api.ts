@@ -54,7 +54,13 @@ import {
 import { DocKind, NewDocKind } from "../models/docs.schema"
 import { Race, raceSchema } from "../models/race.schema"
 import { Role, roleSchema } from "../models/role.schema"
-import { Permission, permissionSchema } from "../models/permission.schema"
+import {
+    Permission,
+    permissionSchema,
+    UserPermissionDetail,
+    userPermissionDetailSchema,
+    UserPermissionOverride,
+} from "../models/permission.schema"
 import {
     AnimalEventType,
     IntUtilItem,
@@ -751,6 +757,22 @@ class ApiService {
             ApiEndpoints.user.permissions,
         )
         return result.map((permission) => permissionSchema.parse(permission))
+    }
+
+    async getUserPermissions(userId: number): Promise<UserPermissionDetail[]> {
+        const result = await this.get<UserPermissionDetail[]>(
+            ApiEndpoints.user.userPermissions(userId),
+        )
+        return result.map((p) => userPermissionDetailSchema.parse(p))
+    }
+
+    async setUserPermissions(
+        userId: number,
+        overrides: UserPermissionOverride[],
+    ): Promise<void> {
+        await this.put(ApiEndpoints.user.userPermissions(userId), {
+            overrides,
+        })
     }
     async getAnimalStats(params: {
         from_date: string
