@@ -1890,6 +1890,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 comune_residence.name.label("residence_city"),
                 comune_birth.name.label("birth_city"),
                 Adopter.phone,
+                Adopter.document_type,
                 Adopter.document_number,
             )
             .join(

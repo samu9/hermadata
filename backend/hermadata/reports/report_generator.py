@@ -24,10 +24,12 @@ from hermadata.constants import (
     ENTRY_TYPE_LABELS,
     EXIT_TYPE_LABELS,
     FUR_LABELS,
+    ID_DOCUMENT_TYPE_LABELS,
     SIZE_LABELS,
     AnimalFur,
     AnimalSize,
     ExitType,
+    IDDocumentType,
 )
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
@@ -121,7 +123,20 @@ class AdopterVariables(BaseModel):
     birth_date: ReportDate
     phone: NullableString
     fiscal_code: NullableString
+    document_type: NullableString
     document_number: NullableString
+
+    @field_validator("document_type", mode="before")
+    @classmethod
+    def validate_document_type(cls, value: IDDocumentType | str | None):
+        if isinstance(value, IDDocumentType):
+            return ID_DOCUMENT_TYPE_LABELS[value]
+        if isinstance(value, str):
+            try:
+                return ID_DOCUMENT_TYPE_LABELS[IDDocumentType(value)]
+            except ValueError:
+                return value
+        return value
 
 
 def format_age(birth_date: date | None) -> str:
