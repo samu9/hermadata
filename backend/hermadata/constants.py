@@ -145,6 +145,17 @@ ENTRY_RESULT_LABELS = {
 }
 
 
+class IDDocumentType(Enum):
+    identity_card = "id"
+    driving_licence = "dl"
+
+
+ID_DOCUMENT_TYPE_LABELS = {
+    IDDocumentType.identity_card: "Carta di identità",
+    IDDocumentType.driving_licence: "Patente di guida",
+}
+
+
 class StructureType(str, Enum):
     sanitary = "S"
     shelter = "R"

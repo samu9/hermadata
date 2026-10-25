@@ -3,7 +3,7 @@ from io import BytesIO
 
 from openpyxl import load_workbook
 
-from hermadata.constants import EntryType, ExitType
+from hermadata.constants import EntryType, ExitType, IDDocumentType
 from hermadata.reports.report_generator import (
     AdopterVariables,
     AnimalListReportRow,
@@ -164,6 +164,8 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
             residence_city="Montecatini Terme",
             birth_city="Roma",
             birth_date=date(1979, 2, 3),
+            document_type=IDDocumentType.identity_card,
+            document_number="AA12345BB",
         ),
         variation_type=ExitType.custody,
     )
@@ -178,9 +180,10 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
     html = template.render(**return_variables.model_dump())
     assert "stato restituito al Sig." in html
     assert "stato restituito dal Sig." not in html
+    assert "Documento (Carta di identità) n. AA12345BB" in html
 
 
-def test_adoption_report(report_generator: ReportGenerator):
+def test_adoption_report(jinja_env, report_generator: ReportGenerator):
     variables = ReportAdoptionVariables(
         animal=AnimalVariables(
             name="Gino",
@@ -203,6 +206,8 @@ def test_adoption_report(report_generator: ReportGenerator):
             birth_date=date(1979, 2, 3),
             residence_address="Via test",
             phone="123456789",
+            document_type="dl",
+            document_number="PT9876543",
         ),
         exit_date=datetime.now().date(),
         notes="Test",
@@ -214,6 +219,20 @@ def test_adoption_report(report_generator: ReportGenerator):
     pdf = report_generator.build_adoption_report(variables)
 
     assert pdf
+
+    template = jinja_env.get_template("adoption.jinja")
+    html = template.render(**variables.model_dump())
+    assert "Documento (Patente di guida) n. PT9876543" in html
+
+    no_type_adopter = variables.adopter.model_copy(
+        update={"document_type": ""}
+    )
+    html_no_type = template.render(
+        **variables.model_copy(
+            update={"adopter": no_type_adopter}
+        ).model_dump()
+    )
+    assert "Documento n. PT9876543" in html_no_type
 
 
 def test_models():

@@ -1,12 +1,11 @@
 from datetime import date
-from enum import Enum
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, StringConstraints
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.orm import MappedColumn
 
-from hermadata.constants import DocKindCode
+from hermadata.constants import DocKindCode, IDDocumentType
 from hermadata.database.models import (
     Adopter,
     Adoption,
@@ -17,11 +16,6 @@ from hermadata.database.models import (
 from hermadata.models import PaginationResult, SearchQuery
 from hermadata.repositories import SQLBaseRepository
 from hermadata.repositories.animal.models import WhereClauseMapItem
-
-
-class IDDocumentType(Enum):
-    identity_card = "id"
-    driving_licence = "dl"
 
 
 class NewAdopter(BaseModel):
