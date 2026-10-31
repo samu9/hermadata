@@ -133,6 +133,36 @@ def test_create_adopter_foreign_born(adopter_service: AdopterService):
     assert city.provincia == "EE"
 
 
+def test_create_adopter_historical_italian_municipality(
+    adopter_service: AdopterService,
+):
+    """Test creating an adopter born in a historical Italian municipality."""
+    # RSSMRA80A01H980L is a valid codice fiscale for someone born in
+    # San Marcello Pistoiese (H980, PT), merged into San Marcello Piteglio.
+    new_adopter_data = NewAdopterRequest(
+        name="Mario",
+        surname="Rossi",
+        fiscal_code="RSSMRA80A01H980L",
+        residence_city_code="H501",
+        phone="3331234567",
+        document_type="id",
+        document_number="AR1234567",
+    )
+
+    result = adopter_service.create(new_adopter_data)
+
+    assert result.name == "MARIO"
+    assert result.surname == "ROSSI"
+    assert result.fiscal_code == "RSSMRA80A01H980L"
+    assert result.birth_city_code == "H980"
+    assert result.birth_date == date(1980, 1, 1)
+
+    city = adopter_service.city_repository.get_comune("H980")
+    assert city is not None
+    assert city.name == "San Marcello Pistoiese"
+    assert city.provincia == "PT"
+
+
 def test_update_adopter_marks_adoption_documents_dirty(
     adopter_service: AdopterService,
     animal_service: AnimalService,
