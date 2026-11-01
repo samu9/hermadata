@@ -770,7 +770,8 @@ def serve_animal_image(
         content=data,
         media_type=image.mimetype,
         headers={
-            "Content-Disposition": f'inline; filename="{image.filename}"'
+            "Content-Disposition": f'inline; filename="{image.filename}"',
+            "Cache-Control": "public, max-age=31536000, immutable",
         },
     )
 

@@ -816,3 +816,39 @@ def test_get_animal_warning(app: TestClient, make_animal):
 
     assert result.status_code == 200
 
+
+def test_upload_and_serve_animal_image_cache_headers(
+    app: TestClient, make_animal, disk_storage
+):
+    from hermadata.initializations import get_image_storage
+
+    app.app.dependency_overrides[get_image_storage] = lambda: disk_storage
+    try:
+        animal_id = make_animal()
+        image_bytes = b"RIFF\x1a\x00\x00\x00WEBPVP8 "
+
+        upload_res = app.post(
+            f"/animal/{animal_id}/image",
+            files={"image": ("photo.webp", image_bytes, "image/webp")},
+        )
+        assert upload_res.status_code == 200
+        image_data = upload_res.json()
+        assert image_data["filename"] == "photo.webp"
+        assert image_data["mimetype"] == "image/webp"
+
+        serve_res = app.get(f"/animal/{animal_id}/image/{image_data['id']}")
+        assert serve_res.status_code == 200
+        assert serve_res.content == image_bytes
+        assert serve_res.headers["content-type"] == "image/webp"
+        assert (
+            serve_res.headers["cache-control"]
+            == "public, max-age=31536000, immutable"
+        )
+        assert (
+            serve_res.headers["content-disposition"]
+            == 'inline; filename="photo.webp"'
+        )
+    finally:
+        app.app.dependency_overrides.pop(get_image_storage, None)
+
+

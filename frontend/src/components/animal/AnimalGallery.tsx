@@ -121,6 +121,8 @@ const AnimalGallery = () => {
                                     img.id,
                                 )}
                                 alt={img.filename}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover"
                             />
 
