@@ -55,21 +55,33 @@ class AdopterService:
         self.city_repository(session)
         return self
 
-    def _validate_birth_city_code(self, city_code: str) -> str:
+    def _validate_birth_city_code(
+        self,
+        city_code: str,
+        city_name: str | None = None,
+        province_code: str | None = None,
+    ) -> str:
         """Validate that the birth city code exists in the database.
 
         For foreign-born individuals, the codice fiscale encodes the country
         with a code starting with 'Z'. If the code is not yet in the database,
         it is automatically created under province 'EE' (STATO ESTERO).
 
+        For individuals born in historical/suppressed Italian municipalities
+        decoded by codicefiscale, the missing comune is automatically created
+        using the decoded name and province.
+
         Args:
             city_code: The city code to validate
+            city_name: Optional decoded municipality name
+            province_code: Optional decoded two-letter province code
 
         Returns:
             The validated city code
 
         Raises:
-            ValueError: If the city code doesn't exist in the database
+            ValueError: If the city code doesn't exist in the database and
+                cannot be created
         """
         if not city_code:
             raise ValueError("Birth city code cannot be empty")
@@ -80,6 +92,12 @@ class AdopterService:
                     code=city_code,
                     name=self.FOREIGN_CITY_NAME,
                     provincia=self.FOREIGN_PROVINCE_CODE,
+                )
+            elif city_name and province_code:
+                self.city_repository.create_comune(
+                    code=city_code,
+                    name=city_name,
+                    provincia=province_code,
                 )
             else:
                 raise ValueError(
@@ -99,11 +117,14 @@ class AdopterService:
 
         decoded = codicefiscale.decode(data.fiscal_code)
         birth_date = decoded.get("birthdate")
-        birth_place_code = decoded.get("birthplace").get("code")
+        birth_place = decoded.get("birthplace") or {}
+        birth_place_code = birth_place.get("code")
 
         # Validate that both city codes exist in the database
         validated_birth_city_code = self._validate_birth_city_code(
-            birth_place_code
+            birth_place_code,
+            city_name=birth_place.get("name"),
+            province_code=birth_place.get("province"),
         )
 
         # Also validate residence city code
