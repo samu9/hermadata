@@ -3,6 +3,7 @@ import { useRef, useState } from "react"
 import { useQueryClient } from "react-query"
 import { apiService } from "../../main"
 import { toastService } from "../../services/toast"
+import { compressImage } from "../../utils/imageCompression"
 
 type Props = {
     animalId: number
@@ -21,7 +22,11 @@ const AnimalImageUploadForm = ({ animalId, onComplete }: Props) => {
         if (!file) return
         setLoading(true)
         try {
-            const image = await apiService.uploadAnimalImage(animalId, file)
+            const compressedFile = await compressImage(file)
+            const image = await apiService.uploadAnimalImage(
+                animalId,
+                compressedFile,
+            )
             await apiService.setProfileImage(animalId, image.id)
             queryClient.invalidateQueries(["animal", String(animalId)])
             queryClient.invalidateQueries(["animal-images", animalId])
