@@ -100,6 +100,9 @@ describe('chipCodeValidator', () => {
     expect(chipCodeValidator.parse('123.456.789.012.345')).toBe(
       '123.456.789.012.345'
     )
+    expect(chipCodeValidator.parse(' 123.456.789.012.345 ')).toBe(
+      '123.456.789.012.345'
+    )
   })
 
   it('rejects invalid chip code formats', () => {

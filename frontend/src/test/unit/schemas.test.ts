@@ -102,6 +102,28 @@ describe('newAdopterSchema', () => {
     expect(result.name).toBe('Luigi')
   })
 
+  it('trims leading and trailing whitespace from adopter fields', () => {
+    const raw = {
+      name: '  Julia ',
+      surname: ' Amigud  ',
+      fiscal_code: ' MGDJLU69R64Z154U ',
+      residence_city_code: ' H501 ',
+      phone: ' 3339876543 ',
+      document_type: ' id ',
+      document_number: ' CC987654 ',
+    }
+    const result = newAdopterSchema.parse(raw)
+    expect(result).toEqual({
+      name: 'Julia',
+      surname: 'Amigud',
+      fiscal_code: 'MGDJLU69R64Z154U',
+      residence_city_code: 'H501',
+      phone: '3339876543',
+      document_type: 'id',
+      document_number: 'CC987654',
+    })
+  })
+
   it('rejects fiscal code shorter than 16 chars', () => {
     const raw = {
       name: 'Luigi',

@@ -5,15 +5,15 @@ import {
 } from "./pagination.schema"
 
 const FISCAL_CODE = z.union([
-    z.string().min(16).max(16),
-    z.string().regex(/^\d{9}$/),
+    z.string().trim().min(16).max(16),
+    z.string().trim().regex(/^\d{9}$/),
 ])
 export const newVetSchema = z.object({
-    name: z.string().nullish(),
-    surname: z.string().nullish(),
-    business_name: z.string(),
+    name: z.string().trim().nullish(),
+    surname: z.string().trim().nullish(),
+    business_name: z.string().trim(),
     fiscal_code: FISCAL_CODE,
-    phone: z.string().min(9).nullable(),
+    phone: z.string().trim().min(9).nullable(),
 })
 
 export type NewVet = z.infer<typeof newVetSchema>
@@ -25,8 +25,8 @@ export const vetSchema = newVetSchema.extend({
 export type Vet = z.infer<typeof vetSchema>
 
 export const vetSearchSchema = paginationQuerySchema.extend({
-    name: z.string().nullish(),
-    surname: z.string().nullish(),
+    name: z.string().trim().nullish(),
+    surname: z.string().trim().nullish(),
     fiscal_code: FISCAL_CODE.nullish(),
     sort_field: z.string().nullish(),
     sort_order: z.number().nullish(),

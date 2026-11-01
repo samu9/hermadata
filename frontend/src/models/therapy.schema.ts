@@ -44,6 +44,7 @@ export const newTherapySchema = z
         end_date: z.string().nullable().optional(),
         description: z
             .string()
+            .trim()
             .min(5, "La descrizione deve contenere almeno 5 caratteri"),
         reminder_value: z.number().int().positive().nullable().optional(),
         reminder_unit: reminderUnitSchema.nullable().optional(),

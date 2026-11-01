@@ -32,8 +32,8 @@ export const animalEntrySchema = z.object({
     exit_date: dateOnly.nullish(),
     entry_type: z.string(),
     exit_type: z.string().nullish(),
-    entry_notes: z.string().nullish(),
-    exit_notes: z.string().nullish(),
+    entry_notes: z.string().trim().nullish(),
+    exit_notes: z.string().trim().nullish(),
     without_chip: z.boolean().optional(),
 })
 
@@ -41,7 +41,7 @@ export type AnimalEntry = z.infer<typeof animalEntrySchema>
 
 export const animalSchema = z.object({
     code: animalCodeValidator,
-    name: z.string().nullable().optional(),
+    name: z.string().trim().nullable().optional(),
     race_id: animalRaceValidator,
     breed_id: z.number().nullish(),
     sterilized: z.boolean().nullish(),
@@ -56,11 +56,11 @@ export const animalSchema = z.object({
 
     stage: z.string().nullish(),
     adoptability_index: z.number().optional(),
-    chip_code: z.string().nullish(),
+    chip_code: z.string().trim().nullish(),
     chip_code_set: z.boolean(),
     profile_image_id: z.number().nullable(),
     sex: z.number().nullable(),
-    notes: z.string().nullish(),
+    notes: z.string().trim().nullish(),
     fur: z.number().nullish(),
     size: z.number().nullish(),
     color: z.number().nullish(),
@@ -75,9 +75,10 @@ export const animalSchema = z.object({
 export type Animal = z.infer<typeof animalSchema>
 
 export const animalEditSchema = z.object({
-    name: z.string().nullable().optional(),
+    name: z.string().trim().nullable().optional(),
     chip_code: z.preprocess(
-        (arg) => (arg === "" ? null : arg),
+        (arg) =>
+            typeof arg === "string" && arg.trim() === "" ? null : arg,
         chipCodeValidator.nullish(),
     ),
     chip_code_set: z.boolean(),
@@ -89,7 +90,7 @@ export const animalEditSchema = z.object({
     sterilized: z.boolean().nullish(),
     sex: z.number().nullable(),
     breed_id: z.number().nullish(),
-    notes: z.string().nullish(),
+    notes: z.string().trim().nullish(),
 })
 
 export type AnimalEdit = z.infer<typeof animalEditSchema>
@@ -116,8 +117,8 @@ export const updateAnimalEntrySchema = z.object({
     entry_type: z.string().optional(),
     exit_date: dateOnly.nullish(),
     exit_type: z.string().nullish(),
-    entry_notes: z.string().nullish(),
-    exit_notes: z.string().nullish(),
+    entry_notes: z.string().trim().nullish(),
+    exit_notes: z.string().trim().nullish(),
     without_chip: z.boolean().optional(),
 })
 export type UpdateAnimalEntry = z.infer<typeof updateAnimalEntrySchema>
@@ -163,8 +164,8 @@ export type PaginatedAnimalSearchResult = z.infer<
 
 export const animalDocUploadSchema = z
     .object({
-        title: z.string().min(1),
-        document_kind_code: z.string().min(1),
+        title: z.string().trim().min(1),
+        document_kind_code: z.string().trim().min(1),
         document_id: z.number(),
         animal_entry_id: z.number().nullish(),
     })
@@ -198,13 +199,13 @@ export const animalDocumentSchema = z.object({
 export type AnimalDocument = z.infer<typeof animalDocumentSchema>
 
 export const animalSearchQuerySchema = paginationQuerySchema.extend({
-    rescue_city_code: z.string().nullish(),
+    rescue_city_code: z.string().trim().nullish(),
     entry_type: z.string().nullish(),
     exit_type: z.string().nullish(),
     present: z.boolean().nullish(),
     not_present: z.boolean().nullish(),
-    name: z.string().nullish(),
-    chip_code: z.string().nullish(),
+    name: z.string().trim().nullish(),
+    chip_code: z.string().trim().nullish(),
     race_id: z.string().nullish(),
     sort_field: z.string().nullish(),
     sort_order: z.number().nullish(),
@@ -235,9 +236,9 @@ export const animalExitSchema = z
         }),
         exit_data: z.record(z.string(), z.any()).nullish(),
         adopter_id: z.number().nullish(),
-        location_address: z.string().nullish(),
-        location_city_code: z.string().nullish(),
-        notes: z.string().nullish(),
+        location_address: z.string().trim().nullish(),
+        location_city_code: z.string().trim().nullish(),
+        notes: z.string().trim().nullish(),
     })
     .refine((data) => {
         if (["A", "T", "R"].includes(data.exit_type)) {

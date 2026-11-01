@@ -1,13 +1,14 @@
 import { z } from "zod"
 
-export const animalCodeValidator = z.string().length(13)
-export const animalRaceValidator = z.string().length(1)
-export const cityCodeValidator = z.string().regex(/[A-Z]\d{3}/)
-export const provinceValidator = z.string().length(2)
+export const animalCodeValidator = z.string().trim().length(13)
+export const animalRaceValidator = z.string().trim().length(1)
+export const cityCodeValidator = z.string().trim().regex(/[A-Z]\d{3}/)
+export const provinceValidator = z.string().trim().length(2)
 export const breedNameValidator = z
     .string({
         required_error: "Il nome è obbligatorio",
     })
+    .trim()
     .regex(/^(.*[a-zA-Z]){2,}.*$/)
 
 export const dateFromString = z.preprocess((arg) => {
@@ -40,8 +41,10 @@ export const dateOnly = dateFromString.transform((d: Date | null) => {
 
 export const docKindNameValidator = z
     .string()
+    .trim()
     .min(3, "Il nome deve avere almeno 3 caratteri.")
 
 export const chipCodeValidator = z
     .string()
+    .trim()
     .regex(/\d{3}\.\d{3}\.\d{3}\.\d{3}\.\d{3}/, "Codice chip non valido")

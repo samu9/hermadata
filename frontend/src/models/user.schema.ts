@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export const loginSchema = z.object({
-    username: z.string(),
+    username: z.string().trim(),
     password: z.string(),
 })
 
@@ -48,11 +48,11 @@ export const managementUserSchema = z.object({
 export type ManagementUser = z.infer<typeof managementUserSchema>
 
 export const createUserSchema = z.object({
-    name: z.string().optional(),
-    surname: z.string().optional(),
-    email: z.string().email(),
+    name: z.string().trim().optional(),
+    surname: z.string().trim().optional(),
+    email: z.string().trim().email(),
     password: z.string().min(6),
-    role_name: z.string().optional(),
+    role_name: z.string().trim().optional(),
     city_codes: z.array(z.string()).optional(),
     is_active: z.boolean().default(true),
     is_superuser: z.boolean().default(false),
@@ -61,9 +61,9 @@ export const createUserSchema = z.object({
 export type CreateUser = z.infer<typeof createUserSchema>
 
 export const updateUserSchema = z.object({
-    name: z.string().optional(),
-    surname: z.string().optional(),
-    email: z.string().email().optional(),
+    name: z.string().trim().optional(),
+    surname: z.string().trim().optional(),
+    email: z.string().trim().email().optional(),
     city_codes: z.array(z.string()).optional(),
     is_active: z.boolean().optional(),
     is_superuser: z.boolean().optional(),
