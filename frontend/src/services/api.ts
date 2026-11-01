@@ -79,6 +79,37 @@ import { NewTherapy, Therapy, TherapyReminder } from "../models/therapy.schema"
 
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 
+const PASSWORD_KEYS = new Set([
+    "password",
+    "currentPassword",
+    "newPassword",
+    "confirmPassword",
+])
+
+function trimStrings<T>(value: T): T {
+    if (typeof value === "string") {
+        return value.trim() as unknown as T
+    }
+    if (
+        value === null ||
+        value === undefined ||
+        typeof value !== "object" ||
+        value instanceof Date ||
+        (typeof FormData !== "undefined" && value instanceof FormData) ||
+        (typeof Blob !== "undefined" && value instanceof Blob)
+    ) {
+        return value
+    }
+    if (Array.isArray(value)) {
+        return value.map((item) => trimStrings(item)) as unknown as T
+    }
+    const result: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+        result[k] = PASSWORD_KEYS.has(k) ? v : trimStrings(v)
+    }
+    return result as T
+}
+
 class ApiService {
     inst: AxiosInstance
     baseURL: string
@@ -95,9 +126,19 @@ class ApiService {
                 for (const [key, value] of Object.entries(params)) {
                     if (value === null || value === undefined) continue
                     if (Array.isArray(value)) {
-                        value.forEach((v) => searchParams.append(key, String(v)))
+                        value.forEach((v) =>
+                            searchParams.append(
+                                key,
+                                typeof v === "string" ? v.trim() : String(v),
+                            ),
+                        )
                     } else {
-                        searchParams.append(key, String(value))
+                        searchParams.append(
+                            key,
+                            typeof value === "string"
+                                ? value.trim()
+                                : String(value),
+                        )
                     }
                 }
                 return searchParams.toString()
@@ -157,7 +198,9 @@ class ApiService {
         data: object,
         headers = {},
     ): Promise<T> {
-        const res = await this.inst.post<T>(endpoint, data, { headers })
+        const res = await this.inst.post<T>(endpoint, trimStrings(data), {
+            headers,
+        })
         return res.data
     }
 
@@ -166,7 +209,9 @@ class ApiService {
         data: object,
         headers = {},
     ): Promise<T> {
-        const res = await this.inst.put<T>(endpoint, data, { headers })
+        const res = await this.inst.put<T>(endpoint, trimStrings(data), {
+            headers,
+        })
         return res.data
     }
 

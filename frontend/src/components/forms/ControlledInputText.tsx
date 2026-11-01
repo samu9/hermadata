@@ -43,7 +43,10 @@ const ControlledInputText = <T extends FieldValues>(props: Props<T>) => {
                                 "p-invalid": fieldState.error,
                                 uppercase: props.uppercase,
                             })}
-                            {...register(props.fieldName)}
+                            {...register(props.fieldName, {
+                                setValueAs: (v: unknown) =>
+                                    typeof v === "string" ? v.trim() : v,
+                            })}
                             disabled={props.disabled}
                         />
                         {errors.name && (

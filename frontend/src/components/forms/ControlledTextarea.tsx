@@ -42,7 +42,10 @@ const ControlledTextarea = <T extends FieldValues>(props: Props<T>) => {
                             className={classNames("w-full", {
                                 "p-invalid": fieldState.error,
                             })}
-                            {...register(props.fieldName)}
+                            {...register(props.fieldName, {
+                                setValueAs: (v: unknown) =>
+                                    typeof v === "string" ? v.trim() : v,
+                            })}
                         />
                     </div>
                     {/* {getFormErrorMessage(field.name)} */}
