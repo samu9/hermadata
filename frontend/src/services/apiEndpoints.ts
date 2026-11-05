@@ -77,6 +77,7 @@ const ApiEndpoints = {
         activity: "/user/activity",
         roles: "/user/roles",
         permissions: "/user/permissions",
+        userPermissions: (id: number) => `/user/${id}/permissions`,
     },
     util: {
         getProvince: "/util/province",

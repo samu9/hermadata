@@ -9,9 +9,11 @@ import { confirmDialog, ConfirmDialog } from "primereact/confirmdialog"
 import { useRef } from "react"
 import { useMutation, useQuery, useQueryClient } from "react-query"
 import { apiService } from "../../main"
+import { useAuth } from "../../contexts/AuthContext"
 import { ManagementUser } from "../../models/user.schema"
 import { useComuneQuery } from "../../queries"
 import EditUserForm from "./EditUserForm"
+import UserPermissionsDialog from "./UserPermissionsDialog"
 
 // Component to fetch and display city name
 const CityNameTag: React.FC<{ code: string }> = ({ code }) => {
@@ -31,8 +33,10 @@ const UserList: React.FC = () => {
         null,
     )
     const [showEditDialog, setShowEditDialog] = useState(false)
+    const [showPermissionsDialog, setShowPermissionsDialog] = useState(false)
     const toast = useRef<Toast>(null)
     const queryClient = useQueryClient()
+    const { isSuperUser } = useAuth()
 
     const usersQuery = useQuery("users", () => apiService.getAllUsers(), {
         staleTime: 30000, // 30 seconds
@@ -156,6 +160,17 @@ const UserList: React.FC = () => {
                     }}
                     tooltip="Modifica utente"
                 />
+                {isSuperUser && (
+                    <Button
+                        icon="pi pi-key"
+                        className="p-button-rounded p-button-text"
+                        onClick={() => {
+                            setSelectedUser(user)
+                            setShowPermissionsDialog(true)
+                        }}
+                        tooltip="Gestisci permessi"
+                    />
+                )}
                 <Button
                     icon={user.is_active ? "pi pi-eye-slash" : "pi pi-eye"}
                     className="p-button-rounded p-button-text"
@@ -293,7 +308,7 @@ const UserList: React.FC = () => {
                     <Column
                         header="Azioni"
                         body={actionsBodyTemplate}
-                        style={{ width: "150px" }}
+                        style={{ width: "200px" }}
                     />
                 </DataTable>
             </div>
@@ -319,6 +334,32 @@ const UserList: React.FC = () => {
                         }}
                         onCancel={() => {
                             setShowEditDialog(false)
+                            setSelectedUser(null)
+                        }}
+                    />
+                )}
+            </Dialog>
+
+            {/* User Permissions Dialog */}
+            <Dialog
+                header={`Permessi – ${selectedUser?.email ?? ""}`}
+                visible={showPermissionsDialog}
+                onHide={() => {
+                    setShowPermissionsDialog(false)
+                    setSelectedUser(null)
+                }}
+                style={{ width: "950px" }}
+                modal
+            >
+                {selectedUser && (
+                    <UserPermissionsDialog
+                        user={selectedUser}
+                        onSaved={() => {
+                            setShowPermissionsDialog(false)
+                            setSelectedUser(null)
+                        }}
+                        onCancel={() => {
+                            setShowPermissionsDialog(false)
                             setSelectedUser(null)
                         }}
                     />
