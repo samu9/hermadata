@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders, setupAuthenticatedUser, clearAuthState } from '../utils'
 import HomePage from '../../pages/HomePage'
 import { server } from '../mocks/server'
@@ -123,6 +123,45 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />)
     await waitFor(() => {
       expect(screen.getAllByText('Ritrovato').length).toBeGreaterThan(0)
+    })
+  })
+
+  it('filters stats and recent entries by comune and its provincia', async () => {
+    vi.restoreAllMocks()
+    const statsRequests: URLSearchParams[] = []
+    const searchRequests: URLSearchParams[] = []
+    server.use(
+      http.get(`${BASE_URL}/animal/stats`, ({ request }) => {
+        statsRequests.push(new URL(request.url).searchParams)
+        return HttpResponse.json({
+          total_animals: 1,
+          present_animals: 1,
+          adopted_animals: 0,
+          entered_animals: 1,
+        })
+      }),
+      http.get(`${BASE_URL}/animal/search`, ({ request }) => {
+        searchRequests.push(new URL(request.url).searchParams)
+        return HttpResponse.json({ total: 0, items: [] })
+      })
+    )
+    renderWithProviders(<HomePage />)
+
+    const comuneInput = await screen.findByPlaceholderText('Tutti i comuni')
+    await waitFor(() => expect(comuneInput).not.toBeDisabled())
+    fireEvent.change(comuneInput, { target: { value: 'Milano' } })
+    fireEvent.blur(comuneInput)
+
+    await waitFor(() => {
+      const last = statsRequests[statsRequests.length - 1]
+      expect(last.get('city_code')).toBe('F205')
+      expect(last.get('province')).toBe('MI')
+    })
+    await waitFor(() => {
+      const last = searchRequests[searchRequests.length - 1]
+      expect(last.get('rescue_city_code')).toBe('F205')
+      expect(last.get('rescue_province')).toBe('MI')
+      expect(last.get('not_present')).toBe('true')
     })
   })
 })

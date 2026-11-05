@@ -200,6 +200,7 @@ export type AnimalDocument = z.infer<typeof animalDocumentSchema>
 
 export const animalSearchQuerySchema = paginationQuerySchema.extend({
     rescue_city_code: z.string().trim().nullish(),
+    rescue_province: z.string().trim().nullish(),
     entry_type: z.string().nullish(),
     exit_type: z.string().nullish(),
     present: z.boolean().nullish(),

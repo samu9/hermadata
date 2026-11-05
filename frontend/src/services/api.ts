@@ -120,6 +120,8 @@ export type AnimalStatsParams = {
     from_date: string
     to_date: string
     structure_ids?: number[]
+    province?: string
+    city_code?: string
 }
 
 class ApiService {

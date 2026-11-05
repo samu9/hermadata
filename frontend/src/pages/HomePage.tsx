@@ -16,6 +16,8 @@ import {
 import { useAuth } from "../contexts/AuthContext"
 import { Permission } from "../constants"
 import { useEntryTypesMap } from "../hooks/useMaps"
+import ProvinciaAutoComplete from "../components/forms/city/ProvinciaAutoComplete"
+import ComuneAutoComplete from "../components/forms/city/ComuneAutoComplete"
 import { AnimalSearchResult } from "../models/animal.schema"
 import { classNames } from "primereact/utils"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -286,6 +288,8 @@ const HomePage = () => {
     const [selectedStructureIds, setSelectedStructureIds] = useState<number[]>(
         [],
     )
+    const [provincia, setProvincia] = useState<string | null>(null)
+    const [comune, setComune] = useState<string | null>(null)
 
     const [fromDate, toDate] = useMemo<[Date, Date]>(() => {
         if (preset === "custom" && customRange[0] && customRange[1]) {
@@ -302,20 +306,24 @@ const HomePage = () => {
                 selectedStructureIds.length > 0
                     ? selectedStructureIds
                     : undefined,
+            province: provincia ?? undefined,
+            city_code: comune ?? undefined,
         }),
-        [fromDate, toDate, selectedStructureIds],
+        [fromDate, toDate, selectedStructureIds, provincia, comune],
     )
 
     const { data: stats, isLoading: statsLoading } =
         useAnimalStatsQuery(statsParams)
 
-    // Latest entries follow the structure filter (not the period),
+    // Latest entries follow the structure / city filters (not the period),
     // including animals that already left, if the user may browse them
     const canBrowsePresent = can(Permission.BROWSE_PRESENT_ANIMALS)
     const canBrowseNotPresent = can(Permission.BROWSE_NOT_PRESENT_ANIMALS)
     const recentQuery = useMemo(
         () => ({
             structure_ids: statsParams.structure_ids,
+            rescue_province: statsParams.province,
+            rescue_city_code: statsParams.city_code,
             present: canBrowsePresent,
             not_present: canBrowseNotPresent,
         }),
@@ -414,7 +422,29 @@ const HomePage = () => {
                         />
                     )}
 
-                    <div className="ml-auto">
+                    <div className="ml-auto flex flex-wrap items-center gap-3">
+                        <ProvinciaAutoComplete
+                            label=""
+                            placeholder="Tutte le province"
+                            value={provincia}
+                            onChange={(p) => {
+                                setProvincia(p)
+                                setComune(null)
+                            }}
+                            className="text-sm w-52"
+                        />
+                        <ComuneAutoComplete
+                            label=""
+                            placeholder="Tutti i comuni"
+                            provincia={provincia}
+                            allowedCodes={user?.city_codes}
+                            value={comune}
+                            onChange={setComune}
+                            onSelectComune={(c) =>
+                                c && setProvincia(c.provincia)
+                            }
+                            className="text-sm w-52"
+                        />
                         <MultiSelect
                             value={selectedStructureIds}
                             onChange={(e) =>
@@ -441,6 +471,15 @@ const HomePage = () => {
                             {selectedStructureIds.length > 1 ? "e" : ""}{" "}
                             selezionata
                             {selectedStructureIds.length > 1 ? "e" : ""}
+                        </>
+                    )}
+                    {(provincia || comune) && (
+                        <>
+                            {" · "}
+                            Provenienza:{" "}
+                            <span className="font-medium">
+                                {comune ?? `provincia ${provincia}`}
+                            </span>
                         </>
                     )}
                 </div>
