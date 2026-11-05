@@ -1842,6 +1842,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             select(
                 Animal.name,
                 Animal.chip_code,
+                Race.name.label("race"),
                 Breed.name.label("breed"),
                 Animal.sex,
                 self.animal_birth_date_to_age.label("age"),
