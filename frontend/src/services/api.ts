@@ -116,6 +116,14 @@ function trimStrings<T>(value: T): T {
     return result as T
 }
 
+export type AnimalStatsParams = {
+    from_date: string
+    to_date: string
+    structure_ids?: number[]
+    province?: string
+    city_code?: string
+}
+
 class ApiService {
     inst: AxiosInstance
     baseURL: string
@@ -819,33 +827,24 @@ class ApiService {
             overrides,
         })
     }
-    async getAnimalStats(params: {
-        from_date: string
-        to_date: string
-        structure_ids?: number[]
-    }): Promise<{
+    async getAnimalStats(params: AnimalStatsParams): Promise<{
         total_animals: number
         present_animals: number
         adopted_animals: number
         entered_animals: number
     }> {
-        const searchParams = new URLSearchParams({
-            from_date: params.from_date,
-            to_date: params.to_date,
-        })
-        if (params.structure_ids?.length) {
-            params.structure_ids.forEach((id) =>
-                searchParams.append("structure_ids", String(id)),
-            )
-        }
-        const response = await this.inst.get(
-            `${ApiEndpoints.animal.stats}?${searchParams.toString()}`,
-        )
-        return response.data
+        return this.get(ApiEndpoints.animal.stats, params)
     }
 
-    async getRecentAnimals(limit: number = 5): Promise<AnimalSearchResult[]> {
+    async getRecentAnimals(
+        query: Omit<
+            AnimalSearchQuery,
+            "from_index" | "to_index" | "sort_field" | "sort_order"
+        >,
+        limit: number = 5,
+    ): Promise<AnimalSearchResult[]> {
         const result = await this.searchAnimals({
+            ...query,
             from_index: 0,
             to_index: limit,
             sort_field: "entry_date",

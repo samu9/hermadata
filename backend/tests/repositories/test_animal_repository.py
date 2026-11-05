@@ -24,6 +24,7 @@ from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalExit,
     AnimalExitsQuery,
+    AnimalStatsQuery,
     CompleteEntryModel,
     MedicalActivityModel,
     NewAnimalModel,
@@ -1083,3 +1084,114 @@ def test_get_animal_adopter(
     assert adopter is not None
     assert adopter.id == adopter_id
     assert adopter.name == "MARIO"
+
+
+@pytest.fixture
+def stats_animals(
+    empty_db,
+    db_session: Session,
+    animal_repository: SQLAnimalRepository,
+    make_animal,
+):
+    """
+    Animals around March 2019:
+    - PD (G224): entered 2019-03-05, present
+    - TO (A074): entered 2019-03-10, adopted 2019-03-20
+    - TO (A117): entered 2019-01-10, present
+    - MI (F205): entered 2019-01-01, dead 2019-02-01 (before the period)
+    - RM (H501): entered 2019-03-01, exit scheduled in the future
+    """
+    rows = [
+        ("G224", date(2019, 3, 5), None, None),
+        ("A074", date(2019, 3, 10), date(2019, 3, 20), ExitType.adoption),
+        ("A117", date(2019, 1, 10), None, None),
+        ("F205", date(2019, 1, 1), date(2019, 2, 1), ExitType.death),
+        (
+            "H501",
+            date(2019, 3, 1),
+            date.today() + timedelta(days=30),
+            ExitType.death,
+        ),
+    ]
+    for city, entry_date, exit_date, exit_type in rows:
+        animal_id = make_animal(
+            NewAnimalModel(
+                race_id="C",
+                rescue_city_code=city,
+                entry_type=EntryType.rescue,
+                structure_id=1,
+            )
+        )
+        db_session.execute(
+            update(AnimalEntry)
+            .where(AnimalEntry.animal_id == animal_id)
+            .values(
+                entry_date=entry_date,
+                exit_date=exit_date,
+                exit_type=exit_type,
+            )
+        )
+    db_session.flush()
+
+
+def _stats(repo: SQLAnimalRepository, **kwargs):
+    result = repo.get_stats(
+        AnimalStatsQuery(
+            from_date=date(2019, 3, 1),
+            to_date=date(2019, 3, 31),
+            **{k: v for k, v in kwargs.items() if k != "allowed"},
+        ),
+        allowed_city_codes=kwargs.get("allowed"),
+    )
+    return (
+        result.total_animals,
+        result.present_animals,
+        result.adopted_animals,
+        result.entered_animals,
+    )
+
+
+def test_get_stats(stats_animals, animal_repository: SQLAnimalRepository):
+    # total, present (today), adopted, entered
+    assert _stats(animal_repository) == (4, 3, 1, 3)
+
+
+def test_get_stats_province_filter(
+    stats_animals, animal_repository: SQLAnimalRepository
+):
+    assert _stats(animal_repository, province="TO") == (2, 1, 1, 1)
+    assert _stats(animal_repository, province="MI") == (0, 0, 0, 0)
+
+
+def test_get_stats_city_filter(
+    stats_animals, animal_repository: SQLAnimalRepository
+):
+    assert _stats(animal_repository, city_code="G224") == (1, 1, 0, 1)
+    assert _stats(animal_repository, city_code="A074") == (1, 0, 1, 1)
+    # A comune outside the selected provincia matches nothing
+    assert _stats(animal_repository, province="PD", city_code="A074") == (
+        0,
+        0,
+        0,
+        0,
+    )
+
+
+def test_get_stats_allowed_city_codes(
+    stats_animals, animal_repository: SQLAnimalRepository
+):
+    assert _stats(animal_repository, allowed=["A117"]) == (1, 1, 0, 0)
+    assert _stats(
+        animal_repository, province="TO", allowed=["A117", "G224"]
+    ) == (1, 1, 0, 0)
+
+
+def test_search_rescue_province(
+    stats_animals, animal_repository: SQLAnimalRepository
+):
+    result = animal_repository.search(
+        AnimalSearchModel(rescue_province="TO", present=True, not_present=True)
+    )
+
+    assert result.total == 2
+    assert {i.rescue_city_code for i in result.items} == {"A074", "A117"}

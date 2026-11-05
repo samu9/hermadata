@@ -568,7 +568,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             .join(Comune, Comune.id == AnimalEntry.origin_city_code)
             .join(Structure, Structure.id == Animal.structure_id)
             .where(*where)
-            .order_by(query.as_order_by_clause())
+            .order_by(
+                *[c for c in [query.as_order_by_clause()] if c is not None],
+                Animal.id.desc(),  # deterministic order on ties
+            )
         )
         if query.from_index is not None:
             stmt = stmt.offset(query.from_index)
@@ -1462,10 +1465,37 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         return result
 
-    def get_stats(self, query: AnimalStatsQuery) -> AnimalStatsResult:
+    def get_stats(
+        self,
+        query: AnimalStatsQuery,
+        allowed_city_codes: list[str] | None = None,
+    ) -> AnimalStatsResult:
+        """
+        Dashboard counters.
+
+        - total: animals present at least one day in the period (already
+          in shelter at its start, or entered during it)
+        - present: animals present today, regardless of the period (same
+          definition as the "present" filter of the animal list)
+        - adopted / entered: adoptions and entries within the period
+
+        The city filters apply to the origin city of the counted entry.
+        """
         base_where = [Animal.deleted_at.is_(None)]
         if query.structure_ids:
             base_where.append(Animal.structure_id.in_(query.structure_ids))
+        if query.city_code:
+            base_where.append(AnimalEntry.origin_city_code == query.city_code)
+        if query.province:
+            base_where.append(
+                AnimalEntry.origin_city_code.in_(
+                    select(Comune.id).where(Comune.provincia == query.province)
+                )
+            )
+        if allowed_city_codes:
+            base_where.append(
+                AnimalEntry.origin_city_code.in_(allowed_city_codes)
+            )
 
         total = self.session.execute(
             select(func.count(func.distinct(Animal.id)))
@@ -1481,6 +1511,7 @@ class SQLAnimalRepository(SQLBaseRepository):
             )
         ).scalar_one()
 
+        today = get_today()
         present = self.session.execute(
             select(func.count(Animal.id))
             .select_from(Animal)
@@ -1491,7 +1522,13 @@ class SQLAnimalRepository(SQLBaseRepository):
                     AnimalEntry.current.is_(True),
                 ),
             )
-            .where(*base_where, AnimalEntry.exit_date.is_(None))
+            .where(
+                *base_where,
+                or_(
+                    AnimalEntry.exit_date.is_(None),
+                    AnimalEntry.exit_date > today,
+                ),
+            )
         ).scalar_one()
 
         adopted = self.session.execute(

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "react-query"
 import { apiService } from "./main"
+import ApiService, { AnimalStatsParams } from "./services/api"
 import { AdopterSearch } from "./models/adopter.schema"
 import { AnimalSearchQuery } from "./models/animal.schema"
 import { UserPermissionOverride } from "./models/permission.schema"
@@ -156,29 +157,33 @@ export const useRolesQuery = () =>
         staleTime: Infinity,
     })
 
-// Dashboard queries
-export const useAnimalStatsQuery = (params: {
-    from_date: string
-    to_date: string
-    structure_ids?: number[]
-}) =>
+// Dashboard queries: always refetched when the dashboard is opened, so that
+// entries/exits registered meanwhile are reflected
+export const useAnimalStatsQuery = (params: AnimalStatsParams) =>
     useQuery(
         ["animal-stats", params],
         () => apiService.getAnimalStats(params),
         {
-            staleTime: 5 * 60 * 1000,
+            staleTime: 0,
+            keepPreviousData: true,
             refetchOnWindowFocus: false,
             enabled: !!params.from_date && !!params.to_date,
         },
     )
 
-export const useRecentAnimalsQuery = (limit: number = 5) =>
+export const useRecentAnimalsQuery = (
+    query: Parameters<ApiService["getRecentAnimals"]>[0],
+    limit: number = 5,
+    enabled: boolean = true,
+) =>
     useQuery(
-        ["recent-animals", limit],
-        () => apiService.getRecentAnimals(limit),
+        ["recent-animals", query, limit],
+        () => apiService.getRecentAnimals(query, limit),
         {
-            staleTime: 2 * 60 * 1000, // 2 minutes
+            staleTime: 0,
+            keepPreviousData: true,
             refetchOnWindowFocus: false,
+            enabled,
         },
     )
 
