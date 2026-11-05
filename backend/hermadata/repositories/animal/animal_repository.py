@@ -1478,10 +1478,20 @@ class SQLAnimalRepository(SQLBaseRepository):
         - present: animals present today, regardless of the period (same
           definition as the "present" filter of the animal list)
         - adopted / entered: adoptions and entries within the period
+
+        The city filters apply to the origin city of the counted entry.
         """
         base_where = [Animal.deleted_at.is_(None)]
         if query.structure_ids:
             base_where.append(Animal.structure_id.in_(query.structure_ids))
+        if query.city_code:
+            base_where.append(AnimalEntry.origin_city_code == query.city_code)
+        if query.province:
+            base_where.append(
+                AnimalEntry.origin_city_code.in_(
+                    select(Comune.id).where(Comune.provincia == query.province)
+                )
+            )
         if allowed_city_codes:
             base_where.append(
                 AnimalEntry.origin_city_code.in_(allowed_city_codes)

@@ -13,11 +13,11 @@ from typing import (
 )
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
 from hermadata.constants import EntryType, ExitType, RecurrenceType
-from hermadata.database.models import Animal, AnimalEntry
+from hermadata.database.models import Animal, AnimalEntry, Comune
 from hermadata.models import PaginationQuery, Sex
 from hermadata.time_utils import get_today
 
@@ -114,6 +114,7 @@ class AnimalSearchModel(PaginationQuery):
     rescue_city_code: str | None = Field(
         pattern=rescue_city_code_PATTERN, default=None
     )
+    rescue_province: str | None = Field(default=None, pattern=r"^[A-Z]{2}$")
     entry_type: Optional[str] = None
     exit_type: Optional[str] = None
     present: bool = True
@@ -131,6 +132,11 @@ class AnimalSearchModel(PaginationQuery):
         ),
         "rescue_city_code": WhereClauseMapItem(
             lambda v: AnimalEntry.origin_city_code == v
+        ),
+        "rescue_province": WhereClauseMapItem(
+            lambda v: AnimalEntry.origin_city_code.in_(
+                select(Comune.id).where(Comune.provincia == v)
+            )
         ),
         "entry_type": WhereClauseMapItem(
             lambda v: AnimalEntry.entry_type == v
@@ -412,6 +418,11 @@ class AnimalStatsQuery(BaseModel):
     from_date: date
     to_date: date
     structure_ids: list[int] | None = None
+    # Filters on the origin (rescue) city of the counted entries
+    province: str | None = Field(default=None, pattern=r"^[A-Z]{2}$")
+    city_code: str | None = Field(
+        default=None, pattern=rescue_city_code_PATTERN
+    )
 
 
 class AnimalStatsResult(BaseModel):
