@@ -276,7 +276,22 @@ class SQLUserRepository(SQLBaseRepository):
                     for code, granted in overrides.items()
                 ],
             )
+        # force the user to log in again to pick up the new permissions
+        self.session.execute(
+            update(User)
+            .values(token_version=User.token_version + 1)
+            .where(User.id == user_id)
+        )
         self.session.flush()
+
+    def get_token_version(self, user_id: int) -> int | None:
+        """Return the current token version of a non-deleted user, or None
+        if the user doesn't exist"""
+        return self.session.execute(
+            select(User.token_version).where(
+                User.id == user_id, User.deleted_at.is_(None)
+            )
+        ).scalar_one_or_none()
 
     def user_exists(self, user_id: int) -> bool:
         """Return True if a non-deleted user with the given id exists"""

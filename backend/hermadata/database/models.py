@@ -346,6 +346,11 @@ class User(Base):
 
     city_codes: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
 
+    # bumped to invalidate every token issued before the change
+    token_version: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0"
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )

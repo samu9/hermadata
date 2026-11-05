@@ -186,7 +186,7 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
                 ) : (
                     <Message
                         severity="info"
-                        text="Le modifiche saranno attive al prossimo accesso dell'utente."
+                        text="Al salvataggio l'utente verrà disconnesso: le modifiche saranno attive al suo prossimo accesso."
                     />
                 )}
 
