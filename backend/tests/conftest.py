@@ -58,7 +58,7 @@ from hermadata.services.adopter_service import AdopterService
 from hermadata.services.animal_service import AnimalService
 from hermadata.services.user_service import RegisterUserModel, UserService
 from hermadata.storage.disk_storage import DiskStorage
-from tests.utils import random_chip_code
+from tests.utils import random_chip_code, random_fiscal_code
 
 TRUNCATE_QUERY = "TRUNCATE TABLE {}"
 
@@ -379,7 +379,7 @@ def make_adopter(
     def make(data: AdopterModel = None) -> int:
         if data is None:
             data = NewAdopter(
-                fiscal_code="RSSMRO11A22B123A",
+                fiscal_code=random_fiscal_code(),
                 name="Mario",
                 surname="Rossi",
                 birth_city_code="H501",

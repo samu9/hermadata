@@ -1,10 +1,16 @@
 from datetime import date, datetime, timedelta
 from typing import Callable
 
-from sqlalchemy import select
+import pytest
+from sqlalchemy import insert, select
 
 from hermadata.constants import DocKindCode, ExitType
-from hermadata.database.models import AnimalDocument, DocumentKind
+from hermadata.database.models import (
+    Adopter,
+    AnimalDocument,
+    DocumentKind,
+)
+from hermadata.errors import DuplicateFiscalCodeException
 from hermadata.repositories.animal.models import (
     AnimalExit,
     CompleteEntryModel,
@@ -15,14 +21,16 @@ from hermadata.services.adopter_service import (
     NewAdopterRequest,
 )
 from hermadata.services.animal_service import AnimalService
+from tests.utils import random_fiscal_code
 
 
 def test_create_adopter(adopter_service: AdopterService):
     """Test creating a new adopter through the service."""
+    fiscal_code = random_fiscal_code()
     new_adopter_data = NewAdopterRequest(
         name="Mario",
         surname="Rossi",
-        fiscal_code="RSSMRA80A01H501U",
+        fiscal_code=fiscal_code,
         residence_city_code="H501",
         phone="3331234567",
         document_type="id",
@@ -33,7 +41,7 @@ def test_create_adopter(adopter_service: AdopterService):
 
     assert result.name == "MARIO"
     assert result.surname == "ROSSI"
-    assert result.fiscal_code == "RSSMRA80A01H501U"
+    assert result.fiscal_code == fiscal_code
     assert result.residence_city_code == "H501"
     assert result.phone == "3331234567"
     assert result.document_type == "id"
@@ -92,7 +100,7 @@ def test_create_adopter_invalid_residence_city(
     new_adopter_data = NewAdopterRequest(
         name="Mario",
         surname="Rossi",
-        fiscal_code="RSSMRA80A01H501U",
+        fiscal_code=random_fiscal_code(),
         residence_city_code="ZZZZ",  # Invalid city code
         phone="3331234567",
         document_type="id",
@@ -103,13 +111,33 @@ def test_create_adopter_invalid_residence_city(
         adopter_service.create(new_adopter_data)
 
 
-def test_create_adopter_foreign_born(adopter_service: AdopterService):
-    """Test creating an adopter born abroad (foreign birthplace code starting with Z)."""
-    # RSSMRA80A01Z100A is a valid codice fiscale for someone born in Albania (Z100)
+def test_create_adopter_duplicate_fiscal_code(
+    adopter_service: AdopterService,
+):
+    """Test that a duplicate fiscal code raises on adopter creation."""
     new_adopter_data = NewAdopterRequest(
         name="Mario",
         surname="Rossi",
-        fiscal_code="RSSMRA80A01Z100A",
+        fiscal_code=random_fiscal_code(),
+        residence_city_code="H501",
+        phone="3331234567",
+        document_type="id",
+        document_number="AR1234567",
+    )
+
+    adopter_service.create(new_adopter_data)
+
+    with pytest.raises(DuplicateFiscalCodeException):
+        adopter_service.create(new_adopter_data)
+
+
+def test_create_adopter_foreign_born(adopter_service: AdopterService):
+    """Test creating an adopter born abroad (foreign birthplace code starting with Z)."""
+    fiscal_code = random_fiscal_code(birthplace="Z100")  # born in Albania
+    new_adopter_data = NewAdopterRequest(
+        name="Mario",
+        surname="Rossi",
+        fiscal_code=fiscal_code,
         residence_city_code="H501",
         phone="3331234567",
         document_type="id",
@@ -120,7 +148,7 @@ def test_create_adopter_foreign_born(adopter_service: AdopterService):
 
     assert result.name == "MARIO"
     assert result.surname == "ROSSI"
-    assert result.fiscal_code == "RSSMRA80A01Z100A"
+    assert result.fiscal_code == fiscal_code
     assert result.birth_city_code == "Z100"
     assert result.birth_date == date(1980, 1, 1)
 
@@ -137,12 +165,13 @@ def test_create_adopter_historical_italian_municipality(
     adopter_service: AdopterService,
 ):
     """Test creating an adopter born in a historical Italian municipality."""
-    # RSSMRA80A01H980L is a valid codice fiscale for someone born in
-    # San Marcello Pistoiese (H980, PT), merged into San Marcello Piteglio.
+    # Born in San Marcello Pistoiese (H980, PT), merged into San Marcello
+    # Piteglio.
+    fiscal_code = random_fiscal_code(birthplace="H980")
     new_adopter_data = NewAdopterRequest(
         name="Mario",
         surname="Rossi",
-        fiscal_code="RSSMRA80A01H980L",
+        fiscal_code=fiscal_code,
         residence_city_code="H501",
         phone="3331234567",
         document_type="id",
@@ -153,7 +182,7 @@ def test_create_adopter_historical_italian_municipality(
 
     assert result.name == "MARIO"
     assert result.surname == "ROSSI"
-    assert result.fiscal_code == "RSSMRA80A01H980L"
+    assert result.fiscal_code == fiscal_code
     assert result.birth_city_code == "H980"
     assert result.birth_date == date(1980, 1, 1)
 
@@ -174,11 +203,12 @@ def test_update_adopter_marks_adoption_documents_dirty(
     Non-adoption rendered documents on the same entry (e.g. the variation
     report) must stay clean, since they don't embed adopter data.
     """
+    fiscal_code = random_fiscal_code()
     adopter = adopter_service.create(
         NewAdopterRequest(
             name="Mario",
             surname="Rossi",
-            fiscal_code="RSSMRA80A01H501U",
+            fiscal_code=fiscal_code,
             residence_city_code="H501",
             phone="3331234567",
             document_type="id",
@@ -237,7 +267,7 @@ def test_update_adopter_marks_adoption_documents_dirty(
         NewAdopterRequest(
             name="Luigi",
             surname="Verdi",
-            fiscal_code="RSSMRA80A01H501U",
+            fiscal_code=fiscal_code,
             residence_city_code="H501",
             phone="3339999999",
             document_type="id",
@@ -253,3 +283,67 @@ def test_update_adopter_marks_adoption_documents_dirty(
     # Adoption document flagged dirty; variation document left clean.
     assert all(dirty_flags(DocKindCode.adozione.value))
     assert all(not d for d in dirty_flags(DocKindCode.variazione.value))
+
+
+def test_update_adopter_duplicate_fiscal_code(
+    adopter_service: AdopterService,
+):
+    """Changing the fiscal code to one used by another adopter raises."""
+    base = {
+        "name": "Mario",
+        "surname": "Rossi",
+        "residence_city_code": "H501",
+        "phone": "3331234567",
+        "document_type": "id",
+        "document_number": "AR1234567",
+    }
+    taken = random_fiscal_code()
+    adopter_service.create(NewAdopterRequest(**base, fiscal_code=taken))
+    other = adopter_service.create(
+        NewAdopterRequest(**base, fiscal_code=random_fiscal_code())
+    )
+
+    with pytest.raises(DuplicateFiscalCodeException):
+        adopter_service.update(
+            other.id,
+            NewAdopterRequest(**base, fiscal_code=taken),
+        )
+
+
+def test_update_already_duplicated_adopter(
+    adopter_service: AdopterService,
+):
+    """Adopters duplicated before the check was added stay editable."""
+    fiscal_code = random_fiscal_code()
+    session = adopter_service.adopter_repository.session
+    ids = [
+        session.execute(
+            insert(Adopter).values(
+                name="MARIO",
+                surname="ROSSI",
+                fiscal_code=fiscal_code,
+                birth_city_code="H501",
+                birth_date=date(1980, 1, 1),
+                residence_city_code="H501",
+                phone="3331234567",
+                document_type="id",
+                document_number="AR1234567",
+            )
+        ).lastrowid
+        for _ in range(2)
+    ]
+
+    updated = adopter_service.update(
+        ids[0],
+        NewAdopterRequest(
+            name="Mario",
+            surname="Rossi",
+            fiscal_code=fiscal_code,
+            residence_city_code="H501",
+            phone="3339999999",
+            document_type="id",
+            document_number="AR1234567",
+        ),
+    )
+
+    assert updated.phone == "3339999999"
