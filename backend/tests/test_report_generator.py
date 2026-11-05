@@ -184,6 +184,7 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
     assert "Documento (Carta di identità) n. AA12345BB" in html
     assert "proprietario del cane" in html
     assert "il suddetto cane è" in html
+    assert "iscritto all'Anagrafe Animali d'Affezione" in html
 
     cat_variables = return_variables.model_copy(
         update={
@@ -195,7 +196,7 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
     html = template.render(**cat_variables.model_dump())
     assert "proprietario del gatto" in html
     assert "il suddetto gatto è" in html
-    assert "cane" not in html.replace("Canina", "")
+    assert "cane" not in html
 
     no_race_variables = return_variables.model_copy(
         update={
