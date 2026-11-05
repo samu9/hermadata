@@ -31,9 +31,9 @@ describe('HomePage', () => {
   it('renders the statistics section titles', async () => {
     renderWithProviders(<HomePage />)
     await waitFor(() => {
-      expect(screen.getByText(/Animali Totali/i)).toBeInTheDocument()
-      expect(screen.getByText(/Animali Presenti/i)).toBeInTheDocument()
-      expect(screen.getByText(/Animali Adottati/i)).toBeInTheDocument()
+      expect(screen.getByText(/Animali Ospitati/i)).toBeInTheDocument()
+      expect(screen.getByText(/Presenti Oggi/i)).toBeInTheDocument()
+      expect(screen.getByText(/Nuovi Ingressi/i)).toBeInTheDocument()
     })
   })
 
@@ -113,6 +113,16 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />)
     await waitFor(() => {
       expect(screen.queryByText('Date Importanti')).not.toBeInTheDocument()
+    })
+  })
+
+  it('shows entry type labels in the recent entries table', async () => {
+    // The mocked window.location breaks XHR URL resolution: restore it so
+    // the API mocks are actually reached
+    vi.restoreAllMocks()
+    renderWithProviders(<HomePage />)
+    await waitFor(() => {
+      expect(screen.getAllByText('Ritrovato').length).toBeGreaterThan(0)
     })
   })
 })

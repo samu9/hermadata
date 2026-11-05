@@ -67,6 +67,19 @@ export const handlers = [
     return HttpResponse.json(mockPaginatedAnimals)
   }),
 
+  http.get(`${BASE_URL}/animal/stats`, () => {
+    return HttpResponse.json({
+      total_animals: 2,
+      present_animals: 1,
+      adopted_animals: 1,
+      entered_animals: 2,
+    })
+  }),
+
+  http.get(`${BASE_URL}/therapies/reminders`, () => {
+    return HttpResponse.json([])
+  }),
+
   http.get(`${BASE_URL}/animal/:id`, ({ params }) => {
     const animal = mockAnimalSearchResults.find(
       (a) => a.id.toString() === params.id
