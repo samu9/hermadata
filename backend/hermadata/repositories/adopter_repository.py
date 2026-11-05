@@ -71,16 +71,19 @@ class AdopterSearchQuery(SearchQuery):
 
 
 class SQLAdopterRepository(SQLBaseRepository):
+    def _check_fiscal_code_available(self, fiscal_code: str) -> None:
+        # Uniqueness is enforced here rather than by a DB constraint until
+        # the existing duplicates are cleaned up.
+        stmt = select(Adopter.id).where(Adopter.fiscal_code == fiscal_code)
+        if self.session.execute(stmt.limit(1)).first() is not None:
+            raise DuplicateFiscalCodeException()
+
     def create(self, data: NewAdopter) -> AdopterModel:
+        self._check_fiscal_code_available(data.fiscal_code)
+
         dump = data.model_dump()
-        try:
-            result = self.session.execute(insert(Adopter).values(**dump))
-            self.session.flush()
-        except IntegrityError as e:
-            self.session.rollback()
-            if "fiscal_code" in str(e.orig):
-                raise DuplicateFiscalCodeException() from e
-            raise
+        result = self.session.execute(insert(Adopter).values(**dump))
+        self.session.flush()
 
         adopter_id = result.lastrowid
 
@@ -138,6 +141,14 @@ class SQLAdopterRepository(SQLBaseRepository):
 
     def update(self, id: int, data: NewAdopter) -> int:
         """Update an adopter and return the number of updated rows."""
+        # Only check when the code changes, so adopters that are already
+        # duplicated can still be edited.
+        current_fiscal_code = self.session.execute(
+            select(Adopter.fiscal_code).where(Adopter.id == id)
+        ).scalar_one_or_none()
+        if data.fiscal_code != current_fiscal_code:
+            self._check_fiscal_code_available(data.fiscal_code)
+
         result = self.session.execute(
             update(Adopter).where(Adopter.id == id).values(**data.model_dump())
         )

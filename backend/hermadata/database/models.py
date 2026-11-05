@@ -239,7 +239,7 @@ class Adopter(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100))
     surname: Mapped[str] = mapped_column(String(100))
-    fiscal_code: Mapped[str] = mapped_column(String(16), unique=True)
+    fiscal_code: Mapped[str] = mapped_column(String(16))
     birth_city_code: Mapped[str] = mapped_column(String(4))
     birth_date: Mapped[Date] = mapped_column(Date())
     residence_city_code: Mapped[str] = mapped_column(String(4))
