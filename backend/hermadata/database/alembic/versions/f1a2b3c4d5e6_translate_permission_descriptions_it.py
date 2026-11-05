@@ -1,7 +1,7 @@
 """translate permission descriptions to Italian
 
 Revision ID: f1a2b3c4d5e6
-Revises: f0a1b2c3d4e5
+Revises: 7c4e1a9d2b38
 Create Date: 2026-10-25 16:35:00.000000
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "f1a2b3c4d5e6"
-down_revision: Union[str, None] = "f0a1b2c3d4e5"
+down_revision: Union[str, None] = "7c4e1a9d2b38"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
