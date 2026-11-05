@@ -152,7 +152,9 @@ def get_animal_stats(
     structure_ids: Annotated[list[int] | None, Query()] = None,
 ):
     query.structure_ids = structure_ids
-    return repo.get_stats(query)
+    return repo.get_stats(
+        query, allowed_city_codes=current_user.city_codes or None
+    )
 
 
 @router.get("/search/report")
