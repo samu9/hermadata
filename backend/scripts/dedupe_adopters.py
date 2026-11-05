@@ -2,9 +2,9 @@
 Detect adopters sharing the same fiscal code, merge their linked data
 (adoptions) into a single kept record, then delete the duplicates.
 
-Needed for databases that predate the `uq_adopter_fiscal_code` migration:
-that migration fails if duplicate fiscal codes already exist, so this
-cleanup must run first on any such database.
+Uniqueness is currently enforced only in code (SQLAdopterRepository).
+Run this on every database before adding a unique constraint on
+`adopter.fiscal_code`, which would fail while duplicates exist.
 
 For each group of adopters sharing a fiscal code (compared case/whitespace
 insensitively), the adopter with the earliest `created_at` (ties broken by
