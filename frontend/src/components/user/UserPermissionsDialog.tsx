@@ -1,18 +1,20 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { DataTable } from "primereact/datatable"
 import { Column } from "primereact/column"
 import { Button } from "primereact/button"
 import { Tag } from "primereact/tag"
-import { Toast } from "primereact/toast"
 import { Message } from "primereact/message"
 import { SelectButton } from "primereact/selectbutton"
-import { useMutation, useQuery, useQueryClient } from "react-query"
-import { apiService } from "../../main"
 import { ManagementUser } from "../../models/user.schema"
 import {
     UserPermissionDetail,
     UserPermissionOverride,
 } from "../../models/permission.schema"
+import {
+    useSetUserPermissionsMutation,
+    useUserPermissionsQuery,
+} from "../../queries"
+import { toastService } from "../../services/toast"
 
 type OverrideState = "inherit" | "grant" | "revoke"
 
@@ -36,13 +38,8 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
     onSaved,
     onCancel,
 }) => {
-    const toast = useRef<Toast>(null)
-    const queryClient = useQueryClient()
-    const queryKey = ["user-permissions", user.id]
-
-    const permissionsQuery = useQuery(queryKey, () =>
-        apiService.getUserPermissions(user.id),
-    )
+    const permissionsQuery = useUserPermissionsQuery(user.id)
+    const saveMutation = useSetUserPermissionsMutation(user.id)
 
     // local, unsaved override state: permission code -> state
     const [overrides, setOverrides] = useState<Record<string, OverrideState>>(
@@ -81,29 +78,6 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [permissionsQuery.data, overrides])
 
-    const saveMutation = useMutation(
-        (data: UserPermissionOverride[]) =>
-            apiService.setUserPermissions(user.id, data),
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries(queryKey)
-                toast.current?.show({
-                    severity: "success",
-                    summary: "Successo",
-                    detail: "Permessi aggiornati con successo",
-                })
-                onSaved()
-            },
-            onError: () => {
-                toast.current?.show({
-                    severity: "error",
-                    summary: "Errore",
-                    detail: "Errore durante il salvataggio dei permessi",
-                })
-            },
-        },
-    )
-
     const onSave = () => {
         const data: UserPermissionOverride[] = Object.entries(overrides)
             .filter(([, state]) => state !== "inherit")
@@ -111,7 +85,13 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
                 permission_code: code,
                 granted: state === "grant",
             }))
-        saveMutation.mutate(data)
+        // HTTP errors are already toasted by the ApiService interceptor
+        saveMutation.mutate(data, {
+            onSuccess: () => {
+                toastService.showSuccess("Permessi aggiornati con successo")
+                onSaved()
+            },
+        })
     }
 
     const readOnly = user.is_superuser
@@ -175,94 +155,91 @@ const UserPermissionsDialog: React.FC<UserPermissionsDialogProps> = ({
     }
 
     return (
-        <>
-            <Toast ref={toast} />
-            <div className="flex flex-col gap-4">
-                {readOnly ? (
-                    <Message
-                        severity="warn"
-                        text="Questo utente è un Super Admin e possiede tutti i permessi: le personalizzazioni non hanno effetto."
-                    />
-                ) : (
-                    <Message
-                        severity="info"
-                        text="Al salvataggio l'utente verrà disconnesso: le modifiche saranno attive al suo prossimo accesso."
-                    />
-                )}
+        <div className="flex flex-col gap-4">
+            {readOnly ? (
+                <Message
+                    severity="warn"
+                    text="Questo utente è un Super Admin e possiede tutti i permessi: le personalizzazioni non hanno effetto."
+                />
+            ) : (
+                <Message
+                    severity="info"
+                    text="Al salvataggio l'utente verrà disconnesso: le modifiche saranno attive al suo prossimo accesso."
+                />
+            )}
 
-                <div className="flex gap-2 flex-wrap text-sm">
-                    <Tag
-                        value={`Ruolo: ${user.role_name ?? "nessuno"}`}
-                        className="!bg-surface-200 !text-surface-700"
-                    />
-                    <Tag
-                        value={`${summary.fromRole} dal ruolo`}
-                        severity="info"
-                    />
-                    <Tag
-                        value={`${summary.granted} concessi`}
-                        severity="success"
-                    />
-                    <Tag
-                        value={`${summary.revoked} revocati`}
-                        severity="danger"
-                    />
-                    <Tag
-                        value={`${summary.effective} effettivi`}
-                        className="!bg-surface-700"
-                    />
-                </div>
-
-                <DataTable
-                    value={permissionsQuery.data ?? []}
-                    dataKey="code"
-                    className="p-datatable-sm"
-                    rowClassName={rowClassName}
-                    scrollable
-                    scrollHeight="55vh"
-                    emptyMessage="Nessun permesso trovato"
-                >
-                    <Column
-                        field="code"
-                        header="Codice"
-                        style={{ width: "80px" }}
-                        className="font-mono"
-                    />
-                    <Column field="description" header="Descrizione" />
-                    <Column
-                        header="Da ruolo"
-                        body={fromRoleBody}
-                        style={{ width: "90px" }}
-                        bodyClassName="text-center"
-                    />
-                    <Column
-                        header="Personalizzazione"
-                        body={overrideBody}
-                        style={{ width: "260px" }}
-                    />
-                    <Column
-                        header="Effettivo"
-                        body={effectiveBody}
-                        style={{ width: "90px" }}
-                    />
-                </DataTable>
-
-                <div className="flex justify-end gap-2">
-                    <Button
-                        label="Annulla"
-                        className="p-button-text"
-                        onClick={onCancel}
-                    />
-                    <Button
-                        label="Salva"
-                        icon="pi pi-check"
-                        onClick={onSave}
-                        disabled={readOnly}
-                        loading={saveMutation.isLoading}
-                    />
-                </div>
+            <div className="flex gap-2 flex-wrap text-sm">
+                <Tag
+                    value={`Ruolo: ${user.role_name ?? "nessuno"}`}
+                    className="!bg-surface-200 !text-surface-700"
+                />
+                <Tag
+                    value={`${summary.fromRole} dal ruolo`}
+                    severity="info"
+                />
+                <Tag
+                    value={`${summary.granted} concessi`}
+                    severity="success"
+                />
+                <Tag
+                    value={`${summary.revoked} revocati`}
+                    severity="danger"
+                />
+                <Tag
+                    value={`${summary.effective} effettivi`}
+                    className="!bg-surface-700"
+                />
             </div>
-        </>
+
+            <DataTable
+                value={permissionsQuery.data ?? []}
+                dataKey="code"
+                className="p-datatable-sm"
+                rowClassName={rowClassName}
+                scrollable
+                scrollHeight="55vh"
+                emptyMessage="Nessun permesso trovato"
+            >
+                <Column
+                    field="code"
+                    header="Codice"
+                    style={{ width: "80px" }}
+                    className="font-mono"
+                />
+                <Column field="description" header="Descrizione" />
+                <Column
+                    header="Da ruolo"
+                    body={fromRoleBody}
+                    style={{ width: "90px" }}
+                    bodyClassName="text-center"
+                />
+                <Column
+                    header="Personalizzazione"
+                    body={overrideBody}
+                    style={{ width: "260px" }}
+                />
+                <Column
+                    header="Effettivo"
+                    body={effectiveBody}
+                    style={{ width: "90px" }}
+                />
+            </DataTable>
+
+            <div className="flex justify-end gap-2">
+                <Button
+                    label="Annulla"
+                    className="p-button-text"
+                    onClick={onCancel}
+                />
+                <Button
+                    label="Salva"
+                    icon="pi pi-check"
+                    onClick={onSave}
+                    disabled={readOnly}
+                    loading={saveMutation.isLoading}
+                />
+            </div>
+        </div>
     )
 }
 

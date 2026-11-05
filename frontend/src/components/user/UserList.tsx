@@ -357,7 +357,6 @@ const UserList: React.FC = () => {
                         onSaved={() => {
                             setShowPermissionsDialog(false)
                             setSelectedUser(null)
-                            queryClient.invalidateQueries("users")
                         }}
                         onCancel={() => {
                             setShowPermissionsDialog(false)

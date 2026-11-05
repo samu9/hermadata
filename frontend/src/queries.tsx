@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "react-query"
 import { apiService } from "./main"
 import { AdopterSearch } from "./models/adopter.schema"
 import { AnimalSearchQuery } from "./models/animal.schema"
+import { UserPermissionOverride } from "./models/permission.schema"
 import { NewTherapy } from "./models/therapy.schema"
 import { VetSearch } from "./models/vet.schema"
 
@@ -235,6 +236,25 @@ export const useDeleteTherapyMutation = (animalId: number) => {
         {
             onSuccess: () => {
                 queryClient.invalidateQueries(["therapies", animalId])
+            },
+        },
+    )
+}
+
+export const useUserPermissionsQuery = (userId: number) =>
+    useQuery(["user-permissions", userId], () =>
+        apiService.getUserPermissions(userId),
+    )
+
+export const useSetUserPermissionsMutation = (userId: number) => {
+    const queryClient = useQueryClient()
+    return useMutation(
+        (overrides: UserPermissionOverride[]) =>
+            apiService.setUserPermissions(userId, overrides),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries(["user-permissions", userId])
+                queryClient.invalidateQueries("users")
             },
         },
     )
