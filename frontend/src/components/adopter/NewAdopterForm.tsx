@@ -52,7 +52,12 @@ const NewAdopterForm = (props: Props) => {
         <div>
             <FormProvider {...form}>
                 <form
-                    onSubmit={handleSubmit(onSubmit)}
+                    onSubmit={(e) => {
+                        // React bubbles submit events through portals
+                        // (e.g. a Dialog) up to any enclosing form.
+                        e.stopPropagation()
+                        handleSubmit(onSubmit)(e)
+                    }}
                     className="flex flex-col gap-2 items-start"
                 >
                     <div className="flex flex-col gap-2 items-start">

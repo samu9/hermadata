@@ -6,7 +6,6 @@ import {
 } from "../../models/animal.schema"
 import ControlledDropdown from "../forms/ControlledDropdown"
 import ControlledInputDate from "../forms/ControlledInputDate"
-import { Button } from "primereact/button"
 import { Checkbox } from "primereact/checkbox"
 import { useEffect, useRef, useState } from "react"
 import {
@@ -19,23 +18,13 @@ import { useMutation, useQueryClient } from "react-query"
 import { apiService } from "../../main"
 import { Toast } from "primereact/toast"
 import { useParams } from "react-router-dom"
-import SearchAdopter from "../adoption/SearchAdopter"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import {
-    faAdd,
-    faDoorOpen,
-    faMagnifyingGlass,
-} from "@fortawesome/free-solid-svg-icons"
-import NewAdopterForm from "../adopter/NewAdopterForm"
-import { Dialog } from "primereact/dialog"
+import { faDoorOpen } from "@fortawesome/free-solid-svg-icons"
 import ControlledTextarea from "../forms/ControlledTextarea"
 import { useLoader } from "../../contexts/Loader"
-import AdopterCard from "../adoption/AdopterCard"
 import { Adopter } from "../../models/adopter.schema"
-import ControlledCityPicker from "../forms/city/ControlledCityPicker"
-import ControlledInputText from "../forms/ControlledInputText"
 import { useFormPersist } from "../../hooks/useFormPersist"
 import { useToolbar } from "../../contexts/Toolbar"
+import ExitDetentionSteps from "./ExitDetentionSteps"
 
 const AnimalExitForm = () => {
     const { id } = useParams()
@@ -46,10 +35,6 @@ const AnimalExitForm = () => {
     const toast = useRef<Toast>(null)
 
     const [selectedAdopter, setSelectedAdopter] = useState<Adopter | null>(null)
-    const [dialogVisibile, setDialogVisible] = useState(false)
-    const [adopterAction, setAdopterAction] = useState<"add" | "search">(
-        "search",
-    )
     const [isTemporary, setIsTemporary] = useState(false)
     const { startLoading, stopLoading } = useLoader()
 
@@ -86,6 +71,14 @@ const AnimalExitForm = () => {
             setSelectedAdopter(null)
         }
     }, [adopterQuery.data, adopterId])
+
+    const onAdopterSelected = (adopter: Adopter | null) => {
+        setSelectedAdopter(adopter)
+        setValue("adopter_id", adopter?.id, {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }
 
     const animalExitMutation = useMutation({
         mutationFn: (data: AnimalExit) => apiService.animalExit(data),
@@ -162,7 +155,9 @@ const AnimalExitForm = () => {
     return (
         <div className="max-w-6xl mx-auto p-6">
             <FormProvider {...form}>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {/* Not a <form>: saving goes through the toolbar, and the
+                    adopter step embeds its own forms. */}
+                <div className="space-y-6">
                     {/* Basic Exit Information */}
                     <div className="bg-white rounded-lg shadow p-6">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -208,134 +203,11 @@ const AnimalExitForm = () => {
                         )}
                     </div>
 
-                    {/* Detention Details - Only shown when exit type is detention */}
                     {isDetention && (
-                        <div className="bg-blue-50 rounded-lg shadow p-6 border border-blue-200">
-                            <h3 className="text-lg font-semibold text-blue-900 mb-4">
-                                Dettagli Detenzione
-                            </h3>
-
-                            {/* Location Information */}
-                            <div className="space-y-4">
-                                <ControlledInputText
-                                    label="Indirizzo di detenzione"
-                                    fieldName="location_address"
-                                    className="w-full"
-                                />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <ControlledCityPicker
-                                        provinciaLabel="Provincia di detenzione"
-                                        comuneLabel="Comune di detenzione"
-                                        fieldName="location_city_code"
-                                        className="w-full"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Adopter Section */}
-                            <div className="mt-6">
-                                <h4 className="text-md font-medium text-blue-800 mb-3">
-                                    Adottante
-                                </h4>
-
-                                {/* Selected Adopter Card */}
-                                {selectedAdopter && (
-                                    <div className="mb-4">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-green-800 font-medium text-sm">
-                                                ✓ Adottante Selezionato
-                                            </span>
-                                            <Button
-                                                type="button"
-                                                onClick={() => {
-                                                    setSelectedAdopter(null)
-                                                    setValue(
-                                                        "adopter_id",
-                                                        undefined,
-                                                    )
-                                                }}
-                                                text
-                                                severity="secondary"
-                                                size="small"
-                                                className="text-xs"
-                                            >
-                                                Cambia
-                                            </Button>
-                                        </div>
-                                        <AdopterCard
-                                            data={selectedAdopter}
-                                            variant="selected"
-                                        />
-                                    </div>
-                                )}
-
-                                {/* Adopter Search/Add Actions */}
-                                {!selectedAdopter && (
-                                    <div className="space-y-4">
-                                        <div className="flex flex-wrap gap-3">
-                                            <Button
-                                                type="button"
-                                                onClick={() =>
-                                                    setAdopterAction("search")
-                                                }
-                                                outlined={
-                                                    adopterAction !== "search"
-                                                }
-                                                severity={
-                                                    adopterAction === "search"
-                                                        ? "info"
-                                                        : "secondary"
-                                                }
-                                                className="flex-1 sm:flex-none"
-                                            >
-                                                <FontAwesomeIcon
-                                                    icon={faMagnifyingGlass}
-                                                    className="mr-2"
-                                                />
-                                                Cerca Adottante
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                onClick={() =>
-                                                    setDialogVisible(true)
-                                                }
-                                                outlined
-                                                severity="success"
-                                                className="flex-1 sm:flex-none"
-                                            >
-                                                <FontAwesomeIcon
-                                                    icon={faAdd}
-                                                    className="mr-2"
-                                                />
-                                                Nuovo Adottante
-                                            </Button>
-                                        </div>
-
-                                        {/* Search Component */}
-                                        {adopterAction === "search" && (
-                                            <div className="bg-white p-4 border border-gray-200 rounded-lg">
-                                                <SearchAdopter
-                                                    onSelected={(a) => {
-                                                        setValue(
-                                                            "adopter_id",
-                                                            a.id,
-                                                            {
-                                                                shouldDirty: true,
-                                                                shouldValidate: true,
-                                                            },
-                                                        )
-                                                        setSelectedAdopter(a)
-                                                    }}
-                                                    onNoResultsCallback={() =>
-                                                        null
-                                                    }
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        <ExitDetentionSteps
+                            selectedAdopter={selectedAdopter}
+                            onAdopterSelected={onAdopterSelected}
+                        />
                     )}
 
                     {/* Notes Section */}
@@ -349,28 +221,8 @@ const AnimalExitForm = () => {
                             className="w-full"
                         />
                     </div>
-                </form>
+                </div>
             </FormProvider>
-
-            {/* Add Adopter Dialog */}
-            <Dialog
-                visible={dialogVisibile}
-                className="w-full max-w-4xl"
-                header="Aggiungi Nuovo Adottante"
-                onHide={() => setDialogVisible(false)}
-                modal
-            >
-                <NewAdopterForm
-                    onSaved={(a) => {
-                        setValue("adopter_id", a.id, {
-                            shouldDirty: true,
-                            shouldValidate: true,
-                        })
-                        setSelectedAdopter(a)
-                        setDialogVisible(false)
-                    }}
-                />
-            </Dialog>
 
             <Toast ref={toast} position="bottom-right" />
         </div>
