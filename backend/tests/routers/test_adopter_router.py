@@ -12,6 +12,7 @@ from hermadata.repositories.adopter_repository import (
     IDDocumentType,
 )
 from hermadata.services.adopter_service import NewAdopterRequest
+from tests.utils import random_fiscal_code
 
 
 def test_new_adopter(
@@ -21,7 +22,7 @@ def test_new_adopter(
     data = NewAdopterRequest(
         name="Mario",
         surname="Rossi",
-        fiscal_code="RSSMRA80A01H501U",
+        fiscal_code=random_fiscal_code(),
         document_type=IDDocumentType.identity_card,
         document_number="AA12345BB",
         residence_city_code="H501",
@@ -54,7 +55,7 @@ def test_new_adopter_duplicate_fiscal_code(
     data = NewAdopterRequest(
         name="Mario",
         surname="Rossi",
-        fiscal_code="RSSMRA80A01H501U",
+        fiscal_code=random_fiscal_code(),
         document_type=IDDocumentType.identity_card,
         document_number="AA12345BB",
         residence_city_code="H501",
