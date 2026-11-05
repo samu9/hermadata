@@ -1,7 +1,7 @@
 import { Controller, useForm } from "react-hook-form"
 import { apiService } from "../../main"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { useMutation, useQueryClient } from "react-query"
 import { Button } from "primereact/button"
 import { Checkbox } from "primereact/checkbox"
@@ -14,12 +14,11 @@ import {
 import { Divider } from "primereact/divider"
 import { SubTitle } from "../typography"
 import {
-    useComuniQuery,
     useEntryTypesQuery,
-    useProvinceQuery,
     useRacesQuery,
     useStructuresQuery,
 } from "../../queries"
+import CityPicker from "../forms/city/CityPicker"
 
 type Props = {
     // first entry must also specify race
@@ -35,10 +34,7 @@ const NewAnimalForm = (props: Props) => {
 
     const { handleSubmit, watch, setValue, resetField } = form
 
-    const [provincia, setProvincia] = useState<string>()
-    const provinceQuery = useProvinceQuery()
     const racesQuery = useRacesQuery()
-    const comuniQuery = useComuniQuery(provincia)
     const entryTypesQuery = useEntryTypesQuery()
     const { data: structures = [] } = useStructuresQuery()
 
@@ -141,46 +137,16 @@ const NewAnimalForm = (props: Props) => {
                             )}
                         />
                     )}
-                    <div className="flex flex-col w-full">
-                        <label
-                            className="text-xs text-gray-500"
-                            htmlFor="provincia"
-                        >
-                            Provincia
-                        </label>
-                        <Dropdown
-                            value={provincia}
-                            onChange={(e) => {
-                                setProvincia(e.target.value)
-                            }}
-                            options={provinceQuery.data}
-                            optionLabel="name"
-                            optionValue="id"
-                            placeholder="Seleziona"
-                            className="w-full"
-                        />
-                    </div>
-
                     <Controller
                         name="rescue_city_code"
                         control={form.control}
                         render={({ field }) => (
-                            <div className="w-full">
-                                <label
-                                    className="text-xs text-gray-500"
-                                    htmlFor={field.name}
-                                >
-                                    Comune
-                                </label>
-                                <Dropdown
-                                    {...field}
-                                    options={comuniQuery.data}
-                                    optionLabel="name"
-                                    optionValue="id"
-                                    placeholder="Seleziona"
-                                    className="w-full"
-                                />
-                            </div>
+                            <CityPicker
+                                id={field.name}
+                                value={field.value ?? null}
+                                onChange={field.onChange}
+                                fieldClassName="w-full"
+                            />
                         )}
                     />
 

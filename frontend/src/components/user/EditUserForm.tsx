@@ -3,8 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
 import { Checkbox } from "primereact/checkbox"
 import { InputText } from "primereact/inputtext"
-import { Dropdown } from "primereact/dropdown"
-import { MultiSelect } from "primereact/multiselect"
 import { Password } from "primereact/password"
 import { Toast } from "primereact/toast"
 import { Divider } from "primereact/divider"
@@ -14,7 +12,7 @@ import { z } from "zod"
 import { apiService } from "../../main"
 import { ManagementUser } from "../../models/user.schema"
 import { useAuth } from "../../contexts/AuthContext"
-import { useComuniQuery, useProvinceQuery } from "../../queries"
+import ComuniMultiAutoComplete from "../forms/city/ComuniMultiAutoComplete"
 
 const editUserSchema = z.object({
     name: z.string().optional(),
@@ -54,10 +52,6 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
     const [showPasswordForm, setShowPasswordForm] = useState(false)
     const toast = useRef<Toast>(null)
     const { user: currentUser } = useAuth()
-    const [selectedProvince, setSelectedProvince] = useState<string>("")
-    const { data: provinces, isLoading: provincesLoading } = useProvinceQuery()
-    const { data: comuni, isLoading: comuniLoading } =
-        useComuniQuery(selectedProvince)
 
     const userForm = useForm<EditUserFormData>({
         resolver: zodResolver(editUserSchema),
@@ -272,66 +266,21 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                                 <label className="text-sm font-medium text-surface-700">
                                     Comuni di competenza
                                 </label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="flex flex-col gap-2">
-                                        <label
-                                            htmlFor="province-select"
-                                            className="text-xs text-surface-500"
-                                        >
-                                            Filtra per Provincia
-                                        </label>
-                                        <Dropdown
-                                            id="province-select"
-                                            value={selectedProvince}
-                                            options={provinces || []}
-                                            optionLabel="name"
-                                            optionValue="id"
-                                            onChange={(e) =>
-                                                setSelectedProvince(e.value)
-                                            }
-                                            placeholder="Seleziona Provincia"
-                                            filter
+                                <Controller
+                                    name="city_codes"
+                                    control={userForm.control}
+                                    render={({ field }) => (
+                                        <ComuniMultiAutoComplete
+                                            id="city-codes"
+                                            value={field.value ?? []}
+                                            onChange={field.onChange}
                                             className="w-full"
-                                            disabled={provincesLoading}
                                         />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label
-                                            htmlFor="city-multiselect"
-                                            className="text-xs text-surface-500"
-                                        >
-                                            Seleziona Comuni
-                                        </label>
-                                        <Controller
-                                            name="city_codes"
-                                            control={userForm.control}
-                                            render={({ field }) => (
-                                                <MultiSelect
-                                                    id="city-multiselect"
-                                                    value={field.value}
-                                                    options={comuni || []}
-                                                    optionLabel="name"
-                                                    optionValue="id"
-                                                    onChange={(e) =>
-                                                        field.onChange(e.value)
-                                                    }
-                                                    placeholder="Seleziona Comuni"
-                                                    filter
-                                                    className="w-full"
-                                                    display="chip"
-                                                    disabled={
-                                                        !selectedProvince ||
-                                                        comuniLoading
-                                                    }
-                                                />
-                                            )}
-                                        />
-                                    </div>
-                                </div>
+                                    )}
+                                />
                                 <small className="text-surface-500">
-                                    Seleziona una provincia per vedere i comuni
-                                    disponibili. È possibile aggiungere comuni
-                                    da province diverse ripetendo la selezione.
+                                    Digita il nome di un comune per cercarlo. È possibile
+                                    selezionare più comuni, anche di province diverse.
                                 </small>
                             </div>
 

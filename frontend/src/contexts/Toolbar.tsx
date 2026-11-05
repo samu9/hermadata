@@ -7,8 +7,16 @@ import React, {
 } from "react"
 import { SeverityType } from "../constants"
 
-type ToolbarButton = {
+/**
+ * - "record": actions on the whole animal record (delete, move to shelter…),
+ *   shown on every tab of the profile.
+ * - "page": the primary actions of the current tab/form (save, upload…).
+ */
+export type ToolbarButtonGroup = "record" | "page"
+
+export type ToolbarButton = {
     id: string
+    group?: ToolbarButtonGroup
     buttonText: string
     buttonIcon: any // Use the appropriate FontAwesomeIcon type
     severity?: SeverityType
@@ -19,6 +27,9 @@ type ToolbarButton = {
     onSuccessAction?: (data: any) => void
     formProps?: Record<string, any>
     onClick?: () => void
+    // Render as a small, low-emphasis button set apart from the main actions
+    // (for destructive actions that must not be clicked by mistake)
+    subtle?: boolean
 }
 
 type ToolbarContextType = {

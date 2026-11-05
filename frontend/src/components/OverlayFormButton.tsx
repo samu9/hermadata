@@ -8,6 +8,8 @@ interface OverlayFormButtonProps<T> {
     buttonText: string
     buttonIcon: any
     severity?: SeverityType
+    outlined?: boolean
+    className?: string
 
     FormComponent: React.ComponentType<{ onSuccess: (data: T) => void } & any>
     formProps?: Record<string, any>
@@ -18,6 +20,8 @@ const OverlayFormButton = <T,>({
     buttonText,
     buttonIcon,
     severity,
+    outlined,
+    className = "shadow-lg !rounded-full px-6 py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold",
     FormComponent,
     formProps = {},
     onSuccessAction,
@@ -32,8 +36,9 @@ const OverlayFormButton = <T,>({
     return (
         <div className="bottom-4 right-4">
             <Button
-                className="shadow-lg !rounded-full px-6 py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
+                className={className}
                 severity={severity}
+                outlined={outlined}
                 onClick={(e) => op.current && op.current.toggle(e)}
             >
                 <FontAwesomeIcon icon={buttonIcon} fixedWidth /> {buttonText}

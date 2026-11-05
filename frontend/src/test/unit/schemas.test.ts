@@ -102,6 +102,28 @@ describe('newAdopterSchema', () => {
     expect(result.name).toBe('Luigi')
   })
 
+  it('trims leading and trailing whitespace from adopter fields', () => {
+    const raw = {
+      name: '  Julia ',
+      surname: ' Amigud  ',
+      fiscal_code: ' MGDJLU69R64Z154U ',
+      residence_city_code: ' H501 ',
+      phone: ' 3339876543 ',
+      document_type: ' id ',
+      document_number: ' CC987654 ',
+    }
+    const result = newAdopterSchema.parse(raw)
+    expect(result).toEqual({
+      name: 'Julia',
+      surname: 'Amigud',
+      fiscal_code: 'MGDJLU69R64Z154U',
+      residence_city_code: 'H501',
+      phone: '3339876543',
+      document_type: 'id',
+      document_number: 'CC987654',
+    })
+  })
+
   it('rejects fiscal code shorter than 16 chars', () => {
     const raw = {
       name: 'Luigi',
@@ -143,13 +165,20 @@ describe('raceSchema', () => {
 
 describe('comuneSchema', () => {
   it('parses a valid comune', () => {
-    const result = comuneSchema.parse({ id: 'H501', name: 'Roma' })
+    const result = comuneSchema.parse({
+      id: 'H501',
+      name: 'Roma',
+      provincia: 'RM',
+    })
     expect(result.id).toBe('H501')
     expect(result.name).toBe('Roma')
+    expect(result.provincia).toBe('RM')
   })
 
   it('rejects invalid id format', () => {
-    expect(() => comuneSchema.parse({ id: '1234', name: 'Roma' })).toThrow()
+    expect(() =>
+      comuneSchema.parse({ id: '1234', name: 'Roma', provincia: 'RM' }),
+    ).toThrow()
   })
 })
 

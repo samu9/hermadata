@@ -277,6 +277,7 @@ class AnimalModel(BaseModel):
     healthcare_stage: bool = False
     without_chip: bool = False
     structure_id: int | None = None
+    deleted_at: datetime | None = None
 
     model_config = ConfigDict(extra="ignore")
 
@@ -326,6 +327,7 @@ class AnimalSearchResult(BaseModel):
     healthcare_stage: bool = False
     without_chip: bool = False
     structure_id: int
+    deleted_at: datetime | None = None
 
 
 AnimalSearchResultQuery = namedtuple(
@@ -340,6 +342,13 @@ class AnimalListReportItem(BaseModel):
     chip_code: str | None = None
     origin_city: str
     sex: str | None = None
+    birth_date: date | None = None
+    sterilized: bool | None = None
+
+
+class AnimalListReportExtraField(str, Enum):
+    AGE = "age"
+    STERILIZED = "sterilized"
 
 
 AnimalListReportItemQuery = namedtuple(
@@ -351,12 +360,18 @@ class NewAnimalDocument(BaseModel):
     document_id: int
     document_kind_code: str
     title: Annotated[str, StringConstraints(max_length=100)]
+    animal_entry_id: int | None = None
 
 
 class AnimalDocumentModel(BaseModel):
     animal_id: int
     document_id: int
     document_kind_code: str
+    document_kind_name: str | None = None
+    title: str | None = None
+    animal_entry_id: int | None = None
+    dirty: bool = False
+    rerenderable: bool = False
     created_at: datetime
 
 

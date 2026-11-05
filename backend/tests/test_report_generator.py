@@ -3,16 +3,19 @@ from io import BytesIO
 
 from openpyxl import load_workbook
 
-from hermadata.constants import EntryType, ExitType
+from hermadata.constants import EntryType, ExitType, IDDocumentType
 from hermadata.reports.report_generator import (
     AdopterVariables,
+    AnimalListReportRow,
     AnimalVariables,
     ReportAdoptionVariables,
     ReportAnimalEntryVariables,
+    ReportAnimalListVariables,
     ReportChipAssignmentVariables,
     ReportFormat,
     ReportGenerator,
     ReportVariationVariables,
+    format_age,
 )
 from hermadata.repositories.animal.models import (
     AnimalDaysItem,
@@ -20,6 +23,7 @@ from hermadata.repositories.animal.models import (
     AnimalDaysResult,
     AnimalEntriesItem,
     AnimalEntriesQuery,
+    AnimalListReportExtraField,
     AnimalReportResult,
 )
 from hermadata.settings import Settings
@@ -138,11 +142,12 @@ def test_animal_entries_report(empty_db, report_generator: ReportGenerator):
     assert rows[1][4].value == "M"
 
 
-def test_variation_report(report_generator: ReportGenerator):
+def test_variation_report(jinja_env, report_generator: ReportGenerator):
     variables = ReportVariationVariables(
         animal=AnimalVariables(
             name="Gino",
             chip_code="111.111.111.111.111",
+            race="Cane",
             fur_type="lungo",
             age=12,
             birth_date=date(2010, 5, 15),
@@ -160,6 +165,8 @@ def test_variation_report(report_generator: ReportGenerator):
             residence_city="Montecatini Terme",
             birth_city="Roma",
             birth_date=date(1979, 2, 3),
+            document_type=IDDocumentType.identity_card,
+            document_number="AA12345BB",
         ),
         variation_type=ExitType.custody,
     )
@@ -167,8 +174,41 @@ def test_variation_report(report_generator: ReportGenerator):
 
     assert pdf
 
+    return_variables = variables.model_copy(
+        update={"variation_type": ExitType.return_}
+    )
+    template = jinja_env.get_template("variation.jinja")
+    html = template.render(**return_variables.model_dump())
+    assert "stato restituito al Sig." in html
+    assert "stato restituito dal Sig." not in html
+    assert "Documento (Carta di identità) n. AA12345BB" in html
+    assert "proprietario del cane" in html
+    assert "il suddetto cane è" in html
+    assert "iscritto all'Anagrafe Animali d'Affezione" in html
 
-def test_adoption_report(report_generator: ReportGenerator):
+    cat_variables = return_variables.model_copy(
+        update={
+            "animal": return_variables.animal.model_copy(
+                update={"race": "gatto"}
+            )
+        }
+    )
+    html = template.render(**cat_variables.model_dump())
+    assert "proprietario del gatto" in html
+    assert "il suddetto gatto è" in html
+    assert "cane" not in html
+
+    no_race_variables = return_variables.model_copy(
+        update={
+            "animal": return_variables.animal.model_copy(update={"race": ""})
+        }
+    )
+    html = template.render(**no_race_variables.model_dump())
+    assert "proprietario dell'animale" in html
+    assert "il suddetto animale è" in html
+
+
+def test_adoption_report(jinja_env, report_generator: ReportGenerator):
     variables = ReportAdoptionVariables(
         animal=AnimalVariables(
             name="Gino",
@@ -191,6 +231,8 @@ def test_adoption_report(report_generator: ReportGenerator):
             birth_date=date(1979, 2, 3),
             residence_address="Via test",
             phone="123456789",
+            document_type="dl",
+            document_number="PT9876543",
         ),
         exit_date=datetime.now().date(),
         notes="Test",
@@ -202,6 +244,20 @@ def test_adoption_report(report_generator: ReportGenerator):
     pdf = report_generator.build_adoption_report(variables)
 
     assert pdf
+
+    template = jinja_env.get_template("adoption.jinja")
+    html = template.render(**variables.model_dump())
+    assert "Documento (Patente di guida) n. PT9876543" in html
+
+    no_type_adopter = variables.adopter.model_copy(
+        update={"document_type": ""}
+    )
+    html_no_type = template.render(
+        **variables.model_copy(
+            update={"adopter": no_type_adopter}
+        ).model_dump()
+    )
+    assert "Documento n. PT9876543" in html_no_type
 
 
 def test_models():
@@ -237,3 +293,50 @@ def test_models():
     dump = r.model_dump()
 
     assert isinstance(dump["animal"]["age"], str)
+
+
+def test_format_age():
+    today = date.today()
+    assert format_age(None) == ""
+    assert format_age(today) == "Appena nato"
+    assert format_age(today - timedelta(days=1)) == "1 giorno"
+    assert format_age(today.replace(year=today.year - 1)) == "1 anno"
+    assert format_age(today.replace(year=today.year - 3)) == "3 anni"
+
+
+def test_animal_list_report_extra_fields(
+    jinja_env, report_generator: ReportGenerator
+):
+    items = [
+        AnimalListReportRow(
+            name="Gino",
+            chip_code="111.111.111.111.111",
+            origin_city="Trieste",
+            sex="M",
+            birth_date=date.today().replace(year=date.today().year - 2),
+            sterilized=True,
+        ),
+        AnimalListReportRow(origin_city="Trieste", sterilized=False),
+    ]
+    template = jinja_env.get_template("animal_list.jinja")
+
+    base = ReportAnimalListVariables(items=items, total=len(items))
+    html = template.render(**base.model_dump())
+    assert "Età" not in html
+    assert "Sterilizzato" not in html
+
+    full = ReportAnimalListVariables(
+        items=items,
+        total=len(items),
+        extra_fields=[
+            AnimalListReportExtraField.AGE,
+            AnimalListReportExtraField.STERILIZED,
+        ],
+    )
+    html = template.render(**full.model_dump())
+    assert "<th>Età</th>" in html
+    assert "<th>Sterilizzato</th>" in html
+    assert "<td>2 anni</td>" in html
+    assert "Sì" in html and "<td>No</td>" in html
+
+    assert report_generator.build_animal_list_report(full)

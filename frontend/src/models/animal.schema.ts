@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { ENTRY_TIED_DOC_KIND_CODES } from "../constants"
 import {
     createPaginatedResponseSchema,
     paginationQuerySchema,
@@ -31,8 +32,8 @@ export const animalEntrySchema = z.object({
     exit_date: dateOnly.nullish(),
     entry_type: z.string(),
     exit_type: z.string().nullish(),
-    entry_notes: z.string().nullish(),
-    exit_notes: z.string().nullish(),
+    entry_notes: z.string().trim().nullish(),
+    exit_notes: z.string().trim().nullish(),
     without_chip: z.boolean().optional(),
 })
 
@@ -40,7 +41,7 @@ export type AnimalEntry = z.infer<typeof animalEntrySchema>
 
 export const animalSchema = z.object({
     code: animalCodeValidator,
-    name: z.string().nullable().optional(),
+    name: z.string().trim().nullable().optional(),
     race_id: animalRaceValidator,
     breed_id: z.number().nullish(),
     sterilized: z.boolean().nullish(),
@@ -55,11 +56,11 @@ export const animalSchema = z.object({
 
     stage: z.string().nullish(),
     adoptability_index: z.number().optional(),
-    chip_code: z.string().nullish(),
+    chip_code: z.string().trim().nullish(),
     chip_code_set: z.boolean(),
     profile_image_id: z.number().nullable(),
     sex: z.number().nullable(),
-    notes: z.string().nullish(),
+    notes: z.string().trim().nullish(),
     fur: z.number().nullish(),
     size: z.number().nullish(),
     color: z.number().nullish(),
@@ -67,15 +68,17 @@ export const animalSchema = z.object({
     healthcare_stage: z.boolean().optional(),
     without_chip: z.boolean().optional(),
     structure_id: z.number().nullish(),
+    deleted_at: dateFromString.nullish(),
     entries: z.array(animalEntrySchema).optional(),
 })
 
 export type Animal = z.infer<typeof animalSchema>
 
 export const animalEditSchema = z.object({
-    name: z.string().nullable().optional(),
+    name: z.string().trim().nullable().optional(),
     chip_code: z.preprocess(
-        (arg) => (arg === "" ? null : arg),
+        (arg) =>
+            typeof arg === "string" && arg.trim() === "" ? null : arg,
         chipCodeValidator.nullish(),
     ),
     chip_code_set: z.boolean(),
@@ -87,7 +90,7 @@ export const animalEditSchema = z.object({
     sterilized: z.boolean().nullish(),
     sex: z.number().nullable(),
     breed_id: z.number().nullish(),
-    notes: z.string().nullish(),
+    notes: z.string().trim().nullish(),
 })
 
 export type AnimalEdit = z.infer<typeof animalEditSchema>
@@ -114,8 +117,8 @@ export const updateAnimalEntrySchema = z.object({
     entry_type: z.string().optional(),
     exit_date: dateOnly.nullish(),
     exit_type: z.string().nullish(),
-    entry_notes: z.string().nullish(),
-    exit_notes: z.string().nullish(),
+    entry_notes: z.string().trim().nullish(),
+    exit_notes: z.string().trim().nullish(),
     without_chip: z.boolean().optional(),
 })
 export type UpdateAnimalEntry = z.infer<typeof updateAnimalEntrySchema>
@@ -146,6 +149,7 @@ export const animalSearchResultSchema = z.object({
     healthcare_stage: z.boolean().optional(),
     without_chip: z.boolean().optional(),
     structure_id: z.number(),
+    deleted_at: dateFromString.nullish(),
 })
 
 export type AnimalSearchResult = z.infer<typeof animalSearchResultSchema>
@@ -158,11 +162,25 @@ export type PaginatedAnimalSearchResult = z.infer<
     typeof paginatedAnimalSearchResultSchema
 >
 
-export const animalDocUploadSchema = z.object({
-    title: z.string().min(1),
-    document_kind_code: z.string().min(1),
-    document_id: z.number(),
-})
+export const animalDocUploadSchema = z
+    .object({
+        title: z.string().trim().min(1),
+        document_kind_code: z.string().trim().min(1),
+        document_id: z.number(),
+        animal_entry_id: z.number().nullish(),
+    })
+    .superRefine((data, ctx) => {
+        if (
+            ENTRY_TIED_DOC_KIND_CODES.includes(data.document_kind_code) &&
+            !data.animal_entry_id
+        ) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["animal_entry_id"],
+                message: "Seleziona l'ingresso a cui associare il documento",
+            })
+        }
+    })
 
 export type AnimalDocUpload = z.infer<typeof animalDocUploadSchema>
 
@@ -170,28 +188,36 @@ export const animalDocumentSchema = z.object({
     animal_id: z.number(),
     document_id: z.number(),
     document_kind_code: z.string(),
+    document_kind_name: z.string().nullish(),
+    title: z.string().nullish(),
+    animal_entry_id: z.number().nullish(),
+    dirty: z.boolean().default(false),
+    rerenderable: z.boolean().default(false),
     created_at: dateFromString,
 })
 
 export type AnimalDocument = z.infer<typeof animalDocumentSchema>
 
 export const animalSearchQuerySchema = paginationQuerySchema.extend({
-    rescue_city_code: z.string().nullish(),
+    rescue_city_code: z.string().trim().nullish(),
     entry_type: z.string().nullish(),
     exit_type: z.string().nullish(),
     present: z.boolean().nullish(),
     not_present: z.boolean().nullish(),
-    name: z.string().nullish(),
-    chip_code: z.string().nullish(),
+    name: z.string().trim().nullish(),
+    chip_code: z.string().trim().nullish(),
     race_id: z.string().nullish(),
     sort_field: z.string().nullish(),
     sort_order: z.number().nullish(),
     cats: z.boolean().nullish(),
     dogs: z.boolean().nullish(),
+    deleted: z.boolean().nullish(),
     structure_ids: z.array(z.number()).nullish(),
 })
 
 export type AnimalSearchQuery = z.infer<typeof animalSearchQuerySchema>
+
+export type AnimalListReportExtraField = "age" | "sterilized"
 
 export const newAnimalAdoptionSchema = z.object({
     animal_id: z.number(),
@@ -210,9 +236,9 @@ export const animalExitSchema = z
         }),
         exit_data: z.record(z.string(), z.any()).nullish(),
         adopter_id: z.number().nullish(),
-        location_address: z.string().nullish(),
-        location_city_code: z.string().nullish(),
-        notes: z.string().nullish(),
+        location_address: z.string().trim().nullish(),
+        location_city_code: z.string().trim().nullish(),
+        notes: z.string().trim().nullish(),
     })
     .refine((data) => {
         if (["A", "T", "R"].includes(data.exit_type)) {

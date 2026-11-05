@@ -53,8 +53,8 @@ def get_province(
 
 @router.get("/comuni", response_model=list[ComuneModel])
 def get_comuni(
-    provincia: str,
     repo: Annotated[SQLCityRepository, Depends(get_city_repository)],
+    provincia: str | None = None,
 ):
     comuni = repo.get_comuni(provincia=provincia)
     return comuni

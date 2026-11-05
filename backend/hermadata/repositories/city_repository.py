@@ -43,16 +43,15 @@ class SQLCityRepository(SQLBaseRepository):
 
         return result
 
-    def get_comuni(self, provincia: str) -> list[ComuneModel]:
-        query_result = (
-            self.session.execute(
-                select(Comune)
-                .where(Comune.provincia == provincia)
-                .order_by(Comune.name)
-            )
-            .scalars()
-            .all()
-        )
+    def get_comuni(self, provincia: str | None = None) -> list[ComuneModel]:
+        """Return the comuni of a provincia, or all of them if omitted.
+
+        Preferred cities come first, the rest is ordered by name.
+        """
+        stmt = select(Comune).order_by(Comune.name)
+        if provincia:
+            stmt = stmt.where(Comune.provincia == provincia)
+        query_result = self.session.execute(stmt).scalars().all()
         result = sorted(
             [ComuneModel.model_validate(r) for r in query_result],
             key=lambda x: (x.id not in self.preferred_cities, x.name),

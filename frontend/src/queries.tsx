@@ -1,7 +1,8 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from "react-query"
+import { useMutation, useQuery, useQueryClient } from "react-query"
 import { apiService } from "./main"
 import { AdopterSearch } from "./models/adopter.schema"
 import { AnimalSearchQuery } from "./models/animal.schema"
+import { UserPermissionOverride } from "./models/permission.schema"
 import { NewTherapy } from "./models/therapy.schema"
 import { VetSearch } from "./models/vet.schema"
 
@@ -14,6 +15,16 @@ export const useAnimalSearchQuery = (queryData: AnimalSearchQuery) =>
 export const useAnimalQuery = (id: string) =>
     useQuery(["animal", id], {
         queryFn: () => apiService.getAnimal(id),
+        staleTime: Infinity,
+    })
+
+export const useAnimalAdopterQuery = (
+    animalId: string | number,
+    enabled = true,
+) =>
+    useQuery(["animal-adopter", animalId], {
+        queryFn: () => apiService.getAnimalAdopter(animalId),
+        enabled: enabled && !!animalId,
         staleTime: Infinity,
     })
 
@@ -42,15 +53,12 @@ export const useProvinceQuery = () =>
         staleTime: Infinity,
     })
 
-export const useComuniQuery = (provincia?: string) =>
-    useQuery(
-        ["comuni", provincia],
-        () => (provincia && apiService.getComuni(provincia)) || [],
-        {
-            placeholderData: [],
-            staleTime: Infinity,
-        },
-    )
+// All the comuni of Italy (~8k), fetched once per session and searched
+// client side by the city autocompletes
+export const useAllComuniQuery = () =>
+    useQuery("comuni", () => apiService.getComuni(), {
+        staleTime: Infinity,
+    })
 
 export const useComuneQuery = (code?: string) =>
     useQuery(
@@ -61,17 +69,6 @@ export const useComuneQuery = (code?: string) =>
             staleTime: Infinity,
         },
     )
-
-export const useComuniByCodesQuery = (codes: string[]) => {
-    const results = useQueries(
-        codes.map((code) => ({
-            queryKey: ["comune", code],
-            queryFn: () => apiService.getComune(code),
-            staleTime: Infinity,
-        })),
-    )
-    return results.map((r) => r.data).filter(Boolean)
-}
 
 export const useDocKindsQuery = () =>
     useQuery("doc-kinds", () => apiService.getAllDocKinds(), {
@@ -239,6 +236,25 @@ export const useDeleteTherapyMutation = (animalId: number) => {
         {
             onSuccess: () => {
                 queryClient.invalidateQueries(["therapies", animalId])
+            },
+        },
+    )
+}
+
+export const useUserPermissionsQuery = (userId: number) =>
+    useQuery(["user-permissions", userId], () =>
+        apiService.getUserPermissions(userId),
+    )
+
+export const useSetUserPermissionsMutation = (userId: number) => {
+    const queryClient = useQueryClient()
+    return useMutation(
+        (overrides: UserPermissionOverride[]) =>
+            apiService.setUserPermissions(userId, overrides),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries(["user-permissions", userId])
+                queryClient.invalidateQueries("users")
             },
         },
     )
