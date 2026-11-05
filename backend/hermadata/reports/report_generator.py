@@ -166,6 +166,7 @@ def format_age(birth_date: date | None) -> str:
 class AnimalVariables(BaseVariables):
     name: NullableString
     chip_code: NullableString
+    race: Annotated[NullableString, StringConstraints(to_lower=True)]
     breed: NullableString
     sex: NullableString
     age: str = ""

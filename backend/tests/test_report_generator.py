@@ -147,6 +147,7 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
         animal=AnimalVariables(
             name="Gino",
             chip_code="111.111.111.111.111",
+            race="Cane",
             fur_type="lungo",
             age=12,
             birth_date=date(2010, 5, 15),
@@ -181,6 +182,29 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
     assert "stato restituito al Sig." in html
     assert "stato restituito dal Sig." not in html
     assert "Documento (Carta di identità) n. AA12345BB" in html
+    assert "proprietario del cane" in html
+    assert "il suddetto cane è" in html
+
+    cat_variables = return_variables.model_copy(
+        update={
+            "animal": return_variables.animal.model_copy(
+                update={"race": "gatto"}
+            )
+        }
+    )
+    html = template.render(**cat_variables.model_dump())
+    assert "proprietario del gatto" in html
+    assert "il suddetto gatto è" in html
+    assert "cane" not in html.replace("Canina", "")
+
+    no_race_variables = return_variables.model_copy(
+        update={
+            "animal": return_variables.animal.model_copy(update={"race": ""})
+        }
+    )
+    html = template.render(**no_race_variables.model_dump())
+    assert "proprietario dell'animale" in html
+    assert "il suddetto animale è" in html
 
 
 def test_adoption_report(jinja_env, report_generator: ReportGenerator):

@@ -1,11 +1,13 @@
 {% extends "base.jinja" %} {% block content%}
+{% set animal_label = animal.race or "animale" %}
+{% set of_animal = "del " ~ animal.race if animal.race else "dell'animale" %}
 
 <div style="page-break-inside: avoid;">
     <p>
         Il/la sottoscritto/a <strong>Luigi Vescovini</strong> per
         <strong>ASSOCIAZIONE AMICI DEGLI ANIMALI - ODV</strong>, residente in
         <strong>51016 Montecatini Terme in Via delle Padulette</strong>, tel.
-        <strong>3503060217</strong>, in qualità di proprietario del cane
+        <strong>3503060217</strong>, in qualità di proprietario {{ of_animal }}
         iscritto all'Anagrafe Canina Regionale rispondente al seguente stato
         segnaletico:
     </p>
@@ -18,7 +20,7 @@
         </p>
         <ul>
             <li>
-                che il suddetto cane è {% if variation_type.value == "I" %}
+                che il suddetto {{ animal_label }} è {% if variation_type.value == "I" %}
                 scomparso {% elif variation_type.value == "D" %} deceduto {%
                 elif variation_type.value == "C" %} stato ceduto al Sig.
                 {{ adopter.surname }} {{ adopter.name }} nato il
