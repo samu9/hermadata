@@ -9,6 +9,7 @@ import { confirmDialog, ConfirmDialog } from "primereact/confirmdialog"
 import { useRef } from "react"
 import { useMutation, useQuery, useQueryClient } from "react-query"
 import { apiService } from "../../main"
+import { useAuth } from "../../contexts/AuthContext"
 import { ManagementUser } from "../../models/user.schema"
 import { useComuneQuery } from "../../queries"
 import EditUserForm from "./EditUserForm"
@@ -35,6 +36,7 @@ const UserList: React.FC = () => {
     const [showPermissionsDialog, setShowPermissionsDialog] = useState(false)
     const toast = useRef<Toast>(null)
     const queryClient = useQueryClient()
+    const { isSuperUser } = useAuth()
 
     const usersQuery = useQuery("users", () => apiService.getAllUsers(), {
         staleTime: 30000, // 30 seconds
@@ -158,15 +160,17 @@ const UserList: React.FC = () => {
                     }}
                     tooltip="Modifica utente"
                 />
-                <Button
-                    icon="pi pi-key"
-                    className="p-button-rounded p-button-text"
-                    onClick={() => {
-                        setSelectedUser(user)
-                        setShowPermissionsDialog(true)
-                    }}
-                    tooltip="Gestisci permessi"
-                />
+                {isSuperUser && (
+                    <Button
+                        icon="pi pi-key"
+                        className="p-button-rounded p-button-text"
+                        onClick={() => {
+                            setSelectedUser(user)
+                            setShowPermissionsDialog(true)
+                        }}
+                        tooltip="Gestisci permessi"
+                    />
+                )}
                 <Button
                     icon={user.is_active ? "pi pi-eye-slash" : "pi pi-eye"}
                     className="p-button-rounded p-button-text"

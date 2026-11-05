@@ -138,8 +138,7 @@ def test_get_and_set_user_permissions(app: TestClient, make_user):
     assert result.status_code == 200
 
     details = {
-        d["code"]: d
-        for d in app.get(f"/user/{user_id}/permissions").json()
+        d["code"]: d for d in app.get(f"/user/{user_id}/permissions").json()
     }
     assert details["MU"]["override"] is True
     assert details["MU"]["effective"] is True
@@ -161,20 +160,11 @@ def test_user_permissions_unknown_user(app: TestClient):
     assert result.status_code == 404
 
 
-def test_user_permissions_requires_manage_users(app: TestClient, make_user):
+def test_user_permissions_requires_superuser(app: TestClient, make_user):
     from hermadata.initializations import get_current_user
     from hermadata.services.user_service import TokenData
 
     user_id = make_user()
-
-    def no_mu_user():
-        return TokenData(
-            user_id=1,
-            email="test@test.it",
-            is_active=True,
-            is_superuser=False,
-            permissions=["CA"],
-        )
 
     def mu_user():
         return TokenData(
@@ -185,10 +175,15 @@ def test_user_permissions_requires_manage_users(app: TestClient, make_user):
             permissions=["MU"],
         )
 
-    app.app.dependency_overrides[get_current_user] = no_mu_user
-    assert app.get(f"/user/{user_id}/permissions").status_code == 403
-    result = app.put(f"/user/{user_id}/permissions", json={"overrides": []})
-    assert result.status_code == 403
-
+    superuser = app.app.dependency_overrides[get_current_user]
     app.app.dependency_overrides[get_current_user] = mu_user
+    try:
+        assert app.get(f"/user/{user_id}/permissions").status_code == 403
+        result = app.put(
+            f"/user/{user_id}/permissions", json={"overrides": []}
+        )
+        assert result.status_code == 403
+    finally:
+        app.app.dependency_overrides[get_current_user] = superuser
+
     assert app.get(f"/user/{user_id}/permissions").status_code == 200
