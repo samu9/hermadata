@@ -5,17 +5,16 @@ import { useRef } from "react"
 import { SeverityType } from "../constants"
 import { useIsMobile } from "../hooks/useMediaQuery"
 
-// Exact original desktop styling (labeled pill).
-const DESKTOP_FAB =
-    "shadow-lg !rounded-full px-6 py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
-// Mobile: icon-only 48px circle.
-const MOBILE_FAB =
-    "shadow-lg !rounded-full !w-12 !h-12 !p-0 justify-center gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold"
+// Mobile: icon-only circle; the label moves to aria-label.
+const MOBILE_ICON_BUTTON =
+    "!rounded-full !w-11 !h-11 !p-0 justify-center shrink-0"
 
 interface OverlayFormButtonProps<T> {
     buttonText: string
     buttonIcon: any
     severity?: SeverityType
+    outlined?: boolean
+    className?: string
 
     FormComponent: React.ComponentType<{ onSuccess: (data: T) => void } & any>
     formProps?: Record<string, any>
@@ -26,6 +25,8 @@ const OverlayFormButton = <T,>({
     buttonText,
     buttonIcon,
     severity,
+    outlined,
+    className = "shadow-lg !rounded-full px-6 py-3 gap-2 transition-all hover:shadow-xl hover:-translate-y-1 !font-bold",
     FormComponent,
     formProps = {},
     onSuccessAction,
@@ -41,9 +42,10 @@ const OverlayFormButton = <T,>({
     return (
         <div>
             <Button
-                className={isMobile ? MOBILE_FAB : DESKTOP_FAB}
+                className={isMobile ? MOBILE_ICON_BUTTON : className}
                 aria-label={buttonText}
                 severity={severity}
+                outlined={outlined}
                 onClick={(e) => op.current && op.current.toggle(e)}
             >
                 <FontAwesomeIcon icon={buttonIcon} fixedWidth />

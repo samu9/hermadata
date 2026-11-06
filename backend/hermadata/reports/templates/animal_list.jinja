@@ -31,6 +31,8 @@
             <th>Chip</th>
             <th>Provenienza</th>
             <th>Sesso</th>
+            {% if 'age' in extra_fields %}<th>Età</th>{% endif %}
+            {% if 'sterilized' in extra_fields %}<th>Sterilizzato</th>{% endif %}
         </tr>
     </thead>
     <tbody>
@@ -41,6 +43,8 @@
             <td>{{ item.chip_code or '' }}</td>
             <td>{{ item.origin_city }}</td>
             <td>{{ item.sex or '' }}</td>
+            {% if 'age' in extra_fields %}<td>{{ item.age }}</td>{% endif %}
+            {% if 'sterilized' in extra_fields %}<td>{% if item.sterilized is none %}{% elif item.sterilized %}Sì{% else %}No{% endif %}</td>{% endif %}
         </tr>
         {% endfor %}
     </tbody>

@@ -40,6 +40,7 @@ class TokenData(BaseModel):
     role: str | None = None
     city_codes: list[str] | None = None
     permissions: list[str] = []
+    token_version: int = 0
 
 
 class UserService:
@@ -112,6 +113,10 @@ class UserService:
 
         data = TokenData.model_validate(payload)
 
+        token_version = self.user_repository.get_token_version(data.user_id)
+        if token_version is None or token_version != data.token_version:
+            raise jwt.InvalidTokenError("Token has been revoked")
+
         return data
 
     def login(self, email: str, password: str) -> UserModel:
@@ -134,6 +139,7 @@ class UserService:
             role=user_data.role_name,
             city_codes=user_data.city_codes,
             permissions=user_data.permissions,
+            token_version=self.user_repository.get_token_version(user_data.id),
         )
 
         jwt = self._encode_jwt(user.model_dump())

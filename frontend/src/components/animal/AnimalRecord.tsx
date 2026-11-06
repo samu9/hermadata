@@ -13,6 +13,7 @@ import {
     faRotateLeft,
 } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { format } from "date-fns"
 import { MenuItem } from "primereact/menuitem"
 import { TabMenu } from "primereact/tabmenu"
 import { classNames } from "primereact/utils"
@@ -30,8 +31,8 @@ import { useToolbar } from "../../contexts/Toolbar"
 import { Animal } from "../../models/animal.schema"
 import NewAnimalForm from "../new-entry/NewAnimalEntryForm"
 import AnimalRecordHeader from "./AnimalRecordHeader"
-import { ConfirmDialog } from "primereact/confirmdialog"
 import { Dialog } from "primereact/dialog"
+import { ConfirmDialog } from "primereact/confirmdialog"
 import { Calendar } from "primereact/calendar"
 import { Button } from "primereact/button"
 import { Dropdown } from "primereact/dropdown"
@@ -91,6 +92,9 @@ const generateItems = (
         path: "health",
     })
 
+    // Deleted animals are read-only: no edit/exit tabs
+    if (data.deleted_at) return items
+
     // Edit tab - requires animal editing permissions
     can(Permission.EDIT_ANIMAL) &&
         items.push({
@@ -133,6 +137,11 @@ const AnimalRecord = (props: Props) => {
     )
     const [activeIndex, setActiveIndex] = useState(1)
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [restoreDialogVisible, setRestoreDialogVisible] = useState(false)
+    const [isRestoring, setIsRestoring] = useState(false)
+    const [deleteExitDialogVisible, setDeleteExitDialogVisible] =
+        useState(false)
     const [moveToShelterDialogVisible, setMoveToShelterDialogVisible] =
         useState(false)
     const [moveToShelterDate, setMoveToShelterDate] = useState<Date | null>(
@@ -155,15 +164,52 @@ const AnimalRecord = (props: Props) => {
     const [isConfirmingAdoption, setIsConfirmingAdoption] = useState(false)
 
     const { addButton, removeButton } = useToolbar()
+    const isDeleted = Boolean(props.data.deleted_at)
+
+    const closeDeleteDialog = () => setDeleteDialogVisible(false)
+    const closeRestoreDialog = () => setRestoreDialogVisible(false)
 
     const confirmDelete = async () => {
         try {
+            setIsDeleting(true)
             await apiService.deleteAnimal(Number(id))
             await queryClient.invalidateQueries(["animal-search"])
+            await queryClient.invalidateQueries(["animal", id])
             toastService.showSuccess("Animale eliminato correttamente")
             navigate("/")
         } catch (error) {
             console.error("Failed to delete animal", error)
+        } finally {
+            setIsDeleting(false)
+        }
+    }
+
+    const confirmRestore = async () => {
+        try {
+            setIsRestoring(true)
+            await apiService.restoreAnimal(Number(id))
+            await queryClient.invalidateQueries(["animal-search"])
+            await queryClient.invalidateQueries(["animal", id])
+            toastService.showSuccess("Animale ripristinato correttamente")
+            setRestoreDialogVisible(false)
+        } catch (error) {
+            console.error("Failed to restore animal", error)
+        } finally {
+            setIsRestoring(false)
+        }
+    }
+
+    const confirmDeleteExit = async () => {
+        if (!id) return
+        try {
+            await apiService.deleteAnimalExit(Number(id))
+            await queryClient.invalidateQueries(["animal", id])
+            await queryClient.invalidateQueries(["animal-entries", id])
+            await queryClient.invalidateQueries(["animal-search"])
+            toastService.showSuccess("Uscita eliminata correttamente")
+            setDeleteExitDialogVisible(false)
+        } catch (error) {
+            console.error("Failed to delete animal exit", error)
         }
     }
 
@@ -230,7 +276,11 @@ const AnimalRecord = (props: Props) => {
     }
 
     useEffect(() => {
-        if (props.data.healthcare_stage && !props.data.exit_type) {
+        if (
+            !isDeleted &&
+            props.data.healthcare_stage &&
+            !props.data.exit_type
+        ) {
             addButton({
                 id: "move-to-shelter",
                 buttonText: "Sposta in rifugio",
@@ -246,6 +296,7 @@ const AnimalRecord = (props: Props) => {
         }
         return () => removeButton("move-to-shelter")
     }, [
+        isDeleted,
         props.data.healthcare_stage,
         props.data.exit_type,
         addButton,
@@ -254,7 +305,11 @@ const AnimalRecord = (props: Props) => {
 
     // Temporary adoption action buttons
     useEffect(() => {
-        if (props.data.exit_type === "T" && can(Permission.MAKE_ADOPTION)) {
+        if (
+            !isDeleted &&
+            props.data.exit_type === "T" &&
+            can(Permission.MAKE_ADOPTION)
+        ) {
             addButton({
                 id: "confirm-temp-adoption",
                 buttonText: "Conferma adozione",
@@ -280,26 +335,58 @@ const AnimalRecord = (props: Props) => {
             removeButton("undo-temp-adoption")
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.data.exit_type, can, addButton, removeButton])
+    }, [isDeleted, props.data.exit_type, can, addButton, removeButton])
 
     useEffect(() => {
-        if (isSuperUser) {
+        if (isSuperUser && !isDeleted) {
             addButton({
                 id: "delete-animal",
-                buttonText: "Elimina",
+                buttonText: "Elimina animale",
                 buttonIcon: faTrash,
                 severity: "danger",
-                order: 10,
+                order: 0,
+                subtle: true,
                 onClick: () => setDeleteDialogVisible(true),
             })
         }
-        return () => {
-            if (isSuperUser) removeButton("delete-animal")
-        }
-    }, [isSuperUser, addButton, removeButton])
+        return () => removeButton("delete-animal")
+    }, [isSuperUser, isDeleted, addButton, removeButton])
 
     useEffect(() => {
-        if (props.data?.exit_date && can(Permission.CREATE_ANIMAL)) {
+        if (isSuperUser && isDeleted) {
+            addButton({
+                id: "restore-animal",
+                buttonText: "Ripristina animale",
+                buttonIcon: faRotateLeft,
+                severity: "success",
+                order: 10,
+                onClick: () => setRestoreDialogVisible(true),
+            })
+        }
+        return () => removeButton("restore-animal")
+    }, [isSuperUser, isDeleted, addButton, removeButton])
+
+    useEffect(() => {
+        if (isSuperUser && !isDeleted && props.data.exit_date) {
+            addButton({
+                id: "delete-exit",
+                buttonText: "Elimina uscita",
+                buttonIcon: faRotateLeft,
+                severity: "warning",
+                order: 5,
+                subtle: true,
+                onClick: () => setDeleteExitDialogVisible(true),
+            })
+        }
+        return () => removeButton("delete-exit")
+    }, [isSuperUser, isDeleted, props.data.exit_date, addButton, removeButton])
+
+    useEffect(() => {
+        if (
+            !isDeleted &&
+            props.data?.exit_date &&
+            can(Permission.CREATE_ANIMAL)
+        ) {
             addButton({
                 id: "new-entry",
                 buttonText: "Nuovo ingresso",
@@ -315,7 +402,7 @@ const AnimalRecord = (props: Props) => {
             })
         }
         return () => removeButton("new-entry")
-    }, [props.data?.exit_date, can, addButton, removeButton, id])
+    }, [isDeleted, props.data?.exit_date, can, addButton, removeButton, id])
 
     useEffect(() => {
         const pathElements = location.pathname.split("/").filter((e) => e)
@@ -394,6 +481,16 @@ const AnimalRecord = (props: Props) => {
     }))
     return (
         <div>
+            {props.data.deleted_at && (
+                <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-800">
+                    <FontAwesomeIcon icon={faTrash} className="flex-shrink-0" />
+                    <span className="text-sm font-medium">
+                        Animale eliminato il{" "}
+                        {format(props.data.deleted_at, "dd/MM/yyyy HH:mm")}.
+                        La scheda è in sola lettura.
+                    </span>
+                </div>
+            )}
             <div className="mb-6">
                 <AnimalRecordHeader data={props.data} />
             </div>
@@ -418,15 +515,94 @@ const AnimalRecord = (props: Props) => {
                 <Outlet />
             </div>
 
-            <ConfirmDialog
+            {/* Delete Animal Dialog */}
+            <Dialog
+                header="Eliminare definitivamente l'animale?"
                 visible={deleteDialogVisible}
-                onHide={() => setDeleteDialogVisible(false)}
-                message="Sei sicuro di voler eliminare questo animale? Questa azione non può essere annullata."
-                header="Conferma eliminazione"
+                style={{ width: "480px" }}
+                onHide={closeDeleteDialog}
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            label="Annulla"
+                            icon="pi pi-times"
+                            onClick={closeDeleteDialog}
+                            className="p-button-text"
+                            autoFocus
+                        />
+                        <Button
+                            label="Elimina definitivamente"
+                            icon="pi pi-trash"
+                            severity="danger"
+                            onClick={confirmDelete}
+                            loading={isDeleting}
+                        />
+                    </div>
+                }
+            >
+                <div className="flex gap-3 items-start p-3 rounded-md bg-red-50 text-red-800 border border-red-200">
+                    <i className="pi pi-exclamation-triangle text-xl mt-0.5" />
+                    <p>
+                        Stai per eliminare l'animale{" "}
+                        <strong>
+                            {props.data.name
+                                ? `${props.data.name} (${props.data.code})`
+                                : props.data.code}
+                        </strong>{" "}
+                        con tutti i suoi dati. L'animale non sarà più visibile
+                        nell'applicazione.{" "}
+                        <strong>Questa azione non può essere annullata.</strong>
+                    </p>
+                </div>
+            </Dialog>
+
+            {/* Restore Animal Dialog */}
+            <Dialog
+                header="Ripristinare l'animale?"
+                visible={restoreDialogVisible}
+                style={{ width: "480px" }}
+                onHide={closeRestoreDialog}
+                footer={
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            label="Annulla"
+                            icon="pi pi-times"
+                            onClick={closeRestoreDialog}
+                            className="p-button-text"
+                            disabled={isRestoring}
+                        />
+                        <Button
+                            label="Ripristina"
+                            icon="pi pi-replay"
+                            severity="success"
+                            onClick={confirmRestore}
+                            loading={isRestoring}
+                            autoFocus
+                        />
+                    </div>
+                }
+            >
+                <p className="m-0">
+                    Stai per ripristinare l'animale{" "}
+                    <strong>
+                        {props.data.name
+                            ? `${props.data.name} (${props.data.code})`
+                            : props.data.code}
+                    </strong>
+                    . L'animale tornerà visibile e modificabile
+                    nell'applicazione.
+                </p>
+            </Dialog>
+
+            <ConfirmDialog
+                visible={deleteExitDialogVisible}
+                onHide={() => setDeleteExitDialogVisible(false)}
+                message="Sei sicuro di voler eliminare l'uscita di questo animale? L'animale tornerà presente in struttura e l'eventuale adozione collegata verrà annullata."
+                header="Conferma eliminazione uscita"
                 icon="pi pi-exclamation-triangle"
-                accept={confirmDelete}
-                reject={() => setDeleteDialogVisible(false)}
-                acceptLabel="Elimina"
+                accept={confirmDeleteExit}
+                reject={() => setDeleteExitDialogVisible(false)}
+                acceptLabel="Elimina uscita"
                 rejectLabel="Annulla"
                 acceptClassName="p-button-danger"
             />

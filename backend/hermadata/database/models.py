@@ -209,6 +209,10 @@ class Adoption(Base):
     returned_at: Mapped[datetime | None] = mapped_column(
         DateTime(), nullable=True
     )
+    # set when an exit is deleted by a superuser: the adoption is voided
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
 
 
 # class Person(Base):
@@ -342,6 +346,11 @@ class User(Base):
 
     city_codes: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
 
+    # bumped to invalidate every token issued before the change
+    token_version: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0"
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )
@@ -379,6 +388,37 @@ class UserRolePermission(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+
+class UserPermission(Base):
+    """Per-user permission override on top of the role permissions.
+
+    granted=True explicitly grants the permission, granted=False
+    explicitly revokes it even if the user's role grants it.
+    """
+
+    __tablename__ = "user_permissions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    permission_code: Mapped[str] = mapped_column(
+        String(3), ForeignKey("permissions.code")
+    )
+    granted: Mapped[bool] = mapped_column(Boolean())
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_onupdate=func.now(), nullable=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "permission_code", name="unique_user_permission"
+        ),
     )
 
 
@@ -511,12 +551,25 @@ class AnimalDocument(Base):
     animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"))
     document_id: Mapped[int] = mapped_column(ForeignKey("document.id"))
     document_kind_id = mapped_column(ForeignKey("document_kind.id"))
+    # Set for documents tied to a specific entry/exit event (adoption,
+    # variation, entry/exit comms, ...). Null for general animal documents.
+    animal_entry_id: Mapped[int | None] = mapped_column(
+        ForeignKey("animal_entry.id"), nullable=True
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(), server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(), server_onupdate=func.now(), nullable=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), nullable=True
+    )
+    # True when the data this (rendered) document embeds has since been
+    # edited, so the document is stale and should be re-rendered.
+    dirty: Mapped[bool] = mapped_column(
+        Boolean, server_default=expression.false(), default=False
     )
 
     __table_args__ = (

@@ -16,10 +16,12 @@ const ApiEndpoints = {
     },
     animal: {
         getById: (code: string) => `/animal/${code}`,
+        adopter: (id: string | number) => `/animal/${id}/adopter`,
         create: "/animal",
         search: "/animal/search",
         update: (id: string) => `/animal/${id}`,
         delete: (id: number) => `/animal/${id}`,
+        restore: (id: number) => `/animal/${id}/restore`,
         addEntry: (id: string) => `/animal/${id}/entry`,
         completeEntry: (id: string) => `/animal/${id}/entry/complete`,
         getEntries: (id: string) => `/animal/${id}/entries`,
@@ -27,6 +29,10 @@ const ApiEndpoints = {
             `/animal/${animalId}/entries/${entryId}`,
         documents: (id: number) => `/animal/${id}/document`,
         newDocument: (id: number) => `/animal/${id}/document`,
+        deleteDocument: (animalId: number, documentId: number) =>
+            `/animal/${animalId}/document/${documentId}`,
+        rerenderDocument: (animalId: number, documentId: number) =>
+            `/animal/${animalId}/document/${documentId}/rerender`,
         uploadImage: (id: number) => `/animal/${id}/image`,
         listImages: (id: number) => `/animal/${id}/images`,
         serveImage: (animalId: number, imageId: number) =>
@@ -53,6 +59,7 @@ const ApiEndpoints = {
         create: "/adopter",
         get: "/adopter",
         getById: (id: number) => `/adopter/${id}`,
+        update: (id: number) => `/adopter/${id}`,
         search: "/adopter/search",
     },
     adoption: {
@@ -70,6 +77,7 @@ const ApiEndpoints = {
         activity: "/user/activity",
         roles: "/user/roles",
         permissions: "/user/permissions",
+        userPermissions: (id: number) => `/user/${id}/permissions`,
     },
     util: {
         getProvince: "/util/province",

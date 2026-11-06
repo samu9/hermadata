@@ -1,12 +1,17 @@
 from uuid import uuid4
 
+import jwt as pyjwt
 import pytest
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from hermadata.database.models import User
-from hermadata.repositories.user_repository import UserListQuery
+from hermadata.repositories.user_repository import (
+    SetUserPermissionsModel,
+    UserListQuery,
+    UserPermissionOverride,
+)
 from hermadata.services.user_service import RegisterUserModel, UserService
 
 
@@ -129,3 +134,40 @@ def test_change_password_nonexistent_user(user_service: UserService):
     success = user_service.change_password(999999, None, "new_password_123")
 
     assert success is False
+
+
+def test_set_user_permissions_revokes_issued_tokens(
+    user_service: UserService,
+):
+    data = RegisterUserModel(email=f"{uuid4().hex}@test.it", password="test")
+    user = user_service.register(data)
+
+    token = user_service.login(data.email, data.password)
+    assert user_service.decode_jwt(token).user_id == user.id
+
+    user_service.user_repository.set_user_permissions(
+        user.id,
+        SetUserPermissionsModel(
+            overrides=[
+                UserPermissionOverride(permission_code="CA", granted=True)
+            ]
+        ),
+    )
+
+    with pytest.raises(pyjwt.InvalidTokenError):
+        user_service.decode_jwt(token)
+
+    new_token = user_service.login(data.email, data.password)
+    decoded = user_service.decode_jwt(new_token)
+    assert "CA" in decoded.permissions
+
+
+def test_deleted_user_token_is_rejected(user_service: UserService):
+    data = RegisterUserModel(email=f"{uuid4().hex}@test.it", password="test")
+    user = user_service.register(data)
+    token = user_service.login(data.email, data.password)
+
+    user_service.delete_user(user.id)
+
+    with pytest.raises(pyjwt.InvalidTokenError):
+        user_service.decode_jwt(token)

@@ -2,21 +2,32 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
-from hermadata.constants import DocKindCode, ExitType
+from hermadata.constants import (
+    RERENDERABLE_DOC_KIND_CODES,
+    AnimalEvent,
+    DocKindCode,
+    ExitType,
+)
 from hermadata.dependancies import get_db_session
 from hermadata.reports.report_generator import (
+    AnimalListReportRow,
     ReportAnimalEntryVariables,
     ReportAnimalListVariables,
     ReportGenerator,
 )
-from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
+from hermadata.repositories.animal.animal_repository import (
+    DocumentNotRerenderableException,
+    SQLAnimalRepository,
+)
 from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalEntriesQuery,
     AnimalExit,
     AnimalExitsQuery,
+    AnimalListReportExtraField,
     AnimalLogModel,
     AnimalSearchModel,
     CompleteEntryModel,
@@ -62,8 +73,11 @@ class AnimalService:
         animal_id: int,
         data: UpdateAnimalModel,
         user_id: int | None = None,
+        allow_chip_override: bool = False,
     ):
-        affected = self.animal_repository.update(animal_id, data, user_id)
+        affected = self.animal_repository.update(
+            animal_id, data, user_id, allow_chip_override=allow_chip_override
+        )
 
         if not affected:
             raise Exception(f"no animals affected by update, {animal_id=}")
@@ -80,6 +94,9 @@ class AnimalService:
 
     def soft_delete(self, animal_id: int):
         self.animal_repository.soft_delete_animal(animal_id)
+
+    def restore(self, animal_id: int) -> int:
+        return self.animal_repository.restore_animal(animal_id)
 
     def complete_entry(
         self,
@@ -119,6 +136,7 @@ class AnimalService:
                 document_id=document_id,
                 document_kind_code=DocKindCode.comunicazione_ingresso,
                 title="ingresso",
+                animal_entry_id=entry.id,
             ),
         )
 
@@ -127,12 +145,21 @@ class AnimalService:
     ):
         self.animal_repository.exit(animal_id, data, user_id)
 
-        if data.exit_type == ExitType.temporary_adoption:
-            self.generate_adoption_report(animal_id, temporary=True)
-        elif data.exit_type in (ExitType.adoption, ExitType.custody):
-            self.generate_adoption_report(animal_id)
+        animal_entry_id = self.animal_repository.get_current_entry_id(
+            animal_id
+        )
 
-        self.generate_variation_report(animal_id)
+        if data.exit_type == ExitType.temporary_adoption:
+            self.generate_adoption_report(
+                animal_id, animal_entry_id, temporary=True
+            )
+        elif data.exit_type in (ExitType.adoption, ExitType.custody):
+            self.generate_adoption_report(animal_id, animal_entry_id)
+
+        self.generate_variation_report(animal_id, animal_entry_id)
+
+    def delete_exit(self, animal_id: int, user_id: int | None = None):
+        self.animal_repository.delete_exit(animal_id, user_id)
 
     def days_report(self, query: AnimalDaysQuery):
         animal_days = self.animal_repository.count_animal_days(query)
@@ -147,13 +174,15 @@ class AnimalService:
         self,
         query: AnimalSearchModel,
         allowed_city_codes: list[str] | None = None,
+        extra_fields: list[AnimalListReportExtraField] | None = None,
     ):
         items = self.animal_repository.search_for_list_report(
             query, allowed_city_codes
         )
         variables = ReportAnimalListVariables(
-            items=items,
+            items=[AnimalListReportRow(**i.model_dump()) for i in items],
             total=len(items),
+            extra_fields=extra_fields or [],
         )
         pdf = self.report_generator.build_animal_list_report(variables)
         return "elenco_animali.pdf", pdf
@@ -179,10 +208,13 @@ class AnimalService:
         return filename, report
 
     def generate_adoption_report(
-        self, animal_id: int, temporary: bool = False
+        self,
+        animal_id: int,
+        animal_entry_id: int,
+        temporary: bool = False,
     ):
         variables = self.animal_repository.get_adoption_report_variables(
-            animal_id
+            animal_id, animal_entry_id
         )
 
         if temporary:
@@ -212,6 +244,7 @@ class AnimalService:
                 document_id=new_document_id,
                 document_kind_code=DocKindCode.adozione,
                 title=doc_title,
+                animal_entry_id=animal_entry_id,
             ),
         )
 
@@ -225,6 +258,10 @@ class AnimalService:
         and generate final document."""
         variables = self.animal_repository.confirm_temporary_adoption(
             animal_id, confirmation_date, user_id
+        )
+
+        animal_entry_id = self.animal_repository.get_current_entry_id(
+            animal_id
         )
 
         pdf = self.report_generator.build_adoption_report(variables)
@@ -245,10 +282,11 @@ class AnimalService:
                 document_id=new_document_id,
                 document_kind_code=DocKindCode.adozione,
                 title=f"Adozione {variables.animal.chip_code}",
+                animal_entry_id=animal_entry_id,
             ),
         )
 
-        self.generate_variation_report(animal_id)
+        self.generate_variation_report(animal_id, animal_entry_id)
 
     def undo_temporary_adoption(
         self, animal_id: int, user_id: int | None = None
@@ -256,9 +294,11 @@ class AnimalService:
         """Undo a temporary adoption: add rientro entry for the animal."""
         self.animal_repository.undo_temporary_adoption(animal_id, user_id)
 
-    def generate_variation_report(self, animal_id: int):
+    def generate_variation_report(
+        self, animal_id: int, animal_entry_id: int
+    ):
         variables = self.animal_repository.get_variation_report_variables(
-            animal_id=animal_id
+            animal_id=animal_id, animal_entry_id=animal_entry_id
         )
 
         pdf = self.report_generator.build_variation_report(variables)
@@ -279,5 +319,57 @@ class AnimalService:
                 document_id=new_document_id,
                 document_kind_code=DocKindCode.variazione,
                 title="Variazione",
+                animal_entry_id=animal_entry_id,
+            ),
+        )
+
+    def rerender_document(
+        self, animal_id: int, document_id: int, user_id: int | None = None
+    ):
+        """Regenerate an entry-tied rendered document from current data.
+
+        Soft-deletes the stale document and produces a fresh one tied to the
+        same entry. Only CI / AD / VA kinds have generators.
+        """
+        info = self.animal_repository.get_document_rerender_info(
+            animal_id, document_id
+        )
+        if info is None:
+            raise NoResultFound("document not found")
+
+        kind_code, animal_entry_id, entry_exit_type = info
+        if (
+            kind_code not in RERENDERABLE_DOC_KIND_CODES
+            or animal_entry_id is None
+        ):
+            raise DocumentNotRerenderableException(
+                f"document kind {kind_code} cannot be re-rendered"
+            )
+
+        # Soft-delete the stale document before producing the fresh one.
+        self.animal_repository.soft_delete_document(animal_id, document_id)
+
+        if kind_code == DocKindCode.comunicazione_ingresso.value:
+            self.generate_entry_report(animal_entry_id)
+        elif kind_code == DocKindCode.adozione.value:
+            self.generate_adoption_report(
+                animal_id,
+                animal_entry_id,
+                temporary=entry_exit_type
+                == ExitType.temporary_adoption.value,
+            )
+        elif kind_code == DocKindCode.variazione.value:
+            self.generate_variation_report(animal_id, animal_entry_id)
+
+        self.animal_repository.add_log(
+            animal_id,
+            NewAnimalLogModel(
+                event=AnimalEvent.document_rerendered.value,
+                data={
+                    "document_id": document_id,
+                    "document_kind_code": kind_code,
+                    "animal_entry_id": animal_entry_id,
+                },
+                user_id=user_id,
             ),
         )

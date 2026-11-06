@@ -13,11 +13,11 @@ from typing import (
 )
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
 from hermadata.constants import EntryType, ExitType, RecurrenceType
-from hermadata.database.models import Animal, AnimalEntry
+from hermadata.database.models import Animal, AnimalEntry, Comune
 from hermadata.models import PaginationQuery, Sex
 from hermadata.time_utils import get_today
 
@@ -114,6 +114,7 @@ class AnimalSearchModel(PaginationQuery):
     rescue_city_code: str | None = Field(
         pattern=rescue_city_code_PATTERN, default=None
     )
+    rescue_province: str | None = Field(default=None, pattern=r"^[A-Z]{2}$")
     entry_type: Optional[str] = None
     exit_type: Optional[str] = None
     present: bool = True
@@ -131,6 +132,11 @@ class AnimalSearchModel(PaginationQuery):
         ),
         "rescue_city_code": WhereClauseMapItem(
             lambda v: AnimalEntry.origin_city_code == v
+        ),
+        "rescue_province": WhereClauseMapItem(
+            lambda v: AnimalEntry.origin_city_code.in_(
+                select(Comune.id).where(Comune.provincia == v)
+            )
         ),
         "entry_type": WhereClauseMapItem(
             lambda v: AnimalEntry.entry_type == v
@@ -277,6 +283,7 @@ class AnimalModel(BaseModel):
     healthcare_stage: bool = False
     without_chip: bool = False
     structure_id: int | None = None
+    deleted_at: datetime | None = None
 
     model_config = ConfigDict(extra="ignore")
 
@@ -326,6 +333,7 @@ class AnimalSearchResult(BaseModel):
     healthcare_stage: bool = False
     without_chip: bool = False
     structure_id: int
+    deleted_at: datetime | None = None
 
 
 AnimalSearchResultQuery = namedtuple(
@@ -340,6 +348,13 @@ class AnimalListReportItem(BaseModel):
     chip_code: str | None = None
     origin_city: str
     sex: str | None = None
+    birth_date: date | None = None
+    sterilized: bool | None = None
+
+
+class AnimalListReportExtraField(str, Enum):
+    AGE = "age"
+    STERILIZED = "sterilized"
 
 
 AnimalListReportItemQuery = namedtuple(
@@ -351,12 +366,18 @@ class NewAnimalDocument(BaseModel):
     document_id: int
     document_kind_code: str
     title: Annotated[str, StringConstraints(max_length=100)]
+    animal_entry_id: int | None = None
 
 
 class AnimalDocumentModel(BaseModel):
     animal_id: int
     document_id: int
     document_kind_code: str
+    document_kind_name: str | None = None
+    title: str | None = None
+    animal_entry_id: int | None = None
+    dirty: bool = False
+    rerenderable: bool = False
     created_at: datetime
 
 
@@ -397,6 +418,11 @@ class AnimalStatsQuery(BaseModel):
     from_date: date
     to_date: date
     structure_ids: list[int] | None = None
+    # Filters on the origin (rescue) city of the counted entries
+    province: str | None = Field(default=None, pattern=r"^[A-Z]{2}$")
+    city_code: str | None = Field(
+        default=None, pattern=rescue_city_code_PATTERN
+    )
 
 
 class AnimalStatsResult(BaseModel):

@@ -26,6 +26,7 @@ import {
     AnimalExit,
     AnimalExitsReportSchema,
     AnimalImage,
+    AnimalListReportExtraField,
     AnimalSearchQuery,
     AnimalSearchResult,
     ExitCheckResult,
@@ -53,7 +54,13 @@ import {
 import { DocKind, NewDocKind } from "../models/docs.schema"
 import { Race, raceSchema } from "../models/race.schema"
 import { Role, roleSchema } from "../models/role.schema"
-import { Permission, permissionSchema } from "../models/permission.schema"
+import {
+    Permission,
+    permissionSchema,
+    UserPermissionDetail,
+    userPermissionDetailSchema,
+    UserPermissionOverride,
+} from "../models/permission.schema"
 import {
     AnimalEventType,
     IntUtilItem,
@@ -78,6 +85,45 @@ import { NewTherapy, Therapy, TherapyReminder } from "../models/therapy.schema"
 
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 
+const PASSWORD_KEYS = new Set([
+    "password",
+    "currentPassword",
+    "newPassword",
+    "confirmPassword",
+])
+
+function trimStrings<T>(value: T): T {
+    if (typeof value === "string") {
+        return value.trim() as unknown as T
+    }
+    if (
+        value === null ||
+        value === undefined ||
+        typeof value !== "object" ||
+        value instanceof Date ||
+        (typeof FormData !== "undefined" && value instanceof FormData) ||
+        (typeof Blob !== "undefined" && value instanceof Blob)
+    ) {
+        return value
+    }
+    if (Array.isArray(value)) {
+        return value.map((item) => trimStrings(item)) as unknown as T
+    }
+    const result: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+        result[k] = PASSWORD_KEYS.has(k) ? v : trimStrings(v)
+    }
+    return result as T
+}
+
+export type AnimalStatsParams = {
+    from_date: string
+    to_date: string
+    structure_ids?: number[]
+    province?: string
+    city_code?: string
+}
+
 class ApiService {
     inst: AxiosInstance
     baseURL: string
@@ -94,9 +140,19 @@ class ApiService {
                 for (const [key, value] of Object.entries(params)) {
                     if (value === null || value === undefined) continue
                     if (Array.isArray(value)) {
-                        value.forEach((v) => searchParams.append(key, String(v)))
+                        value.forEach((v) =>
+                            searchParams.append(
+                                key,
+                                typeof v === "string" ? v.trim() : String(v),
+                            ),
+                        )
                     } else {
-                        searchParams.append(key, String(value))
+                        searchParams.append(
+                            key,
+                            typeof value === "string"
+                                ? value.trim()
+                                : String(value),
+                        )
                     }
                 }
                 return searchParams.toString()
@@ -156,7 +212,9 @@ class ApiService {
         data: object,
         headers = {},
     ): Promise<T> {
-        const res = await this.inst.post<T>(endpoint, data, { headers })
+        const res = await this.inst.post<T>(endpoint, trimStrings(data), {
+            headers,
+        })
         return res.data
     }
 
@@ -165,7 +223,9 @@ class ApiService {
         data: object,
         headers = {},
     ): Promise<T> {
-        const res = await this.inst.put<T>(endpoint, data, { headers })
+        const res = await this.inst.put<T>(endpoint, trimStrings(data), {
+            headers,
+        })
         return res.data
     }
 
@@ -190,10 +250,10 @@ class ApiService {
         return result
     }
 
-    async getComuni(provincia: string): Promise<ComuneSchema[]> {
+    async getComuni(provincia?: string): Promise<ComuneSchema[]> {
         const data = await this.get<ComuneSchema[]>(
             ApiEndpoints.util.getComuni,
-            { provincia },
+            provincia ? { provincia } : undefined,
         )
         const result = data.map((d) => comuneSchema.parse(d))
 
@@ -245,6 +305,17 @@ class ApiService {
         return animalSchema.parse(result)
     }
 
+    async getAnimalAdopter(
+        id: string | number,
+    ): Promise<Adopter | null> {
+        const result = await this.get<Adopter | null>(
+            ApiEndpoints.animal.adopter(id),
+        )
+        if (!result) return null
+
+        return adopterSchema.parse(result)
+    }
+
     async searchAnimals(
         query: AnimalSearchQuery,
     ): Promise<PaginatedAnimalSearchResult> {
@@ -286,6 +357,10 @@ class ApiService {
 
     async deleteAnimal(id: number): Promise<void> {
         await this.delete(ApiEndpoints.animal.delete(id))
+    }
+
+    async restoreAnimal(id: number): Promise<void> {
+        await this.post<void>(ApiEndpoints.animal.restore(id), {})
     }
 
     async completeAnimalEntry(
@@ -428,6 +503,28 @@ class ApiService {
         return parsed
     }
 
+    async deleteAnimalDocument(
+        animalId: number,
+        documentId: number,
+        permanent = false,
+    ): Promise<void> {
+        await this.inst.delete(
+            ApiEndpoints.animal.deleteDocument(animalId, documentId),
+            { params: { permanent } },
+        )
+    }
+
+    async rerenderAnimalDocument(
+        animalId: number,
+        documentId: number,
+    ): Promise<AnimalDocument[]> {
+        const result = await this.post<AnimalDocument[]>(
+            ApiEndpoints.animal.rerenderDocument(animalId, documentId),
+            {},
+        )
+        return result.map((r) => animalDocumentSchema.parse(r))
+    }
+
     async openDocument(document_id: number): Promise<void> {
         const result = await this.get<{ url: string }>(
             ApiEndpoints.doc.open(document_id),
@@ -480,6 +577,15 @@ class ApiService {
         return result
     }
 
+    async updateAdopter(id: number, data: NewAdopter): Promise<Adopter> {
+        const result = await this.put<Adopter>(
+            ApiEndpoints.adopter.update(id),
+            data,
+        )
+
+        return adopterSchema.parse(result)
+    }
+
     async searchAdopter(
         query: AdopterSearch,
     ): Promise<PaginatedAdopterSearchResult> {
@@ -506,6 +612,10 @@ class ApiService {
         )
 
         return result
+    }
+
+    async deleteAnimalExit(id: number): Promise<void> {
+        await this.delete(ApiEndpoints.animal.exit(id))
     }
 
     async checkAnimalExit(id: number): Promise<ExitCheckResult> {
@@ -572,9 +682,12 @@ class ApiService {
         return { url, filename }
     }
 
-    async animalSearchReport(data: AnimalSearchQuery) {
+    async animalSearchReport(
+        data: AnimalSearchQuery,
+        extraFields: AnimalListReportExtraField[] = [],
+    ) {
         const result = await this.inst.get(ApiEndpoints.animal.searchReport, {
-            params: data,
+            params: { ...data, extra_fields: extraFields },
             responseType: "blob",
         })
         const filename = result.headers["x-filename"].toString()
@@ -698,33 +811,40 @@ class ApiService {
         )
         return result.map((permission) => permissionSchema.parse(permission))
     }
-    async getAnimalStats(params: {
-        from_date: string
-        to_date: string
-        structure_ids?: number[]
-    }): Promise<{
+
+    async getUserPermissions(userId: number): Promise<UserPermissionDetail[]> {
+        const result = await this.get<UserPermissionDetail[]>(
+            ApiEndpoints.user.userPermissions(userId),
+        )
+        return result.map((p) => userPermissionDetailSchema.parse(p))
+    }
+
+    async setUserPermissions(
+        userId: number,
+        overrides: UserPermissionOverride[],
+    ): Promise<void> {
+        await this.put(ApiEndpoints.user.userPermissions(userId), {
+            overrides,
+        })
+    }
+    async getAnimalStats(params: AnimalStatsParams): Promise<{
         total_animals: number
         present_animals: number
         adopted_animals: number
         entered_animals: number
     }> {
-        const searchParams = new URLSearchParams({
-            from_date: params.from_date,
-            to_date: params.to_date,
-        })
-        if (params.structure_ids?.length) {
-            params.structure_ids.forEach((id) =>
-                searchParams.append("structure_ids", String(id)),
-            )
-        }
-        const response = await this.inst.get(
-            `${ApiEndpoints.animal.stats}?${searchParams.toString()}`,
-        )
-        return response.data
+        return this.get(ApiEndpoints.animal.stats, params)
     }
 
-    async getRecentAnimals(limit: number = 5): Promise<AnimalSearchResult[]> {
+    async getRecentAnimals(
+        query: Omit<
+            AnimalSearchQuery,
+            "from_index" | "to_index" | "sort_field" | "sort_order"
+        >,
+        limit: number = 5,
+    ): Promise<AnimalSearchResult[]> {
         const result = await this.searchAnimals({
+            ...query,
             from_index: 0,
             to_index: limit,
             sort_field: "entry_date",
