@@ -258,6 +258,8 @@ const UserList: React.FC = () => {
                     rows={10}
                     rowsPerPageOptions={[5, 10, 25]}
                     className="p-datatable-sm"
+                    scrollable
+                    tableStyle={{ minWidth: "64rem" }}
                     emptyMessage="Nessun utente trovato"
                     sortField="created_at"
                     sortOrder={-1}
@@ -322,6 +324,7 @@ const UserList: React.FC = () => {
                     setSelectedUser(null)
                 }}
                 style={{ width: "500px" }}
+                breakpoints={{ "640px": "95vw" }}
                 modal
             >
                 {selectedUser && (

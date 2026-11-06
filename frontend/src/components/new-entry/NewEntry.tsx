@@ -34,7 +34,7 @@ const NewEntry = (props: Props) => {
                     <FontAwesomeIcon icon={faPlus} fixedWidth /> {label}
                 </Button>
                 <OverlayPanel showCloseIcon ref={op}>
-                    <div className="w-[20rem]">
+                    <div className="w-[90vw] max-w-[20rem]">
                         <NewAnimalForm
                             title={label}
                             animalId={props.animalId}

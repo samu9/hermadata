@@ -504,7 +504,8 @@ const AnimalRecord = (props: Props) => {
                             "bg-transparent border-b border-surface-200 mb-6",
                     },
                     menu: {
-                        className: "bg-transparent border-none flex flex-wrap",
+                        className:
+                            "bg-transparent border-none flex flex-nowrap overflow-x-auto",
                     },
                     menuitem: { className: "bg-transparent border-none mr-2" },
                     action: { className: "hidden" }, // Hide default action since we use template
@@ -611,6 +612,7 @@ const AnimalRecord = (props: Props) => {
                 header="Sposta in rifugio"
                 visible={moveToShelterDialogVisible}
                 style={{ width: "400px" }}
+                breakpoints={{ "640px": "95vw" }}
                 onHide={() => setMoveToShelterDialogVisible(false)}
                 footer={
                     <div className="flex justify-end gap-2">
@@ -663,6 +665,7 @@ const AnimalRecord = (props: Props) => {
                 header="Conferma adozione"
                 visible={confirmAdoptionDialogVisible}
                 style={{ width: "400px" }}
+                breakpoints={{ "640px": "95vw" }}
                 onHide={() => setConfirmAdoptionDialogVisible(false)}
                 footer={
                     <div className="flex justify-end gap-2">

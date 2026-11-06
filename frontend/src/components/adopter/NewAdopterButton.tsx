@@ -26,7 +26,7 @@ const NewAdopterButton = (props: Props) => {
 
     return (
         <div>
-            <div className="fixed bottom-8 right-8 z-50">
+            <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50">
                 <Button
                     className="shadow-xl !bg-primary-600 !border-primary-600 hover:!bg-primary-700 !rounded-full px-6 py-3 gap-2 font-semibold tracking-wide transition-all hover:scale-105"
                     onClick={(e) => op.current && op.current.toggle(e)}
@@ -35,7 +35,7 @@ const NewAdopterButton = (props: Props) => {
                     Nuovo adottante
                 </Button>
                 <OverlayPanel showCloseIcon ref={op}>
-                    <div className="">
+                    <div className="w-[90vw] sm:w-auto">
                         <NewAdopterForm onSaved={(a) => onNew(a)} />
                     </div>
                 </OverlayPanel>

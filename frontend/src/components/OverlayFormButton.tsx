@@ -3,6 +3,11 @@ import { Button } from "primereact/button"
 import { OverlayPanel } from "primereact/overlaypanel"
 import { useRef } from "react"
 import { SeverityType } from "../constants"
+import { useIsMobile } from "../hooks/useMediaQuery"
+
+// Mobile: icon-only circle; the label moves to aria-label.
+const MOBILE_ICON_BUTTON =
+    "!rounded-full !w-11 !h-11 !p-0 justify-center shrink-0"
 
 interface OverlayFormButtonProps<T> {
     buttonText: string
@@ -27,6 +32,7 @@ const OverlayFormButton = <T,>({
     onSuccessAction,
 }: OverlayFormButtonProps<T>) => {
     const op = useRef<OverlayPanel>(null)
+    const isMobile = useIsMobile()
 
     const handleSuccess = (data: T) => {
         onSuccessAction(data)
@@ -34,14 +40,16 @@ const OverlayFormButton = <T,>({
     }
 
     return (
-        <div className="bottom-4 right-4">
+        <div>
             <Button
-                className={className}
+                className={isMobile ? MOBILE_ICON_BUTTON : className}
+                aria-label={buttonText}
                 severity={severity}
                 outlined={outlined}
                 onClick={(e) => op.current && op.current.toggle(e)}
             >
-                <FontAwesomeIcon icon={buttonIcon} fixedWidth /> {buttonText}
+                <FontAwesomeIcon icon={buttonIcon} fixedWidth />
+                {!isMobile && <span>{buttonText}</span>}
             </Button>
             <OverlayPanel
                 showCloseIcon
@@ -55,7 +63,7 @@ const OverlayFormButton = <T,>({
                     },
                 }}
             >
-                <div className="w-[25rem] p-6 bg-white rounded-xl">
+                <div className="w-[90vw] max-w-[25rem] p-6 bg-white rounded-xl">
                     <FormComponent onSuccess={handleSuccess} {...formProps} />
                 </div>
             </OverlayPanel>

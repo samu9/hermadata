@@ -120,6 +120,8 @@ const AdopterList = () => {
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
                 <DataTable
                     className="w-full"
+                    scrollable
+                    tableStyle={{ minWidth: "48rem" }}
                     filters={lazyState.filters}
                     value={adopterQuery.data?.items}
                     selectionMode="single"
