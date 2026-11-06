@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react"
 
+const hasMatchMedia = () =>
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+
 /**
  * SSR-safe media query hook. Returns whether the given query currently matches
  * and updates on viewport changes.
  */
 export const useMediaQuery = (query: string): boolean => {
     const getMatch = () =>
-        typeof window !== "undefined" && "matchMedia" in window
-            ? window.matchMedia(query).matches
-            : false
+        hasMatchMedia() ? window.matchMedia(query).matches : false
 
     const [matches, setMatches] = useState(getMatch)
 
     useEffect(() => {
-        if (typeof window === "undefined" || !("matchMedia" in window)) return
+        if (!hasMatchMedia()) return
 
         const mql = window.matchMedia(query)
         const handler = (e: MediaQueryListEvent) => setMatches(e.matches)
