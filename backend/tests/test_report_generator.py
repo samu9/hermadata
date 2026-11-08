@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
 from io import BytesIO
 
+import pytest
 from openpyxl import load_workbook
 
 from hermadata.constants import EntryType, ExitType, IDDocumentType
@@ -142,7 +143,16 @@ def test_animal_entries_report(empty_db, report_generator: ReportGenerator):
     assert rows[1][4].value == "M"
 
 
-def test_variation_report(jinja_env, report_generator: ReportGenerator):
+@pytest.mark.parametrize(
+    ("document_type", "document_label"),
+    [
+        (IDDocumentType.identity_card, "Carta di identità"),
+        (IDDocumentType.passport, "Passaporto"),
+    ],
+)
+def test_variation_report(
+    jinja_env, report_generator: ReportGenerator, document_type, document_label
+):
     variables = ReportVariationVariables(
         animal=AnimalVariables(
             name="Gino",
@@ -165,7 +175,7 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
             residence_city="Montecatini Terme",
             birth_city="Roma",
             birth_date=date(1979, 2, 3),
-            document_type=IDDocumentType.identity_card,
+            document_type=document_type,
             document_number="AA12345BB",
         ),
         variation_type=ExitType.custody,
@@ -181,7 +191,7 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
     html = template.render(**return_variables.model_dump())
     assert "stato restituito al Sig." in html
     assert "stato restituito dal Sig." not in html
-    assert "Documento (Carta di identità) n. AA12345BB" in html
+    assert f"Documento ({document_label}) n. AA12345BB" in html
     assert "proprietario del cane" in html
     assert "il suddetto cane è" in html
     assert "iscritto all'Anagrafe Animali d'Affezione" in html
@@ -208,7 +218,13 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
     assert "il suddetto animale è" in html
 
 
-def test_adoption_report(jinja_env, report_generator: ReportGenerator):
+@pytest.mark.parametrize(
+    ("document_type", "document_label"),
+    [("dl", "Patente di guida"), ("pa", "Passaporto")],
+)
+def test_adoption_report(
+    jinja_env, report_generator: ReportGenerator, document_type, document_label
+):
     variables = ReportAdoptionVariables(
         animal=AnimalVariables(
             name="Gino",
@@ -231,7 +247,7 @@ def test_adoption_report(jinja_env, report_generator: ReportGenerator):
             birth_date=date(1979, 2, 3),
             residence_address="Via test",
             phone="123456789",
-            document_type="dl",
+            document_type=document_type,
             document_number="PT9876543",
         ),
         exit_date=datetime.now().date(),
@@ -247,7 +263,7 @@ def test_adoption_report(jinja_env, report_generator: ReportGenerator):
 
     template = jinja_env.get_template("adoption.jinja")
     html = template.render(**variables.model_dump())
-    assert "Documento (Patente di guida) n. PT9876543" in html
+    assert f"Documento ({document_label}) n. PT9876543" in html
 
     no_type_adopter = variables.adopter.model_copy(
         update={"document_type": ""}
