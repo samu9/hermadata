@@ -323,6 +323,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Adoption.animal_id == animal_id,
                 Adoption.animal_entry_id == last_entry_id,
                 Adoption.returned_at.is_(None),
+                Adoption.deleted_at.is_(None),
             )
             .values(returned_at=get_today())
         )
@@ -1997,7 +1998,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             .select_from(AnimalEntry)
             .join(
                 Adoption,
-                Adoption.animal_entry_id == AnimalEntry.id,
+                and_(
+                    Adoption.animal_entry_id == AnimalEntry.id,
+                    Adoption.deleted_at.is_(None),
+                ),
             )
             .join(Comune, Adoption.location_city_code == Comune.id)
             .where(
@@ -2057,7 +2061,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             .select_from(AnimalEntry)
             .join(
                 Adoption,
-                Adoption.animal_entry_id == AnimalEntry.id,
+                and_(
+                    Adoption.animal_entry_id == AnimalEntry.id,
+                    Adoption.deleted_at.is_(None),
+                ),
                 isouter=True,
             )
             .join(
@@ -2139,6 +2146,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Adoption.animal_id == animal_id,
                 Adoption.animal_entry_id == current_entry.id,
                 Adoption.returned_at.is_(None),
+                Adoption.deleted_at.is_(None),
             )
             .values(
                 completed_at=datetime.combine(
