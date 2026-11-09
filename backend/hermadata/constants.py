@@ -148,11 +148,13 @@ ENTRY_RESULT_LABELS = {
 class IDDocumentType(Enum):
     identity_card = "id"
     driving_licence = "dl"
+    passport = "pa"
 
 
 ID_DOCUMENT_TYPE_LABELS = {
     IDDocumentType.identity_card: "Carta di identità",
     IDDocumentType.driving_licence: "Patente di guida",
+    IDDocumentType.passport: "Passaporto",
 }
 
 

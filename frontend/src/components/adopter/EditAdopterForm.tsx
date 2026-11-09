@@ -103,6 +103,7 @@ const EditAdopterForm = ({ adopter }: Props) => {
                                 options={[
                                     { name: "Carta di identità", id: "id" },
                                     { name: "Patente di guida", id: "dl" },
+                                    { name: "Passaporto", id: "pa" },
                                 ]}
                                 fieldName="document_type"
                                 className="w-64"
