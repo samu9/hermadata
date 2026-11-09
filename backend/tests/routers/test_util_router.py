@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -73,6 +74,22 @@ def test_get_exit_types(app: TestClient):
     assert len(data) > 0
     assert "id" in data[0]
     assert "label" in data[0]
+
+    by_id = {e["id"]: e for e in data}
+    assert by_id["L"]["race_ids"] == ["G"]
+    assert by_id["A"]["race_ids"] is None
+
+
+@pytest.mark.parametrize("race_id,has_release", [("G", True), ("C", False)])
+def test_get_exit_types_by_race(
+    app: TestClient, race_id: str, has_release: bool
+):
+    result = app.get("/util/exit-types", params={"race_id": race_id})
+
+    assert result.status_code == 200
+    ids = {e["id"] for e in result.json()}
+    assert "A" in ids
+    assert ("L" in ids) is has_release
 
 
 def test_get_animal_sizes(app: TestClient):

@@ -17,6 +17,7 @@ from hermadata.models import UtilElement
 from hermadata.repositories.animal.animal_repository import (
     AnimalModel,
     AnimalSearchModel,
+    ExitTypeNotAllowedForRaceException,
     NoRequiredExitDataException,
     SQLAnimalRepository,
 )
@@ -29,6 +30,7 @@ from hermadata.repositories.animal.models import (
     MedicalActivityModel,
     NewAnimalModel,
     NewEntryModel,
+    UpdateAnimalEntryModel,
     UpdateAnimalModel,
 )
 from hermadata.repositories.breed_repository import (
@@ -1195,3 +1197,91 @@ def test_search_rescue_province(
 
     assert result.total == 2
     assert {i.rescue_city_code for i in result.items} == {"A074", "A117"}
+
+
+def _make_completed_animal(
+    animal_repository: SQLAnimalRepository,
+    db_session: Session,
+    complete_animal_data,
+    race_id: str,
+) -> int:
+    code = animal_repository.new_animal(
+        NewAnimalModel(
+            race_id=race_id,
+            rescue_city_code="H501",
+            entry_type=EntryType.rescue,
+            structure_id=1,
+        )
+    )
+    animal_id = get_animal_id_by_code(db_session, code)
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
+    complete_animal_data(animal_id)
+    return animal_id
+
+
+def test_exit_territory_release_allowed_for_cat(
+    animal_repository: SQLAnimalRepository,
+    db_session: Session,
+    complete_animal_data,
+):
+    animal_id = _make_completed_animal(
+        animal_repository, db_session, complete_animal_data, "G"
+    )
+
+    animal_repository.exit(
+        animal_id,
+        AnimalExit(
+            exit_date=date(2024, 1, 2),
+            exit_type=ExitType.territory_release,
+        ),
+    )
+
+    entry = db_session.execute(
+        select(AnimalEntry).where(
+            AnimalEntry.animal_id == animal_id,
+            AnimalEntry.current.is_(True),
+        )
+    ).scalar_one()
+    assert entry.exit_type == ExitType.territory_release
+
+
+def test_exit_territory_release_rejected_for_dog(
+    animal_repository: SQLAnimalRepository,
+    db_session: Session,
+    complete_animal_data,
+):
+    animal_id = _make_completed_animal(
+        animal_repository, db_session, complete_animal_data, "C"
+    )
+
+    with pytest.raises(ExitTypeNotAllowedForRaceException):
+        animal_repository.exit(
+            animal_id,
+            AnimalExit(
+                exit_date=date(2024, 1, 2),
+                exit_type=ExitType.territory_release,
+            ),
+        )
+
+
+def test_update_entry_territory_release_rejected_for_dog(
+    animal_repository: SQLAnimalRepository,
+    db_session: Session,
+    complete_animal_data,
+):
+    animal_id = _make_completed_animal(
+        animal_repository, db_session, complete_animal_data, "C"
+    )
+    animal_repository.exit(
+        animal_id,
+        AnimalExit(exit_date=date(2024, 1, 2), exit_type=ExitType.death),
+    )
+    entry_id = animal_repository.get_current_entry_id(animal_id)
+
+    with pytest.raises(ExitTypeNotAllowedForRaceException):
+        animal_repository.update_animal_entry(
+            entry_id,
+            UpdateAnimalEntryModel(exit_type=ExitType.territory_release),
+        )

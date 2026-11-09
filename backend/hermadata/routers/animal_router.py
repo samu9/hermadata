@@ -19,6 +19,7 @@ from hermadata.constants import (
     Permission,
     StorageType,
 )
+from hermadata.errors import APIException
 from hermadata.initializations import (
     get_animal_repository,
     get_animal_service,
@@ -616,6 +617,8 @@ def update_animal_entry(
             "message": "Entry updated successfully",
             "updated_rows": updated_rows,
         }
+    except APIException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
