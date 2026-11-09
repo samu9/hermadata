@@ -104,6 +104,8 @@ const AnimalOverview = () => {
     }
 
     const animal = animalQuery.data
+    // without_chip describes the intake: a chip assigned later wins over it
+    const isWithoutChip = animal.without_chip && !animal.chip_code
 
     const basicInfoItems = [
         {
@@ -125,7 +127,7 @@ const AnimalOverview = () => {
         },
         {
             label: "Chip",
-            value: animal.without_chip ? (
+            value: isWithoutChip ? (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
                     Senza chip
                 </span>
@@ -136,7 +138,7 @@ const AnimalOverview = () => {
                 <FontAwesomeIcon
                     icon={faIdCard}
                     className={
-                        animal.without_chip
+                        isWithoutChip
                             ? "text-red-400 w-4"
                             : "text-purple-500 w-4"
                     }
