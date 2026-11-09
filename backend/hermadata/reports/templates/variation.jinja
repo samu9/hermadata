@@ -34,6 +34,8 @@
                 {{ adopter.surname }} {{ adopter.name }} nato il
                 {{ adopter.birth_date }} a {{ adopter.birth_city }}, residente
                 in {{ adopter.residence_city }} C.F. {{adopter.fiscal_code}} Documento{% if adopter.document_type %} ({{ adopter.document_type }}){% endif %} n. {{adopter.document_number}} tel. {{ adopter.phone }}
+                {%elif variation_type.value == 'L'%} stato reimmesso sul
+                territorio
                 {%endif%} il
                 {{ variation_date }}.
             </li>

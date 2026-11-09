@@ -90,6 +90,7 @@ const EXIT_TYPE_BADGE: Record<string, string> = {
     R: "bg-orange-100 text-orange-800",
     I: "bg-yellow-100 text-yellow-800",
     C: "bg-blue-100 text-blue-800",
+    L: "bg-lime-100 text-lime-800",
 }
 
 type SwitchFilterProps = {

@@ -13,7 +13,12 @@ import ControlledDropdown from "../forms/ControlledDropdown"
 import ControlledTextarea from "../forms/ControlledTextarea"
 import ControlledCheckbox from "../forms/ControlledCheckbox"
 import { useLoader } from "../../contexts/Loader"
-import { useEntryTypesQuery, useExitTypesQuery } from "../../queries"
+import {
+    useAnimalQuery,
+    useEntryTypesQuery,
+    useExitTypesQuery,
+} from "../../queries"
+import { filterExitTypesByRace } from "../../utils/exitTypes"
 import { useEffect } from "react"
 
 type Props = {
@@ -45,6 +50,12 @@ const UpdateAnimalEntryForm = (props: Props) => {
     // Query data for dropdowns
     const entryTypesQuery = useEntryTypesQuery()
     const exitTypesQuery = useExitTypesQuery()
+    const animalQuery = useAnimalQuery(animalId)
+    const exitTypeOptions = filterExitTypesByRace(
+        exitTypesQuery.data,
+        animalQuery.data?.race_id,
+        entry.exit_type,
+    )
 
     const updateEntryMutation = useMutation({
         mutationFn: (data: UpdateAnimalEntry) =>
@@ -180,7 +191,7 @@ const UpdateAnimalEntryForm = (props: Props) => {
                                 label="Tipo uscita"
                                 optionValue="id"
                                 optionLabel="label"
-                                options={exitTypesQuery.data || []}
+                                options={exitTypeOptions}
                                 className="w-full"
                             />
 

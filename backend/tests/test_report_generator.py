@@ -208,6 +208,14 @@ def test_variation_report(
     assert "il suddetto gatto è" in html
     assert "cane" not in html
 
+    release_variables = cat_variables.model_copy(
+        update={"variation_type": ExitType.territory_release, "adopter": None}
+    )
+    html = template.render(**release_variables.model_dump())
+    assert "il suddetto gatto è stato reimmesso sul territorio il" in " ".join(
+        html.split()
+    )
+
     no_race_variables = return_variables.model_copy(
         update={
             "animal": return_variables.animal.model_copy(update={"race": ""})

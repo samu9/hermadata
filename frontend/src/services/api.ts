@@ -82,6 +82,7 @@ import {
 import { PaginationQuery } from "../models/pagination.schema"
 import { Structure } from "../models/structure.schema"
 import { NewTherapy, Therapy, TherapyReminder } from "../models/therapy.schema"
+import { ExitTypeOption } from "../utils/exitTypes"
 
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 
@@ -286,8 +287,8 @@ class ApiService {
         return data
     }
 
-    async getExitTypes(): Promise<{ id: string; label: string }[]> {
-        const data = await this.get<{ id: string; label: string }[]>(
+    async getExitTypes(): Promise<ExitTypeOption[]> {
+        const data = await this.get<ExitTypeOption[]>(
             ApiEndpoints.util.getExitTypes,
         )
 

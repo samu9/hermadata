@@ -25,6 +25,7 @@ from hermadata.constants import (
     AnimalEvent,
     EntryType,
     ExitType,
+    is_exit_type_allowed_for_race,
 )
 from hermadata.database.models import (
     Adopter,
@@ -142,6 +143,10 @@ class AnimalNotPresentException(APIException):
 
 
 class NoRequiredExitDataException(APIException):
+    pass
+
+
+class ExitTypeNotAllowedForRaceException(APIException):
     pass
 
 
@@ -860,6 +865,17 @@ class SQLAnimalRepository(SQLBaseRepository):
         if not values:
             return 0
 
+        if updates.exit_type is not None:
+            race_id = self.session.execute(
+                select(Animal.race_id)
+                .join(AnimalEntry, AnimalEntry.animal_id == Animal.id)
+                .where(AnimalEntry.id == entry_id)
+            ).scalar_one_or_none()
+            if race_id is not None and not is_exit_type_allowed_for_race(
+                updates.exit_type, race_id
+            ):
+                raise ExitTypeNotAllowedForRaceException
+
         result = self.session.execute(
             update(AnimalEntry)
             .where(AnimalEntry.id == entry_id)
@@ -1320,6 +1336,9 @@ class SQLAnimalRepository(SQLBaseRepository):
 
         if data.exit_date < entry_date:
             raise ExitNotValidException()
+
+        if not is_exit_type_allowed_for_race(data.exit_type, race_code):
+            raise ExitTypeNotAllowedForRaceException
 
         if data.exit_type in ADOPTER_EXIT_TYPES:
             adoption_data = NewAdoption(

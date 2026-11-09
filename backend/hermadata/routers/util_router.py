@@ -9,6 +9,7 @@ from hermadata.constants import (
     ANIMAL_STAGE_LABELS,
     ENTRY_TYPE_LABELS,
     EXIT_TYPE_LABELS,
+    EXIT_TYPE_RACES,
     FUR_LABELS,
     HEALTHCARE_STAGE_ENTRY_TYPES,
     SIZE_LABELS,
@@ -21,6 +22,7 @@ from hermadata.initializations import (
 from hermadata.models import (
     AnimalEventTypeModel,
     EntryTypeElement,
+    ExitTypeElement,
     UtilElement,
 )
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
@@ -81,11 +83,20 @@ def get_entry_types():
     return result
 
 
-@router.get("/exit-types", response_model=list[UtilElement])
-def get_exit_types():
-    result = [
-        UtilElement(id=k.value, label=v) for k, v in EXIT_TYPE_LABELS.items()
-    ]
+@router.get("/exit-types", response_model=list[ExitTypeElement])
+def get_exit_types(race_id: str | None = None):
+    result = []
+    for k, v in EXIT_TYPE_LABELS.items():
+        races = EXIT_TYPE_RACES.get(k)
+        if race_id and races is not None and race_id not in races:
+            continue
+        result.append(
+            ExitTypeElement(
+                id=k.value,
+                label=v,
+                race_ids=sorted(races) if races is not None else None,
+            )
+        )
     return result
 
 

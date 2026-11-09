@@ -67,6 +67,7 @@ class ExitType(str, Enum):
     return_ = "R"
     disappeared = "I"
     custody = "C"
+    territory_release = "L"
 
 
 EXIT_TYPE_LABELS = {
@@ -75,7 +76,19 @@ EXIT_TYPE_LABELS = {
     ExitType.death: "Morte",
     ExitType.return_: "Restituzione",
     ExitType.disappeared: "Scomparsa",
+    ExitType.territory_release: "Reimmesso sul territorio",
 }
+
+# Exit types restricted to specific animal races (race ids, see races.csv:
+# C=dog, G=cat). Exit types not listed here are allowed for every race.
+EXIT_TYPE_RACES: dict[ExitType, frozenset[str]] = {
+    ExitType.territory_release: frozenset({"G"}),
+}
+
+
+def is_exit_type_allowed_for_race(exit_type: ExitType, race_id: str) -> bool:
+    races = EXIT_TYPE_RACES.get(ExitType(exit_type))
+    return races is None or race_id in races
 
 
 class AnimalStage(Enum):
