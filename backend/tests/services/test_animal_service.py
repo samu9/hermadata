@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Callable
 
+import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -424,3 +425,55 @@ def test_rerender_document_not_found_raises(
     animal_id = make_animal()
     with pytest.raises(NoResultFound):
         animal_service.rerender_document(animal_id, 999999)
+
+
+@pytest.mark.parametrize(
+    "exit_type",
+    [ExitType.return_, ExitType.adoption, ExitType.temporary_adoption],
+)
+def test_exit_again_after_deleted_exit_with_adopter(
+    make_animal,
+    make_adopter,
+    animal_service: AnimalService,
+    complete_animal_data,
+    exit_type: ExitType,
+):
+    """Re-exiting after a deleted exit must ignore the voided adoption.
+
+    Deleting an exit soft-deletes the adoption tied to the entry; a new
+    exit with an adopter adds a second adoption on the same entry, and the
+    report queries must not pick up the voided one.
+    """
+    animal_id = make_animal()
+    animal_service.complete_entry(
+        animal_id,
+        data=CompleteEntryModel(
+            entry_date=datetime.now().date() - timedelta(days=10)
+        ),
+    )
+    complete_animal_data(animal_id)
+    adopter_id = make_adopter()
+
+    def do_exit(address: str):
+        animal_service.exit(
+            animal_id,
+            data=AnimalExit(
+                exit_date=datetime.now().date(),
+                exit_type=exit_type,
+                adopter_id=adopter_id,
+                location_address=address,
+                location_city_code="H501",
+            ),
+        )
+
+    do_exit("Via vecchia")
+    animal_service.delete_exit(animal_id)
+    do_exit("Via nuova")
+
+    repo = animal_service.animal_repository
+    entry_id = repo.get_current_entry_id(animal_id)
+    variation = repo.get_variation_report_variables(animal_id, entry_id)
+    assert variation.location_address == "VIA NUOVA"
+    if exit_type != ExitType.return_:
+        adoption = repo.get_adoption_report_variables(animal_id, entry_id)
+        assert adoption.location_address == "VIA NUOVA"
