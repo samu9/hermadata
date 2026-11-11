@@ -477,7 +477,7 @@ const AnimalList = () => {
                     <div
                         role="group"
                         aria-label="Stampa"
-                        className="ml-auto inline-flex items-stretch"
+                        className="w-full sm:w-auto sm:ml-auto inline-flex items-stretch"
                     >
                         <Button
                             icon={
@@ -487,7 +487,7 @@ const AnimalList = () => {
                                 />
                             }
                             label="Stampa"
-                            className="!bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg !rounded-r-none"
+                            className="flex-1 sm:flex-none justify-center !bg-primary-600 !border-primary-600 hover:!bg-primary-700 !text-white !text-sm !px-4 !py-2 !rounded-lg !rounded-r-none"
                             onClick={() => {
                                 // Deleted animals are never part of the report
                                 const {
@@ -550,6 +550,8 @@ const AnimalList = () => {
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
                 <DataTable
                     className="w-full"
+                    scrollable
+                    tableStyle={{ minWidth: "60rem" }}
                     filters={lazyState.filters}
                     value={animalQuery.data?.items}
                     selectionMode="single"

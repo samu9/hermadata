@@ -74,6 +74,8 @@ const VetList = () => {
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
                 <DataTable
                     className="w-full"
+                    scrollable
+                    tableStyle={{ minWidth: "40rem" }}
                     filters={lazyState.filters}
                     value={vetQuery.data?.items}
                     selectionMode="single"

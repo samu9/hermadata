@@ -57,7 +57,7 @@ const ControlledFurColorsDropdown = (props: Props) => {
                         </Button>
                     </div>
                     <OverlayPanel showCloseIcon ref={op}>
-                        <div className="w-[20rem]">
+                        <div className="w-[90vw] max-w-[20rem]">
                             <AddFurColorForm
                                 onSuccess={(furColor: IntUtilItem) => {
                                     setValue("color", furColor.id)

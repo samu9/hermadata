@@ -225,6 +225,8 @@ const AnimalDocs = () => {
         <div>
             <DataTable
                 emptyMessage="Nessun documento trovato"
+                scrollable
+                tableStyle={{ minWidth: "22rem" }}
                 onRowClick={(e) =>
                     apiService.openDocument((e.data as DocRow).documentId)
                 }
