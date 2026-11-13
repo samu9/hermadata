@@ -211,7 +211,7 @@ def serve_animal_list_report(
 
 @router.get("/days/report")
 def serve_animal_days_report(
-    query: Annotated[AnimalDaysQuery, Depends()],
+    query: Annotated[AnimalDaysQuery, Query()],
     service: Annotated[AnimalService, Depends(get_animal_service)],
     current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
@@ -234,7 +234,7 @@ def serve_animal_days_report(
 
 @router.get("/entries/report")
 def serve_animal_entries_report(
-    query: Annotated[AnimalEntriesQuery, Depends()],
+    query: Annotated[AnimalEntriesQuery, Query()],
     service: Annotated[AnimalService, Depends(get_animal_service)],
 ):
     filename, report = service.entries_report(query)
@@ -248,7 +248,7 @@ def serve_animal_entries_report(
 
 @router.get("/exits/report")
 def serve_animal_exits_report(
-    query: Annotated[AnimalExitsQuery, Depends()],
+    query: Annotated[AnimalExitsQuery, Query()],
     service: Annotated[AnimalService, Depends(get_animal_service)],
 ):
     filename, report = service.exits_report(query)

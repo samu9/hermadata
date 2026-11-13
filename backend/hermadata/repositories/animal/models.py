@@ -397,6 +397,7 @@ class ExitCheckResult(BaseModel):
 
 
 class ExtractionQuery(BaseModel):
+    race_ids: list[Annotated[str, Field(min_length=1)]] = Field(min_length=1)
     from_date: date
     to_date: date
     city_code: str

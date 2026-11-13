@@ -79,6 +79,7 @@ def test_animal_days_report(report_generator: ReportGenerator, test_settings):
         total_days=5,
     )
     query = AnimalDaysQuery(
+        race_ids=["C", "G"],
         from_date=date(2023, 1, 1),
         to_date=date(2023, 2, 1),
         city_code="H501",
@@ -102,6 +103,7 @@ def test_animal_days_report(report_generator: ReportGenerator, test_settings):
 
 def test_animal_entries_report(empty_db, report_generator: ReportGenerator):
     query = AnimalEntriesQuery(
+        race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         to_date=date(2024, 12, 31),
         entry_type=EntryType.rescue,

@@ -329,6 +329,7 @@ def test_count_days(
 
     result = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2020, 1, 1),
             to_date=date(2020, 1, 31),
             city_code="H501",
@@ -337,8 +338,19 @@ def test_count_days(
 
     assert result.total_days == 25
 
+    cats_only = animal_repository.count_animal_days(
+        AnimalDaysQuery(
+            race_ids=["G"],
+            from_date=date(2020, 1, 1),
+            to_date=date(2020, 1, 31),
+            city_code="H501",
+        )
+    )
+    assert cats_only.total_days == 0
+
     result = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2020, 1, 11),
             to_date=date(2020, 1, 31),
             city_code="H501",
@@ -349,6 +361,7 @@ def test_count_days(
 
     result = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2020, 2, 1),
             to_date=date(2020, 2, 28),
             city_code="H501",
@@ -381,6 +394,7 @@ def test_count_days(
 
     result = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2020, 1, 1),
             to_date=date(2020, 1, 31),
             city_code="H501",
@@ -393,6 +407,7 @@ def test_count_days(
 
     result = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2020, 1, 10),
             to_date=date(2020, 1, 20),
             city_code="H501",
@@ -420,6 +435,7 @@ def test_count_days_same_day(
 
     days = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2024, 3, 1),
             to_date=date(2024, 4, 2),
             city_code="H501",
@@ -462,6 +478,7 @@ def test_count_exits(
     )
 
     query = AnimalExitsQuery(
+        race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         to_date=date(2024, 2, 1),
         exit_type=ExitType.death,
@@ -474,7 +491,11 @@ def test_count_exits(
     assert result.items[0].exit_date == date(2024, 1, 3)
     assert result.items[0].exit_type == ExitType.death
 
+    cats_only = query.model_copy(update={"race_ids": ["G"]})
+    assert animal_repository.count_animal_exits(cats_only).total == 0
+
     query = AnimalExitsQuery(
+        race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         to_date=date(2024, 4, 1),
         exit_type=ExitType.death,
@@ -821,6 +842,7 @@ def test_count_animal_entries(
     )
 
     query = AnimalEntriesQuery(
+        race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         to_date=date(2024, 12, 31),
         entry_type=EntryType.rescue,
@@ -830,6 +852,9 @@ def test_count_animal_entries(
     result = animal_repository.count_animal_entries(query)
 
     assert result.total >= 1
+
+    cats_only = query.model_copy(update={"race_ids": ["G"]})
+    assert animal_repository.count_animal_entries(cats_only).total == 0
 
 
 def test_temporary_adoption_exit(

@@ -10,7 +10,7 @@ license = { file = "LICENSE" }
 classifiers = ["License :: OSI Approved :: MIT License"]
 dynamic = ["version", "description"]
 dependencies = [
-    "fastapi >= 0.104, < 1",
+    "fastapi >= 0.115, < 1",
     "sqlalchemy >= 2, < 3",
     "pymysql >= 1.1, < 2",
     "alembic >= 1.12, < 2",

@@ -13,12 +13,14 @@ import {
 import { useEntryTypesQuery } from "../queries"
 import ControlledCityPicker from "./forms/city/ControlledCityPicker"
 import ControlledInputDate from "./forms/ControlledInputDate"
+import ControlledRaceMultiSelect from "./forms/ControlledRaceMultiSelect"
 import { SubTitle } from "./typography"
 
 const AnimalEntriesForm = () => {
     const entryTypesQuery = useEntryTypesQuery()
 
     const form = useForm<AnimalEntriesReportSchema>({
+        defaultValues: { race_ids: [] },
         resolver: zodResolver(animalEntriesReportSchema),
     })
 
@@ -61,6 +63,7 @@ const AnimalEntriesForm = () => {
                             fieldName="to_date"
                             label="Data fine"
                         />
+                        <ControlledRaceMultiSelect />
                         <ControlledCityPicker
                             fieldName="city_code"
                             className="w-full"

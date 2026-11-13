@@ -1599,6 +1599,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 ),
                 AnimalEntry.origin_city_code == query.city_code,
                 Animal.deleted_at.is_(None),
+                Animal.race_id.in_(query.race_ids),
             )
             .join(Animal, Animal.id == AnimalEntry.animal_id)
         ).all()
@@ -1661,6 +1662,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.entry_date <= query.to_date,
                 AnimalEntry.entry_date >= query.from_date,
                 Animal.deleted_at.is_(None),
+                Animal.race_id.in_(query.race_ids),
             )
             .join(Animal, Animal.id == AnimalEntry.animal_id)
             .join(Race, Race.id == Animal.race_id)
@@ -1721,6 +1723,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.exit_date <= query.to_date,
                 AnimalEntry.exit_date >= query.from_date,
                 Animal.deleted_at.is_(None),
+                Animal.race_id.in_(query.race_ids),
             )
             .join(Animal, Animal.id == AnimalEntry.animal_id)
             .join(Race, Race.id == Animal.race_id)

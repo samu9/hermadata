@@ -13,6 +13,7 @@ import {
 } from "../models/animal.schema"
 import ControlledCityPicker from "./forms/city/ControlledCityPicker"
 import ControlledInputDate from "./forms/ControlledInputDate"
+import ControlledRaceMultiSelect from "./forms/ControlledRaceMultiSelect"
 import { SubTitle } from "./typography"
 
 const AnimalDaysForm = () => {
@@ -20,6 +21,7 @@ const AnimalDaysForm = () => {
     const restrictedCities = user?.city_codes?.length ? user.city_codes : null
 
     const form = useForm<AnimalDaysRequestSchema>({
+        defaultValues: { race_ids: [] },
         resolver: zodResolver(animalDaysRequestSchema),
     })
 
@@ -68,6 +70,7 @@ const AnimalDaysForm = () => {
                             fieldName="to_date"
                             label="Data fine"
                         />
+                        <ControlledRaceMultiSelect />
                         <ControlledCityPicker
                             fieldName="city_code"
                             allowedCodes={restrictedCities}

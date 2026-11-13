@@ -176,6 +176,7 @@ def test_days_report(
     from hermadata.repositories.animal.models import AnimalDaysQuery
 
     query = AnimalDaysQuery(
+        race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         to_date=date(2024, 12, 31),
         city_code="H501",
@@ -196,6 +197,7 @@ def test_entries_report(
     from hermadata.repositories.animal.models import AnimalEntriesQuery
 
     query = AnimalEntriesQuery(
+        race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         to_date=date(2024, 12, 31),
         entry_type=EntryType.rescue,
@@ -217,6 +219,7 @@ def test_exits_report(
     from hermadata.repositories.animal.models import AnimalExitsQuery
 
     query = AnimalExitsQuery(
+        race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         to_date=date(2024, 12, 31),
         exit_type=ExitType.adoption,
