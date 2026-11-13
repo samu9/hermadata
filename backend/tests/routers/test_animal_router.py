@@ -688,6 +688,25 @@ def test_new_animal_document(
     assert document_kind.code == DocKindCode.documento_identita.value
 
 
+@pytest.mark.parametrize("report", ["days", "entries", "exits"])
+@pytest.mark.parametrize("race_ids", [[], [""]])
+def test_animal_reports_require_race_ids(app: TestClient, report, race_ids):
+    response = app.get(
+        f"/animal/{report}/report",
+        params={
+            "from_date": "2024-01-01",
+            "to_date": "2024-12-31",
+            "city_code": "H501",
+            "race_ids": race_ids,
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["query", "race_ids"] + (
+        [0] if race_ids else []
+    )
+
+
 def test_get_animal_days_report(
     app: TestClient,
     empty_db,
@@ -696,6 +715,7 @@ def test_get_animal_days_report(
     result = app.get(
         "/animal/days/report",
         params={
+            "race_ids": ["C", "G"],
             "from_date": "2024-01-01",
             "to_date": "2024-12-31",
             "city_code": "H501",
@@ -709,6 +729,7 @@ def test_get_animal_entries_report(app: TestClient, empty_db):
     result = app.get(
         "/animal/entries/report",
         params={
+            "race_ids": ["C", "G"],
             "from_date": "2024-01-01",
             "to_date": "2024-12-31",
             "entry_type": "R",
@@ -723,6 +744,7 @@ def test_get_animal_exits_report(app: TestClient, empty_db):
     result = app.get(
         "/animal/exits/report",
         params={
+            "race_ids": ["C", "G"],
             "from_date": "2024-01-01",
             "to_date": "2024-12-31",
             "exit_type": "A",

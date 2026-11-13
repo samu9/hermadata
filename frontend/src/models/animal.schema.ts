@@ -255,6 +255,7 @@ export const animalExitSchema = z
 export type AnimalExit = z.infer<typeof animalExitSchema>
 
 export const animalDaysRequestSchema = z.object({
+    race_ids: z.array(z.string()).min(1),
     from_date: dateOnly,
     to_date: dateOnly,
     city_code: z.string(),
