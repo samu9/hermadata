@@ -18,6 +18,9 @@ from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.breed_repository import SQLBreedRepository
 from hermadata.repositories.city_repository import SQLCityRepository
 from hermadata.repositories.document_repository import SQLDocumentRepository
+from hermadata.repositories.health_activity_repository import (
+    SQLHealthActivityRepository,
+)
 from hermadata.repositories.race_repository import SQLRaceRepository
 from hermadata.repositories.structure_repository import SQLStructureRepository
 from hermadata.repositories.therapy_repository import SQLTherapyRepository
@@ -95,6 +98,12 @@ def get_activity_repository(
     return SQLActivityRepository()(session)
 
 
+def get_health_activity_repository(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> SQLHealthActivityRepository:
+    return SQLHealthActivityRepository()(session)
+
+
 def get_therapy_repository(
     session: Annotated[Session, Depends(get_db_session)],
 ) -> SQLTherapyRepository:
@@ -119,7 +128,9 @@ image_s3_storage = (
     else None
 )
 disk_storage = (
-    DiskStorage(settings.storage.disk.base_path) if settings.storage.disk else None
+    DiskStorage(settings.storage.disk.base_path)
+    if settings.storage.disk
+    else None
 )
 image_disk_storage = (
     DiskStorage(

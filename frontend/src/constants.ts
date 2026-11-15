@@ -20,6 +20,10 @@ export enum Permission {
     ADD_ANIMAL_EVENT = "AAE",
     BROWSE_ANIMAL_EVENTS = "BAE",
     UPLOAD_ANIMAL_IMAGE = "UAI",
+    BROWSE_HEALTH_ACTIVITY = "BHA",
+    CREATE_HEALTH_ACTIVITY = "CHA",
+    EDIT_HEALTH_ACTIVITY = "EHA",
+    DELETE_HEALTH_ACTIVITY = "DHA",
 }
 
 export type SeverityType =

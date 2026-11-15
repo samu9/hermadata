@@ -3,6 +3,7 @@ import { apiService } from "./main"
 import { AdopterSearch } from "./models/adopter.schema"
 import { AnimalSearchQuery } from "./models/animal.schema"
 import { NewTherapy } from "./models/therapy.schema"
+import { HealthActivityFilters, HealthActivityWrite } from "./models/healthActivity.schema"
 import { VetSearch } from "./models/vet.schema"
 
 export const useAnimalSearchQuery = (queryData: AnimalSearchQuery) =>
@@ -237,5 +238,31 @@ export const useDeleteTherapyMutation = (animalId: number) => {
                 queryClient.invalidateQueries(["therapies", animalId])
             },
         },
+    )
+}
+
+export const useHealthActivitiesQuery = (
+    animalId: number, filters: HealthActivityFilters, enabled: boolean,
+) => useQuery(
+    ["health-activities", animalId, filters],
+    () => apiService.getHealthActivities(animalId, filters),
+    { enabled: enabled && animalId > 0 },
+)
+
+export const useSaveHealthActivityMutation = (animalId: number) => {
+    const queryClient = useQueryClient()
+    return useMutation(
+        ({ id, data }: { id?: number; data: HealthActivityWrite }) => id
+            ? apiService.updateHealthActivity(animalId, id, data)
+            : apiService.createHealthActivity(animalId, data),
+        { onSuccess: () => queryClient.invalidateQueries(["health-activities", animalId]) },
+    )
+}
+
+export const useDeleteHealthActivityMutation = (animalId: number) => {
+    const queryClient = useQueryClient()
+    return useMutation(
+        (id: number) => apiService.deleteHealthActivity(animalId, id),
+        { onSuccess: () => queryClient.invalidateQueries(["health-activities", animalId]) },
     )
 }

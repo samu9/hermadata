@@ -22,6 +22,7 @@ from hermadata.database.models import (
     Animal,
     AnimalDocument,
     AnimalEntry,
+    AnimalHealthActivity,
     AnimalLog,
     Breed,
     Document,
@@ -63,6 +64,7 @@ from tests.utils import random_chip_code
 TRUNCATE_QUERY = "TRUNCATE TABLE {}"
 
 TABLES = [
+    "animal_health_activity",
     "adoption",
     "animal_entry",
     "animal_log",
@@ -467,6 +469,7 @@ def app(db_session):
 
 @pytest.fixture(scope="function")
 def empty_db(db_session: Session):
+    db_session.execute(delete(AnimalHealthActivity))
     db_session.execute(delete(MedicalActivityRecord))
     db_session.execute(delete(MedicalActivity))
     db_session.execute(delete(Adoption))

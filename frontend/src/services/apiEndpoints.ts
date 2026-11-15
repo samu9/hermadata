@@ -14,6 +14,11 @@ const ApiEndpoints = {
         create: "/breed",
         getAll: "/breed",
     },
+    healthActivity: {
+        list: (animalId: number) => `/animal/${animalId}/health-activities`,
+        item: (animalId: number, activityId: number) =>
+            `/animal/${animalId}/health-activities/${activityId}`,
+    },
     animal: {
         getById: (code: string) => `/animal/${code}`,
         adopter: (id: string | number) => `/animal/${id}/adopter`,

@@ -684,3 +684,19 @@ class Comune(Base):
     id: Mapped[str] = mapped_column(String(4), primary_key=True)
     provincia: Mapped[str] = mapped_column(ForeignKey("provincia.id"))
     name: Mapped[str] = mapped_column(String(100))
+
+
+class AnimalHealthActivity(Base):
+    __tablename__ = "animal_health_activity"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    animal_id: Mapped[int] = mapped_column(ForeignKey("animal.id"), index=True)
+    activity_date: Mapped[date] = mapped_column(Date())
+    description: Mapped[str] = mapped_column(Text())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(), server_default=func.now()
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(), onupdate=func.now(), nullable=True
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(), nullable=True)

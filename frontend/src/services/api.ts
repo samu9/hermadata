@@ -77,6 +77,12 @@ import { PaginationQuery } from "../models/pagination.schema"
 import { Structure } from "../models/structure.schema"
 import { NewTherapy, Therapy, TherapyReminder } from "../models/therapy.schema"
 
+import {
+    healthActivitySchema,
+    HealthActivityFilters,
+    HealthActivityWrite,
+} from "../models/healthActivity.schema"
+
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 
 class ApiService {
@@ -803,6 +809,25 @@ class ApiService {
             { structure_id: structureId },
         )
         return response.data
+    }
+
+    async getHealthActivities(animalId: number, filters: HealthActivityFilters) {
+        const result = await this.get(ApiEndpoints.healthActivity.list(animalId), filters)
+        return z.array(healthActivitySchema).parse(result)
+    }
+
+    async createHealthActivity(animalId: number, data: HealthActivityWrite) {
+        const result = await this.post(ApiEndpoints.healthActivity.list(animalId), data)
+        return healthActivitySchema.parse(result)
+    }
+
+    async updateHealthActivity(animalId: number, activityId: number, data: HealthActivityWrite) {
+        const result = await this.put(ApiEndpoints.healthActivity.item(animalId, activityId), data)
+        return healthActivitySchema.parse(result)
+    }
+
+    deleteHealthActivity(animalId: number, activityId: number) {
+        return this.delete<void>(ApiEndpoints.healthActivity.item(animalId, activityId))
     }
 
     getTherapies(animalId: number): Promise<Therapy[]> {

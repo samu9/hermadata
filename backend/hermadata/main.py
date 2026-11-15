@@ -11,6 +11,7 @@ from hermadata.routers import (
     adopter_router,
     animal_router,
     breed_router,
+    health_activity_router,
     document_router,
     race_router,
     structure_router,
@@ -49,6 +50,7 @@ def build_app():
     app.include_router(vet_router.router)
     app.include_router(user_router.router)
     app.include_router(structure_router.router)
+    app.include_router(health_activity_router.router)
     app.include_router(therapy_router.router)
     app.include_router(reminders_router)
 

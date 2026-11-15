@@ -16,3 +16,7 @@ BDA,browse_deleted_animals,Browse deleted animal records
 AAE,add_animal_event,Aggiungi evento animal
 UAI,upload_animal_image,Upload and manage animal images
 BAE,browse_animal_events,Browse animal events
+BHA,browse_health_activity,Visualizza attività sanitarie
+CHA,create_health_activity,Aggiungi attività sanitaria
+EHA,edit_health_activity,Modifica attività sanitaria
+DHA,delete_health_activity,Elimina attività sanitaria
