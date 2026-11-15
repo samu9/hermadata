@@ -108,16 +108,22 @@ def upgrade() -> None:
         sa.column("description", sa.String),
         sa.column("category", sa.String),
     )
-    op.bulk_insert(
-        animal_event_type,
-        [
-            {
-                "code": "MV",
-                "description": "Spostamento a struttura",
-                "category": "structure",
-            },
-        ],
+    # Earlier migrations load the current CSV, which may seed these codes.
+    events = [
+        {
+            "code": "MV",
+            "description": "Spostamento a struttura",
+            "category": "structure",
+        },
+    ]
+    existing_codes = set(
+        op.get_bind().execute(sa.select(animal_event_type.c.code)).scalars()
     )
+    missing_events = [
+        event for event in events if event["code"] not in existing_codes
+    ]
+    if missing_events:
+        op.bulk_insert(animal_event_type, missing_events)
 
 
 def downgrade() -> None:
