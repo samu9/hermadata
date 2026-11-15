@@ -161,6 +161,7 @@ def test_serve_document_can_view_false(
     db_session: Session,
     document_repository: SQLDocumentRepository,
     make_animal,
+    make_user,
 ):
     """document_permissions row with can_view=False blocks access for matching user."""
     from hermadata.database.models import Animal, AnimalDocument
@@ -169,7 +170,7 @@ def test_serve_document_can_view_false(
     from hermadata.main import build_app
     from hermadata.services.user_service import TokenData
 
-    user_id = 42
+    user_id = make_user()
 
     document_id = document_repository.new_document(
         data=NewDocument(
