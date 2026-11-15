@@ -24,10 +24,19 @@ def upgrade() -> None:
         sa.column("id", sa.String),
         sa.column("name", sa.String),
     )
-    op.bulk_insert(
-        provincia_table,
-        [{"id": "EE", "name": "STATO ESTERO"}],
+    # The initial province import may already include the foreign province.
+    existing = (
+        op.get_bind()
+        .execute(
+            sa.select(provincia_table.c.id).where(provincia_table.c.id == "EE")
+        )
+        .scalar_one_or_none()
     )
+    if existing is None:
+        op.bulk_insert(
+            provincia_table,
+            [{"id": "EE", "name": "STATO ESTERO"}],
+        )
 
 
 def downgrade() -> None:

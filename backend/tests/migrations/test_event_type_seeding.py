@@ -75,3 +75,36 @@ def test_event_type_migration_handles_existing_seeds(
                     "MV": ("Spostamento a struttura", "structure"),
                 }[code]
             )
+
+
+@pytest.mark.parametrize("seeded", [False, True])
+def test_foreign_province_migration_handles_existing_seed(monkeypatch, seeded):
+    migration = import_module(
+        "hermadata.database.alembic.versions."
+        "b1c2d3e4f5a6_add_foreign_province_ee"
+    )
+    engine = sa.create_engine("sqlite://")
+    metadata = sa.MetaData()
+    provinces = sa.Table(
+        "provincia",
+        metadata,
+        sa.Column("id", sa.String(2), primary_key=True),
+        sa.Column("name", sa.String(255), nullable=False),
+    )
+    metadata.create_all(engine)
+    with engine.begin() as connection:
+        monkeypatch.setattr(
+            migration, "op", Operations(MigrationContext.configure(connection))
+        )
+        connection.execute(provinces.insert(), {"id": "RM", "name": "Roma"})
+        if seeded:
+            connection.execute(
+                provinces.insert(), {"id": "EE", "name": "Existing"}
+            )
+
+        migration.upgrade()
+
+        assert dict(connection.execute(sa.select(provinces)).all()) == {
+            "RM": "Roma",
+            "EE": "Existing" if seeded else "STATO ESTERO",
+        }
