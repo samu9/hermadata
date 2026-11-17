@@ -4,21 +4,63 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
 import { Checkbox } from "primereact/checkbox"
 import { MultiSelect } from "primereact/multiselect"
-import { useId } from "react"
+import { useId, useMemo } from "react"
 import { Controller, FormProvider, useForm } from "react-hook-form"
 import { useMutation } from "react-query"
+import { useAuth } from "../contexts/AuthContext"
 import { apiService } from "../main"
 import {
     animalOverviewReportSchema,
     AnimalOverviewReportSchema,
 } from "../models/animal.schema"
-import { useEntryTypesQuery, useExitTypesQuery } from "../queries"
+import {
+    useAllComuniQuery,
+    useEntryTypesQuery,
+    useExitTypesQuery,
+} from "../queries"
 import ComuniMultiAutoComplete from "./forms/city/ComuniMultiAutoComplete"
 import ControlledInputDate from "./forms/ControlledInputDate"
 import ControlledRaceMultiSelect from "./forms/ControlledRaceMultiSelect"
 import { SubTitle } from "./typography"
 
 type TypesFieldName = "entry_types" | "exit_types"
+
+type QuickAction = {
+    label: string
+    onClick: () => void
+    disabled?: boolean
+    title?: string
+}
+
+/** Field label with quick selection links on the right. */
+const LabelWithActions = (props: {
+    htmlFor: string
+    label: string
+    actions: QuickAction[]
+}) => (
+    <div className="flex items-end justify-between gap-3 mb-1">
+        <label
+            className="text-sm font-medium text-surface-700"
+            htmlFor={props.htmlFor}
+        >
+            {props.label}
+        </label>
+        <div className="flex gap-3 text-xs">
+            {props.actions.map((action) => (
+                <button
+                    key={action.label}
+                    type="button"
+                    onClick={action.onClick}
+                    disabled={action.disabled}
+                    title={action.title}
+                    className="text-primary-600 hover:underline disabled:text-surface-400 disabled:no-underline disabled:cursor-not-allowed"
+                >
+                    {action.label}
+                </button>
+            ))}
+        </div>
+    </div>
+)
 
 const TypesMultiSelect = (props: {
     name: TypesFieldName
@@ -31,12 +73,27 @@ const TypesMultiSelect = (props: {
             name={props.name}
             render={({ field }) => (
                 <div>
-                    <label
-                        className="block text-sm font-medium mb-1 text-surface-700"
+                    <LabelWithActions
                         htmlFor={inputId}
-                    >
-                        {props.label}
-                    </label>
+                        label={props.label}
+                        actions={[
+                            {
+                                label: "Tutti",
+                                onClick: () =>
+                                    field.onChange(
+                                        (props.options ?? []).map((o) => o.id),
+                                    ),
+                                disabled:
+                                    !props.options?.length ||
+                                    field.value.length === props.options.length,
+                            },
+                            {
+                                label: "Nessuno",
+                                onClick: () => field.onChange([]),
+                                disabled: field.value.length === 0,
+                            },
+                        ]}
+                    />
                     <MultiSelect
                         inputId={inputId}
                         value={field.value}
@@ -58,8 +115,20 @@ const TypesMultiSelect = (props: {
 const AnimalOverviewReportForm = () => {
     const entryTypesQuery = useEntryTypesQuery()
     const exitTypesQuery = useExitTypesQuery()
+    const comuniQuery = useAllComuniQuery()
+    const { user } = useAuth()
     const citiesInputId = useId()
     const splitInputId = useId()
+
+    // Users bound to some comuni can only extract those
+    const favouriteCodes = useMemo(() => {
+        const allowed = user?.city_codes?.length
+            ? new Set(user.city_codes)
+            : null
+        return (comuniQuery.data ?? [])
+            .filter((c) => c.favourite && (!allowed || allowed.has(c.id)))
+            .map((c) => c.id)
+    }, [comuniQuery.data, user?.city_codes])
 
     const form = useForm<AnimalOverviewReportSchema>({
         defaultValues: {
@@ -127,12 +196,40 @@ const AnimalOverviewReportForm = () => {
                             control={form.control}
                             render={({ field }) => (
                                 <div>
-                                    <label
-                                        className="block text-sm font-medium mb-1 text-surface-700"
+                                    <LabelWithActions
                                         htmlFor={citiesInputId}
-                                    >
-                                        Comuni
-                                    </label>
+                                        label="Comuni"
+                                        actions={[
+                                            {
+                                                label: "Tutti i preferiti",
+                                                onClick: () =>
+                                                    field.onChange([
+                                                        ...new Set([
+                                                            ...field.value,
+                                                            ...favouriteCodes,
+                                                        ]),
+                                                    ]),
+                                                disabled:
+                                                    favouriteCodes.length ===
+                                                        0 ||
+                                                    favouriteCodes.every((c) =>
+                                                        field.value.includes(c),
+                                                    ),
+                                                title:
+                                                    favouriteCodes.length === 0
+                                                        ? "Nessun comune preferito (Pannello Admin › Comuni preferiti)"
+                                                        : "Aggiunge tutti i comuni preferiti",
+                                            },
+                                            {
+                                                label: "Svuota",
+                                                onClick: () =>
+                                                    field.onChange([]),
+                                                disabled:
+                                                    field.value.length === 0,
+                                                title: "Nessun comune selezionato = tutti i comuni",
+                                            },
+                                        ]}
+                                    />
                                     <ComuniMultiAutoComplete
                                         id={citiesInputId}
                                         value={field.value}
