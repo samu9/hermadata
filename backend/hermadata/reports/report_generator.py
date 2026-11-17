@@ -138,7 +138,8 @@ def _write_overview_summary(
     races: list[tuple[str, str]],
     cities: list[tuple[str, str]],
 ):
-    """Filters used, then distinct animals per race and section."""
+    """Filters used, then one table per section: a row for each selected
+    entry/exit type, a column for each race, plus the totals."""
     ws.title = "Riepilogo"
     ws.append(["Riepilogo animali"])
     _bold_last_row(ws)
@@ -159,16 +160,31 @@ def _write_overview_summary(
                 ", ".join(label for _, label in section.types),
             ]
         )
-    ws.append([])
-    ws.append(["Tipo animale"] + [s.title for s in sections])
-    _bold_last_row(ws)
-    for race_id, race_name in races:
+    for section in sections:
+        ws.append([])
+        ws.append([section.title] + [name for _, name in races] + ["Totale"])
+        _bold_last_row(ws)
+        for type_code, label in section.types:
+            ws.append(
+                [label]
+                + [
+                    _count_animals(
+                        section.items, type=type_code, race_id=race_id
+                    )
+                    for race_id, _ in races
+                ]
+                + [_count_animals(section.items, type=type_code)]
+            )
+        # Distinct animals: one with several types is counted once
         ws.append(
-            [race_name]
-            + [_count_animals(s.items, race_id=race_id) for s in sections]
+            [f"Totale {section.title.lower()}"]
+            + [
+                _count_animals(section.items, race_id=race_id)
+                for race_id, _ in races
+            ]
+            + [_count_animals(section.items)]
         )
-    ws.append(["Totale"] + [_count_animals(s.items) for s in sections])
-    _bold_last_row(ws)
+        _bold_last_row(ws)
     _autofit(ws)
 
 

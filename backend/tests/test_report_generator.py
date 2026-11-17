@@ -428,4 +428,11 @@ def test_animal_overview_report(report_generator: ReportGenerator):
     assert summary[1][:2] == ("Periodo", "dal 01/01/2024")
     assert summary[2][:2] == ("Comuni", "Tutti")
     assert summary[4][:2] == ("Tipi di ingresso", "Recupero, Sequestro")
-    assert summary[-3:] == [("Cane", 2), ("Gatto", 1), ("Totale", 3)]
+    # One row per entry type, one column per race
+    assert summary[-4:] == [
+        ("Ingressi", "Cane", "Gatto", "Totale"),
+        ("Recupero", 2, 1, 3),
+        ("Sequestro", 1, 0, 1),
+        # animal 1 has both types: counted once
+        ("Totale ingressi", 2, 1, 3),
+    ]
