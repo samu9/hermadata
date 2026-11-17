@@ -173,6 +173,17 @@ describe('comuneSchema', () => {
     expect(result.id).toBe('H501')
     expect(result.name).toBe('Roma')
     expect(result.provincia).toBe('RM')
+    expect(result.favourite).toBe(false)
+  })
+
+  it('parses the favourite flag', () => {
+    const result = comuneSchema.parse({
+      id: 'H501',
+      name: 'Roma',
+      provincia: 'RM',
+      favourite: true,
+    })
+    expect(result.favourite).toBe(true)
   })
 
   it('rejects invalid id format', () => {
