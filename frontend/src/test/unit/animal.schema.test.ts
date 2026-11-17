@@ -7,6 +7,7 @@ import {
   animalEditSchema,
   exitCheckResultSchema,
   animalLogSchema,
+  animalOverviewReportSchema,
 } from '../../models/animal.schema'
 
 describe('animalSchema', () => {
@@ -215,5 +216,59 @@ describe('animalLogSchema', () => {
     const result = animalLogSchema.parse(raw)
     expect(result.id).toBe(1)
     expect(result.event).toBe('entry')
+  })
+})
+
+describe('animalOverviewReportSchema', () => {
+  const base = {
+    race_ids: ['C'],
+    city_codes: [],
+    entry_types: ['R'],
+    exit_types: [],
+  }
+
+  it('accepts a single date and a single section', () => {
+    const result = animalOverviewReportSchema.safeParse({
+      ...base,
+      from_date: '2024-01-01',
+    })
+    expect(result.success).toBe(true)
+    expect(result.data?.from_date).toBe('2024-01-01T00:00:00.000')
+    expect(result.data?.to_date).toBeUndefined()
+  })
+
+  it('requires at least one date', () => {
+    const result = animalOverviewReportSchema.safeParse(base)
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0].path).toEqual(['from_date'])
+  })
+
+  it('requires at least one entry or exit type', () => {
+    const result = animalOverviewReportSchema.safeParse({
+      ...base,
+      entry_types: [],
+      to_date: '2024-12-31',
+    })
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0].path).toEqual(['entry_types'])
+  })
+
+  it('rejects an inverted period', () => {
+    const result = animalOverviewReportSchema.safeParse({
+      ...base,
+      from_date: '2024-02-01',
+      to_date: '2024-01-01',
+    })
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0].path).toEqual(['to_date'])
+  })
+
+  it('requires at least one race', () => {
+    const result = animalOverviewReportSchema.safeParse({
+      ...base,
+      race_ids: [],
+      from_date: '2024-01-01',
+    })
+    expect(result.success).toBe(false)
   })
 })

@@ -39,6 +39,16 @@ describe('DataExtractionsPage', () => {
     })
   })
 
+  it('renders the overview report form', async () => {
+    renderWithProviders(<DataExtractionsPage />)
+    await waitFor(() => {
+      expect(screen.getByText('Report riepilogativo')).toBeInTheDocument()
+    })
+    expect(screen.getByText('Tipi di ingresso')).toBeInTheDocument()
+    expect(screen.getByText('Tipi di uscita')).toBeInTheDocument()
+    expect(screen.getByText('Comuni')).toBeInTheDocument()
+  })
+
   it('renders download buttons', async () => {
     renderWithProviders(<DataExtractionsPage />)
     await waitFor(() => {
