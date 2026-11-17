@@ -755,6 +755,70 @@ def test_get_animal_exits_report(app: TestClient, empty_db):
     assert result.status_code == 200
 
 
+def test_get_animal_overview_report(app: TestClient, empty_db):
+    result = app.get(
+        "/animal/overview/report",
+        params={
+            "race_ids": ["C", "G"],
+            "from_date": "2024-01-01",
+            "city_codes": ["H501", "F205"],
+            "entry_types": ["R", "C"],
+            # custody (C) has no label: the report falls back to the code
+            "exit_types": ["A", "C"],
+            "split_by_city": True,
+        },
+    )
+
+    assert result.status_code == 200
+    assert result.headers["x-filename"] == "riepilogo_dal_2024-01-01.xlsx"
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        # no dates
+        {"entry_types": ["R"]},
+        # no entry or exit types
+        {"to_date": "2024-12-31"},
+    ],
+)
+def test_animal_overview_report_validation(app: TestClient, params):
+    result = app.get(
+        "/animal/overview/report", params={"race_ids": ["C"], **params}
+    )
+
+    assert result.status_code == 422
+
+
+def test_animal_overview_report_restricted_city(app: TestClient, empty_db):
+    from hermadata.initializations import get_current_user
+    from hermadata.services.user_service import TokenData
+
+    app.app.dependency_overrides[get_current_user] = lambda: TokenData(
+        user_id=1,
+        email="test@test.it",
+        is_active=True,
+        is_superuser=False,
+        permissions=[],
+        city_codes=["H501"],
+    )
+    params = {
+        "race_ids": ["C"],
+        "from_date": "2024-01-01",
+        "entry_types": ["R"],
+    }
+
+    result = app.get(
+        "/animal/overview/report",
+        params={**params, "city_codes": ["H501", "F205"]},
+    )
+    assert result.status_code == 403
+
+    # Without a comune filter the user's comuni are used
+    result = app.get("/animal/overview/report", params=params)
+    assert result.status_code == 200
+
+
 def test_move_to_shelter(
     app: TestClient,
     make_animal,

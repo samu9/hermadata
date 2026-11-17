@@ -25,6 +25,7 @@ import {
     AnimalEntry,
     AnimalExit,
     AnimalExitsReportSchema,
+    AnimalOverviewReportSchema,
     AnimalImage,
     AnimalListReportExtraField,
     AnimalSearchQuery,
@@ -686,6 +687,19 @@ class ApiService {
             responseType: "blob",
         })
         console.log(result.headers)
+        const filename = result.headers["x-filename"].toString()
+        const filetype = result.headers["content-type"]?.toString()
+        const url = window.URL.createObjectURL(
+            new Blob([result.data], { type: filetype }),
+        )
+        return { url, filename }
+    }
+
+    async animalOverviewReport(data: AnimalOverviewReportSchema) {
+        const result = await this.inst.get(ApiEndpoints.animal.overviewReport, {
+            params: data,
+            responseType: "blob",
+        })
         const filename = result.headers["x-filename"].toString()
         const filetype = result.headers["content-type"]?.toString()
         const url = window.URL.createObjectURL(

@@ -52,6 +52,7 @@ const ApiEndpoints = {
         daysReport: `/animal/days/report`,
         entriesReport: `/animal/entries/report`,
         exitsReport: `/animal/exits/report`,
+        overviewReport: `/animal/overview/report`,
         searchReport: `/animal/search/report`,
         stats: `/animal/stats`,
     },

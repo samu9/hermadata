@@ -12,7 +12,13 @@ from typing import (
     TypeVar,
 )
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    model_validator,
+)
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import InstrumentedAttribute, MappedColumn
 
@@ -415,6 +421,39 @@ class AnimalExitsQuery(ExtractionQuery):
     exit_type: ExitType | None = None
 
 
+class AnimalOverviewQuery(BaseModel):
+    """Filters of the overview report: animals counted day by day per
+    race (and optionally comune) and entry/exit type. A section (entries
+    or exits) is included only when at least one of its types is
+    selected."""
+
+    race_ids: list[Annotated[str, Field(min_length=1)]] = Field(min_length=1)
+    from_date: date | None = None
+    to_date: date | None = None
+    # Empty means every comune
+    city_codes: list[Annotated[str, Field(min_length=1)]] = []
+    entry_types: list[EntryType] = []
+    exit_types: list[ExitType] = []
+    # One daily sheet per comune and race instead of one per race
+    split_by_city: bool = False
+
+    @model_validator(mode="after")
+    def check_filters(self):
+        if self.from_date is None and self.to_date is None:
+            raise ValueError("at least one of from_date, to_date is required")
+        if (
+            self.from_date is not None
+            and self.to_date is not None
+            and self.from_date > self.to_date
+        ):
+            raise ValueError("from_date must not be after to_date")
+        if not self.entry_types and not self.exit_types:
+            raise ValueError(
+                "at least one entry type or exit type is required"
+            )
+        return self
+
+
 class AnimalStatsQuery(BaseModel):
     from_date: date
     to_date: date
@@ -466,6 +505,27 @@ class AnimalReportResult(BaseModel, Generic[T]):
 class AnimalExitsItem(AnimalReportBaseItem):
     exit_date: date
     exit_type: ExitType
+
+
+class AnimalPresenceItem(BaseModel):
+    """One animal movement counted in an overview section: the entry (or
+    exit) date and type, under the comune of origin of the entry."""
+
+    animal_id: int
+    city_code: str
+    race_id: str
+    type: str
+    day: date
+
+
+class AnimalOverviewResult(BaseModel):
+    # None when the section was not requested
+    entries: list[AnimalPresenceItem] | None = None
+    exits: list[AnimalPresenceItem] | None = None
+    # code -> name, for the requested comuni (or the ones found when no
+    # comune filter is given) and the requested races
+    cities: dict[str, str]
+    races: dict[str, str]
 
 
 class AddMedicalRecordModel(BaseModel):

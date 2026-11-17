@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report riepilogativo: proposta di layout</title>
+<style>
+  :root {
+    --bg: #f8fafc; --fg: #0f172a; --muted: #64748b; --card: #ffffff;
+    --border: #e2e8f0; --head: #f1f5f9; --accent: #0d9488; --accent-soft: #ccfbf1;
+    --in: #fef3c7; --out: #dbeafe; --total: #e2e8f0; --warn: #b45309;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1120; --fg: #e2e8f0; --muted: #94a3b8; --card: #111827;
+      --border: #1f2937; --head: #1e293b; --accent: #2dd4bf; --accent-soft: #134e4a;
+      --in: #422006; --out: #172554; --total: #1e293b; --warn: #fbbf24;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+         background: var(--bg); color: var(--fg); }
+  main { max-width: 1180px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 19px; margin: 40px 0 12px; }
+  h3 { font-size: 16px; margin: 0 0 6px; }
+  p { margin: 6px 0; }
+  .muted { color: var(--muted); }
+  .tldr { background: var(--accent-soft); border-left: 4px solid var(--accent);
+          padding: 14px 18px; border-radius: 8px; margin: 18px 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .card.rec { border: 2px solid var(--accent); }
+  .badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px;
+           border-radius: 999px; background: var(--accent); color: var(--card); margin-left: 6px; }
+  .sheet { font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  .sheet b { color: var(--fg); }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; margin: 4px 0 10px; }
+  th, td { border: 1px solid var(--border); padding: 3px 6px; text-align: center; white-space: nowrap; }
+  th { background: var(--head); font-weight: 600; }
+  th.in { background: var(--in); } th.out { background: var(--out); }
+  td:first-child, th:first-child { text-align: left; }
+  tr.tot td { background: var(--total); font-weight: 700; }
+  .title-row th { background: transparent; border: none; font-size: 13px; text-align: left; padding: 6px 2px; }
+  ul { margin: 6px 0; padding-left: 20px; }
+  .pros li::marker { content: "+  "; color: var(--accent); font-weight: 700; }
+  .cons li::marker { content: "−  "; color: var(--warn); font-weight: 700; }
+  .size { font-size: 13px; background: var(--head); border-radius: 8px; padding: 8px 10px; margin-top: 10px; }
+  nav a { color: var(--accent); margin-right: 14px; text-decoration: none; }
+  code { background: var(--head); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  details { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 8px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  .scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Report riepilogativo: proposta di layout</h1>
+  <p class="muted">Basata sull'esempio Excel (CANI / MONTECATINI): conteggi giorno per giorno, una colonna per tipo di ingresso e una per tipo di uscita.</p>
+  <nav><a href="#ref">Esempio</a><a href="#options">Opzioni</a><a href="#rec">Raccomandazione</a><a href="#questions">Domande aperte</a></nav>
+
+  <div class="tldr">
+    <b>Decisione (17/11/2026)</b>: opzione <b>B</b>; riga Totale = <b>somma dei giorni</b>; <b>solo i giorni con movimenti</b>;
+    <b>solo raggruppamento per giorno</b> (settimana/mese rimandati); "Dividi per comune" <b>off</b> per default.
+  </div>
+
+  <div class="tldr">
+    <b>TL;DR</b>: tenere <b>esattamente la tabella dell'esempio</b> (righe = giorni, colonne = Ingressi | Uscite, riga Totale), ma
+    <b>un foglio per tipo di animale</b>, con i comuni <b>aggregati per default</b>. La divisione per comune diventa un'opzione
+    (<i>"Dividi per comune"</i>): crea un foglio per comune. Per non far crescere le righe, il periodo si può raggruppare per
+    <b>giorno / settimana / mese</b>, e vengono mostrati solo i giorni con almeno un movimento. Un foglio <b>Riepilogo</b> iniziale
+    dà il colpo d'occhio comune × tipo con i soli totali.
+  </div>
+
+  <h2 id="ref">L'esempio, letto come struttura</h2>
+  <div class="card">
+    <div class="sheet">Titolo: <b>CANI</b> · <b>MONTECATINI</b></div>
+    <div class="scroll"><table>
+      <tr><th rowspan="2">Data</th><th class="in" colspan="3">Entrate</th><th class="out" colspan="3">Uscite</th></tr>
+      <tr><th class="in">Recupero</th><th class="in">Rinuncia</th><th class="in">Sequestro</th><th class="out">Restituzione</th><th class="out">Adozione</th><th class="out">Morte</th></tr>
+      <tr><td>10-ott</td><td>1</td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>14-ott</td><td></td><td>1</td><td></td><td>1</td><td>1</td><td></td></tr>
+      <tr><td>…</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>31-ott</td><td>1</td><td></td><td></td><td>2</td><td>1</td><td></td></tr>
+      <tr class="tot"><td>Totali</td><td>8</td><td>1</td><td>1</td><td>8</td><td>2</td><td>0</td></tr>
+    </table></div>
+    <ul>
+      <li>Un blocco = <b>un tipo di animale × un comune</b>.</li>
+      <li>Righe = giorni del periodo con almeno un movimento; celle vuote al posto degli zeri.</li>
+      <li>Colonne = tipi di ingresso selezionati, poi tipi di uscita selezionati, con intestazione di gruppo Entrate/Uscite.</li>
+      <li>Ingressi contati sulla data di ingresso, uscite sulla data di uscita: stessa riga se avvengono lo stesso giorno.</li>
+    </ul>
+    <p class="muted">Il rischio: con N comuni × 2 tipi di animale × ~30-365 giorni, un unico foglio diventa ingestibile.</p>
+  </div>
+
+  <h2 id="options">Opzioni</h2>
+  <div class="grid">
+
+    <div class="card">
+      <h3>A · Un foglio per comune × tipo di animale</h3>
+      <p class="muted">L'esempio replicato tale e quale, un foglio per combinazione.</p>
+      <div class="sheet">Fogli: <b>Riepilogo</b> · <b>Cani - Trieste</b> · <b>Gatti - Trieste</b> · <b>Cani - Muggia</b> · …</div>
+      <div class="scroll"><table>
+        <tr class="title-row"><th colspan="5">CANI · TRIESTE</th></tr>
+        <tr><th rowspan="2">Data</th><th class="in" colspan="2">Entrate</th><th class="out" colspan="2">Uscite</th></tr>
+        <tr><th class="in">Recupero</th><th class="in">Sequestro</th><th class="out">Adozione</th><th class="out">Morte</th></tr>
+        <tr><td>03/01</td><td>1</td><td></td><td></td><td></td></tr>
+        <tr><td>05/01</td><td></td><td>1</td><td>2</td><td></td></tr>
+        <tr class="tot"><td>Totale</td><td>1</td><td>1</td><td>2</td><td>0</td></tr>
+      </table></div>
+      <ul class="pros"><li>Identico al foglio che usano oggi.</li><li>Ogni tabella resta piccola e stampabile.</li></ul>
+      <ul class="cons"><li>Numero di fogli = comuni × tipi: con "tutti i comuni" possono essere decine.</li><li>Confrontare due comuni significa saltare tra fogli.</li></ul>
+      <div class="size">Dimensione: 6 comuni × 2 tipi = <b>12 fogli</b> + Riepilogo.</div>
+    </div>
+
+    <div class="card rec">
+      <h3>B · Un foglio per tipo di animale, comuni opzionali <span class="badge">consigliata</span></h3>
+      <p class="muted">Default: comuni selezionati sommati. Con <i>"Dividi per comune"</i> → un foglio per comune (= opzione A).</p>
+      <div class="sheet">Fogli: <b>Riepilogo</b> · <b>Cani</b> · <b>Gatti</b></div>
+      <div class="scroll"><table>
+        <tr class="title-row"><th colspan="6">CANI · Trieste, Muggia · 01/01/2025 – 31/01/2025</th></tr>
+        <tr><th rowspan="2">Data</th><th class="in" colspan="2">Entrate</th><th class="out" colspan="3">Uscite</th></tr>
+        <tr><th class="in">Recupero</th><th class="in">Sequestro</th><th class="out">Restituzione</th><th class="out">Adozione</th><th class="out">Morte</th></tr>
+        <tr><td>03/01</td><td>2</td><td></td><td></td><td>1</td><td></td></tr>
+        <tr><td>05/01</td><td></td><td>1</td><td>1</td><td></td><td></td></tr>
+        <tr><td>12/01</td><td>1</td><td></td><td></td><td>2</td><td>1</td></tr>
+        <tr class="tot"><td>Totale</td><td>3</td><td>1</td><td>1</td><td>3</td><td>1</td></tr>
+      </table></div>
+      <div class="sheet">Riepilogo (colpo d'occhio, solo totali)</div>
+      <div class="scroll"><table>
+        <tr><th rowspan="2">Comune</th><th rowspan="2">Tipo</th><th class="in" colspan="2">Entrate</th><th class="out" colspan="3">Uscite</th></tr>
+        <tr><th class="in">Recupero</th><th class="in">Sequestro</th><th class="out">Restit.</th><th class="out">Adoz.</th><th class="out">Morte</th></tr>
+        <tr><td>Trieste</td><td>Cani</td><td>2</td><td>1</td><td>1</td><td>2</td><td>1</td></tr>
+        <tr><td>Muggia</td><td>Cani</td><td>1</td><td></td><td></td><td>1</td><td></td></tr>
+        <tr class="tot"><td>Totale</td><td></td><td>3</td><td>1</td><td>1</td><td>3</td><td>1</td></tr>
+      </table></div>
+      <ul class="pros"><li>Stessa tabella dell'esempio: nessuna curva di apprendimento.</li><li>Fogli fissi (1 per tipo di animale) nel caso normale.</li><li>Il dettaglio per comune resta disponibile, sia nel Riepilogo che con l'opzione.</li><li>Con un solo tipo di animale: un solo foglio giornaliero.</li></ul>
+      <ul class="cons"><li>Un controllo in più nel form (checkbox).</li><li>Senza divisione, il dettaglio giornaliero per comune non c'è.</li></ul>
+      <div class="size">Dimensione: <b>2 fogli</b> + Riepilogo; righe ≤ giorni con movimenti.</div>
+    </div>
+
+    <div class="card">
+      <h3>C · Tabella unica "lunga" (formato database)</h3>
+      <p class="muted">Una riga per giorno × comune × tipo di animale, con filtri automatici di Excel.</p>
+      <div class="sheet">Fogli: <b>Riepilogo</b> · <b>Movimenti</b></div>
+      <div class="scroll"><table>
+        <tr><th>Data</th><th>Comune</th><th>Tipo</th><th class="in">Recupero</th><th class="in">Sequestro</th><th class="out">Adozione</th></tr>
+        <tr><td>03/01</td><td>Trieste</td><td>Cani</td><td>1</td><td></td><td>1</td></tr>
+        <tr><td>03/01</td><td>Muggia</td><td>Cani</td><td>1</td><td></td><td></td></tr>
+        <tr><td>05/01</td><td>Trieste</td><td>Gatti</td><td></td><td>1</td><td></td></tr>
+      </table></div>
+      <ul class="pros"><li>Un solo foglio, qualsiasi numero di comuni.</li><li>Filtrabile e pronto per tabelle pivot.</li></ul>
+      <ul class="cons"><li>Lontano dall'esempio: serve filtrare per leggere un comune.</li><li>Totali solo nel Riepilogo (o con subtotali Excel).</li></ul>
+      <div class="size">Dimensione: 1 foglio; righe = giorni × comuni × tipi con movimenti.</div>
+    </div>
+  </div>
+
+  <h2>Contenere le righe: raggruppamento del periodo</h2>
+  <div class="card">
+    <p>Indipendente dall'opzione scelta: nel form, <b>Raggruppa per: Giorno · Settimana · Mese</b> (default Giorno).</p>
+    <div class="grid">
+      <div><div class="sheet"><b>Giorno</b> (come l'esempio)</div>
+        <table><tr><th>Data</th><th class="in">Recupero</th><th class="out">Adozione</th></tr>
+        <tr><td>03/01/2025</td><td>2</td><td>1</td></tr><tr><td>05/01/2025</td><td></td><td>1</td></tr></table></div>
+      <div><div class="sheet"><b>Mese</b> (periodi lunghi)</div>
+        <table><tr><th>Mese</th><th class="in">Recupero</th><th class="out">Adozione</th></tr>
+        <tr><td>Gen 2025</td><td>14</td><td>9</td></tr><tr><td>Feb 2025</td><td>11</td><td>12</td></tr></table></div>
+    </div>
+    <ul>
+      <li>Si mostrano solo i giorni/periodi con almeno un movimento (come nell'esempio).</li>
+      <li>Un anno al giorno = fino a 365 righe; al mese = 12.</li>
+    </ul>
+  </div>
+
+  <h2 id="rec">Raccomandazione</h2>
+  <div class="card rec">
+    <p><b>Opzione B</b> + raggruppamento Giorno/Settimana/Mese:</p>
+    <ul>
+      <li><b>Riepilogo</b>: filtri usati + tabella comune × tipo di animale con i totali per tipo di ingresso/uscita (riga Totale).</li>
+      <li><b>Un foglio per tipo di animale</b> ("Cani", "Gatti"), layout identico all'esempio: titolo, intestazione di gruppo Entrate/Uscite, righe per data, riga Totale, celle vuote invece di 0.</li>
+      <li><b>"Dividi per comune"</b> (checkbox, default off): un foglio per comune × tipo ("Cani - Trieste"), cioè l'esempio esatto.</li>
+      <li>Conteggi: animali distinti per giorno e tipo. La riga Totale somma i giorni (come l'esempio); un animale con due ingressi dello stesso tipo nel periodo conta due volte nel totale, perché sono due movimenti in giorni diversi.</li>
+    </ul>
+    <p class="muted">Questo sostituisce i fogli attuali "Ingressi"/"Uscite" (comune × tipo di animale) con il formato giornaliero; il loro contenuto confluisce nel Riepilogo.</p>
+  </div>
+
+  <h2 id="questions">Domande aperte</h2>
+  <details open><summary>1. Totale: somma dei giorni o animali distinti?</summary>
+    <p>L'esempio somma le righe. Con la riga Totale = somma, un animale rientrato due volte per "Recupero" nel periodo conta 2. Proposta: somma (coerente con la tabella), e animali distinti solo nel Riepilogo. Va bene?</p></details>
+  <details open><summary>2. Default di "Dividi per comune"?</summary>
+    <p>Proposta: off (comuni sommati). Se di solito si fa un comune alla volta, va bene anche on, con una sola selezione il risultato è lo stesso.</p></details>
+  <details open><summary>3. Giorni senza movimenti?</summary>
+    <p>L'esempio ha una riga vuota (15-ott). Proposta: mostrare solo i giorni con movimenti; in alternativa, tutti i giorni del periodo (utile per stampa a calendario, ma fino a 365 righe).</p></details>
+  <details open><summary>4. Serve il raggruppamento Settimana/Mese ora?</summary>
+    <p>Si può rimandare e partire solo con Giorno.</p></details>
+</main>
+</body>
+</html>

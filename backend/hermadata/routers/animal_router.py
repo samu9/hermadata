@@ -53,6 +53,7 @@ from hermadata.repositories.animal.models import (
     AnimalListReportExtraField,
     AnimalLogModel,
     AnimalModel,
+    AnimalOverviewQuery,
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
@@ -252,6 +253,30 @@ def serve_animal_exits_report(
     service: Annotated[AnimalService, Depends(get_animal_service)],
 ):
     filename, report = service.exits_report(query)
+
+    return Response(
+        content=report,
+        media_type=EXCEL_MEDIA_TYPE,
+        headers={"X-filename": filename},
+    )
+
+
+@router.get("/overview/report")
+def serve_animal_overview_report(
+    query: Annotated[AnimalOverviewQuery, Query()],
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+):
+    if current_user.city_codes:
+        if not query.city_codes:
+            # Users bound to some comuni only see those
+            query.city_codes = list(current_user.city_codes)
+        elif not set(query.city_codes) <= set(current_user.city_codes):
+            raise HTTPException(
+                status_code=403, detail="Accesso negato per questo comune"
+            )
+
+    filename, report = service.overview_report(query)
 
     return Response(
         content=report,
