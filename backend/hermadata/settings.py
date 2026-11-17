@@ -39,8 +39,10 @@ class AuthSettings(BaseSettings):
 
 class AppSettings(BaseSettings):
     preferred_provinces: list[str] | None = None
-    preferred_cities: list[str] | None = None
     timezone: str = "UTC"
+    # Ignore removed keys still set in existing env files (e.g. the legacy
+    # APP__PREFERRED_CITIES, replaced by the comune.favourite flag)
+    model_config = SettingsConfigDict(extra="ignore")
 
 
 class Settings(BaseSettings):

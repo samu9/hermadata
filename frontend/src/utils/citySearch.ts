@@ -1,11 +1,11 @@
 import { matchSorter, rankings } from "match-sorter"
-import { ComuneSchema, ProvinciaSchema } from "../models/city.schema"
+import { ProvinciaSchema } from "../models/city.schema"
 
 export const MAX_CITY_SUGGESTIONS = 100
 
 /**
  * Among equally ranked matches keep the order the API returned, which
- * already puts the preferred province/comuni first.
+ * already puts the preferred province and the favourite comuni first.
  */
 const keepApiOrder = (a: { index: number }, b: { index: number }) =>
     a.index - b.index
@@ -43,18 +43,31 @@ export const searchProvince = (
 /**
  * Fuzzy search on comuni by name, same ranking as `searchProvince`
  * (e.g. "sangiorgio" finds "San Giorgio di Nogaro", "ciampo" "Ciampino").
+ * Favourite comuni whose name contains the query come first, so they stay
+ * on top while typing; looser favourite matches (acronym, letters in order)
+ * are ranked as usual.
  */
-export const searchComuni = (
-    comuni: ComuneSchema[],
+export const searchComuni = <T extends { name: string; favourite?: boolean }>(
+    comuni: T[],
     query: string,
     limit = MAX_CITY_SUGGESTIONS,
-): ComuneSchema[] => {
+): T[] => {
+    // The API already lists the favourites first
     if (!query.trim()) return comuni.slice(0, limit)
 
-    return matchSorter(comuni, query.trim(), {
-        keys: ["name", compactName],
+    const keys = ["name", compactName]
+    const favourites = matchSorter(
+        comuni.filter((c) => c.favourite),
+        query.trim(),
+        { keys, threshold: rankings.CONTAINS, baseSort: keepApiOrder },
+    )
+    const pinned = new Set(favourites)
+    const others = matchSorter(comuni, query.trim(), {
+        keys,
         baseSort: keepApiOrder,
-    }).slice(0, limit)
+    }).filter((c) => !pinned.has(c))
+
+    return [...favourites, ...others].slice(0, limit)
 }
 
 const normalize = (value: string) =>
