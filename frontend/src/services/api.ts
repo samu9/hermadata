@@ -270,6 +270,17 @@ class ApiService {
         return comuneSchema.parse(data)
     }
 
+    async setComuneFavourite(
+        code: string,
+        favourite: boolean,
+    ): Promise<ComuneSchema> {
+        const data = await this.put<ComuneSchema>(
+            ApiEndpoints.util.setComuneFavourite(code),
+            { favourite },
+        )
+        return comuneSchema.parse(data)
+    }
+
     async getRaces(): Promise<Race[]> {
         const data = await this.get<Race[]>(ApiEndpoints.race.getAll)
 

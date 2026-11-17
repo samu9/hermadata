@@ -720,3 +720,7 @@ class Comune(Base):
     id: Mapped[str] = mapped_column(String(4), primary_key=True)
     provincia: Mapped[str] = mapped_column(ForeignKey("provincia.id"))
     name: Mapped[str] = mapped_column(String(100))
+    # Favourite comuni are listed first in every comune picker
+    favourite: Mapped[bool] = mapped_column(
+        server_default=expression.false(), default=False
+    )

@@ -7,6 +7,7 @@ import { useMemo, useState } from "react"
 import { ComuneSchema } from "../../../models/city.schema"
 import { useAllComuniQuery } from "../../../queries"
 import { searchComuni } from "../../../utils/citySearch"
+import ComuneItem from "./ComuneItem"
 
 type Props = {
     id?: string
@@ -26,7 +27,13 @@ const ComuniMultiAutoComplete = (props: Props) => {
     const selected = useMemo(() => {
         const byCode = new Map(comuniQuery.data?.map((c) => [c.id, c]))
         return props.value.map(
-            (code) => byCode.get(code) ?? { id: code, name: code, provincia: "" },
+            (code) =>
+                byCode.get(code) ?? {
+                    id: code,
+                    name: code,
+                    provincia: "",
+                    favourite: false,
+                },
         )
     }, [comuniQuery.data, props.value])
 
@@ -51,12 +58,7 @@ const ComuniMultiAutoComplete = (props: Props) => {
             selectedItemTemplate={(c: ComuneSchema) =>
                 c.provincia ? `${c.name} (${c.provincia})` : c.name
             }
-            itemTemplate={(c: ComuneSchema) => (
-                <div className="flex justify-between gap-3">
-                    <span>{c.name}</span>
-                    <span className="text-surface-400">{c.provincia}</span>
-                </div>
-            )}
+            itemTemplate={(c: ComuneSchema) => <ComuneItem comune={c} />}
             disabled={props.disabled || comuniQuery.isLoading}
             placeholder={props.placeholder ?? "Cerca comune"}
             emptyMessage="Nessun risultato"
