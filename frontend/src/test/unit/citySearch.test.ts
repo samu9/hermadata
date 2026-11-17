@@ -79,6 +79,43 @@ describe('searchComuni', () => {
     expect(names(searchComuni(comuni, 'ciampno'))).toEqual(['Ciampino'])
   })
 
+  describe('favourites', () => {
+    const withFavourites = [
+      { id: 'G491', name: 'Pescia', provincia: 'PT', favourite: true },
+      { id: 'A561', name: 'Montecatini-Terme', provincia: 'PT', favourite: true },
+      { id: 'G491X', name: 'Pesaro', provincia: 'PU' },
+      { id: 'M001', name: 'Montecarlo', provincia: 'LU' },
+      { id: 'P001', name: 'Pescara', provincia: 'PE' },
+    ]
+
+    it('lists favourites first among matches containing the query', () => {
+      // "Pesaro" and "Pescara" also start with "pes"
+      expect(names(searchComuni(withFavourites, 'pes'))[0]).toBe('Pescia')
+      expect(names(searchComuni(withFavourites, 'monte'))).toEqual([
+        'Montecatini-Terme',
+        'Montecarlo',
+      ])
+      expect(names(searchComuni(withFavourites, 'terme'))[0]).toBe(
+        'Montecatini-Terme',
+      )
+    })
+
+    it('does not pin favourites matching only loosely', () => {
+      // "Pescia" matches "pca" only as letters in order, "Pescara" as well,
+      // so the regular ranking applies
+      expect(names(searchComuni(withFavourites, 'pescar'))).toEqual([
+        'Pescara',
+      ])
+      const result = names(searchComuni(withFavourites, 'pca'))
+      expect(result).toContain('Pescia')
+      expect(result).toContain('Pescara')
+    })
+
+    it('keeps the API order for an empty query', () => {
+      expect(searchComuni(withFavourites, '')).toEqual(withFavourites)
+    })
+  })
+
   it('limits the number of suggestions', () => {
     expect(searchComuni(comuni, '', 3)).toHaveLength(3)
   })

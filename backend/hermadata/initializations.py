@@ -61,7 +61,6 @@ def get_city_repository(
 ) -> SQLCityRepository:
     return SQLCityRepository(
         preferred_provinces=settings.app.preferred_provinces,
-        preferred_cities=settings.app.preferred_cities,
     )(session)
 
 
