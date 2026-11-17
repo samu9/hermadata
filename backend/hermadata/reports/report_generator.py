@@ -554,7 +554,7 @@ class ReportGenerator:
                     types_title="Tipi di ingresso",
                     items=data.entries,
                     types=[
-                        (t.value, ENTRY_TYPE_LABELS[t])
+                        (t.value, ENTRY_TYPE_LABELS.get(t, t.value))
                         for t in query.entry_types
                     ],
                 )
@@ -566,7 +566,7 @@ class ReportGenerator:
                     types_title="Tipi di uscita",
                     items=data.exits,
                     types=[
-                        (t.value, EXIT_TYPE_LABELS[t])
+                        (t.value, EXIT_TYPE_LABELS.get(t, t.value))
                         for t in query.exit_types
                     ],
                 )

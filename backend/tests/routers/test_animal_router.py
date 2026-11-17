@@ -763,7 +763,8 @@ def test_get_animal_overview_report(app: TestClient, empty_db):
             "from_date": "2024-01-01",
             "city_codes": ["H501", "F205"],
             "entry_types": ["R", "C"],
-            "exit_types": ["A"],
+            # custody (C) has no label: the report falls back to the code
+            "exit_types": ["A", "C"],
         },
     )
 
