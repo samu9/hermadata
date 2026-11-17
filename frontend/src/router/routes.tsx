@@ -12,6 +12,7 @@ import RoleProtectedRoute from "../components/RoleProtectedRoute"
 import AdoptersPage from "../pages/AdoptersPage"
 import EditAdopterPage from "../pages/EditAdopterPage"
 import AdminPage from "../pages/AdminPage"
+import FavouriteComuniPage from "../pages/FavouriteComuniPage"
 import AnimalAdoptionPage from "../pages/AnimalAdoptionPage"
 import AnimalProfilePage from "../pages/AnimalProfilePage"
 import AnimalsPage from "../pages/AnimalsPage"
@@ -126,6 +127,13 @@ const routes: RouteObject[] = [
                         element: <UserManagementPage />,
                         handle: {
                             crumb: () => "Gestione Utenti",
+                        },
+                    },
+                    {
+                        path: "comuni",
+                        element: <FavouriteComuniPage />,
+                        handle: {
+                            crumb: () => "Comuni Preferiti",
                         },
                     },
                 ],
