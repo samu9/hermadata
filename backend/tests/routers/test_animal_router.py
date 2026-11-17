@@ -765,6 +765,7 @@ def test_get_animal_overview_report(app: TestClient, empty_db):
             "entry_types": ["R", "C"],
             # custody (C) has no label: the report falls back to the code
             "exit_types": ["A", "C"],
+            "split_by_city": True,
         },
     )
 

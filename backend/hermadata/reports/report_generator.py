@@ -1,5 +1,7 @@
 import logging
 import os
+import re
+from collections import defaultdict
 from datetime import date
 from enum import Enum
 from io import BytesIO
@@ -7,7 +9,7 @@ from typing import Annotated
 
 import openpyxl
 from jinja2 import Environment
-from openpyxl.styles import Font
+from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.worksheet.worksheet import Worksheet
 from pydantic import (
     AfterValidator,
@@ -85,9 +87,17 @@ DEFAULT_EXTENSIONS: dict[ReportFormat, str] = {ReportFormat.excel: "xlsx"}
 
 
 _BOLD = Font(bold=True)
+_CENTER = Alignment(horizontal="center", vertical="center")
+_SECTION_FILLS = {
+    "Entrate": PatternFill("solid", fgColor="FEF3C7"),
+    "Uscite": PatternFill("solid", fgColor="DBEAFE"),
+}
+# Characters not allowed in Excel sheet names
+_SHEET_NAME_FORBIDDEN = re.compile(r"[\\/*?:\[\]]")
 
 
 class _OverviewSection(BaseModel):
+    # Group header of the type columns ("Entrate", "Uscite")
     title: str
     # Summary label of the selected types
     types_title: str
@@ -105,6 +115,11 @@ def _count_animals(items: list[AnimalPresenceItem], **filters) -> int:
             if all(getattr(i, k) == v for k, v in filters.items())
         }
     )
+
+
+def _blank_zero(value: int) -> int | None:
+    # Empty cells instead of zeros, as in the sheets kept by the shelter
+    return value or None
 
 
 def _bold_last_row(ws: Worksheet):
@@ -131,6 +146,54 @@ def _overview_period(query: AnimalOverviewQuery) -> str:
     return f"fino al {transform_date_to_string(query.to_date)}"
 
 
+def _sheet_name(name: str, taken: set[str]) -> str:
+    """Valid (max 31 chars, no forbidden characters) and unique name."""
+    base = _SHEET_NAME_FORBIDDEN.sub("-", name)[:31]
+    candidate, n = base, 2
+    while candidate.lower() in taken:
+        suffix = f" ({n})"
+        candidate = base[: 31 - len(suffix)] + suffix
+        n += 1
+    taken.add(candidate.lower())
+    return candidate
+
+
+def _write_type_headers(
+    ws: Worksheet, lead: list[str], sections: list[_OverviewSection]
+):
+    """Two header rows: the lead columns (merged vertically), then a
+    group header per section over its type columns."""
+    first_row: list[str | None] = list(lead)
+    second_row: list[str | None] = [None] * len(lead)
+    for section in sections:
+        first_row += [section.title] + [None] * (len(section.types) - 1)
+        second_row += [label for _, label in section.types]
+    ws.append(first_row)
+    ws.append(second_row)
+    # After an empty append() max_row lags behind: read it afterwards
+    top = ws.max_row - 1
+
+    for col in range(1, len(lead) + 1):
+        ws.merge_cells(
+            start_row=top, start_column=col, end_row=top + 1, end_column=col
+        )
+    col = len(lead) + 1
+    for section in sections:
+        last = col + len(section.types) - 1
+        if last > col:
+            ws.merge_cells(
+                start_row=top, start_column=col, end_row=top, end_column=last
+            )
+        for c in range(col, last + 1):
+            for r in (top, top + 1):
+                ws.cell(r, c).fill = _SECTION_FILLS[section.title]
+        col = last + 1
+    for r in (top, top + 1):
+        for cell in ws[r]:
+            cell.font = _BOLD
+            cell.alignment = _CENTER
+
+
 def _write_overview_summary(
     ws: Worksheet,
     query: AnimalOverviewQuery,
@@ -138,8 +201,8 @@ def _write_overview_summary(
     races: list[tuple[str, str]],
     cities: list[tuple[str, str]],
 ):
-    """Filters used, then one table per section: a row for each selected
-    entry/exit type, a column for each race, plus the totals."""
+    """Filters used, then distinct animals per comune (and race, when
+    more than one is selected) for each entry/exit type."""
     ws.title = "Riepilogo"
     ws.append(["Riepilogo animali"])
     _bold_last_row(ws)
@@ -160,84 +223,81 @@ def _write_overview_summary(
                 ", ".join(label for _, label in section.types),
             ]
         )
-    # With a single race the race columns would repeat the total
-    race_columns = races if len(races) > 1 else []
-    for section in sections:
-        ws.append([])
-        ws.append(
-            [section.title] + [name for _, name in race_columns] + ["Totale"]
-        )
-        _bold_last_row(ws)
-        for type_code, label in section.types:
-            ws.append(
-                [label]
-                + [
-                    _count_animals(
-                        section.items, type=type_code, race_id=race_id
-                    )
-                    for race_id, _ in race_columns
-                ]
-                + [_count_animals(section.items, type=type_code)]
-            )
-        # Distinct animals: one with several types is counted once
-        ws.append(
-            [f"Totale {section.title.lower()}"]
-            + [
-                _count_animals(section.items, race_id=race_id)
-                for race_id, _ in race_columns
-            ]
-            + [_count_animals(section.items)]
-        )
-        _bold_last_row(ws)
-    _autofit(ws)
+    ws.append(["Dividi per comune", "Sì" if query.split_by_city else "No"])
+    ws.append([])
 
-
-def _write_overview_section(
-    ws: Worksheet,
-    section: _OverviewSection,
-    races: list[tuple[str, str]],
-    cities: list[tuple[str, str]],
-):
-    """One column per entry/exit type plus the total. With several races:
-    comune x race rows, subtotals per comune, then totals per race across
-    all comuni. With a single race: one row per comune, no race column."""
+    # With a single race the race column would only repeat it
     by_race = len(races) > 1
+    _write_type_headers(
+        ws, ["Comune"] + (["Tipo animale"] if by_race else []), sections
+    )
 
     def row(labels: list[str], **filters):
         ws.append(
             labels
             + [
-                _count_animals(section.items, type=t, **filters)
-                for t, _ in section.types
+                _blank_zero(_count_animals(s.items, type=t, **filters))
+                for s in sections
+                for t, _ in s.types
             ]
-            + [_count_animals(section.items, **filters)]
         )
 
-    ws.append(
-        ["Comune"]
-        + (["Tipo animale"] if by_race else [])
-        + [label for _, label in section.types]
-        + ["Totale"]
-    )
-    _bold_last_row(ws)
-
     for city_code, city_name in cities:
-        if not by_race:
+        if by_race:
+            for race_id, race_name in races:
+                row(
+                    [city_name, race_name],
+                    city_code=city_code,
+                    race_id=race_id,
+                )
+        else:
             row([city_name], city_code=city_code)
-            continue
-        for race_id, race_name in races:
-            row([city_name, race_name], city_code=city_code, race_id=race_id)
-        row([f"Totale {city_name}", ""], city_code=city_code)
-        _bold_last_row(ws)
+    row(["Totale"] + ([None] if by_race else []))
+    _bold_last_row(ws)
+    _autofit(ws)
 
-    if by_race:
-        for race_id, race_name in races:
-            row(["Tutti i comuni", race_name], race_id=race_id)
-    row(["Totale"] + ([""] if by_race else []))
+
+def _write_daily_sheet(
+    ws: Worksheet,
+    title: str,
+    sections: list[_OverviewSection],
+    **filters,
+):
+    """Like the shelter's sheet: a row for each day with at least one
+    movement, a column for each entry/exit type, then the totals (sum of
+    the days)."""
+    ws.append([title])
+    _bold_last_row(ws)
+    ws.append([])
+    _write_type_headers(ws, ["Data"], sections)
+
+    # (day, type) -> distinct animals, per section
+    counts: list[dict[tuple[date, str], set[int]]] = []
+    for section in sections:
+        by_day: dict[tuple[date, str], set[int]] = defaultdict(set)
+        for i in section.items:
+            if all(getattr(i, k) == v for k, v in filters.items()):
+                by_day[(i.day, i.type)].add(i.animal_id)
+        counts.append(by_day)
+
+    days = sorted({day for c in counts for day, _ in c})
+    columns = [
+        (c, t)
+        for c, section in zip(counts, sections, strict=True)
+        for t, _ in section.types
+    ]
+    totals = [0] * len(columns)
+    for day in days:
+        values = [len(c.get((day, t), ())) for c, t in columns]
+        totals = [a + b for a, b in zip(totals, values, strict=True)]
+        ws.append([day] + [_blank_zero(v) for v in values])
+        ws.cell(ws.max_row, 1).number_format = "DD/MM/YYYY"
+    ws.append(["Totale"] + [_blank_zero(v) for v in totals])
     _bold_last_row(ws)
 
-    ws.freeze_panes = "A2"
+    ws.freeze_panes = "B5"
     _autofit(ws)
+    ws.column_dimensions["A"].width = 12
 
 
 class BaseVariables(BaseModel):
@@ -565,8 +625,9 @@ class ReportGenerator:
         data: AnimalOverviewResult,
         format: ReportFormat = ReportFormat.excel,
     ) -> tuple[str, bytes]:
-        """Excel with a summary sheet plus one sheet per requested section
-        (entries, exits). Every count is of distinct animals."""
+        """Excel with a summary sheet (distinct animals per comune and
+        type) plus daily sheets, one per race or, with split_by_city, one
+        per race and comune."""
         if format != ReportFormat.excel:
             raise Exception("format not supported")
 
@@ -577,7 +638,7 @@ class ReportGenerator:
         if data.entries is not None:
             sections.append(
                 _OverviewSection(
-                    title="Ingressi",
+                    title="Entrate",
                     types_title="Tipi di ingresso",
                     items=data.entries,
                     types=[
@@ -601,10 +662,33 @@ class ReportGenerator:
 
         wb = openpyxl.Workbook()
         _write_overview_summary(wb.active, query, sections, races, cities)
-        for section in sections:
-            _write_overview_section(
-                wb.create_sheet(section.title), section, races, cities
-            )
+
+        taken = {"riepilogo"}
+        selected_cities = (
+            ", ".join(name for _, name in cities)
+            if query.city_codes
+            else "Tutti i comuni"
+        )
+        period = _overview_period(query)
+        for race_id, race_name in races:
+            if not query.split_by_city:
+                _write_daily_sheet(
+                    wb.create_sheet(_sheet_name(race_name, taken)),
+                    f"{race_name.upper()} · {selected_cities} · {period}",
+                    sections,
+                    race_id=race_id,
+                )
+                continue
+            for city_code, city_name in cities:
+                _write_daily_sheet(
+                    wb.create_sheet(
+                        _sheet_name(f"{race_name} - {city_name}", taken)
+                    ),
+                    f"{race_name.upper()} · {city_name} · {period}",
+                    sections,
+                    race_id=race_id,
+                    city_code=city_code,
+                )
 
         period_parts = []
         if query.from_date:

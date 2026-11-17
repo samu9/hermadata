@@ -16,6 +16,7 @@ from hermadata.reports.report_generator import (
     ReportFormat,
     ReportGenerator,
     ReportVariationVariables,
+    _sheet_name,
     format_age,
 )
 from hermadata.repositories.animal.models import (
@@ -371,28 +372,39 @@ def test_animal_list_report_extra_fields(
     assert report_generator.build_animal_list_report(full)
 
 
+def _presence(animal_id, city, race, type_, day):
+    return AnimalPresenceItem(
+        animal_id=animal_id,
+        city_code=city,
+        race_id=race,
+        type=type_,
+        day=day,
+    )
+
+
+def _rows(ws):
+    return list(ws.iter_rows(values_only=True))
+
+
 def test_animal_overview_report(report_generator: ReportGenerator):
     query = AnimalOverviewQuery(
         race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         entry_types=[EntryType.rescue, EntryType.confiscation],
+        exit_types=[ExitType.adoption],
     )
-    # Animal 1 entered twice in Roma with different types: counted once
-    # in the totals
     data = AnimalOverviewResult(
         entries=[
-            AnimalPresenceItem(
-                animal_id=1, city_code="H501", race_id="C", type="R"
-            ),
-            AnimalPresenceItem(
-                animal_id=1, city_code="H501", race_id="C", type="C"
-            ),
-            AnimalPresenceItem(
-                animal_id=2, city_code="H501", race_id="C", type="R"
-            ),
-            AnimalPresenceItem(
-                animal_id=3, city_code="F205", race_id="G", type="R"
-            ),
+            _presence(1, "H501", "C", "R", date(2024, 1, 5)),
+            _presence(2, "H501", "C", "R", date(2024, 1, 5)),
+            _presence(3, "F205", "G", "R", date(2024, 1, 7)),
+            # animal 1 came back with another entry type
+            _presence(1, "H501", "C", "C", date(2024, 1, 20)),
+            _presence(5, "F205", "C", "R", date(2024, 1, 20)),
+        ],
+        exits=[
+            _presence(1, "H501", "C", "A", date(2024, 1, 10)),
+            _presence(3, "F205", "G", "A", date(2024, 1, 7)),
         ],
         cities={"H501": "ROMA", "F205": "MILANO"},
         races={"C": "Cane", "G": "Gatto"},
@@ -404,59 +416,63 @@ def test_animal_overview_report(report_generator: ReportGenerator):
 
     assert filename == "riepilogo_dal_2024-01-01.xlsx"
     wb = load_workbook(BytesIO(report))
-    # The exits section was not requested
-    assert wb.sheetnames == ["Riepilogo", "Ingressi"]
+    # Comuni summed: one daily sheet per race
+    assert wb.sheetnames == ["Riepilogo", "Cane", "Gatto"]
 
-    rows = [
-        tuple(v if v != "" else None for v in row)
-        for row in wb["Ingressi"].iter_rows(values_only=True)
+    # Days with movements only, empty cells instead of zeros, totals are
+    # the sum of the days
+    assert _rows(wb["Cane"]) == [
+        ("CANE · Tutti i comuni · dal 01/01/2024", None, None, None),
+        (None, None, None, None),
+        ("Data", "Entrate", None, "Uscite"),
+        (None, "Recupero", "Sequestro", "Adozione"),
+        (datetime(2024, 1, 5), 2, None, None),
+        (datetime(2024, 1, 10), None, None, 1),
+        (datetime(2024, 1, 20), 1, 1, None),
+        ("Totale", 3, 1, 1),
     ]
-    assert rows == [
-        ("Comune", "Tipo animale", "Recupero", "Sequestro", "Totale"),
-        ("MILANO", "Cane", 0, 0, 0),
-        ("MILANO", "Gatto", 1, 0, 1),
-        ("Totale MILANO", None, 1, 0, 1),
-        ("ROMA", "Cane", 2, 1, 2),
-        ("ROMA", "Gatto", 0, 0, 0),
-        ("Totale ROMA", None, 2, 1, 2),
-        ("Tutti i comuni", "Cane", 2, 1, 2),
-        ("Tutti i comuni", "Gatto", 1, 0, 1),
-        ("Totale", None, 3, 1, 3),
+    assert _rows(wb["Gatto"])[4:] == [
+        (datetime(2024, 1, 7), 1, None, 1),
+        ("Totale", 1, None, 1),
     ]
+    assert "A3:A4" in wb["Cane"].merged_cells
+    assert "B3:C3" in wb["Cane"].merged_cells
 
-    summary = list(wb["Riepilogo"].iter_rows(values_only=True))
+    summary = _rows(wb["Riepilogo"])
     assert summary[1][:2] == ("Periodo", "dal 01/01/2024")
     assert summary[2][:2] == ("Comuni", "Tutti")
     assert summary[4][:2] == ("Tipi di ingresso", "Recupero, Sequestro")
-    # One row per entry type, one column per race
-    assert summary[-4:] == [
-        ("Ingressi", "Cane", "Gatto", "Totale"),
-        ("Recupero", 2, 1, 3),
-        ("Sequestro", 1, 0, 1),
-        # animal 1 has both types: counted once
-        ("Totale ingressi", 2, 1, 3),
+    assert summary[5][:2] == ("Tipi di uscita", "Adozione")
+    assert summary[6][:2] == ("Dividi per comune", "No")
+    # Distinct animals per comune and race
+    assert summary[8:] == [
+        ("Comune", "Tipo animale", "Entrate", None, "Uscite"),
+        (None, None, "Recupero", "Sequestro", "Adozione"),
+        ("MILANO", "Cane", 1, None, None),
+        ("MILANO", "Gatto", 1, None, 1),
+        ("ROMA", "Cane", 2, 1, 1),
+        ("ROMA", "Gatto", None, None, None),
+        ("Totale", None, 4, 1, 2),
     ]
 
 
-def test_animal_overview_report_single_race(
+def test_animal_overview_report_split_by_city_single_race(
     report_generator: ReportGenerator,
 ):
     query = AnimalOverviewQuery(
         race_ids=["C"],
         to_date=date(2024, 12, 31),
+        city_codes=["H501", "F205"],
         exit_types=[ExitType.adoption, ExitType.death],
+        split_by_city=True,
     )
     data = AnimalOverviewResult(
         exits=[
-            AnimalPresenceItem(
-                animal_id=1, city_code="H501", race_id="C", type="A"
-            ),
-            AnimalPresenceItem(
-                animal_id=2, city_code="H501", race_id="C", type="D"
-            ),
-            AnimalPresenceItem(
-                animal_id=4, city_code="F205", race_id="C", type="A"
-            ),
+            _presence(1, "H501", "C", "A", date(2024, 3, 1)),
+            _presence(2, "H501", "C", "D", date(2024, 3, 1)),
+            _presence(4, "F205", "C", "A", date(2024, 2, 1)),
+            # animal 1 adopted again later: the daily totals count it twice
+            _presence(1, "H501", "C", "A", date(2024, 6, 1)),
         ],
         cities={"H501": "ROMA", "F205": "MILANO"},
         races={"C": "Cane"},
@@ -468,21 +484,38 @@ def test_animal_overview_report_single_race(
 
     assert filename == "riepilogo_al_2024-12-31.xlsx"
     wb = load_workbook(BytesIO(report))
-    assert wb.sheetnames == ["Riepilogo", "Uscite"]
+    # The entries section was not requested
+    assert wb.sheetnames == ["Riepilogo", "Cane - MILANO", "Cane - ROMA"]
 
-    # No race column: one row per comune, then the total
-    assert list(wb["Uscite"].iter_rows(values_only=True)) == [
-        ("Comune", "Adozione", "Morte", "Totale"),
-        ("MILANO", 1, 0, 1),
-        ("ROMA", 1, 1, 2),
-        ("Totale", 2, 1, 3),
+    assert _rows(wb["Cane - ROMA"]) == [
+        ("CANE · ROMA · fino al 31/12/2024", None, None),
+        (None, None, None),
+        ("Data", "Uscite", None),
+        (None, "Adozione", "Morte"),
+        (datetime(2024, 3, 1), 1, 1),
+        (datetime(2024, 6, 1), 1, None),
+        ("Totale", 2, 1),
     ]
 
-    summary = list(wb["Riepilogo"].iter_rows(values_only=True))
-    assert summary[1] == ("Periodo", "fino al 31/12/2024")
-    assert summary[-4:] == [
-        ("Uscite", "Totale"),
-        ("Adozione", 2),
-        ("Morte", 1),
-        ("Totale uscite", 3),
+    summary = _rows(wb["Riepilogo"])
+    assert summary[1][:2] == ("Periodo", "fino al 31/12/2024")
+    assert summary[2][:2] == ("Comuni", "MILANO, ROMA")
+    assert summary[5][:2] == ("Dividi per comune", "Sì")
+    # A single race: no race column; distinct animals
+    assert summary[7:] == [
+        ("Comune", "Uscite", None),
+        (None, "Adozione", "Morte"),
+        ("MILANO", 1, None),
+        ("ROMA", 1, 1),
+        ("Totale", 2, 1),
     ]
+
+
+def test_overview_sheet_name():
+    taken = {"riepilogo"}
+    assert _sheet_name("Cane - Reggio/Calabria", taken) == (
+        "Cane - Reggio-Calabria"
+    )
+    long = "Gatto - San Giovanni in Fiore di Sopra"
+    assert _sheet_name(long, taken) == long[:31]
+    assert _sheet_name(long, taken) == long[:27] + " (2)"

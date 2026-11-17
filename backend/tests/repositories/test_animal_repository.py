@@ -1394,7 +1394,9 @@ def overview_animals(
 
 
 def _presences(items):
-    return sorted((i.animal_id, i.city_code, i.race_id, i.type) for i in items)
+    return sorted(
+        (i.animal_id, i.city_code, i.race_id, i.type, i.day) for i in items
+    )
 
 
 def test_get_animal_overview(
@@ -1412,15 +1414,20 @@ def test_get_animal_overview(
         )
     )
 
+    # One item per movement day: dog1's two rescue entries are both there
     assert _presences(result.entries) == sorted(
         [
-            (dog1, "H501", "C", "R"),
-            (dog2, "H501", "C", "C"),
-            (cat1, "F205", "G", "R"),
+            (dog1, "H501", "C", "R", date(2024, 1, 5)),
+            (dog1, "H501", "C", "R", date(2024, 3, 1)),
+            (dog2, "H501", "C", "C", date(2024, 1, 10)),
+            (cat1, "F205", "G", "R", date(2024, 1, 15)),
         ]
     )
     assert _presences(result.exits) == sorted(
-        [(dog1, "H501", "C", "A"), (cat1, "F205", "G", "A")]
+        [
+            (dog1, "H501", "C", "A", date(2024, 2, 10)),
+            (cat1, "F205", "G", "A", date(2024, 3, 5)),
+        ]
     )
     assert set(result.cities) == {"H501", "F205"}
     assert result.races == {"C": "Cane", "G": "Gatto"}
@@ -1441,7 +1448,9 @@ def test_get_animal_overview_filters(
         )
     )
     assert result.exits is None
-    assert _presences(result.entries) == [(cat1, "F205", "G", "R")]
+    assert _presences(result.entries) == [
+        (cat1, "F205", "G", "R", date(2024, 1, 15))
+    ]
     assert set(result.cities) == {"F205"}
 
     # Only the end date: older entries are included
@@ -1453,7 +1462,10 @@ def test_get_animal_overview_filters(
         )
     )
     assert _presences(result.entries) == sorted(
-        [(dog1, "H501", "C", "R"), (dog3, "H501", "C", "R")]
+        [
+            (dog1, "H501", "C", "R", date(2024, 1, 5)),
+            (dog3, "H501", "C", "R", date(2023, 6, 1)),
+        ]
     )
 
     # Race filter, exits only

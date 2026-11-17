@@ -422,9 +422,10 @@ class AnimalExitsQuery(ExtractionQuery):
 
 
 class AnimalOverviewQuery(BaseModel):
-    """Filters of the overview report: distinct animals counted per
-    comune, race and entry/exit type. A section (entries or exits) is
-    included only when at least one of its types is selected."""
+    """Filters of the overview report: animals counted day by day per
+    race (and optionally comune) and entry/exit type. A section (entries
+    or exits) is included only when at least one of its types is
+    selected."""
 
     race_ids: list[Annotated[str, Field(min_length=1)]] = Field(min_length=1)
     from_date: date | None = None
@@ -433,6 +434,8 @@ class AnimalOverviewQuery(BaseModel):
     city_codes: list[Annotated[str, Field(min_length=1)]] = []
     entry_types: list[EntryType] = []
     exit_types: list[ExitType] = []
+    # One daily sheet per comune and race instead of one per race
+    split_by_city: bool = False
 
     @model_validator(mode="after")
     def check_filters(self):
@@ -505,13 +508,14 @@ class AnimalExitsItem(AnimalReportBaseItem):
 
 
 class AnimalPresenceItem(BaseModel):
-    """One animal counted in an overview section, under the comune of
-    origin of the entry and the entry/exit type."""
+    """One animal movement counted in an overview section: the entry (or
+    exit) date and type, under the comune of origin of the entry."""
 
     animal_id: int
     city_code: str
     race_id: str
     type: str
+    day: date
 
 
 class AnimalOverviewResult(BaseModel):

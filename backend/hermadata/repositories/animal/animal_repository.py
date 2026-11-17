@@ -1768,9 +1768,10 @@ class SQLAnimalRepository(SQLBaseRepository):
     def get_animal_overview(
         self, query: AnimalOverviewQuery
     ) -> AnimalOverviewResult:
-        """Distinct animals per comune of origin, race and entry/exit
-        type. Entries are matched on the entry date, exits on the exit
-        date; only the sections with at least one type are computed."""
+        """Animal movements per day, comune of origin, race and
+        entry/exit type (one item per animal and day). Entries are matched
+        on the entry date, exits on the exit date; only the sections with
+        at least one type are computed."""
 
         def presences(date_col, type_col, types) -> list[AnimalPresenceItem]:
             stmt = (
@@ -1779,6 +1780,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                     AnimalEntry.origin_city_code,
                     Animal.race_id,
                     type_col,
+                    date_col,
                 )
                 .distinct()
                 .join(Animal, Animal.id == AnimalEntry.animal_id)
@@ -1805,8 +1807,9 @@ class SQLAnimalRepository(SQLBaseRepository):
                     city_code=city_code,
                     race_id=race_id,
                     type=type_,
+                    day=day,
                 )
-                for animal_id, city_code, race_id, type_ in (
+                for animal_id, city_code, race_id, type_, day in (
                     self.session.execute(stmt).all()
                 )
             ]
