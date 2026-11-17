@@ -160,9 +160,13 @@ def _write_overview_summary(
                 ", ".join(label for _, label in section.types),
             ]
         )
+    # With a single race the race columns would repeat the total
+    race_columns = races if len(races) > 1 else []
     for section in sections:
         ws.append([])
-        ws.append([section.title] + [name for _, name in races] + ["Totale"])
+        ws.append(
+            [section.title] + [name for _, name in race_columns] + ["Totale"]
+        )
         _bold_last_row(ws)
         for type_code, label in section.types:
             ws.append(
@@ -171,7 +175,7 @@ def _write_overview_summary(
                     _count_animals(
                         section.items, type=type_code, race_id=race_id
                     )
-                    for race_id, _ in races
+                    for race_id, _ in race_columns
                 ]
                 + [_count_animals(section.items, type=type_code)]
             )
@@ -180,7 +184,7 @@ def _write_overview_summary(
             [f"Totale {section.title.lower()}"]
             + [
                 _count_animals(section.items, race_id=race_id)
-                for race_id, _ in races
+                for race_id, _ in race_columns
             ]
             + [_count_animals(section.items)]
         )
@@ -194,12 +198,14 @@ def _write_overview_section(
     races: list[tuple[str, str]],
     cities: list[tuple[str, str]],
 ):
-    """Comune x race rows, one column per entry/exit type plus the
-    total. Subtotals per comune, then totals across all comuni."""
+    """One column per entry/exit type plus the total. With several races:
+    comune x race rows, subtotals per comune, then totals per race across
+    all comuni. With a single race: one row per comune, no race column."""
+    by_race = len(races) > 1
 
-    def row(label: str, race_label: str, **filters):
+    def row(labels: list[str], **filters):
         ws.append(
-            [label, race_label]
+            labels
             + [
                 _count_animals(section.items, type=t, **filters)
                 for t, _ in section.types
@@ -208,21 +214,26 @@ def _write_overview_section(
         )
 
     ws.append(
-        ["Comune", "Tipo animale"]
+        ["Comune"]
+        + (["Tipo animale"] if by_race else [])
         + [label for _, label in section.types]
         + ["Totale"]
     )
     _bold_last_row(ws)
 
     for city_code, city_name in cities:
+        if not by_race:
+            row([city_name], city_code=city_code)
+            continue
         for race_id, race_name in races:
-            row(city_name, race_name, city_code=city_code, race_id=race_id)
-        row(f"Totale {city_name}", "", city_code=city_code)
+            row([city_name, race_name], city_code=city_code, race_id=race_id)
+        row([f"Totale {city_name}", ""], city_code=city_code)
         _bold_last_row(ws)
 
-    for race_id, race_name in races:
-        row("Tutti i comuni", race_name, race_id=race_id)
-    row("Totale", "")
+    if by_race:
+        for race_id, race_name in races:
+            row(["Tutti i comuni", race_name], race_id=race_id)
+    row(["Totale"] + ([""] if by_race else []))
     _bold_last_row(ws)
 
     ws.freeze_panes = "A2"

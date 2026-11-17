@@ -436,3 +436,53 @@ def test_animal_overview_report(report_generator: ReportGenerator):
         # animal 1 has both types: counted once
         ("Totale ingressi", 2, 1, 3),
     ]
+
+
+def test_animal_overview_report_single_race(
+    report_generator: ReportGenerator,
+):
+    query = AnimalOverviewQuery(
+        race_ids=["C"],
+        to_date=date(2024, 12, 31),
+        exit_types=[ExitType.adoption, ExitType.death],
+    )
+    data = AnimalOverviewResult(
+        exits=[
+            AnimalPresenceItem(
+                animal_id=1, city_code="H501", race_id="C", type="A"
+            ),
+            AnimalPresenceItem(
+                animal_id=2, city_code="H501", race_id="C", type="D"
+            ),
+            AnimalPresenceItem(
+                animal_id=4, city_code="F205", race_id="C", type="A"
+            ),
+        ],
+        cities={"H501": "ROMA", "F205": "MILANO"},
+        races={"C": "Cane"},
+    )
+
+    filename, report = report_generator.generate_animal_overview_report(
+        query, data
+    )
+
+    assert filename == "riepilogo_al_2024-12-31.xlsx"
+    wb = load_workbook(BytesIO(report))
+    assert wb.sheetnames == ["Riepilogo", "Uscite"]
+
+    # No race column: one row per comune, then the total
+    assert list(wb["Uscite"].iter_rows(values_only=True)) == [
+        ("Comune", "Adozione", "Morte", "Totale"),
+        ("MILANO", 1, 0, 1),
+        ("ROMA", 1, 1, 2),
+        ("Totale", 2, 1, 3),
+    ]
+
+    summary = list(wb["Riepilogo"].iter_rows(values_only=True))
+    assert summary[1] == ("Periodo", "fino al 31/12/2024")
+    assert summary[-4:] == [
+        ("Uscite", "Totale"),
+        ("Adozione", 2),
+        ("Morte", 1),
+        ("Totale uscite", 3),
+    ]
