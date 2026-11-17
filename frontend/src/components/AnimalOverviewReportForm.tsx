@@ -2,6 +2,7 @@ import { faDownload } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "primereact/button"
+import { Checkbox } from "primereact/checkbox"
 import { MultiSelect } from "primereact/multiselect"
 import { useId } from "react"
 import { Controller, FormProvider, useForm } from "react-hook-form"
@@ -58,6 +59,7 @@ const AnimalOverviewReportForm = () => {
     const entryTypesQuery = useEntryTypesQuery()
     const exitTypesQuery = useExitTypesQuery()
     const citiesInputId = useId()
+    const splitInputId = useId()
 
     const form = useForm<AnimalOverviewReportSchema>({
         defaultValues: {
@@ -65,6 +67,7 @@ const AnimalOverviewReportForm = () => {
             city_codes: [],
             entry_types: [],
             exit_types: [],
+            split_by_city: false,
         },
         mode: "onChange",
         resolver: zodResolver(animalOverviewReportSchema),
@@ -104,9 +107,9 @@ const AnimalOverviewReportForm = () => {
             <form onSubmit={handleSubmit(onSubmit)}>
                 <SubTitle className="!mb-2">Report riepilogativo</SubTitle>
                 <p className="text-sm text-surface-500 mb-6">
-                    Numero di animali distinti per comune, tipo di animale e
-                    tipo di ingresso/uscita. Indicare almeno una data e almeno
-                    un tipo di ingresso o di uscita.
+                    Ingressi e uscite giorno per giorno, un foglio per tipo di
+                    animale, più un riepilogo per comune. Indicare almeno una
+                    data e almeno un tipo di ingresso o di uscita.
                 </p>
                 <FormProvider {...form}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -137,6 +140,30 @@ const AnimalOverviewReportForm = () => {
                                         placeholder="Tutti i comuni"
                                         className="w-full"
                                     />
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <Controller
+                                            name="split_by_city"
+                                            control={form.control}
+                                            render={({ field: split }) => (
+                                                <Checkbox
+                                                    inputId={splitInputId}
+                                                    checked={split.value}
+                                                    onChange={(e) =>
+                                                        split.onChange(
+                                                            !!e.checked,
+                                                        )
+                                                    }
+                                                />
+                                            )}
+                                        />
+                                        <label
+                                            htmlFor={splitInputId}
+                                            className="text-sm text-surface-700 cursor-pointer"
+                                        >
+                                            Dividi per comune (un foglio per
+                                            comune)
+                                        </label>
+                                    </div>
                                 </div>
                             )}
                         />

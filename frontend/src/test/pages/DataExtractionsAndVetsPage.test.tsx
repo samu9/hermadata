@@ -47,6 +47,7 @@ describe('DataExtractionsPage', () => {
     expect(screen.getByText('Tipi di ingresso')).toBeInTheDocument()
     expect(screen.getByText('Tipi di uscita')).toBeInTheDocument()
     expect(screen.getByText('Comuni')).toBeInTheDocument()
+    expect(screen.getByLabelText(/Dividi per comune/)).not.toBeChecked()
   })
 
   it('renders download buttons', async () => {

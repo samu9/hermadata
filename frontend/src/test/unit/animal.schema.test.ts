@@ -235,6 +235,7 @@ describe('animalOverviewReportSchema', () => {
     expect(result.success).toBe(true)
     expect(result.data?.from_date).toBe('2024-01-01T00:00:00.000')
     expect(result.data?.to_date).toBeUndefined()
+    expect(result.data?.split_by_city).toBe(false)
   })
 
   it('requires at least one date', () => {

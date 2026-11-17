@@ -286,6 +286,8 @@ export const animalOverviewReportSchema = z
         city_codes: z.array(z.string()),
         entry_types: z.array(z.string()),
         exit_types: z.array(z.string()),
+        // one daily sheet per comune instead of the comuni summed
+        split_by_city: z.boolean().default(false),
     })
     .refine((d) => d.from_date || d.to_date, {
         message: "Indicare almeno una data",
