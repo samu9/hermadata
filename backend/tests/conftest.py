@@ -242,7 +242,6 @@ def city_repository(
 ) -> Generator[SQLCityRepository, SQLCityRepository, None]:
     repo = SQLCityRepository(
         preferred_provinces=["LU", "PT"],
-        preferred_cities=["H501", "A561", "B251"],
     )
     return repo(db_session)
 

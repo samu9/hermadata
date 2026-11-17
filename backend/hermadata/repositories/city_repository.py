@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, constr
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 
 from hermadata.database.models import Comune, Provincia
@@ -17,18 +17,21 @@ class ComuneModel(BaseModel):
     id: str = constr(pattern=r"[A-Z]\d{3}")
     name: str
     provincia: str = constr(pattern=r"[A-Z]{2}")
+    favourite: bool = False
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SetComuneFavouriteModel(BaseModel):
+    favourite: bool
 
 
 class SQLCityRepository(SQLBaseRepository):
     def __init__(
         self,
         preferred_provinces: list[str] = None,
-        preferred_cities: list[str] = None,
     ):
         self.preferred_provinces = preferred_provinces or []
-        self.preferred_cities = preferred_cities or []
 
     def get_province(self) -> list[ProvinciaModel]:
         query_result = (
@@ -46,18 +49,21 @@ class SQLCityRepository(SQLBaseRepository):
     def get_comuni(self, provincia: str | None = None) -> list[ComuneModel]:
         """Return the comuni of a provincia, or all of them if omitted.
 
-        Preferred cities come first, the rest is ordered by name.
+        Favourite comuni come first, then each group is ordered by name.
         """
-        stmt = select(Comune).order_by(Comune.name)
+        stmt = select(Comune).order_by(Comune.favourite.desc(), Comune.name)
         if provincia:
             stmt = stmt.where(Comune.provincia == provincia)
         query_result = self.session.execute(stmt).scalars().all()
-        result = sorted(
-            [ComuneModel.model_validate(r) for r in query_result],
-            key=lambda x: (x.id not in self.preferred_cities, x.name),
-        )
 
-        return result
+        return [ComuneModel.model_validate(r) for r in query_result]
+
+    def set_favourite(self, code: str, favourite: bool) -> None:
+        """Mark or unmark a comune as favourite."""
+        self.session.execute(
+            update(Comune).where(Comune.id == code).values(favourite=favourite)
+        )
+        self.session.flush()
 
     def city_exists(self, city_code: str) -> bool:
         """Check if a city code exists in the database."""
@@ -75,7 +81,9 @@ class SQLCityRepository(SQLBaseRepository):
             return ComuneModel.model_validate(result)
         return None
 
-    def create_comune(self, code: str, name: str, provincia: str) -> ComuneModel:
+    def create_comune(
+        self, code: str, name: str, provincia: str
+    ) -> ComuneModel:
         """Create a new comune entry in the database.
 
         If a concurrent request has already inserted the same code, the
@@ -92,4 +100,3 @@ class SQLCityRepository(SQLBaseRepository):
                 select(Comune).where(Comune.id == code)
             ).scalar_one()
             return ComuneModel.model_validate(result)
-

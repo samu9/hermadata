@@ -1,7 +1,7 @@
 from functools import cache
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 
@@ -25,13 +25,16 @@ from hermadata.models import (
     ExitTypeElement,
     UtilElement,
 )
+from hermadata.permissions import require_superuser
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import FurColorName
 from hermadata.repositories.city_repository import (
     ComuneModel,
     ProvinciaModel,
+    SetComuneFavouriteModel,
     SQLCityRepository,
 )
+from hermadata.services.user_service import TokenData
 
 router = APIRouter(prefix="/util")
 
@@ -67,6 +70,21 @@ def get_comune(
     code: str,
     repo: Annotated[SQLCityRepository, Depends(get_city_repository)],
 ):
+    return repo.get_comune(code)
+
+
+@router.put("/comune/{code}/favourite", response_model=ComuneModel)
+def set_comune_favourite(
+    code: str,
+    data: SetComuneFavouriteModel,
+    current_user: Annotated[TokenData, Depends(require_superuser)],
+    repo: Annotated[SQLCityRepository, Depends(get_city_repository)],
+):
+    """Mark or unmark a comune as favourite: favourite comuni are listed
+    first in the comune pickers. Superuser only."""
+    if not repo.city_exists(code):
+        raise HTTPException(status_code=404, detail="Comune not found")
+    repo.set_favourite(code, data.favourite)
     return repo.get_comune(code)
 
 

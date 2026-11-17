@@ -54,6 +54,55 @@ def test_get_comune_not_found(app: TestClient):
     assert result.json() is None
 
 
+def test_set_comune_favourite(app: TestClient):
+    try:
+        result = app.put(
+            "/util/comune/G491/favourite", json={"favourite": True}
+        )
+        assert result.status_code == 200
+        assert result.json()["favourite"] is True
+
+        comuni = app.get("/util/comuni", params={"provincia": "PT"}).json()
+        assert comuni[0]["id"] == "G491"
+        assert comuni[0]["favourite"] is True
+    finally:
+        result = app.put(
+            "/util/comune/G491/favourite", json={"favourite": False}
+        )
+    assert result.status_code == 200
+    assert result.json()["favourite"] is False
+
+
+def test_set_comune_favourite_not_found(app: TestClient):
+    result = app.put("/util/comune/ZZZZ/favourite", json={"favourite": True})
+
+    assert result.status_code == 404
+
+
+def test_set_comune_favourite_requires_superuser(app: TestClient):
+    from hermadata.initializations import get_current_user
+    from hermadata.services.user_service import TokenData
+
+    def regular_user():
+        return TokenData(
+            user_id=1,
+            email="test@test.it",
+            is_active=True,
+            is_superuser=False,
+            permissions=["MU"],
+        )
+
+    superuser = app.app.dependency_overrides[get_current_user]
+    app.app.dependency_overrides[get_current_user] = regular_user
+    try:
+        result = app.put(
+            "/util/comune/G491/favourite", json={"favourite": True}
+        )
+        assert result.status_code == 403
+    finally:
+        app.app.dependency_overrides[get_current_user] = superuser
+
+
 def test_get_entry_types(app: TestClient):
     result = app.get("/util/entry-types")
 
