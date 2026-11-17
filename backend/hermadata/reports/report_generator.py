@@ -7,6 +7,8 @@ from typing import Annotated
 
 import openpyxl
 from jinja2 import Environment
+from openpyxl.styles import Font
+from openpyxl.worksheet.worksheet import Worksheet
 from pydantic import (
     AfterValidator,
     BaseModel,
@@ -40,6 +42,9 @@ from hermadata.repositories.animal.models import (
     AnimalExitsQuery,
     AnimalListReportExtraField,
     AnimalListReportItem,
+    AnimalOverviewQuery,
+    AnimalOverviewResult,
+    AnimalPresenceItem,
     AnimalReportResult,
 )
 from hermadata.time_utils import get_today
@@ -77,6 +82,135 @@ class ReportFormat(Enum):
 
 
 DEFAULT_EXTENSIONS: dict[ReportFormat, str] = {ReportFormat.excel: "xlsx"}
+
+
+_BOLD = Font(bold=True)
+
+
+class _OverviewSection(BaseModel):
+    title: str
+    # Summary label of the selected types
+    types_title: str
+    items: list[AnimalPresenceItem]
+    # (type code, label) in the order requested
+    types: list[tuple[str, str]]
+
+
+def _count_animals(items: list[AnimalPresenceItem], **filters) -> int:
+    """Distinct animals among the items matching all the filters."""
+    return len(
+        {
+            i.animal_id
+            for i in items
+            if all(getattr(i, k) == v for k, v in filters.items())
+        }
+    )
+
+
+def _bold_last_row(ws: Worksheet):
+    for cell in ws[ws.max_row]:
+        cell.font = _BOLD
+
+
+def _autofit(ws: Worksheet):
+    for column in ws.columns:
+        width = max(len(str(c.value or "")) for c in column)
+        ws.column_dimensions[column[0].column_letter].width = min(
+            max(width + 2, 10), 50
+        )
+
+
+def _overview_period(query: AnimalOverviewQuery) -> str:
+    if query.from_date and query.to_date:
+        return (
+            f"dal {transform_date_to_string(query.from_date)}"
+            f" al {transform_date_to_string(query.to_date)}"
+        )
+    if query.from_date:
+        return f"dal {transform_date_to_string(query.from_date)}"
+    return f"fino al {transform_date_to_string(query.to_date)}"
+
+
+def _write_overview_summary(
+    ws: Worksheet,
+    query: AnimalOverviewQuery,
+    sections: list[_OverviewSection],
+    races: list[tuple[str, str]],
+    cities: list[tuple[str, str]],
+):
+    """Filters used, then distinct animals per race and section."""
+    ws.title = "Riepilogo"
+    ws.append(["Riepilogo animali"])
+    _bold_last_row(ws)
+    ws.append(["Periodo", _overview_period(query)])
+    ws.append(
+        [
+            "Comuni",
+            ", ".join(name for _, name in cities)
+            if query.city_codes
+            else "Tutti",
+        ]
+    )
+    ws.append(["Tipi di animale", ", ".join(name for _, name in races)])
+    for section in sections:
+        ws.append(
+            [
+                section.types_title,
+                ", ".join(label for _, label in section.types),
+            ]
+        )
+    ws.append([])
+    ws.append(["Tipo animale"] + [s.title for s in sections])
+    _bold_last_row(ws)
+    for race_id, race_name in races:
+        ws.append(
+            [race_name]
+            + [_count_animals(s.items, race_id=race_id) for s in sections]
+        )
+    ws.append(["Totale"] + [_count_animals(s.items) for s in sections])
+    _bold_last_row(ws)
+    _autofit(ws)
+
+
+def _write_overview_section(
+    ws: Worksheet,
+    section: _OverviewSection,
+    races: list[tuple[str, str]],
+    cities: list[tuple[str, str]],
+):
+    """Comune x race rows, one column per entry/exit type plus the
+    total. Subtotals per comune, then totals across all comuni."""
+
+    def row(label: str, race_label: str, **filters):
+        ws.append(
+            [label, race_label]
+            + [
+                _count_animals(section.items, type=t, **filters)
+                for t, _ in section.types
+            ]
+            + [_count_animals(section.items, **filters)]
+        )
+
+    ws.append(
+        ["Comune", "Tipo animale"]
+        + [label for _, label in section.types]
+        + ["Totale"]
+    )
+    _bold_last_row(ws)
+
+    for city_code, city_name in cities:
+        for race_id, race_name in races:
+            row(city_name, race_name, city_code=city_code, race_id=race_id)
+        row(f"Totale {city_name}", "", city_code=city_code)
+        _bold_last_row(ws)
+
+    for race_id, race_name in races:
+        row("Tutti i comuni", race_name, race_id=race_id)
+    row("Totale", "")
+    _bold_last_row(ws)
+
+    ws.freeze_panes = "A2"
+    _autofit(ws)
 
 
 class BaseVariables(BaseModel):
@@ -397,6 +531,67 @@ class ReportGenerator:
         bytes_data = fp.getvalue()
 
         return filename, bytes_data
+
+    def generate_animal_overview_report(
+        self,
+        query: AnimalOverviewQuery,
+        data: AnimalOverviewResult,
+        format: ReportFormat = ReportFormat.excel,
+    ) -> tuple[str, bytes]:
+        """Excel with a summary sheet plus one sheet per requested section
+        (entries, exits). Every count is of distinct animals."""
+        if format != ReportFormat.excel:
+            raise Exception("format not supported")
+
+        races = [(r, data.races[r]) for r in query.race_ids if r in data.races]
+        cities = sorted(data.cities.items(), key=lambda c: c[1])
+
+        sections: list[_OverviewSection] = []
+        if data.entries is not None:
+            sections.append(
+                _OverviewSection(
+                    title="Ingressi",
+                    types_title="Tipi di ingresso",
+                    items=data.entries,
+                    types=[
+                        (t.value, ENTRY_TYPE_LABELS[t])
+                        for t in query.entry_types
+                    ],
+                )
+            )
+        if data.exits is not None:
+            sections.append(
+                _OverviewSection(
+                    title="Uscite",
+                    types_title="Tipi di uscita",
+                    items=data.exits,
+                    types=[
+                        (t.value, EXIT_TYPE_LABELS[t])
+                        for t in query.exit_types
+                    ],
+                )
+            )
+
+        wb = openpyxl.Workbook()
+        _write_overview_summary(wb.active, query, sections, races, cities)
+        for section in sections:
+            _write_overview_section(
+                wb.create_sheet(section.title), section, races, cities
+            )
+
+        period_parts = []
+        if query.from_date:
+            period_parts.append(f"dal_{query.from_date.strftime('%Y-%m-%d')}")
+        if query.to_date:
+            period_parts.append(f"al_{query.to_date.strftime('%Y-%m-%d')}")
+        filename = (
+            f"riepilogo_{'_'.join(period_parts)}.{DEFAULT_EXTENSIONS[format]}"
+        )
+
+        fp = BytesIO()
+        wb.save(fp)
+
+        return filename, fp.getvalue()
 
     def generate_animal_exits_report(
         self,

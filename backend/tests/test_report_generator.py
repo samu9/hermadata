@@ -25,6 +25,9 @@ from hermadata.repositories.animal.models import (
     AnimalEntriesItem,
     AnimalEntriesQuery,
     AnimalListReportExtraField,
+    AnimalOverviewQuery,
+    AnimalOverviewResult,
+    AnimalPresenceItem,
     AnimalReportResult,
 )
 from hermadata.settings import Settings
@@ -366,3 +369,63 @@ def test_animal_list_report_extra_fields(
     assert "Sì" in html and "<td>No</td>" in html
 
     assert report_generator.build_animal_list_report(full)
+
+
+def test_animal_overview_report(report_generator: ReportGenerator):
+    query = AnimalOverviewQuery(
+        race_ids=["C", "G"],
+        from_date=date(2024, 1, 1),
+        entry_types=[EntryType.rescue, EntryType.confiscation],
+    )
+    # Animal 1 entered twice in Roma with different types: counted once
+    # in the totals
+    data = AnimalOverviewResult(
+        entries=[
+            AnimalPresenceItem(
+                animal_id=1, city_code="H501", race_id="C", type="R"
+            ),
+            AnimalPresenceItem(
+                animal_id=1, city_code="H501", race_id="C", type="C"
+            ),
+            AnimalPresenceItem(
+                animal_id=2, city_code="H501", race_id="C", type="R"
+            ),
+            AnimalPresenceItem(
+                animal_id=3, city_code="F205", race_id="G", type="R"
+            ),
+        ],
+        cities={"H501": "ROMA", "F205": "MILANO"},
+        races={"C": "Cane", "G": "Gatto"},
+    )
+
+    filename, report = report_generator.generate_animal_overview_report(
+        query, data
+    )
+
+    assert filename == "riepilogo_dal_2024-01-01.xlsx"
+    wb = load_workbook(BytesIO(report))
+    # The exits section was not requested
+    assert wb.sheetnames == ["Riepilogo", "Ingressi"]
+
+    rows = [
+        tuple(v if v != "" else None for v in row)
+        for row in wb["Ingressi"].iter_rows(values_only=True)
+    ]
+    assert rows == [
+        ("Comune", "Tipo animale", "Recupero", "Sequestro", "Totale"),
+        ("MILANO", "Cane", 0, 0, 0),
+        ("MILANO", "Gatto", 1, 0, 1),
+        ("Totale MILANO", None, 1, 0, 1),
+        ("ROMA", "Cane", 2, 1, 2),
+        ("ROMA", "Gatto", 0, 0, 0),
+        ("Totale ROMA", None, 2, 1, 2),
+        ("Tutti i comuni", "Cane", 2, 1, 2),
+        ("Tutti i comuni", "Gatto", 1, 0, 1),
+        ("Totale", None, 3, 1, 3),
+    ]
+
+    summary = list(wb["Riepilogo"].iter_rows(values_only=True))
+    assert summary[1][:2] == ("Periodo", "dal 01/01/2024")
+    assert summary[2][:2] == ("Comuni", "Tutti")
+    assert summary[4][:2] == ("Tipi di ingresso", "Recupero, Sequestro")
+    assert summary[-3:] == [("Cane", 2), ("Gatto", 1), ("Totale", 3)]
