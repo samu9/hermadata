@@ -238,12 +238,12 @@ const AnimalRecordHeader = (props: Props) => {
         <div className="relative mb-6 mt-4">
             {/* Polaroid — top nearly flush with card top border */}
             <div
-                className="absolute -top-1 left-4 sm:left-6 z-10"
+                className="relative z-10 mx-auto -mb-12 w-fit sm:absolute sm:-top-1 sm:left-6 sm:mx-0 sm:mb-0"
                 style={{ transform: `rotate(${rotation}deg)` }}
             >
                 <div
                     className={classNames(
-                        "bg-white p-1.5 pb-6 shadow-xl rounded-sm w-24 sm:w-32 group cursor-pointer",
+                        "bg-white p-1.5 pb-6 shadow-xl rounded-sm w-28 sm:w-32 group cursor-pointer",
                         { grayscale: isNotPresent },
                     )}
                     onClick={handleImageClick}
@@ -276,7 +276,7 @@ const AnimalRecordHeader = (props: Props) => {
             {/* Card */}
             <div
                 className={classNames(
-                    "rounded-xl shadow-sm border pt-6 pb-6 pr-6 pl-36 sm:pl-44",
+                    "rounded-xl shadow-sm border px-4 pt-16 pb-5 sm:pt-6 sm:pb-6 sm:pr-6 sm:pl-44",
                     {
                         "bg-surface-100 border-surface-300": isNotPresent,
                         "bg-red-50 border-red-200": isSanitary,
@@ -287,8 +287,8 @@ const AnimalRecordHeader = (props: Props) => {
             >
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                     {/* Animal Info */}
-                    <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
+                    <div className="flex-1 min-w-0 text-center sm:text-left">
+                        <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
                             {/* Adoptability Flag */}
                             {props.data.adoptability_index !== null &&
                                 props.data.adoptability_index !== undefined && (
@@ -322,7 +322,7 @@ const AnimalRecordHeader = (props: Props) => {
 
                         <h1
                             className={classNames(
-                                "text-3xl font-bold mb-3 leading-tight",
+                                "text-2xl sm:text-3xl font-bold mb-3 leading-tight break-words",
                                 {
                                     "text-surface-900": props.data.name,
                                     "text-surface-400": !props.data.name,
@@ -332,7 +332,7 @@ const AnimalRecordHeader = (props: Props) => {
                             {props.data.name || "Nome non assegnato"}
                         </h1>
 
-                        <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4">
                             <ChipCodeBadge
                                 code={props.data.chip_code || undefined}
                             />
@@ -350,7 +350,7 @@ const AnimalRecordHeader = (props: Props) => {
 
                     {/* Alert for Not Present Animals */}
                     {props.data.exit_type && props.data.exit_date && (
-                        <div className="lg:flex-shrink-0 flex flex-col gap-3">
+                        <div className="lg:flex-shrink-0 flex flex-col items-center sm:items-stretch gap-3">
                             <NotPresentAlert
                                 data={props.data}
                                 bare={!!isNotPresent}
@@ -363,7 +363,7 @@ const AnimalRecordHeader = (props: Props) => {
 
                     {/* Stage Info - Show when animal is present */}
                     {!props.data.exit_type && (
-                        <div className="lg:flex-shrink-0">
+                        <div className="lg:flex-shrink-0 flex justify-center sm:block">
                             <StageInfo
                                 healthcareStage={props.data.healthcare_stage}
                                 inShelterFrom={props.data.in_shelter_from}
