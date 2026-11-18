@@ -13,6 +13,7 @@ import { AdopterSearch } from "../../models/adopter.schema"
 import { useVetSearchQuery } from "../../queries"
 
 import { classNames } from "primereact/utils"
+import { useMobileTableScroll } from "../../hooks/useMediaQuery"
 
 type LazyTableState = {
     first: number
@@ -24,6 +25,7 @@ type LazyTableState = {
 }
 
 const VetList = () => {
+    const mobileTableScroll = useMobileTableScroll("40rem")
     const [totalRecords, setTotalRecords] = useState(0)
 
     const [lazyState, setLazyState] = useState<LazyTableState>({
@@ -74,6 +76,7 @@ const VetList = () => {
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
                 <DataTable
                     className="w-full"
+                    {...mobileTableScroll}
                     filters={lazyState.filters}
                     value={vetQuery.data?.items}
                     selectionMode="single"

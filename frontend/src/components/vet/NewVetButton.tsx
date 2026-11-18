@@ -35,7 +35,7 @@ const NewVetButton = (props: Props) => {
                     Nuovo veterinario
                 </Button>
                 <OverlayPanel showCloseIcon ref={op}>
-                    <div className="">
+                    <div className="w-[90vw] sm:w-auto">
                         <NewVetForm onSaved={(a) => onNew(a)} />
                     </div>
                 </OverlayPanel>

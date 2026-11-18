@@ -35,38 +35,38 @@ const NewVetForm = (props: Props) => {
             <FormProvider {...form}>
                 <form
                     onSubmit={handleSubmit(onSubmit)}
-                    className="flex flex-col gap-2 items-start"
+                    className="flex flex-col gap-2 items-start w-full"
                 >
-                    <div className="flex flex-col gap-2 items-start">
-                        <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 items-start w-full">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full">
                             <ControlledInputText
                                 fieldName="name"
                                 label="Nome"
-                                className="w-64"
+                                className="w-full sm:w-64"
                             />
                             <ControlledInputText
                                 fieldName="surname"
                                 label="Cognome"
-                                className="w-64"
+                                className="w-full sm:w-64"
                             />
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full">
                             <ControlledInputText
                                 fieldName="business_name"
                                 label="Ragione sociale"
-                                className="w-64"
+                                className="w-full sm:w-64"
                             />
 
                             <ControlledInputText
                                 fieldName="fiscal_code"
                                 label="Codice fiscale"
-                                className="w-64"
+                                className="w-full sm:w-64"
                             />
                         </div>
                         <ControlledInputText
                             fieldName="phone"
                             label="Telefono"
-                            className="w-64"
+                            className="w-full sm:w-64"
                         />
                     </div>
                     <Button label="Salva" size="small" />

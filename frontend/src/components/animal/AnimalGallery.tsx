@@ -192,6 +192,7 @@ const AnimalGallery = () => {
                 header="Conferma eliminazione"
                 visible={deleteTarget !== null}
                 style={{ width: "360px" }}
+                breakpoints={{ "640px": "90vw" }}
                 onHide={() => setDeleteTarget(null)}
                 footer={
                     <div className="flex justify-end gap-2">

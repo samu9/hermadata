@@ -14,6 +14,7 @@ import { ManagementUser } from "../../models/user.schema"
 import { useComuneQuery } from "../../queries"
 import EditUserForm from "./EditUserForm"
 import UserPermissionsDialog from "./UserPermissionsDialog"
+import { useMobileTableScroll } from "../../hooks/useMediaQuery"
 
 // Component to fetch and display city name
 const CityNameTag: React.FC<{ code: string }> = ({ code }) => {
@@ -29,6 +30,7 @@ const CityNameTag: React.FC<{ code: string }> = ({ code }) => {
 }
 
 const UserList: React.FC = () => {
+    const mobileTableScroll = useMobileTableScroll("64rem")
     const [selectedUser, setSelectedUser] = useState<ManagementUser | null>(
         null,
     )
@@ -258,6 +260,7 @@ const UserList: React.FC = () => {
                     rows={10}
                     rowsPerPageOptions={[5, 10, 25]}
                     className="p-datatable-sm"
+                    {...mobileTableScroll}
                     emptyMessage="Nessun utente trovato"
                     sortField="created_at"
                     sortOrder={-1}
@@ -322,6 +325,7 @@ const UserList: React.FC = () => {
                     setSelectedUser(null)
                 }}
                 style={{ width: "500px" }}
+                breakpoints={{ "640px": "95vw" }}
                 modal
             >
                 {selectedUser && (

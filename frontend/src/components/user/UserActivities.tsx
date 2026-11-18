@@ -9,8 +9,15 @@ import { apiService } from "../../main"
 import { Activity, ActivityFilterQuery } from "../../models/activity.schema"
 import { format } from "date-fns"
 import { ManagementUser } from "../../models/user.schema"
+import MobileFilters from "../MobileFilters"
+import {
+    useIsMobile,
+    useMobileTableScroll,
+} from "../../hooks/useMediaQuery"
 
 const UserActivities: React.FC = () => {
+    const mobileTableScroll = useMobileTableScroll("48rem")
+    const isMobile = useIsMobile()
     // State for pagination
     const [first, setFirst] = useState(0)
     const [rows, setRows] = useState(15)
@@ -134,68 +141,75 @@ const UserActivities: React.FC = () => {
         <div className="space-y-4">
             {/* Filters Section */}
             <div className="flex flex-wrap items-end gap-4 p-4 bg-surface-50 rounded-lg border border-surface-200">
-                <div className="flex flex-col gap-2 flex-grow md:flex-grow-0 md:w-64">
-                    <label
-                        htmlFor="user-filter"
-                        className="text-sm font-medium text-surface-700"
-                    >
-                        Utente
-                    </label>
-                    <Dropdown
-                        id="user-filter"
-                        value={selectedUser}
-                        onChange={(e) => {
-                            setSelectedUser(e.value)
-                            setFirst(0)
-                        }}
-                        options={usersQuery.data?.items || []}
-                        optionLabel="email"
-                        itemTemplate={(option: ManagementUser) => (
-                            <div>
-                                {option.name && option.surname
-                                    ? `${option.name} ${option.surname} (${option.email})`
-                                    : option.email}
-                            </div>
-                        )}
-                        valueTemplate={(option: ManagementUser) => {
-                            if (!option) return "Tutti gli utenti"
-                            return option.name && option.surname
-                                ? `${option.name} ${option.surname}`
-                                : option.email
-                        }}
-                        placeholder="Seleziona un utente"
-                        className="w-full"
-                        showClear
-                        filter
-                    />
-                </div>
+                <MobileFilters
+                    activeCount={[selectedUser, dateRange].filter(Boolean).length}
+                    className="order-last w-full flex flex-col gap-4"
+                >
+                    <div className="flex flex-col gap-2 flex-grow md:flex-grow-0 md:w-64">
+                        <label
+                            htmlFor="user-filter"
+                            className="text-sm font-medium text-surface-700"
+                        >
+                            Utente
+                        </label>
+                        <Dropdown
+                            id="user-filter"
+                            value={selectedUser}
+                            onChange={(e) => {
+                                setSelectedUser(e.value)
+                                setFirst(0)
+                            }}
+                            options={usersQuery.data?.items || []}
+                            optionLabel="email"
+                            itemTemplate={(option: ManagementUser) => (
+                                <div>
+                                    {option.name && option.surname
+                                        ? `${option.name} ${option.surname} (${option.email})`
+                                        : option.email}
+                                </div>
+                            )}
+                            valueTemplate={(option: ManagementUser) => {
+                                if (!option) return "Tutti gli utenti"
+                                return option.name && option.surname
+                                    ? `${option.name} ${option.surname}`
+                                    : option.email
+                            }}
+                            placeholder="Seleziona un utente"
+                            className="w-full"
+                            showClear
+                            filter
+                        />
+                    </div>
 
-                <div className="flex flex-col gap-2 flex-grow md:flex-grow-0 md:w-64">
-                    <label
-                        htmlFor="date-range"
-                        className="text-sm font-medium text-surface-700"
-                    >
-                        Periodo
-                    </label>
-                    <Calendar
-                        id="date-range"
-                        value={dateRange}
-                        onChange={(e) => {
-                            setDateRange(e.value as (Date | null)[])
-                            setFirst(0)
-                        }}
-                        selectionMode="range"
-                        readOnlyInput
-                        showIcon
-                        placeholder="Intervallo date"
-                        dateFormat="dd/mm/yy"
-                        className="w-full"
-                    />
-                </div>
+                    <div className="flex flex-col gap-2 flex-grow md:flex-grow-0 md:w-64">
+                        <label
+                            htmlFor="date-range"
+                            className="text-sm font-medium text-surface-700"
+                        >
+                            Periodo
+                        </label>
+                        <Calendar
+                            id="date-range"
+                            value={dateRange}
+                            onChange={(e) => {
+                                setDateRange(e.value as (Date | null)[])
+                                setFirst(0)
+                            }}
+                            selectionMode="range"
+                            readOnlyInput
+                            showIcon
+                            placeholder="Intervallo date"
+                            dateFormat="dd/mm/yy"
+                            className="w-full"
+                        />
+                    </div>
+                </MobileFilters>
 
                 <div className="flex gap-2 ml-auto">
                     <Button
-                        label="Reset Filtri"
+                        // Icon only on mobile, to share the row with "Filtri"
+                        label={isMobile ? undefined : "Reset Filtri"}
+                        aria-label="Reset Filtri"
                         icon="pi pi-filter-slash"
                         className="p-button-outlined p-button-secondary"
                         onClick={resetFilters}
@@ -233,6 +247,7 @@ const UserActivities: React.FC = () => {
                 loading={activitiesQuery.isLoading}
                 emptyMessage="Nessuna attività trovata con i filtri selezionati"
                 className="p-datatable-sm"
+                {...mobileTableScroll}
                 pt={{
                     headerRow: { className: "bg-surface-50 text-surface-700" },
                 }}

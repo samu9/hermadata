@@ -48,6 +48,8 @@ import { Tooltip } from "primereact/tooltip"
 import { Button } from "primereact/button"
 import { Dialog } from "primereact/dialog"
 import { apiService } from "../../main"
+import MobileFilters from "../MobileFilters"
+import { useMobileTableScroll } from "../../hooks/useMediaQuery"
 
 type LazyTableState = {
     first: number
@@ -129,6 +131,7 @@ const SwitchFilter = (props: SwitchFilterProps) => {
 }
 
 const AnimalList = () => {
+    const mobileTableScroll = useMobileTableScroll("60rem")
     const [totalRecords, setTotalRecords] = useState(0)
     const [lazyState, setLazyState] = useSessionStorage<LazyTableState>(
         "animal-list:lazy-state",
@@ -174,6 +177,18 @@ const AnimalList = () => {
 
     // Deleted animals are searched regardless of their presence
     const showDeleted = canBrowseDeleted && Boolean(queryData.deleted)
+    // Panel filters changed from their defaults (badge of the mobile toggle)
+    const panelFiltersCount = [
+        !showDeleted &&
+            can(Permission.BROWSE_PRESENT_ANIMALS) &&
+            can(Permission.BROWSE_NOT_PRESENT_ANIMALS) &&
+            !(queryData.present && !queryData.not_present),
+        !(queryData.dogs && queryData.cats),
+        showDeleted,
+        structures.length > 1 &&
+            (queryData.structure_ids?.length ?? 0) > 0 &&
+            (queryData.structure_ids?.length ?? 0) < structures.length,
+    ].filter(Boolean).length
     const searchQuery: AnimalSearchQuery = {
         ...queryData,
         ...(showDeleted
@@ -315,164 +330,169 @@ const AnimalList = () => {
     return (
         <div className="w-full space-y-4">
             <div className="p-4 bg-white rounded-xl shadow-sm border border-surface-200 flex gap-3 flex-wrap items-center">
-                {!showDeleted &&
-                    can(Permission.BROWSE_PRESENT_ANIMALS) &&
-                    can(Permission.BROWSE_NOT_PRESENT_ANIMALS) && (
-                        <>
-                            <SwitchFilter
-                                label="Presenti"
-                                checked={queryData.present || false}
-                                onChange={(e) => {
-                                    // If trying to disable presenti while non_presenti is already disabled,
-                                    // enable non_presenti instead
-                                    if (!e.value && !queryData.not_present) {
-                                        setQueryData({
-                                            ...queryData,
-                                            present: false,
-                                            not_present: true,
-                                        })
-                                    } else {
-                                        setQueryData({
-                                            ...queryData,
-                                            present: e.value,
-                                        })
-                                    }
-                                }}
-                            />
+                <MobileFilters
+                    activeCount={panelFiltersCount}
+                    className="order-last w-full flex gap-3 flex-wrap items-center"
+                >
+                    {!showDeleted &&
+                        can(Permission.BROWSE_PRESENT_ANIMALS) &&
+                        can(Permission.BROWSE_NOT_PRESENT_ANIMALS) && (
+                            <>
+                                <SwitchFilter
+                                    label="Presenti"
+                                    checked={queryData.present || false}
+                                    onChange={(e) => {
+                                        // If trying to disable presenti while non_presenti is already disabled,
+                                        // enable non_presenti instead
+                                        if (!e.value && !queryData.not_present) {
+                                            setQueryData({
+                                                ...queryData,
+                                                present: false,
+                                                not_present: true,
+                                            })
+                                        } else {
+                                            setQueryData({
+                                                ...queryData,
+                                                present: e.value,
+                                            })
+                                        }
+                                    }}
+                                />
 
-                            <SwitchFilter
-                                label="Non presenti"
-                                checked={queryData.not_present || false}
-                                onChange={(e) => {
-                                    if (!e.value && !queryData.present) {
-                                        setQueryData({
-                                            ...queryData,
-                                            not_present: false,
-                                            present: true,
-                                        })
-                                    } else {
-                                        setQueryData({
-                                            ...queryData,
-                                            not_present: e.value,
-                                        })
-                                    }
-                                }}
-                            />
-                            <div className="w-px h-8 bg-surface-200 mx-1"></div>
-                        </>
-                    )}
-                <SwitchFilter
-                    label="Cani"
-                    checked={queryData.dogs || false}
-                    onChange={(e) => {
-                        if (!e.value && !queryData.cats) {
-                            setQueryData({
-                                ...queryData,
-                                dogs: false,
-                                cats: true,
-                            })
-                        } else {
-                            setQueryData({
-                                ...queryData,
-                                dogs: e.value,
-                            })
-                        }
-                    }}
-                />
-                <SwitchFilter
-                    label="Gatti"
-                    checked={queryData.cats || false}
-                    onChange={(e) => {
-                        if (!e.value && !queryData.dogs) {
-                            setQueryData({
-                                ...queryData,
-                                cats: false,
-                                dogs: true,
-                            })
-                        } else {
-                            setQueryData({
-                                ...queryData,
-                                cats: e.value,
-                            })
-                        }
-                    }}
-                />
-                {canBrowseDeleted && (
-                    <>
-                        <div className="w-px h-8 bg-surface-200 mx-1"></div>
-                        <SwitchFilter
-                            label="Eliminati"
-                            checked={showDeleted}
-                            onChange={(e) =>
+                                <SwitchFilter
+                                    label="Non presenti"
+                                    checked={queryData.not_present || false}
+                                    onChange={(e) => {
+                                        if (!e.value && !queryData.present) {
+                                            setQueryData({
+                                                ...queryData,
+                                                not_present: false,
+                                                present: true,
+                                            })
+                                        } else {
+                                            setQueryData({
+                                                ...queryData,
+                                                not_present: e.value,
+                                            })
+                                        }
+                                    }}
+                                />
+                                <div className="hidden lg:block w-px h-8 bg-surface-200 mx-1"></div>
+                            </>
+                        )}
+                    <SwitchFilter
+                        label="Cani"
+                        checked={queryData.dogs || false}
+                        onChange={(e) => {
+                            if (!e.value && !queryData.cats) {
                                 setQueryData({
                                     ...queryData,
-                                    deleted: e.value,
+                                    dogs: false,
+                                    cats: true,
+                                })
+                            } else {
+                                setQueryData({
+                                    ...queryData,
+                                    dogs: e.value,
                                 })
                             }
-                        />
-                    </>
-                )}
-                {hasActiveFilters && (
-                    <>
-                        <div className="w-px h-8 bg-surface-200 mx-1" />
-                        <button
-                            onClick={resetFilters}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-surface-500 hover:text-surface-700 hover:bg-surface-100 rounded-lg transition-all"
-                        >
-                            <i className="pi pi-times text-xs" />
-                            Azzera filtri
-                        </button>
-                    </>
-                )}
-                {structures.length > 1 && (
-                    <>
-                        <div className="w-px h-8 bg-surface-200 mx-1"></div>
-                        <div className="flex items-center gap-2">
-                            <label className="text-sm font-medium text-surface-600 whitespace-nowrap">
-                                Struttura:
-                            </label>
-                            <MultiSelect
-                                value={queryData.structure_ids ?? []}
-                                options={structures}
-                                optionLabel="name"
-                                optionValue="id"
+                        }}
+                    />
+                    <SwitchFilter
+                        label="Gatti"
+                        checked={queryData.cats || false}
+                        onChange={(e) => {
+                            if (!e.value && !queryData.dogs) {
+                                setQueryData({
+                                    ...queryData,
+                                    cats: false,
+                                    dogs: true,
+                                })
+                            } else {
+                                setQueryData({
+                                    ...queryData,
+                                    cats: e.value,
+                                })
+                            }
+                        }}
+                    />
+                    {canBrowseDeleted && (
+                        <>
+                            <div className="hidden lg:block w-px h-8 bg-surface-200 mx-1"></div>
+                            <SwitchFilter
+                                label="Eliminati"
+                                checked={showDeleted}
                                 onChange={(e) =>
-                                    setQueryData((prev) => ({ ...prev, structure_ids: e.value }))
+                                    setQueryData({
+                                        ...queryData,
+                                        deleted: e.value,
+                                    })
                                 }
-                                placeholder="Tutte le strutture"
-                                maxSelectedLabels={2}
-                                selectedItemsLabel="{0} selezionate"
-                                className="text-sm border border-surface-200 rounded-lg"
-                                pt={{
-                                    root: {
-                                        className:
-                                            "!border-surface-200 !rounded-lg !text-sm",
-                                    },
-                                    label: {
-                                        className: "!text-sm !py-1.5 !px-3",
-                                    },
-                                }}
-                                itemTemplate={(s) => (
-                                    <div className="flex items-center gap-2">
-                                        <FontAwesomeIcon
-                                            icon={
-                                                s.structure_type === "S"
-                                                    ? faHospital
-                                                    : faHome
-                                            }
-                                            className={
-                                                s.structure_type === "S"
-                                                    ? "text-red-500"
-                                                    : "text-green-500"
-                                            }
-                                        />
-                                        <span>{s.name}</span>
-                                    </div>
-                                )}
                             />
-                        </div>
-                    </>
-                )}
+                        </>
+                    )}
+                    {hasActiveFilters && (
+                        <>
+                            <div className="hidden lg:block w-px h-8 bg-surface-200 mx-1" />
+                            <button
+                                onClick={resetFilters}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-surface-500 hover:text-surface-700 hover:bg-surface-100 rounded-lg transition-all"
+                            >
+                                <i className="pi pi-times text-xs" />
+                                Azzera filtri
+                            </button>
+                        </>
+                    )}
+                    {structures.length > 1 && (
+                        <>
+                            <div className="hidden lg:block w-px h-8 bg-surface-200 mx-1"></div>
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm font-medium text-surface-600 whitespace-nowrap">
+                                    Struttura:
+                                </label>
+                                <MultiSelect
+                                    value={queryData.structure_ids ?? []}
+                                    options={structures}
+                                    optionLabel="name"
+                                    optionValue="id"
+                                    onChange={(e) =>
+                                        setQueryData((prev) => ({ ...prev, structure_ids: e.value }))
+                                    }
+                                    placeholder="Tutte le strutture"
+                                    maxSelectedLabels={2}
+                                    selectedItemsLabel="{0} selezionate"
+                                    className="text-sm border border-surface-200 rounded-lg"
+                                    pt={{
+                                        root: {
+                                            className:
+                                                "!border-surface-200 !rounded-lg !text-sm",
+                                        },
+                                        label: {
+                                            className: "!text-sm !py-1.5 !px-3",
+                                        },
+                                    }}
+                                    itemTemplate={(s) => (
+                                        <div className="flex items-center gap-2">
+                                            <FontAwesomeIcon
+                                                icon={
+                                                    s.structure_type === "S"
+                                                        ? faHospital
+                                                        : faHome
+                                                }
+                                                className={
+                                                    s.structure_type === "S"
+                                                        ? "text-red-500"
+                                                        : "text-green-500"
+                                                }
+                                            />
+                                            <span>{s.name}</span>
+                                        </div>
+                                    )}
+                                />
+                            </div>
+                        </>
+                    )}
+                </MobileFilters>
                 {!showDeleted && (
                     <div
                         role="group"
@@ -550,6 +570,7 @@ const AnimalList = () => {
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
                 <DataTable
                     className="w-full"
+                    {...mobileTableScroll}
                     filters={lazyState.filters}
                     value={animalQuery.data?.items}
                     selectionMode="single"

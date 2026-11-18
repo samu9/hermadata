@@ -5,14 +5,16 @@ import UserList from "../components/user/UserList"
 import CreateUserForm from "../components/user/CreateUserForm"
 import UserActivities from "../components/user/UserActivities"
 import { PageTitle } from "../components/typography"
+import { useIsMobile } from "../hooks/useMediaQuery"
 
 const UserManagementPage: React.FC = () => {
+    const isMobile = useIsMobile()
     const { user } = usePermissions()
     const [activeTab, setActiveTab] = useState(0)
 
     return (
         <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-8">
                 <div>
                     <PageTitle>Gestione Utenti</PageTitle>
                     <p className="text-surface-600 mt-2">
@@ -32,6 +34,8 @@ const UserManagementPage: React.FC = () => {
                 <TabView
                     activeIndex={activeTab}
                     onTabChange={(e) => setActiveTab(e.index)}
+                    // Scroll arrows only where the tabs may not fit
+                    scrollable={isMobile}
                     className="p-0"
                     pt={{
                         nav: {
