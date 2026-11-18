@@ -35,6 +35,7 @@ import {
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns"
 import { useState, useMemo } from "react"
 import { useMobileTableScroll } from "../hooks/useMediaQuery"
+import { MOBILE_FULL_BLEED_CARD } from "../components/layout/fullBleed"
 
 type PeriodPreset = "this_month" | "last_month" | "last_3_months" | "custom"
 
@@ -554,7 +555,9 @@ const HomePage = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Recent Animals */}
-                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden flex flex-col">
+                <div
+                    className={`lg:col-span-2 bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden flex flex-col ${MOBILE_FULL_BLEED_CARD}`}
+                >
                     <div className="p-6 border-b border-surface-100 flex justify-between items-center">
                         <SectionTitle className="!mb-0">
                             Ultimi Ingressi

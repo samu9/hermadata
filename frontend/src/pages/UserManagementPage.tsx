@@ -6,6 +6,7 @@ import CreateUserForm from "../components/user/CreateUserForm"
 import UserActivities from "../components/user/UserActivities"
 import { PageTitle } from "../components/typography"
 import { useIsMobile } from "../hooks/useMediaQuery"
+import { MOBILE_FULL_BLEED_CARD } from "../components/layout/fullBleed"
 
 const UserManagementPage: React.FC = () => {
     const isMobile = useIsMobile()
@@ -30,7 +31,9 @@ const UserManagementPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+            <div
+                className={`bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden ${MOBILE_FULL_BLEED_CARD}`}
+            >
                 <TabView
                     activeIndex={activeTab}
                     onTabChange={(e) => setActiveTab(e.index)}

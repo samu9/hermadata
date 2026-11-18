@@ -14,6 +14,7 @@ import { useVetSearchQuery } from "../../queries"
 
 import { classNames } from "primereact/utils"
 import { useMobileTableScroll } from "../../hooks/useMediaQuery"
+import { MOBILE_FULL_BLEED_CARD } from "../layout/fullBleed"
 
 type LazyTableState = {
     first: number
@@ -73,7 +74,9 @@ const VetList = () => {
     }, [lazyState])
     return (
         <div className="w-full">
-            <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+            <div
+                className={`bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden ${MOBILE_FULL_BLEED_CARD}`}
+            >
                 <DataTable
                     className="w-full"
                     {...mobileTableScroll}

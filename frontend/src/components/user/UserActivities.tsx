@@ -246,7 +246,8 @@ const UserActivities: React.FC = () => {
                 rowsPerPageOptions={[10, 15, 25, 50, 100]}
                 loading={activitiesQuery.isLoading}
                 emptyMessage="Nessuna attività trovata con i filtri selezionati"
-                className="p-datatable-sm"
+                // Edge to edge on mobile: cancel the tab panel padding
+                className="p-datatable-sm max-lg:-mx-6"
                 {...mobileTableScroll}
                 pt={{
                     headerRow: { className: "bg-surface-50 text-surface-700" },
