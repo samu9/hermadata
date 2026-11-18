@@ -89,7 +89,7 @@ const Toolbar = () => {
         <>
             {/* Reserve space so the floating bar never covers page content */}
             <div className="h-24" aria-hidden />
-            <div className="fixed bottom-4 right-4 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-2 overflow-x-auto rounded-full sm:gap-3 lg:bottom-6 lg:right-8 border border-surface-200 bg-white/90 p-2 shadow-xl backdrop-blur">
+            <div className="fixed bottom-4 right-4 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-2 overflow-x-auto rounded-full sm:gap-3 lg:bottom-6 lg:right-8 lg:max-w-none lg:overflow-x-visible border border-surface-200 bg-white/90 p-2 shadow-xl backdrop-blur">
                 {subtleButtons.map((button) => (
                     <ToolbarItem key={button.id} button={button} />
                 ))}

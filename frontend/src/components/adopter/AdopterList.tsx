@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom"
 import { AdopterSearch } from "../../models/adopter.schema"
 import { useAdopterSearchQuery } from "../../queries"
 import { useSessionStorage } from "../../hooks/useSessionStorage"
+import { useMobileTableScroll } from "../../hooks/useMediaQuery"
 
 type LazyTableState = {
     first: number
@@ -33,6 +34,7 @@ const INITIAL_FILTERS: DataTableFilterMeta = {
 }
 
 const AdopterList = () => {
+    const mobileTableScroll = useMobileTableScroll("48rem")
     const [totalRecords, setTotalRecords] = useState(0)
 
     const [lazyState, setLazyState] = useSessionStorage<LazyTableState>(
@@ -120,8 +122,7 @@ const AdopterList = () => {
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
                 <DataTable
                     className="w-full"
-                    scrollable
-                    tableStyle={{ minWidth: "48rem" }}
+                    {...mobileTableScroll}
                     filters={lazyState.filters}
                     value={adopterQuery.data?.items}
                     selectionMode="single"

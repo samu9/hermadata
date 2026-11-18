@@ -49,6 +49,7 @@ import { Button } from "primereact/button"
 import { Dialog } from "primereact/dialog"
 import { apiService } from "../../main"
 import MobileFilters from "../MobileFilters"
+import { useMobileTableScroll } from "../../hooks/useMediaQuery"
 
 type LazyTableState = {
     first: number
@@ -130,6 +131,7 @@ const SwitchFilter = (props: SwitchFilterProps) => {
 }
 
 const AnimalList = () => {
+    const mobileTableScroll = useMobileTableScroll("60rem")
     const [totalRecords, setTotalRecords] = useState(0)
     const [lazyState, setLazyState] = useSessionStorage<LazyTableState>(
         "animal-list:lazy-state",
@@ -568,8 +570,7 @@ const AnimalList = () => {
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
                 <DataTable
                     className="w-full"
-                    scrollable
-                    tableStyle={{ minWidth: "60rem" }}
+                    {...mobileTableScroll}
                     filters={lazyState.filters}
                     value={animalQuery.data?.items}
                     selectionMode="single"

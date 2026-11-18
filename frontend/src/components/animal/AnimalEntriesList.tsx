@@ -11,12 +11,14 @@ import {
     useEntryTypesQuery,
     useExitTypesQuery,
 } from "../../queries"
+import { useMobileTableScroll } from "../../hooks/useMediaQuery"
 
 type Props = {
     animalId: string
 }
 
 const AnimalEntriesList = ({ animalId }: Props) => {
+    const mobileTableScroll = useMobileTableScroll("64rem")
     const [selectedEntry, setSelectedEntry] = useState<AnimalEntry | null>(null)
     const [dialogVisible, setDialogVisible] = useState(false)
 
@@ -97,8 +99,7 @@ const AnimalEntriesList = ({ animalId }: Props) => {
                     paginator
                     rows={10}
                     className="p-datatable-sm"
-                    scrollable
-                    tableStyle={{ minWidth: "64rem" }}
+                    {...mobileTableScroll}
                     emptyMessage="Nessun ingresso trovato"
                 >
                     <Column

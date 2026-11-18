@@ -34,3 +34,11 @@ export const useMediaQuery = (query: string): boolean => {
  */
 export const useIsMobile = (): boolean =>
     !useMediaQuery("(min-width: 1024px)")
+
+/**
+ * DataTable props that make a wide table scroll sideways on mobile, with the
+ * given minimum width. On desktop no props are returned, so the table keeps
+ * squeezing its columns to fit the page.
+ */
+export const useMobileTableScroll = (minWidth: string) =>
+    useIsMobile() ? { scrollable: true, tableStyle: { minWidth } } : {}

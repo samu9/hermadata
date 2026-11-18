@@ -30,6 +30,7 @@ import {
 } from "../../queries"
 import { toastService } from "../../services/toast"
 import AnimalDocUploadForm from "./AnimalDocUploadForm"
+import { useMobileTableScroll } from "../../hooks/useMediaQuery"
 
 type DocRow = {
     documentId: number
@@ -42,6 +43,7 @@ type DocRow = {
 }
 
 const AnimalDocs = () => {
+    const mobileTableScroll = useMobileTableScroll("22rem")
     const { id } = useParams()
     const animalId = parseInt(id!)
     const { isSuperUser } = useAuth()
@@ -225,8 +227,7 @@ const AnimalDocs = () => {
         <div>
             <DataTable
                 emptyMessage="Nessun documento trovato"
-                scrollable
-                tableStyle={{ minWidth: "22rem" }}
+                {...mobileTableScroll}
                 onRowClick={(e) =>
                     apiService.openDocument((e.data as DocRow).documentId)
                 }

@@ -5,8 +5,10 @@ import UserList from "../components/user/UserList"
 import CreateUserForm from "../components/user/CreateUserForm"
 import UserActivities from "../components/user/UserActivities"
 import { PageTitle } from "../components/typography"
+import { useIsMobile } from "../hooks/useMediaQuery"
 
 const UserManagementPage: React.FC = () => {
+    const isMobile = useIsMobile()
     const { user } = usePermissions()
     const [activeTab, setActiveTab] = useState(0)
 
@@ -32,7 +34,8 @@ const UserManagementPage: React.FC = () => {
                 <TabView
                     activeIndex={activeTab}
                     onTabChange={(e) => setActiveTab(e.index)}
-                    scrollable
+                    // Scroll arrows only where the tabs may not fit
+                    scrollable={isMobile}
                     className="p-0"
                     pt={{
                         nav: {

@@ -34,6 +34,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons"
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns"
 import { useState, useMemo } from "react"
+import { useMobileTableScroll } from "../hooks/useMediaQuery"
 
 type PeriodPreset = "this_month" | "last_month" | "last_3_months" | "custom"
 
@@ -275,6 +276,7 @@ const getPresetDates = (preset: PeriodPreset): [Date, Date] => {
 }
 
 const HomePage = () => {
+    const mobileTableScroll = useMobileTableScroll("44rem")
     const navigate = useNavigate()
     const { user, can } = useAuth()
     const { data: races } = useRacesQuery()
@@ -584,8 +586,7 @@ const HomePage = () => {
                                 value={recentAnimals}
                                 size="small"
                                 className="w-full"
-                                scrollable
-                                tableStyle={{ minWidth: "44rem" }}
+                                {...mobileTableScroll}
                                 emptyMessage="Nessun animale trovato"
                                 rowClassName={() =>
                                     "hover:bg-surface-50 transition-colors"

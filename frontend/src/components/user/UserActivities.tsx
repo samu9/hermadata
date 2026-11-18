@@ -10,9 +10,13 @@ import { Activity, ActivityFilterQuery } from "../../models/activity.schema"
 import { format } from "date-fns"
 import { ManagementUser } from "../../models/user.schema"
 import MobileFilters from "../MobileFilters"
-import { useIsMobile } from "../../hooks/useMediaQuery"
+import {
+    useIsMobile,
+    useMobileTableScroll,
+} from "../../hooks/useMediaQuery"
 
 const UserActivities: React.FC = () => {
+    const mobileTableScroll = useMobileTableScroll("48rem")
     const isMobile = useIsMobile()
     // State for pagination
     const [first, setFirst] = useState(0)
@@ -243,8 +247,7 @@ const UserActivities: React.FC = () => {
                 loading={activitiesQuery.isLoading}
                 emptyMessage="Nessuna attività trovata con i filtri selezionati"
                 className="p-datatable-sm"
-                scrollable
-                tableStyle={{ minWidth: "48rem" }}
+                {...mobileTableScroll}
                 pt={{
                     headerRow: { className: "bg-surface-50 text-surface-700" },
                 }}
