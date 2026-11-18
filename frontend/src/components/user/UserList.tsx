@@ -259,7 +259,8 @@ const UserList: React.FC = () => {
                     paginator
                     rows={10}
                     rowsPerPageOptions={[5, 10, 25]}
-                    className="p-datatable-sm"
+                    // Edge to edge on mobile: cancel the tab panel padding
+                    className="p-datatable-sm max-lg:-mx-6"
                     {...mobileTableScroll}
                     emptyMessage="Nessun utente trovato"
                     sortField="created_at"

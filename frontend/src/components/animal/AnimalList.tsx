@@ -50,6 +50,7 @@ import { Dialog } from "primereact/dialog"
 import { apiService } from "../../main"
 import MobileFilters from "../MobileFilters"
 import { useMobileTableScroll } from "../../hooks/useMediaQuery"
+import { MOBILE_FULL_BLEED_CARD } from "../layout/fullBleed"
 
 type LazyTableState = {
     first: number
@@ -567,7 +568,9 @@ const AnimalList = () => {
                 </div>
             </Dialog>
 
-            <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+            <div
+                className={`bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden ${MOBILE_FULL_BLEED_CARD}`}
+            >
                 <DataTable
                     className="w-full"
                     {...mobileTableScroll}

@@ -98,7 +98,8 @@ const AnimalEntriesList = ({ animalId }: Props) => {
                     value={entries}
                     paginator
                     rows={10}
-                    className="p-datatable-sm"
+                    // Edge to edge on mobile: cancel the card body padding
+                    className="p-datatable-sm max-lg:-mx-5"
                     {...mobileTableScroll}
                     emptyMessage="Nessun ingresso trovato"
                 >

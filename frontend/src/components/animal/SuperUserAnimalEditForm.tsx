@@ -29,6 +29,7 @@ import ControlledInputText from "../forms/ControlledInputText"
 import ControlledRadio from "../forms/ControlledRadio"
 import ControlledTextarea from "../forms/ControlledTextarea"
 import AnimalEntriesList from "./AnimalEntriesList"
+import { MOBILE_FULL_BLEED_CARD } from "../layout/fullBleed"
 
 const SuperUserAnimalEditForm = () => {
     const { id } = useParams()
@@ -300,7 +301,10 @@ const SuperUserAnimalEditForm = () => {
                     </Card>
 
                     {/* Animal Entries History Section */}
-                    <Card title="Storico Entrate/Uscite" className="mt-6">
+                    <Card
+                        title="Storico Entrate/Uscite"
+                        className={`mt-6 ${MOBILE_FULL_BLEED_CARD}`}
+                    >
                         <AnimalEntriesList animalId={id!} />
                     </Card>
 

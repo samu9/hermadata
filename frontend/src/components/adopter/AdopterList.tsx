@@ -15,6 +15,7 @@ import { AdopterSearch } from "../../models/adopter.schema"
 import { useAdopterSearchQuery } from "../../queries"
 import { useSessionStorage } from "../../hooks/useSessionStorage"
 import { useMobileTableScroll } from "../../hooks/useMediaQuery"
+import { MOBILE_FULL_BLEED_CARD } from "../layout/fullBleed"
 
 type LazyTableState = {
     first: number
@@ -119,7 +120,9 @@ const AdopterList = () => {
                     </button>
                 </div>
             )}
-            <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+            <div
+                className={`bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden ${MOBILE_FULL_BLEED_CARD}`}
+            >
                 <DataTable
                     className="w-full"
                     {...mobileTableScroll}
