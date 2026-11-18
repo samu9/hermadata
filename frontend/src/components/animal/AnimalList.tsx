@@ -567,7 +567,8 @@ const AnimalList = () => {
                 </div>
             </Dialog>
 
-            <div className="bg-white rounded-xl shadow-sm border border-surface-200 overflow-hidden">
+            {/* Edge to edge on mobile: cancel the page padding (PageWrapper) */}
+            <div className="bg-white shadow-sm border-y border-surface-200 overflow-hidden -mx-6 md:-mx-8 lg:mx-0 lg:rounded-xl lg:border">
                 <DataTable
                     className="w-full"
                     {...mobileTableScroll}
