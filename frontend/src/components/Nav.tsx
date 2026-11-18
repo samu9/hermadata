@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faBars } from "@fortawesome/free-solid-svg-icons"
-import logo from "../assets/hermadata.svg"
+import logo from "../assets/hermadata-primary.svg"
 
 type Props = {
     onMenuClick: () => void
