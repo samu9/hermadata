@@ -57,6 +57,13 @@ class UtilElement(BaseModel):
     label: str
 
 
+class ExitTypeElement(BaseModel):
+    id: str
+    label: str
+    # Races the exit type applies to; None means every race.
+    race_ids: list[str] | None = None
+
+
 class EntryTypeElement(BaseModel):
     id: str
     label: str

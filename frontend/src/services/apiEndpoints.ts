@@ -52,6 +52,7 @@ const ApiEndpoints = {
         daysReport: `/animal/days/report`,
         entriesReport: `/animal/entries/report`,
         exitsReport: `/animal/exits/report`,
+        overviewReport: `/animal/overview/report`,
         searchReport: `/animal/search/report`,
         stats: `/animal/stats`,
     },
@@ -83,6 +84,8 @@ const ApiEndpoints = {
         getProvince: "/util/province",
         getComuni: "/util/comuni",
         getComune: (code: string) => `/util/comune/${code}`,
+        setComuneFavourite: (code: string) =>
+            `/util/comune/${code}/favourite`,
         getEntryTypes: "/util/entry-types",
         getExitTypes: "/util/exit-types",
         getAnimalSizes: "/util/animal-size",

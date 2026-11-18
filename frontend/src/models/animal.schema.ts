@@ -255,6 +255,7 @@ export const animalExitSchema = z
 export type AnimalExit = z.infer<typeof animalExitSchema>
 
 export const animalDaysRequestSchema = z.object({
+    race_ids: z.array(z.string()).min(1),
     from_date: dateOnly,
     to_date: dateOnly,
     city_code: z.string(),
@@ -275,6 +276,35 @@ export const animalExitsReportSchema = animalDaysRequestSchema.extend({
 })
 
 export type AnimalExitsReportSchema = z.infer<typeof animalExitsReportSchema>
+
+export const animalOverviewReportSchema = z
+    .object({
+        race_ids: z.array(z.string()).min(1),
+        from_date: dateOnly.nullish(),
+        to_date: dateOnly.nullish(),
+        // empty = every comune (for restricted users: their comuni)
+        city_codes: z.array(z.string()),
+        entry_types: z.array(z.string()),
+        exit_types: z.array(z.string()),
+        // one daily sheet per comune instead of the comuni summed
+        split_by_city: z.boolean().default(false),
+    })
+    .refine((d) => d.from_date || d.to_date, {
+        message: "Indicare almeno una data",
+        path: ["from_date"],
+    })
+    .refine((d) => !d.from_date || !d.to_date || d.from_date <= d.to_date, {
+        message: "La data di inizio deve precedere la data di fine",
+        path: ["to_date"],
+    })
+    .refine((d) => d.entry_types.length > 0 || d.exit_types.length > 0, {
+        message: "Selezionare almeno un tipo di ingresso o di uscita",
+        path: ["entry_types"],
+    })
+
+export type AnimalOverviewReportSchema = z.infer<
+    typeof animalOverviewReportSchema
+>
 
 export const addFurColorSchema = z.object({
     name: breedNameValidator,

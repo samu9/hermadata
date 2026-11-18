@@ -34,6 +34,22 @@ const AdminPage: React.FC = () => {
                     </Link>
                 </div>
 
+                <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6 flex flex-col h-full">
+                    <h3 className="text-lg font-semibold text-surface-900 mb-2">
+                        Comuni Preferiti
+                    </h3>
+                    <p className="text-surface-600 mb-6 flex-grow">
+                        Scegli i comuni proposti per primi nei campi di
+                        selezione del comune.
+                    </p>
+                    <Link to="/admin/comuni">
+                        <Button
+                            label="Gestisci Comuni Preferiti"
+                            className="w-full !bg-primary-600 !border-primary-600 hover:!bg-primary-700"
+                        />
+                    </Link>
+                </div>
+
                 {/* <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6 flex flex-col h-full">
                     <h3 className="text-lg font-semibold text-surface-900 mb-2">Configurazioni Sistema</h3>
                     <p className="text-surface-600 mb-6 flex-grow">

@@ -12,7 +12,6 @@ import { apiService } from "../../main"
 import {
     AnimalEditSuperUser,
     animalEditSuperUserSchema,
-    Animal,
 } from "../../models/animal.schema"
 import { ApiError, apiErrorSchema } from "../../models/api.schema"
 import {
@@ -92,14 +91,11 @@ const SuperUserAnimalEditForm = () => {
             queryClient.invalidateQueries({
                 queryKey: ["animal-search"],
             })
-            queryClient.setQueryData(
-                ["animal", variables.id],
-                //@ts-ignore: types Updater and Animal are not compatible
-                (old: Animal) => ({
-                    ...old,
-                    ...variables.data,
-                })
-            )
+            // Refetch instead of merging the form values: the server also
+            // updates derived fields (e.g. chip_code_set) shown in the overview
+            queryClient.invalidateQueries({
+                queryKey: ["animal", variables.id],
+            })
             toast.current?.show({
                 severity: "success",
                 summary: "Scheda aggiornata (Super User)",

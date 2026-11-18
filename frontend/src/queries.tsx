@@ -61,6 +61,20 @@ export const useAllComuniQuery = () =>
         staleTime: Infinity,
     })
 
+export const useSetComuneFavouriteMutation = () => {
+    const queryClient = useQueryClient()
+    return useMutation(
+        (args: { code: string; favourite: boolean }) =>
+            apiService.setComuneFavourite(args.code, args.favourite),
+        {
+            onSuccess: (comune) => {
+                queryClient.invalidateQueries("comuni")
+                queryClient.setQueryData(["comune", comune.id], comune)
+            },
+        },
+    )
+}
+
 export const useComuneQuery = (code?: string) =>
     useQuery(
         ["comune", code],

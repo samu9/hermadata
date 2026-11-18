@@ -149,6 +149,16 @@ export const handlers = [
     return HttpResponse.json(mockProvince)
   }),
 
+  http.put(
+    `${BASE_URL}/util/comune/:code/favourite`,
+    async ({ params, request }) => {
+      const comune = mockComuni.find((c) => c.id === params.code)
+      if (!comune) return new HttpResponse(null, { status: 404 })
+      const { favourite } = (await request.json()) as { favourite: boolean }
+      return HttpResponse.json({ ...comune, favourite })
+    },
+  ),
+
   http.get(`${BASE_URL}/util/comuni`, () => {
     return HttpResponse.json(mockComuni)
   }),

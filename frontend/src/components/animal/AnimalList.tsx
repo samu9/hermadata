@@ -90,6 +90,7 @@ const EXIT_TYPE_BADGE: Record<string, string> = {
     R: "bg-orange-100 text-orange-800",
     I: "bg-yellow-100 text-yellow-800",
     C: "bg-blue-100 text-blue-800",
+    L: "bg-lime-100 text-lime-800",
 }
 
 type SwitchFilterProps = {
@@ -628,7 +629,7 @@ const AnimalList = () => {
                         header="Chip"
                         className="font-mono text-sm"
                         body={(animal: AnimalSearchResult) =>
-                            animal.without_chip ? (
+                            animal.without_chip && !animal.chip_code ? (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
                                     Senza chip
                                 </span>

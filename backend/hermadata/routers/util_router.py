@@ -1,7 +1,7 @@
 from functools import cache
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 
@@ -9,6 +9,7 @@ from hermadata.constants import (
     ANIMAL_STAGE_LABELS,
     ENTRY_TYPE_LABELS,
     EXIT_TYPE_LABELS,
+    EXIT_TYPE_RACES,
     FUR_LABELS,
     HEALTHCARE_STAGE_ENTRY_TYPES,
     SIZE_LABELS,
@@ -21,15 +22,19 @@ from hermadata.initializations import (
 from hermadata.models import (
     AnimalEventTypeModel,
     EntryTypeElement,
+    ExitTypeElement,
     UtilElement,
 )
+from hermadata.permissions import require_superuser
 from hermadata.repositories.animal.animal_repository import SQLAnimalRepository
 from hermadata.repositories.animal.models import FurColorName
 from hermadata.repositories.city_repository import (
     ComuneModel,
     ProvinciaModel,
+    SetComuneFavouriteModel,
     SQLCityRepository,
 )
+from hermadata.services.user_service import TokenData
 
 router = APIRouter(prefix="/util")
 
@@ -68,6 +73,21 @@ def get_comune(
     return repo.get_comune(code)
 
 
+@router.put("/comune/{code}/favourite", response_model=ComuneModel)
+def set_comune_favourite(
+    code: str,
+    data: SetComuneFavouriteModel,
+    current_user: Annotated[TokenData, Depends(require_superuser)],
+    repo: Annotated[SQLCityRepository, Depends(get_city_repository)],
+):
+    """Mark or unmark a comune as favourite: favourite comuni are listed
+    first in the comune pickers. Superuser only."""
+    if not repo.city_exists(code):
+        raise HTTPException(status_code=404, detail="Comune not found")
+    repo.set_favourite(code, data.favourite)
+    return repo.get_comune(code)
+
+
 @router.get("/entry-types", response_model=list[EntryTypeElement])
 def get_entry_types():
     result = [
@@ -81,11 +101,20 @@ def get_entry_types():
     return result
 
 
-@router.get("/exit-types", response_model=list[UtilElement])
-def get_exit_types():
-    result = [
-        UtilElement(id=k.value, label=v) for k, v in EXIT_TYPE_LABELS.items()
-    ]
+@router.get("/exit-types", response_model=list[ExitTypeElement])
+def get_exit_types(race_id: str | None = None):
+    result = []
+    for k, v in EXIT_TYPE_LABELS.items():
+        races = EXIT_TYPE_RACES.get(k)
+        if race_id and races is not None and race_id not in races:
+            continue
+        result.append(
+            ExitTypeElement(
+                id=k.value,
+                label=v,
+                race_ids=sorted(races) if races is not None else None,
+            )
+        )
     return result
 
 

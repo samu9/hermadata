@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -53,6 +54,55 @@ def test_get_comune_not_found(app: TestClient):
     assert result.json() is None
 
 
+def test_set_comune_favourite(app: TestClient):
+    try:
+        result = app.put(
+            "/util/comune/G491/favourite", json={"favourite": True}
+        )
+        assert result.status_code == 200
+        assert result.json()["favourite"] is True
+
+        comuni = app.get("/util/comuni", params={"provincia": "PT"}).json()
+        assert comuni[0]["id"] == "G491"
+        assert comuni[0]["favourite"] is True
+    finally:
+        result = app.put(
+            "/util/comune/G491/favourite", json={"favourite": False}
+        )
+    assert result.status_code == 200
+    assert result.json()["favourite"] is False
+
+
+def test_set_comune_favourite_not_found(app: TestClient):
+    result = app.put("/util/comune/ZZZZ/favourite", json={"favourite": True})
+
+    assert result.status_code == 404
+
+
+def test_set_comune_favourite_requires_superuser(app: TestClient):
+    from hermadata.initializations import get_current_user
+    from hermadata.services.user_service import TokenData
+
+    def regular_user():
+        return TokenData(
+            user_id=1,
+            email="test@test.it",
+            is_active=True,
+            is_superuser=False,
+            permissions=["MU"],
+        )
+
+    superuser = app.app.dependency_overrides[get_current_user]
+    app.app.dependency_overrides[get_current_user] = regular_user
+    try:
+        result = app.put(
+            "/util/comune/G491/favourite", json={"favourite": True}
+        )
+        assert result.status_code == 403
+    finally:
+        app.app.dependency_overrides[get_current_user] = superuser
+
+
 def test_get_entry_types(app: TestClient):
     result = app.get("/util/entry-types")
 
@@ -73,6 +123,22 @@ def test_get_exit_types(app: TestClient):
     assert len(data) > 0
     assert "id" in data[0]
     assert "label" in data[0]
+
+    by_id = {e["id"]: e for e in data}
+    assert by_id["L"]["race_ids"] == ["G"]
+    assert by_id["A"]["race_ids"] is None
+
+
+@pytest.mark.parametrize("race_id,has_release", [("G", True), ("C", False)])
+def test_get_exit_types_by_race(
+    app: TestClient, race_id: str, has_release: bool
+):
+    result = app.get("/util/exit-types", params={"race_id": race_id})
+
+    assert result.status_code == 200
+    ids = {e["id"] for e in result.json()}
+    assert "A" in ids
+    assert ("L" in ids) is has_release
 
 
 def test_get_animal_sizes(app: TestClient):

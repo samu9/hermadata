@@ -17,9 +17,10 @@ export const mockEntryTypes = [
 ]
 
 export const mockExitTypes = [
-  { id: 'A', label: 'Adozione' },
-  { id: 'D', label: 'Deceduto' },
-  { id: 'T', label: 'Trasferimento' },
+  { id: 'A', label: 'Adozione', race_ids: null },
+  { id: 'D', label: 'Deceduto', race_ids: null },
+  { id: 'T', label: 'Trasferimento', race_ids: null },
+  { id: 'L', label: 'Reimmesso sul territorio', race_ids: ['G'] },
 ]
 
 export const mockAnimalSearchResults: AnimalSearchResult[] = [
@@ -122,8 +123,8 @@ export const mockProvince: ProvinciaSchema[] = [
 ]
 
 export const mockComuni: ComuneSchema[] = [
-  { id: 'H501', name: 'Roma', provincia: 'RM' },
-  { id: 'F205', name: 'Milano', provincia: 'MI' },
+  { id: 'H501', name: 'Roma', provincia: 'RM', favourite: false },
+  { id: 'F205', name: 'Milano', provincia: 'MI', favourite: false },
 ]
 
 export const mockAnimalSizes: IntUtilItem[] = [

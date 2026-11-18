@@ -17,6 +17,7 @@ from hermadata.models import UtilElement
 from hermadata.repositories.animal.animal_repository import (
     AnimalModel,
     AnimalSearchModel,
+    ExitTypeNotAllowedForRaceException,
     NoRequiredExitDataException,
     SQLAnimalRepository,
 )
@@ -24,11 +25,13 @@ from hermadata.repositories.animal.models import (
     AnimalDaysQuery,
     AnimalExit,
     AnimalExitsQuery,
+    AnimalOverviewQuery,
     AnimalStatsQuery,
     CompleteEntryModel,
     MedicalActivityModel,
     NewAnimalModel,
     NewEntryModel,
+    UpdateAnimalEntryModel,
     UpdateAnimalModel,
 )
 from hermadata.repositories.breed_repository import (
@@ -327,6 +330,7 @@ def test_count_days(
 
     result = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2020, 1, 1),
             to_date=date(2020, 1, 31),
             city_code="H501",
@@ -335,8 +339,19 @@ def test_count_days(
 
     assert result.total_days == 25
 
+    cats_only = animal_repository.count_animal_days(
+        AnimalDaysQuery(
+            race_ids=["G"],
+            from_date=date(2020, 1, 1),
+            to_date=date(2020, 1, 31),
+            city_code="H501",
+        )
+    )
+    assert cats_only.total_days == 0
+
     result = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2020, 1, 11),
             to_date=date(2020, 1, 31),
             city_code="H501",
@@ -347,6 +362,7 @@ def test_count_days(
 
     result = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2020, 2, 1),
             to_date=date(2020, 2, 28),
             city_code="H501",
@@ -379,6 +395,7 @@ def test_count_days(
 
     result = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2020, 1, 1),
             to_date=date(2020, 1, 31),
             city_code="H501",
@@ -391,6 +408,7 @@ def test_count_days(
 
     result = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2020, 1, 10),
             to_date=date(2020, 1, 20),
             city_code="H501",
@@ -418,6 +436,7 @@ def test_count_days_same_day(
 
     days = animal_repository.count_animal_days(
         AnimalDaysQuery(
+            race_ids=["C", "G"],
             from_date=date(2024, 3, 1),
             to_date=date(2024, 4, 2),
             city_code="H501",
@@ -460,6 +479,7 @@ def test_count_exits(
     )
 
     query = AnimalExitsQuery(
+        race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         to_date=date(2024, 2, 1),
         exit_type=ExitType.death,
@@ -472,7 +492,11 @@ def test_count_exits(
     assert result.items[0].exit_date == date(2024, 1, 3)
     assert result.items[0].exit_type == ExitType.death
 
+    cats_only = query.model_copy(update={"race_ids": ["G"]})
+    assert animal_repository.count_animal_exits(cats_only).total == 0
+
     query = AnimalExitsQuery(
+        race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         to_date=date(2024, 4, 1),
         exit_type=ExitType.death,
@@ -819,6 +843,7 @@ def test_count_animal_entries(
     )
 
     query = AnimalEntriesQuery(
+        race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         to_date=date(2024, 12, 31),
         entry_type=EntryType.rescue,
@@ -828,6 +853,9 @@ def test_count_animal_entries(
     result = animal_repository.count_animal_entries(query)
 
     assert result.total >= 1
+
+    cats_only = query.model_copy(update={"race_ids": ["G"]})
+    assert animal_repository.count_animal_entries(cats_only).total == 0
 
 
 def test_temporary_adoption_exit(
@@ -1195,3 +1223,279 @@ def test_search_rescue_province(
 
     assert result.total == 2
     assert {i.rescue_city_code for i in result.items} == {"A074", "A117"}
+
+
+def _make_completed_animal(
+    animal_repository: SQLAnimalRepository,
+    db_session: Session,
+    complete_animal_data,
+    race_id: str,
+) -> int:
+    code = animal_repository.new_animal(
+        NewAnimalModel(
+            race_id=race_id,
+            rescue_city_code="H501",
+            entry_type=EntryType.rescue,
+            structure_id=1,
+        )
+    )
+    animal_id = get_animal_id_by_code(db_session, code)
+    animal_repository.complete_entry(
+        animal_id, CompleteEntryModel(entry_date=date(2024, 1, 1))
+    )
+    complete_animal_data(animal_id)
+    return animal_id
+
+
+def test_exit_territory_release_allowed_for_cat(
+    animal_repository: SQLAnimalRepository,
+    db_session: Session,
+    complete_animal_data,
+):
+    animal_id = _make_completed_animal(
+        animal_repository, db_session, complete_animal_data, "G"
+    )
+
+    animal_repository.exit(
+        animal_id,
+        AnimalExit(
+            exit_date=date(2024, 1, 2),
+            exit_type=ExitType.territory_release,
+        ),
+    )
+
+    entry = db_session.execute(
+        select(AnimalEntry).where(
+            AnimalEntry.animal_id == animal_id,
+            AnimalEntry.current.is_(True),
+        )
+    ).scalar_one()
+    assert entry.exit_type == ExitType.territory_release
+
+
+def test_exit_territory_release_rejected_for_dog(
+    animal_repository: SQLAnimalRepository,
+    db_session: Session,
+    complete_animal_data,
+):
+    animal_id = _make_completed_animal(
+        animal_repository, db_session, complete_animal_data, "C"
+    )
+
+    with pytest.raises(ExitTypeNotAllowedForRaceException):
+        animal_repository.exit(
+            animal_id,
+            AnimalExit(
+                exit_date=date(2024, 1, 2),
+                exit_type=ExitType.territory_release,
+            ),
+        )
+
+
+def test_update_entry_territory_release_rejected_for_dog(
+    animal_repository: SQLAnimalRepository,
+    db_session: Session,
+    complete_animal_data,
+):
+    animal_id = _make_completed_animal(
+        animal_repository, db_session, complete_animal_data, "C"
+    )
+    animal_repository.exit(
+        animal_id,
+        AnimalExit(exit_date=date(2024, 1, 2), exit_type=ExitType.death),
+    )
+    entry_id = animal_repository.get_current_entry_id(animal_id)
+
+    with pytest.raises(ExitTypeNotAllowedForRaceException):
+        animal_repository.update_animal_entry(
+            entry_id,
+            UpdateAnimalEntryModel(exit_type=ExitType.territory_release),
+        )
+
+
+@pytest.fixture
+def overview_animals(
+    empty_db,
+    db_session: Session,
+    make_animal,
+):
+    """
+    - dog1 RM (H501): rescue 2024-01-05, adopted 2024-02-10, then a second
+      rescue entry 2024-03-01 (must be counted once)
+    - dog2 RM (H501): confiscation 2024-01-10, dead 2024-01-20
+    - cat1 MI (F205): rescue 2024-01-15, adopted 2024-03-05
+    - dog3 RM (H501): rescue 2023-06-01 (before the period)
+    - dog4 RM (H501): rescue 2024-01-07, deleted
+    """
+    rows = [
+        (
+            "C",
+            "H501",
+            EntryType.rescue,
+            date(2024, 1, 5),
+            date(2024, 2, 10),
+            ExitType.adoption,
+        ),
+        (
+            "C",
+            "H501",
+            EntryType.confiscation,
+            date(2024, 1, 10),
+            date(2024, 1, 20),
+            ExitType.death,
+        ),
+        (
+            "G",
+            "F205",
+            EntryType.rescue,
+            date(2024, 1, 15),
+            date(2024, 3, 5),
+            ExitType.adoption,
+        ),
+        ("C", "H501", EntryType.rescue, date(2023, 6, 1), None, None),
+        ("C", "H501", EntryType.rescue, date(2024, 1, 7), None, None),
+    ]
+    ids = []
+    for race, city, entry_type, entry_date, exit_date, exit_type in rows:
+        animal_id = make_animal(
+            NewAnimalModel(
+                race_id=race,
+                rescue_city_code=city,
+                entry_type=entry_type,
+                structure_id=1,
+            )
+        )
+        ids.append(animal_id)
+        db_session.execute(
+            update(AnimalEntry)
+            .where(AnimalEntry.animal_id == animal_id)
+            .values(
+                entry_date=entry_date,
+                exit_date=exit_date,
+                exit_type=exit_type,
+            )
+        )
+    db_session.add(
+        AnimalEntry(
+            animal_id=ids[0],
+            entry_type=EntryType.rescue,
+            entry_date=date(2024, 3, 1),
+            origin_city_code="H501",
+            current=False,
+        )
+    )
+    db_session.execute(
+        update(Animal)
+        .where(Animal.id == ids[4])
+        .values(deleted_at=datetime.now(timezone.utc))
+    )
+    db_session.flush()
+    return ids
+
+
+def _presences(items):
+    return sorted(
+        (i.animal_id, i.city_code, i.race_id, i.type, i.day) for i in items
+    )
+
+
+def test_get_animal_overview(
+    overview_animals, animal_repository: SQLAnimalRepository
+):
+    dog1, dog2, cat1, _, _ = overview_animals
+
+    result = animal_repository.get_animal_overview(
+        AnimalOverviewQuery(
+            race_ids=["C", "G"],
+            from_date=date(2024, 1, 1),
+            to_date=date(2024, 12, 31),
+            entry_types=[EntryType.rescue, EntryType.confiscation],
+            exit_types=[ExitType.adoption],
+        )
+    )
+
+    # One item per movement day: dog1's two rescue entries are both there
+    assert _presences(result.entries) == sorted(
+        [
+            (dog1, "H501", "C", "R", date(2024, 1, 5)),
+            (dog1, "H501", "C", "R", date(2024, 3, 1)),
+            (dog2, "H501", "C", "C", date(2024, 1, 10)),
+            (cat1, "F205", "G", "R", date(2024, 1, 15)),
+        ]
+    )
+    assert _presences(result.exits) == sorted(
+        [
+            (dog1, "H501", "C", "A", date(2024, 2, 10)),
+            (cat1, "F205", "G", "A", date(2024, 3, 5)),
+        ]
+    )
+    assert set(result.cities) == {"H501", "F205"}
+    assert result.races == {"C": "Cane", "G": "Gatto"}
+
+
+def test_get_animal_overview_filters(
+    overview_animals, animal_repository: SQLAnimalRepository
+):
+    dog1, _, cat1, dog3, _ = overview_animals
+
+    # Only the entries section, only Milano
+    result = animal_repository.get_animal_overview(
+        AnimalOverviewQuery(
+            race_ids=["C", "G"],
+            from_date=date(2024, 1, 1),
+            city_codes=["F205"],
+            entry_types=[EntryType.rescue],
+        )
+    )
+    assert result.exits is None
+    assert _presences(result.entries) == [
+        (cat1, "F205", "G", "R", date(2024, 1, 15))
+    ]
+    assert set(result.cities) == {"F205"}
+
+    # Only the end date: older entries are included
+    result = animal_repository.get_animal_overview(
+        AnimalOverviewQuery(
+            race_ids=["C"],
+            to_date=date(2024, 1, 6),
+            entry_types=[EntryType.rescue],
+        )
+    )
+    assert _presences(result.entries) == sorted(
+        [
+            (dog1, "H501", "C", "R", date(2024, 1, 5)),
+            (dog3, "H501", "C", "R", date(2023, 6, 1)),
+        ]
+    )
+
+    # Race filter, exits only
+    result = animal_repository.get_animal_overview(
+        AnimalOverviewQuery(
+            race_ids=["G"],
+            from_date=date(2024, 1, 1),
+            exit_types=[ExitType.death],
+        )
+    )
+    assert result.entries is None
+    assert result.exits == []
+    assert result.races == {"G": "Gatto"}
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        # no dates
+        {"entry_types": [EntryType.rescue]},
+        # no types
+        {"from_date": date(2024, 1, 1)},
+        # inverted period
+        {
+            "from_date": date(2024, 2, 1),
+            "to_date": date(2024, 1, 1),
+            "entry_types": [EntryType.rescue],
+        },
+    ],
+)
+def test_animal_overview_query_validation(kwargs):
+    with pytest.raises(ValueError):
+        AnimalOverviewQuery(race_ids=["C"], **kwargs)

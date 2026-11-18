@@ -25,6 +25,7 @@ import { Adopter } from "../../models/adopter.schema"
 import { useFormPersist } from "../../hooks/useFormPersist"
 import { useToolbar } from "../../contexts/Toolbar"
 import ExitDetentionSteps from "./ExitDetentionSteps"
+import { filterExitTypesByRace } from "../../utils/exitTypes"
 
 const AnimalExitForm = () => {
     const { id } = useParams()
@@ -39,10 +40,12 @@ const AnimalExitForm = () => {
     const { startLoading, stopLoading } = useLoader()
 
     const exitTypesQuery = useExitTypesQuery()
-    // Filter out "temporary_adoption" (T) from the dropdown - it's handled via the checkbox
-    const exitTypesForDropdown = exitTypesQuery.data?.filter(
-        (t) => t.id !== "T",
-    )
+    // Filter out "temporary_adoption" (T) from the dropdown - it's handled via
+    // the checkbox - and the exit types not available for the animal's race
+    const exitTypesForDropdown = filterExitTypesByRace(
+        exitTypesQuery.data,
+        animalQuery.data?.race_id,
+    ).filter((t) => t.id !== "T")
     const form = useForm<AnimalExit>({
         resolver: zodResolver(animalExitSchema),
         defaultValues: {

@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
 from io import BytesIO
 
+import pytest
 from openpyxl import load_workbook
 
 from hermadata.constants import EntryType, ExitType, IDDocumentType
@@ -15,6 +16,7 @@ from hermadata.reports.report_generator import (
     ReportFormat,
     ReportGenerator,
     ReportVariationVariables,
+    _sheet_name,
     format_age,
 )
 from hermadata.repositories.animal.models import (
@@ -24,6 +26,9 @@ from hermadata.repositories.animal.models import (
     AnimalEntriesItem,
     AnimalEntriesQuery,
     AnimalListReportExtraField,
+    AnimalOverviewQuery,
+    AnimalOverviewResult,
+    AnimalPresenceItem,
     AnimalReportResult,
 )
 from hermadata.settings import Settings
@@ -78,6 +83,7 @@ def test_animal_days_report(report_generator: ReportGenerator, test_settings):
         total_days=5,
     )
     query = AnimalDaysQuery(
+        race_ids=["C", "G"],
         from_date=date(2023, 1, 1),
         to_date=date(2023, 2, 1),
         city_code="H501",
@@ -101,6 +107,7 @@ def test_animal_days_report(report_generator: ReportGenerator, test_settings):
 
 def test_animal_entries_report(empty_db, report_generator: ReportGenerator):
     query = AnimalEntriesQuery(
+        race_ids=["C", "G"],
         from_date=date(2024, 1, 1),
         to_date=date(2024, 12, 31),
         entry_type=EntryType.rescue,
@@ -142,7 +149,16 @@ def test_animal_entries_report(empty_db, report_generator: ReportGenerator):
     assert rows[1][4].value == "M"
 
 
-def test_variation_report(jinja_env, report_generator: ReportGenerator):
+@pytest.mark.parametrize(
+    ("document_type", "document_label"),
+    [
+        (IDDocumentType.identity_card, "Carta di identità"),
+        (IDDocumentType.passport, "Passaporto"),
+    ],
+)
+def test_variation_report(
+    jinja_env, report_generator: ReportGenerator, document_type, document_label
+):
     variables = ReportVariationVariables(
         animal=AnimalVariables(
             name="Gino",
@@ -165,7 +181,7 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
             residence_city="Montecatini Terme",
             birth_city="Roma",
             birth_date=date(1979, 2, 3),
-            document_type=IDDocumentType.identity_card,
+            document_type=document_type,
             document_number="AA12345BB",
         ),
         variation_type=ExitType.custody,
@@ -181,7 +197,7 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
     html = template.render(**return_variables.model_dump())
     assert "stato restituito al Sig." in html
     assert "stato restituito dal Sig." not in html
-    assert "Documento (Carta di identità) n. AA12345BB" in html
+    assert f"Documento ({document_label}) n. AA12345BB" in html
     assert "proprietario del cane" in html
     assert "il suddetto cane è" in html
     assert "iscritto all'Anagrafe Animali d'Affezione" in html
@@ -198,6 +214,14 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
     assert "il suddetto gatto è" in html
     assert "cane" not in html
 
+    release_variables = cat_variables.model_copy(
+        update={"variation_type": ExitType.territory_release, "adopter": None}
+    )
+    html = template.render(**release_variables.model_dump())
+    assert "il suddetto gatto è stato reimmesso sul territorio il" in " ".join(
+        html.split()
+    )
+
     no_race_variables = return_variables.model_copy(
         update={
             "animal": return_variables.animal.model_copy(update={"race": ""})
@@ -208,7 +232,13 @@ def test_variation_report(jinja_env, report_generator: ReportGenerator):
     assert "il suddetto animale è" in html
 
 
-def test_adoption_report(jinja_env, report_generator: ReportGenerator):
+@pytest.mark.parametrize(
+    ("document_type", "document_label"),
+    [("dl", "Patente di guida"), ("pa", "Passaporto")],
+)
+def test_adoption_report(
+    jinja_env, report_generator: ReportGenerator, document_type, document_label
+):
     variables = ReportAdoptionVariables(
         animal=AnimalVariables(
             name="Gino",
@@ -231,7 +261,7 @@ def test_adoption_report(jinja_env, report_generator: ReportGenerator):
             birth_date=date(1979, 2, 3),
             residence_address="Via test",
             phone="123456789",
-            document_type="dl",
+            document_type=document_type,
             document_number="PT9876543",
         ),
         exit_date=datetime.now().date(),
@@ -247,7 +277,7 @@ def test_adoption_report(jinja_env, report_generator: ReportGenerator):
 
     template = jinja_env.get_template("adoption.jinja")
     html = template.render(**variables.model_dump())
-    assert "Documento (Patente di guida) n. PT9876543" in html
+    assert f"Documento ({document_label}) n. PT9876543" in html
 
     no_type_adopter = variables.adopter.model_copy(
         update={"document_type": ""}
@@ -340,3 +370,152 @@ def test_animal_list_report_extra_fields(
     assert "Sì" in html and "<td>No</td>" in html
 
     assert report_generator.build_animal_list_report(full)
+
+
+def _presence(animal_id, city, race, type_, day):
+    return AnimalPresenceItem(
+        animal_id=animal_id,
+        city_code=city,
+        race_id=race,
+        type=type_,
+        day=day,
+    )
+
+
+def _rows(ws):
+    return list(ws.iter_rows(values_only=True))
+
+
+def test_animal_overview_report(report_generator: ReportGenerator):
+    query = AnimalOverviewQuery(
+        race_ids=["C", "G"],
+        from_date=date(2024, 1, 1),
+        entry_types=[EntryType.rescue, EntryType.confiscation],
+        exit_types=[ExitType.adoption],
+    )
+    data = AnimalOverviewResult(
+        entries=[
+            _presence(1, "H501", "C", "R", date(2024, 1, 5)),
+            _presence(2, "H501", "C", "R", date(2024, 1, 5)),
+            _presence(3, "F205", "G", "R", date(2024, 1, 7)),
+            # animal 1 came back with another entry type
+            _presence(1, "H501", "C", "C", date(2024, 1, 20)),
+            _presence(5, "F205", "C", "R", date(2024, 1, 20)),
+        ],
+        exits=[
+            _presence(1, "H501", "C", "A", date(2024, 1, 10)),
+            _presence(3, "F205", "G", "A", date(2024, 1, 7)),
+        ],
+        cities={"H501": "ROMA", "F205": "MILANO"},
+        races={"C": "Cane", "G": "Gatto"},
+    )
+
+    filename, report = report_generator.generate_animal_overview_report(
+        query, data
+    )
+
+    assert filename == "riepilogo_dal_2024-01-01.xlsx"
+    wb = load_workbook(BytesIO(report))
+    # Comuni summed: one daily sheet per race
+    assert wb.sheetnames == ["Riepilogo", "Cane", "Gatto"]
+
+    # Days with movements only, empty cells instead of zeros, totals are
+    # the sum of the days
+    assert _rows(wb["Cane"]) == [
+        ("CANE · Tutti i comuni · dal 01/01/2024", None, None, None),
+        (None, None, None, None),
+        ("Data", "Entrate", None, "Uscite"),
+        (None, "Recupero", "Sequestro", "Adozione"),
+        (datetime(2024, 1, 5), 2, None, None),
+        (datetime(2024, 1, 10), None, None, 1),
+        (datetime(2024, 1, 20), 1, 1, None),
+        ("Totale", 3, 1, 1),
+    ]
+    assert _rows(wb["Gatto"])[4:] == [
+        (datetime(2024, 1, 7), 1, None, 1),
+        ("Totale", 1, None, 1),
+    ]
+    assert "A3:A4" in wb["Cane"].merged_cells
+    assert "B3:C3" in wb["Cane"].merged_cells
+
+    summary = _rows(wb["Riepilogo"])
+    assert summary[1][:2] == ("Periodo", "dal 01/01/2024")
+    assert summary[2][:2] == ("Comuni", "Tutti")
+    assert summary[4][:2] == ("Tipi di ingresso", "Recupero, Sequestro")
+    assert summary[5][:2] == ("Tipi di uscita", "Adozione")
+    assert summary[6][:2] == ("Dividi per comune", "No")
+    # Distinct animals per comune and race
+    assert summary[8:] == [
+        ("Comune", "Tipo animale", "Entrate", None, "Uscite"),
+        (None, None, "Recupero", "Sequestro", "Adozione"),
+        ("MILANO", "Cane", 1, None, None),
+        ("MILANO", "Gatto", 1, None, 1),
+        ("ROMA", "Cane", 2, 1, 1),
+        ("ROMA", "Gatto", None, None, None),
+        ("Totale", None, 4, 1, 2),
+    ]
+
+
+def test_animal_overview_report_split_by_city_single_race(
+    report_generator: ReportGenerator,
+):
+    query = AnimalOverviewQuery(
+        race_ids=["C"],
+        to_date=date(2024, 12, 31),
+        city_codes=["H501", "F205"],
+        exit_types=[ExitType.adoption, ExitType.death],
+        split_by_city=True,
+    )
+    data = AnimalOverviewResult(
+        exits=[
+            _presence(1, "H501", "C", "A", date(2024, 3, 1)),
+            _presence(2, "H501", "C", "D", date(2024, 3, 1)),
+            _presence(4, "F205", "C", "A", date(2024, 2, 1)),
+            # animal 1 adopted again later: the daily totals count it twice
+            _presence(1, "H501", "C", "A", date(2024, 6, 1)),
+        ],
+        cities={"H501": "ROMA", "F205": "MILANO"},
+        races={"C": "Cane"},
+    )
+
+    filename, report = report_generator.generate_animal_overview_report(
+        query, data
+    )
+
+    assert filename == "riepilogo_al_2024-12-31.xlsx"
+    wb = load_workbook(BytesIO(report))
+    # The entries section was not requested
+    assert wb.sheetnames == ["Riepilogo", "Cane - MILANO", "Cane - ROMA"]
+
+    assert _rows(wb["Cane - ROMA"]) == [
+        ("CANE · ROMA · fino al 31/12/2024", None, None),
+        (None, None, None),
+        ("Data", "Uscite", None),
+        (None, "Adozione", "Morte"),
+        (datetime(2024, 3, 1), 1, 1),
+        (datetime(2024, 6, 1), 1, None),
+        ("Totale", 2, 1),
+    ]
+
+    summary = _rows(wb["Riepilogo"])
+    assert summary[1][:2] == ("Periodo", "fino al 31/12/2024")
+    assert summary[2][:2] == ("Comuni", "MILANO, ROMA")
+    assert summary[5][:2] == ("Dividi per comune", "Sì")
+    # A single race: no race column; distinct animals
+    assert summary[7:] == [
+        ("Comune", "Uscite", None),
+        (None, "Adozione", "Morte"),
+        ("MILANO", 1, None),
+        ("ROMA", 1, 1),
+        ("Totale", 2, 1),
+    ]
+
+
+def test_overview_sheet_name():
+    taken = {"riepilogo"}
+    assert _sheet_name("Cane - Reggio/Calabria", taken) == (
+        "Cane - Reggio-Calabria"
+    )
+    long = "Gatto - San Giovanni in Fiore di Sopra"
+    assert _sheet_name(long, taken) == long[:31]
+    assert _sheet_name(long, taken) == long[:27] + " (2)"

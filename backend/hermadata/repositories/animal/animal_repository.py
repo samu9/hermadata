@@ -25,6 +25,7 @@ from hermadata.constants import (
     AnimalEvent,
     EntryType,
     ExitType,
+    is_exit_type_allowed_for_race,
 )
 from hermadata.database.models import (
     Adopter,
@@ -76,6 +77,9 @@ from hermadata.repositories.animal.models import (
     AnimalListReportItemQuery,
     AnimalLogModel,
     AnimalModel,
+    AnimalOverviewQuery,
+    AnimalOverviewResult,
+    AnimalPresenceItem,
     AnimalQueryModel,
     AnimalReportResult,
     AnimalSearchModel,
@@ -142,6 +146,10 @@ class AnimalNotPresentException(APIException):
 
 
 class NoRequiredExitDataException(APIException):
+    pass
+
+
+class ExitTypeNotAllowedForRaceException(APIException):
     pass
 
 
@@ -318,6 +326,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Adoption.animal_id == animal_id,
                 Adoption.animal_entry_id == last_entry_id,
                 Adoption.returned_at.is_(None),
+                Adoption.deleted_at.is_(None),
             )
             .values(returned_at=get_today())
         )
@@ -860,6 +869,17 @@ class SQLAnimalRepository(SQLBaseRepository):
         if not values:
             return 0
 
+        if updates.exit_type is not None:
+            race_id = self.session.execute(
+                select(Animal.race_id)
+                .join(AnimalEntry, AnimalEntry.animal_id == Animal.id)
+                .where(AnimalEntry.id == entry_id)
+            ).scalar_one_or_none()
+            if race_id is not None and not is_exit_type_allowed_for_race(
+                updates.exit_type, race_id
+            ):
+                raise ExitTypeNotAllowedForRaceException
+
         result = self.session.execute(
             update(AnimalEntry)
             .where(AnimalEntry.id == entry_id)
@@ -1321,6 +1341,9 @@ class SQLAnimalRepository(SQLBaseRepository):
         if data.exit_date < entry_date:
             raise ExitNotValidException()
 
+        if not is_exit_type_allowed_for_race(data.exit_type, race_code):
+            raise ExitTypeNotAllowedForRaceException
+
         if data.exit_type in ADOPTER_EXIT_TYPES:
             adoption_data = NewAdoption(
                 animal_id=animal_id,
@@ -1579,6 +1602,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 ),
                 AnimalEntry.origin_city_code == query.city_code,
                 Animal.deleted_at.is_(None),
+                Animal.race_id.in_(query.race_ids),
             )
             .join(Animal, Animal.id == AnimalEntry.animal_id)
         ).all()
@@ -1641,6 +1665,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.entry_date <= query.to_date,
                 AnimalEntry.entry_date >= query.from_date,
                 Animal.deleted_at.is_(None),
+                Animal.race_id.in_(query.race_ids),
             )
             .join(Animal, Animal.id == AnimalEntry.animal_id)
             .join(Race, Race.id == Animal.race_id)
@@ -1701,6 +1726,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 AnimalEntry.exit_date <= query.to_date,
                 AnimalEntry.exit_date >= query.from_date,
                 Animal.deleted_at.is_(None),
+                Animal.race_id.in_(query.race_ids),
             )
             .join(Animal, Animal.id == AnimalEntry.animal_id)
             .join(Race, Race.id == Animal.race_id)
@@ -1738,6 +1764,88 @@ class SQLAnimalRepository(SQLBaseRepository):
             total=len(exits),
         )
         return result
+
+    def get_animal_overview(
+        self, query: AnimalOverviewQuery
+    ) -> AnimalOverviewResult:
+        """Animal movements per day, comune of origin, race and
+        entry/exit type (one item per animal and day). Entries are matched
+        on the entry date, exits on the exit date; only the sections with
+        at least one type are computed."""
+
+        def presences(date_col, type_col, types) -> list[AnimalPresenceItem]:
+            stmt = (
+                select(
+                    Animal.id,
+                    AnimalEntry.origin_city_code,
+                    Animal.race_id,
+                    type_col,
+                    date_col,
+                )
+                .distinct()
+                .join(Animal, Animal.id == AnimalEntry.animal_id)
+                .where(
+                    date_col.is_not(None),
+                    type_col.in_(types),
+                    AnimalEntry.origin_city_code.is_not(None),
+                    Animal.race_id.in_(query.race_ids),
+                    Animal.deleted_at.is_(None),
+                )
+            )
+            if query.from_date is not None:
+                stmt = stmt.where(date_col >= query.from_date)
+            if query.to_date is not None:
+                stmt = stmt.where(date_col <= query.to_date)
+            if query.city_codes:
+                stmt = stmt.where(
+                    AnimalEntry.origin_city_code.in_(query.city_codes)
+                )
+
+            return [
+                AnimalPresenceItem(
+                    animal_id=animal_id,
+                    city_code=city_code,
+                    race_id=race_id,
+                    type=type_,
+                    day=day,
+                )
+                for animal_id, city_code, race_id, type_, day in (
+                    self.session.execute(stmt).all()
+                )
+            ]
+
+        entries = None
+        if query.entry_types:
+            entries = presences(
+                AnimalEntry.entry_date,
+                AnimalEntry.entry_type,
+                query.entry_types,
+            )
+        exits = None
+        if query.exit_types:
+            exits = presences(
+                AnimalEntry.exit_date,
+                AnimalEntry.exit_type,
+                query.exit_types,
+            )
+
+        city_codes = set(query.city_codes)
+        if not city_codes:
+            city_codes = {i.city_code for i in (entries or []) + (exits or [])}
+        cities = dict(
+            self.session.execute(
+                select(Comune.id, Comune.name).where(Comune.id.in_(city_codes))
+            ).all()
+        )
+        races = dict(
+            self.session.execute(
+                select(Race.id, Race.name).where(Race.id.in_(query.race_ids))
+            ).all()
+        )
+
+        return AnimalOverviewResult(
+            entries=entries, exits=exits, cities=cities, races=races
+        )
 
     def add_vet_service_record(self, animal_id, data: AddMedicalRecordModel):
         # Verify animal exists and is not deleted
@@ -1978,7 +2086,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             .select_from(AnimalEntry)
             .join(
                 Adoption,
-                Adoption.animal_entry_id == AnimalEntry.id,
+                and_(
+                    Adoption.animal_entry_id == AnimalEntry.id,
+                    Adoption.deleted_at.is_(None),
+                ),
             )
             .join(Comune, Adoption.location_city_code == Comune.id)
             .where(
@@ -2038,7 +2149,10 @@ class SQLAnimalRepository(SQLBaseRepository):
             .select_from(AnimalEntry)
             .join(
                 Adoption,
-                Adoption.animal_entry_id == AnimalEntry.id,
+                and_(
+                    Adoption.animal_entry_id == AnimalEntry.id,
+                    Adoption.deleted_at.is_(None),
+                ),
                 isouter=True,
             )
             .join(
@@ -2120,6 +2234,7 @@ class SQLAnimalRepository(SQLBaseRepository):
                 Adoption.animal_id == animal_id,
                 Adoption.animal_entry_id == current_entry.id,
                 Adoption.returned_at.is_(None),
+                Adoption.deleted_at.is_(None),
             )
             .values(
                 completed_at=datetime.combine(

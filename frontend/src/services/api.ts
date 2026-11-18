@@ -25,6 +25,7 @@ import {
     AnimalEntry,
     AnimalExit,
     AnimalExitsReportSchema,
+    AnimalOverviewReportSchema,
     AnimalImage,
     AnimalListReportExtraField,
     AnimalSearchQuery,
@@ -82,6 +83,7 @@ import {
 import { PaginationQuery } from "../models/pagination.schema"
 import { Structure } from "../models/structure.schema"
 import { NewTherapy, Therapy, TherapyReminder } from "../models/therapy.schema"
+import { ExitTypeOption } from "../utils/exitTypes"
 
 const DEFAULT_ERROR_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 
@@ -268,6 +270,17 @@ class ApiService {
         return comuneSchema.parse(data)
     }
 
+    async setComuneFavourite(
+        code: string,
+        favourite: boolean,
+    ): Promise<ComuneSchema> {
+        const data = await this.put<ComuneSchema>(
+            ApiEndpoints.util.setComuneFavourite(code),
+            { favourite },
+        )
+        return comuneSchema.parse(data)
+    }
+
     async getRaces(): Promise<Race[]> {
         const data = await this.get<Race[]>(ApiEndpoints.race.getAll)
 
@@ -286,8 +299,8 @@ class ApiService {
         return data
     }
 
-    async getExitTypes(): Promise<{ id: string; label: string }[]> {
-        const data = await this.get<{ id: string; label: string }[]>(
+    async getExitTypes(): Promise<ExitTypeOption[]> {
+        const data = await this.get<ExitTypeOption[]>(
             ApiEndpoints.util.getExitTypes,
         )
 
@@ -674,6 +687,19 @@ class ApiService {
             responseType: "blob",
         })
         console.log(result.headers)
+        const filename = result.headers["x-filename"].toString()
+        const filetype = result.headers["content-type"]?.toString()
+        const url = window.URL.createObjectURL(
+            new Blob([result.data], { type: filetype }),
+        )
+        return { url, filename }
+    }
+
+    async animalOverviewReport(data: AnimalOverviewReportSchema) {
+        const result = await this.inst.get(ApiEndpoints.animal.overviewReport, {
+            params: data,
+            responseType: "blob",
+        })
         const filename = result.headers["x-filename"].toString()
         const filetype = result.headers["content-type"]?.toString()
         const url = window.URL.createObjectURL(

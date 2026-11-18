@@ -6,6 +6,7 @@ from hermadata.errors import InvalidFiscalCodeException
 from hermadata.repositories.animal.animal_repository import (
     AnimalWithoutChipCodeException,
     EntryNotCompleteException,
+    ExitTypeNotAllowedForRaceException,
     MoveBeforeEntryException,
     NoRequiredExitDataException,
 )
@@ -22,6 +23,8 @@ API_ERROR_MESSAGES = {
     NoRequiredExitDataException: "Dati animale non completi. "
     "Non è possibile completare l'operazione",
     InvalidFiscalCodeException: "Codice fiscale non valido.",
+    ExitTypeNotAllowedForRaceException: "Tipo di uscita non consentito "
+    "per la razza dell'animale.",
 }
 DEFAULT_MESSAGE = "Qualcosa è andato storto, riprova più tardi"
 

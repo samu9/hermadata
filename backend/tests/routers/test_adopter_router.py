@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -14,15 +15,17 @@ from hermadata.repositories.adopter_repository import (
 from hermadata.services.adopter_service import NewAdopterRequest
 
 
+@pytest.mark.parametrize("document_type", ["id", "pa"])
 def test_new_adopter(
     app: TestClient,
     db_session: Session,
+    document_type: str,
 ):
     data = NewAdopterRequest(
         name="Mario",
         surname="Rossi",
         fiscal_code="RSSMRA80A01H501U",
-        document_type=IDDocumentType.identity_card,
+        document_type=IDDocumentType(document_type),
         document_number="AA12345BB",
         residence_city_code="H501",
         phone="123456789",
@@ -38,6 +41,8 @@ def test_new_adopter(
     parsed = AdopterModel.model_validate(content)
 
     assert parsed.fiscal_code == data.fiscal_code.upper()
+    assert content["document_type"] == document_type
+    assert parsed.document_number == data.document_number
 
     stored = db_session.execute(
         select(Adopter).where(Adopter.id == parsed.id)
@@ -45,6 +50,8 @@ def test_new_adopter(
 
     assert stored.name == data.name.upper()
     assert stored.surname == data.surname.upper()
+    assert stored.document_type == document_type
+    assert stored.document_number == data.document_number
 
 
 def test_search_adopter(

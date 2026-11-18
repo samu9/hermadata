@@ -13,12 +13,14 @@ import {
 import { useExitTypesQuery } from "../queries"
 import ControlledCityPicker from "./forms/city/ControlledCityPicker"
 import ControlledInputDate from "./forms/ControlledInputDate"
+import ControlledRaceMultiSelect from "./forms/ControlledRaceMultiSelect"
 import { SubTitle } from "./typography"
 
 const AnimalExitsForm = () => {
     const exitTypesQuery = useExitTypesQuery()
 
     const form = useForm<AnimalExitsReportSchema>({
+        defaultValues: { race_ids: [] },
         resolver: zodResolver(animalExitsReportSchema),
     })
 
@@ -61,6 +63,7 @@ const AnimalExitsForm = () => {
                             fieldName="to_date"
                             label="Data fine"
                         />
+                        <ControlledRaceMultiSelect />
                         <ControlledCityPicker
                             fieldName="city_code"
                             className="w-full"

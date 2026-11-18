@@ -11,7 +11,7 @@ import {
     faUserShield,
 } from "@fortawesome/free-solid-svg-icons"
 import { usePermissions } from "../../hooks/usePermissions"
-import logo from "../../assets/hermadata.svg"
+import logo from "../../assets/hermadata-primary.svg"
 import { useAuth } from "../../contexts/AuthContext"
 import { Permission } from "../../constants"
 import { classNames } from "primereact/utils"

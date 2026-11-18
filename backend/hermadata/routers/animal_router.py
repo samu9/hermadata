@@ -19,6 +19,7 @@ from hermadata.constants import (
     Permission,
     StorageType,
 )
+from hermadata.errors import APIException
 from hermadata.initializations import (
     get_animal_repository,
     get_animal_service,
@@ -52,6 +53,7 @@ from hermadata.repositories.animal.models import (
     AnimalListReportExtraField,
     AnimalLogModel,
     AnimalModel,
+    AnimalOverviewQuery,
     AnimalQueryModel,
     AnimalSearchModel,
     AnimalSearchResult,
@@ -210,7 +212,7 @@ def serve_animal_list_report(
 
 @router.get("/days/report")
 def serve_animal_days_report(
-    query: Annotated[AnimalDaysQuery, Depends()],
+    query: Annotated[AnimalDaysQuery, Query()],
     service: Annotated[AnimalService, Depends(get_animal_service)],
     current_user: Annotated[TokenData, Depends(get_current_user)],
 ):
@@ -233,7 +235,7 @@ def serve_animal_days_report(
 
 @router.get("/entries/report")
 def serve_animal_entries_report(
-    query: Annotated[AnimalEntriesQuery, Depends()],
+    query: Annotated[AnimalEntriesQuery, Query()],
     service: Annotated[AnimalService, Depends(get_animal_service)],
 ):
     filename, report = service.entries_report(query)
@@ -247,10 +249,34 @@ def serve_animal_entries_report(
 
 @router.get("/exits/report")
 def serve_animal_exits_report(
-    query: Annotated[AnimalExitsQuery, Depends()],
+    query: Annotated[AnimalExitsQuery, Query()],
     service: Annotated[AnimalService, Depends(get_animal_service)],
 ):
     filename, report = service.exits_report(query)
+
+    return Response(
+        content=report,
+        media_type=EXCEL_MEDIA_TYPE,
+        headers={"X-filename": filename},
+    )
+
+
+@router.get("/overview/report")
+def serve_animal_overview_report(
+    query: Annotated[AnimalOverviewQuery, Query()],
+    service: Annotated[AnimalService, Depends(get_animal_service)],
+    current_user: Annotated[TokenData, Depends(get_current_user)],
+):
+    if current_user.city_codes:
+        if not query.city_codes:
+            # Users bound to some comuni only see those
+            query.city_codes = list(current_user.city_codes)
+        elif not set(query.city_codes) <= set(current_user.city_codes):
+            raise HTTPException(
+                status_code=403, detail="Accesso negato per questo comune"
+            )
+
+    filename, report = service.overview_report(query)
 
     return Response(
         content=report,
@@ -616,6 +642,8 @@ def update_animal_entry(
             "message": "Entry updated successfully",
             "updated_rows": updated_rows,
         }
+    except APIException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 

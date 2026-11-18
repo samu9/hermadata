@@ -29,6 +29,7 @@ from hermadata.repositories.animal.models import (
     AnimalExitsQuery,
     AnimalListReportExtraField,
     AnimalLogModel,
+    AnimalOverviewQuery,
     AnimalSearchModel,
     CompleteEntryModel,
     NewAnimalDocument,
@@ -206,6 +207,13 @@ class AnimalService:
         )
 
         return filename, report
+
+    def overview_report(self, query: AnimalOverviewQuery):
+        data = self.animal_repository.get_animal_overview(query)
+
+        return self.report_generator.generate_animal_overview_report(
+            query, data
+        )
 
     def generate_adoption_report(
         self,
