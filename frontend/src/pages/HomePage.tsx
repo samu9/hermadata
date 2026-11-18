@@ -1,4 +1,5 @@
 import TherapyRemindersCard from "../components/TherapyRemindersCard"
+import MobileFilters from "../components/MobileFilters"
 import { Button } from "primereact/button"
 import { Calendar } from "primereact/calendar"
 import { MultiSelect } from "primereact/multiselect"
@@ -368,6 +369,13 @@ const HomePage = () => {
         </span>
     )
 
+    // Filters changed from their defaults (badge of the mobile toggle)
+    const dashboardFiltersCount = [
+        preset !== "this_month",
+        provincia || comune,
+        selectedStructureIds.length > 0,
+    ].filter(Boolean).length
+
     const periodLabel =
         preset !== "custom"
             ? PERIOD_PRESETS.find((p) => p.value === preset)?.label
@@ -385,82 +393,87 @@ const HomePage = () => {
 
             {/* Period & Structure Filters */}
             <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-5">
-                <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex gap-2 flex-wrap">
-                        {PERIOD_PRESETS.map((p) => (
-                            <button
-                                key={p.value}
-                                onClick={() => setPreset(p.value)}
-                                className={classNames(
-                                    "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors",
-                                    preset === p.value
-                                        ? "bg-primary-600 text-white border-primary-600"
-                                        : "bg-white text-surface-600 border-surface-300 hover:border-primary-400",
-                                )}
-                            >
-                                {p.label}
-                            </button>
-                        ))}
-                    </div>
+                <MobileFilters
+                    activeCount={dashboardFiltersCount}
+                    className="mt-4"
+                >
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex gap-2 flex-wrap">
+                            {PERIOD_PRESETS.map((p) => (
+                                <button
+                                    key={p.value}
+                                    onClick={() => setPreset(p.value)}
+                                    className={classNames(
+                                        "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors",
+                                        preset === p.value
+                                            ? "bg-primary-600 text-white border-primary-600"
+                                            : "bg-white text-surface-600 border-surface-300 hover:border-primary-400",
+                                    )}
+                                >
+                                    {p.label}
+                                </button>
+                            ))}
+                        </div>
 
-                    {preset === "custom" && (
-                        <Calendar
-                            value={customRange}
-                            onChange={(e) =>
-                                setCustomRange(
-                                    (e.value as [Date | null, Date | null]) ?? [
-                                        null,
-                                        null,
-                                    ],
-                                )
-                            }
-                            selectionMode="range"
-                            dateFormat="dd/mm/yy"
-                            placeholder="Seleziona periodo"
-                            showIcon
-                            className="text-sm"
-                        />
-                    )}
+                        {preset === "custom" && (
+                            <Calendar
+                                value={customRange}
+                                onChange={(e) =>
+                                    setCustomRange(
+                                        (e.value as [Date | null, Date | null]) ?? [
+                                            null,
+                                            null,
+                                        ],
+                                    )
+                                }
+                                selectionMode="range"
+                                dateFormat="dd/mm/yy"
+                                placeholder="Seleziona periodo"
+                                showIcon
+                                className="text-sm"
+                            />
+                        )}
 
-                    <div className="ml-auto flex flex-wrap items-center gap-3">
-                        <ProvinciaAutoComplete
-                            label=""
-                            placeholder="Tutte le province"
-                            value={provincia}
-                            onChange={(p) => {
-                                setProvincia(p)
-                                setComune(null)
-                            }}
-                            className="text-sm w-52"
-                        />
-                        <ComuneAutoComplete
-                            label=""
-                            placeholder="Tutti i comuni"
-                            provincia={provincia}
-                            allowedCodes={user?.city_codes}
-                            value={comune}
-                            onChange={setComune}
-                            onSelectComune={(c) =>
-                                c && setProvincia(c.provincia)
-                            }
-                            className="text-sm w-52"
-                        />
-                        <MultiSelect
-                            value={selectedStructureIds}
-                            onChange={(e) =>
-                                setSelectedStructureIds(e.value ?? [])
-                            }
-                            options={(structures ?? []).map((s) => ({
-                                label: s.name,
-                                value: s.id,
-                            }))}
-                            placeholder="Tutte le strutture"
-                            display="chip"
-                            className="text-sm min-w-[200px]"
-                            showClear
-                        />
+                        <div className="ml-auto flex flex-wrap items-center gap-3">
+                            <ProvinciaAutoComplete
+                                label=""
+                                placeholder="Tutte le province"
+                                value={provincia}
+                                onChange={(p) => {
+                                    setProvincia(p)
+                                    setComune(null)
+                                }}
+                                className="text-sm w-52"
+                            />
+                            <ComuneAutoComplete
+                                label=""
+                                placeholder="Tutti i comuni"
+                                provincia={provincia}
+                                allowedCodes={user?.city_codes}
+                                value={comune}
+                                onChange={setComune}
+                                onSelectComune={(c) =>
+                                    c && setProvincia(c.provincia)
+                                }
+                                className="text-sm w-52"
+                            />
+                            <MultiSelect
+                                value={selectedStructureIds}
+                                onChange={(e) =>
+                                    setSelectedStructureIds(e.value ?? [])
+                                }
+                                options={(structures ?? []).map((s) => ({
+                                    label: s.name,
+                                    value: s.id,
+                                }))}
+                                placeholder="Tutte le strutture"
+                                display="chip"
+                                className="text-sm min-w-[200px]"
+                                showClear
+                            />
+                        </div>
                     </div>
-                </div>
+                </MobileFilters>
 
                 <div className="mt-3 text-xs text-surface-400">
                     Periodo: <span className="font-medium">{periodLabel}</span>
