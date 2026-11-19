@@ -202,6 +202,15 @@ def test_variation_report(
     assert "il suddetto cane è" in html
     assert "iscritto all'Anagrafe Animali d'Affezione" in html
 
+    temporary_variables = variables.model_copy(
+        update={"variation_type": ExitType.temporary_adoption}
+    )
+    html = " ".join(
+        template.render(**temporary_variables.model_dump()).split()
+    )
+    assert "stato affidato temporaneamente al Sig. Rossi Mario" in html
+    assert f"Documento ({document_label}) n. AA12345BB" in html
+
     cat_variables = return_variables.model_copy(
         update={
             "animal": return_variables.animal.model_copy(
