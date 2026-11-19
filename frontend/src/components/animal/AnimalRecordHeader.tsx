@@ -162,7 +162,8 @@ const StageInfo = ({
                 "bg-red-50": !bare && !isInShelter,
             })}
         >
-            <div className="flex flex-col gap-2">
+            {/* One line on mobile when it fits, stacked from sm up */}
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:flex-col sm:flex-nowrap sm:items-start">
                 <div className="flex items-center gap-2">
                     <FontAwesomeIcon
                         icon={isInShelter ? faTents : faKitMedical}
@@ -288,9 +289,10 @@ const AnimalRecordHeader = (props: Props) => {
                 )}
             >
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                    {/* Animal Info */}
-                    <div className="flex-1 min-w-0 text-center sm:text-left">
-                        <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
+                    {/* Animal Info — on mobile the name goes first and all
+                        tags flow together in one wrapping row below it */}
+                    <div className="flex flex-1 min-w-0 flex-wrap items-center justify-center gap-2 text-center sm:block sm:text-left">
+                        <div className="contents sm:flex sm:items-center sm:gap-3 sm:mb-2">
                             {/* Adoptability Flag */}
                             {props.data.adoptability_index !== null &&
                                 props.data.adoptability_index !== undefined && (
@@ -324,7 +326,7 @@ const AnimalRecordHeader = (props: Props) => {
 
                         <h1
                             className={classNames(
-                                "text-2xl sm:text-3xl font-bold mb-3 leading-tight break-words",
+                                "order-first w-full text-2xl sm:order-none sm:text-3xl font-bold mb-1 sm:mb-3 leading-tight break-words",
                                 {
                                     "text-surface-900": props.data.name,
                                     "text-surface-400": !props.data.name,
@@ -334,7 +336,7 @@ const AnimalRecordHeader = (props: Props) => {
                             {props.data.name || "Nome non assegnato"}
                         </h1>
 
-                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4">
+                        <div className="contents sm:flex sm:flex-wrap sm:items-center sm:gap-4">
                             <ChipCodeBadge
                                 code={props.data.chip_code || undefined}
                             />
