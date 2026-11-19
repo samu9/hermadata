@@ -236,9 +236,11 @@ const AnimalRecordHeader = (props: Props) => {
 
     return (
         <div className="relative mb-6 mt-4">
-            {/* Polaroid — top nearly flush with card top border */}
+            {/* Polaroid — on mobile it is centered and tucked behind the card,
+                which covers its bottom strip like a pocket; from sm up it sits
+                on top of the card, top nearly flush with the card border */}
             <div
-                className="relative z-10 mx-auto -mb-12 w-fit sm:absolute sm:-top-1 sm:left-6 sm:mx-0 sm:mb-0"
+                className="relative z-0 mx-auto -mb-9 w-fit sm:absolute sm:z-10 sm:-top-1 sm:left-6 sm:mx-0 sm:mb-0"
                 style={{ transform: `rotate(${rotation}deg)` }}
             >
                 <div
@@ -276,7 +278,7 @@ const AnimalRecordHeader = (props: Props) => {
             {/* Card */}
             <div
                 className={classNames(
-                    "rounded-xl shadow-sm border px-4 pt-16 pb-5 sm:pt-6 sm:pb-6 sm:pr-6 sm:pl-44",
+                    "relative z-10 rounded-xl border px-4 pt-4 pb-5 shadow-[0_-8px_12px_-8px_rgba(0,0,0,0.35)] sm:static sm:z-auto sm:shadow-sm sm:pt-6 sm:pb-6 sm:pr-6 sm:pl-44",
                     {
                         "bg-surface-100 border-surface-300": isNotPresent,
                         "bg-red-50 border-red-200": isSanitary,
