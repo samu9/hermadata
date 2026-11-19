@@ -162,7 +162,8 @@ const StageInfo = ({
                 "bg-red-50": !bare && !isInShelter,
             })}
         >
-            <div className="flex flex-col gap-2">
+            {/* One line on mobile when it fits, stacked from sm up */}
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 sm:flex-col sm:flex-nowrap sm:items-stretch sm:justify-start">
                 <div className="flex items-center gap-2">
                     <FontAwesomeIcon
                         icon={isInShelter ? faTents : faKitMedical}
@@ -180,6 +181,12 @@ const StageInfo = ({
                         {isInShelter ? "In rifugio" : "In sanitario"}
                     </h3>
                 </div>
+                {isInShelter && inShelterFrom && (
+                    <span
+                        aria-hidden
+                        className="h-4 w-px bg-surface-300 sm:hidden"
+                    />
+                )}
                 {isInShelter && inShelterFrom && (
                     <div className="flex items-center gap-2 text-xs">
                         <FontAwesomeIcon
@@ -236,9 +243,11 @@ const AnimalRecordHeader = (props: Props) => {
 
     return (
         <div className="relative mb-6 mt-4">
-            {/* Polaroid — top nearly flush with card top border */}
+            {/* Polaroid — on mobile it is centered and tucked behind the card,
+                which covers its bottom strip like a pocket; from sm up it sits
+                on top of the card, top nearly flush with the card border */}
             <div
-                className="relative z-10 mx-auto -mb-12 w-fit sm:absolute sm:-top-1 sm:left-6 sm:mx-0 sm:mb-0"
+                className="relative z-0 mx-auto -mb-9 w-fit sm:absolute sm:z-10 sm:-top-1 sm:left-6 sm:mx-0 sm:mb-0"
                 style={{ transform: `rotate(${rotation}deg)` }}
             >
                 <div
@@ -276,7 +285,7 @@ const AnimalRecordHeader = (props: Props) => {
             {/* Card */}
             <div
                 className={classNames(
-                    "rounded-xl shadow-sm border px-4 pt-16 pb-5 sm:pt-6 sm:pb-6 sm:pr-6 sm:pl-44",
+                    "relative z-10 rounded-xl border px-4 pt-4 pb-5 shadow-[0_-8px_12px_-8px_rgba(0,0,0,0.35)] sm:static sm:z-auto sm:shadow-sm sm:pt-6 sm:pb-6 sm:pr-6 sm:pl-44",
                     {
                         "bg-surface-100 border-surface-300": isNotPresent,
                         "bg-red-50 border-red-200": isSanitary,
@@ -286,9 +295,10 @@ const AnimalRecordHeader = (props: Props) => {
                 )}
             >
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                    {/* Animal Info */}
+                    {/* Animal Info — on mobile: name, chip code, structure,
+                        each on its own centered line */}
                     <div className="flex-1 min-w-0 text-center sm:text-left">
-                        <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
+                        <div className="hidden sm:flex items-center gap-3 mb-2">
                             {/* Adoptability Flag */}
                             {props.data.adoptability_index !== null &&
                                 props.data.adoptability_index !== undefined && (
@@ -322,7 +332,7 @@ const AnimalRecordHeader = (props: Props) => {
 
                         <h1
                             className={classNames(
-                                "text-2xl sm:text-3xl font-bold mb-3 leading-tight break-words",
+                                "text-2xl sm:text-3xl font-bold mb-2 sm:mb-3 leading-tight break-words",
                                 {
                                     "text-surface-900": props.data.name,
                                     "text-surface-400": !props.data.name,
@@ -332,7 +342,7 @@ const AnimalRecordHeader = (props: Props) => {
                             {props.data.name || "Nome non assegnato"}
                         </h1>
 
-                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4">
+                        <div className="flex flex-col items-center gap-2 sm:flex-row sm:flex-wrap sm:gap-4">
                             <ChipCodeBadge
                                 code={props.data.chip_code || undefined}
                             />
