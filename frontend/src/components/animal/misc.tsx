@@ -5,7 +5,7 @@ import { classNames } from "primereact/utils"
 export const ChipCodeBadge = ({ code }: { code?: string }) => (
     <div
         className={classNames(
-            "inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border",
+            "inline-flex max-w-full items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border",
             {
                 "bg-surface-50 border-surface-200 text-surface-400": !code,
                 "bg-blue-50 border-blue-200 text-blue-700 font-mono": code,
@@ -14,11 +14,13 @@ export const ChipCodeBadge = ({ code }: { code?: string }) => (
     >
         <FontAwesomeIcon
             icon={faMicrochip}
-            className={classNames("w-3 h-3", {
+            className={classNames("w-3 h-3 flex-shrink-0", {
                 "text-surface-400": !code,
                 "text-blue-600": code,
             })}
         />
-        <span>{code || "Chip non assegnato"}</span>
+        <span className="min-w-0 break-all">
+            {code || "Chip non assegnato"}
+        </span>
     </div>
 )
